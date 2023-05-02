@@ -177,7 +177,7 @@ class UserRegistryService implements UserRegistryServiceInterface {
       // delete all users from this user registry
       $query = \Drupal::entityTypeManager()->getStorage('user')->getQuery();
       $query->condition('apic_user_registry_url', $key);
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
       if ($results !== NULL && !empty($results)) {
         foreach ($results as $id) {
           // DO NOT DELETE THE ADMIN USER!

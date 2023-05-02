@@ -3,7 +3,7 @@
  * Javascript to generate Stripe token in PCI-compliant way.
  */
 
-(function($, Drupal, drupalSettings) {
+(function($, Drupal, once, drupalSettings) {
 
   'use strict';
 
@@ -29,7 +29,7 @@
       if (!drupalSettings.apicStripe || !drupalSettings.apicStripe.publishableKey) {
         return;
       }
-      $('.stripe-form', context).once('stripe-processed').each(function() {
+      $(once('stripe-processed', '.stripe-form', context)).each(function() {
         var $form = $(this).closest('form');
 
         // Create a Stripe client.
@@ -176,4 +176,4 @@
     }
   }
 
-})(jQuery, Drupal, drupalSettings);
+})(jQuery, Drupal, once, drupalSettings);

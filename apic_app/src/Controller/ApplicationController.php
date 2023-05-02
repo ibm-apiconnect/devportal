@@ -344,7 +344,7 @@ class ApplicationController extends ControllerBase {
             $query = \Drupal::entityQuery('node');
             $query->condition('type', 'product');
             $query->condition('apic_url.value', $sub->product_url());
-            $nids = $query->execute();
+            $nids = $query->accessCheck()->execute();
 
             if (isset($nids) && !empty($nids)) {
               $nid = array_shift($nids);

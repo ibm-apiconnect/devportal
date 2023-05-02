@@ -265,7 +265,7 @@ class InviteUserForm extends FormBase {
       $moduleHandler = \Drupal::service('module_handler');
       if ($moduleHandler->moduleExists('honeypot')) {
         // add honeypot to this form to prevent it being used to spam user's mailboxes
-        honeypot_add_form_protection($form, $form_state, ['honeypot', 'time_restriction']);
+        \Drupal::service('honeypot')->addFormProtection($form, $form_state, ['honeypot', 'time_restriction']);
       }
 
       $form['actions']['#type'] = 'actions';

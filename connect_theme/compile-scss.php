@@ -21,7 +21,7 @@ $scss->addImportPath('scss/');
 $scss->addImportPath('scss/component');
 $scss->addImportPath('scss/jquery-ui');
 
-$cssOut = $scss->compile('@import "style.scss";');
+$cssOut = $scss->compileString('@import "style.scss";')->getCss();
 
 if (!file_exists(__DIR__ . '/css') && !mkdir($concurrentDirectory = __DIR__ . '/css', 0755, TRUE) && !is_dir($concurrentDirectory)) {
   throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
@@ -32,7 +32,7 @@ $scss = new Compiler();
 
 $scss->addImportPath('scss/');
 
-$cssOut = $scss->compile('@import "mail.scss";');
+$cssOut = $scss->compileString('@import "mail.scss";')->getCss();
 
 if (!file_exists(__DIR__ . '/css') && !mkdir($concurrentDirectory = __DIR__ . '/css', 0755, TRUE) && !is_dir($concurrentDirectory)) {
   throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));

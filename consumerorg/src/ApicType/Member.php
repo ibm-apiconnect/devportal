@@ -141,7 +141,7 @@ class Member {
    * @return string|null
    */
   public function getId(): ?string {
-    return basename($this->url);
+    return basename($this->url ?? '');
   }
 
   /**

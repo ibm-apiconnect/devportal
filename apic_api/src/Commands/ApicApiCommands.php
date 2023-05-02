@@ -66,6 +66,7 @@ class ApicApiCommands extends DrushCommands {
   public function drush_apic_api_createOrUpdate($api, $event, $func): void {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
     if ($api !== NULL) {
+      $time_start = microtime(true);
       // in case moderation is on we need to run as admin
       // save the current user so we can switch back at the end
       $accountSwitcher = \Drupal::service('account_switcher');
@@ -83,17 +84,15 @@ class ApicApiCommands extends DrushCommands {
 
       $portalApi = new Api();
       $createdOrUpdated = $portalApi->createOrUpdate($api, $event);
+
+      $time_end = microtime(true);
+      $execution_time = (microtime(true) - $time_start);
+
       if ($createdOrUpdated) {
-        \Drupal::logger('apic_api')->info('Drush @func created API @api', [
-          '@func' => $func,
-          '@api' => $ref,
-        ]);
+        fprintf(STDERR, "Drush %s created API '%s' in %f seconds\n", $func, $ref, $execution_time);
       }
       else {
-        \Drupal::logger('apic_api')->info('Drush @func updated existing API @api', [
-          '@func' => $func,
-          '@api' => $ref,
-        ]);
+        fprintf(STDERR, "Drush %s updated existing API '%s' in %f seconds\n", $func, $ref, $execution_time);
       }
       $moduleHandler = \Drupal::service('module_handler');
       if ($func !== 'MassUpdate' && $moduleHandler->moduleExists('views')) {
@@ -174,7 +173,7 @@ class ApicApiCommands extends DrushCommands {
       $query->condition('status', 1);
       $query->condition('apic_url', $api['url']);
 
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
         $apiNode = Node::load($nid);
@@ -184,7 +183,7 @@ class ApicApiCommands extends DrushCommands {
           $query->condition('type', 'product');
           $query->condition('product_apis', $apiNode->apic_ref->value, 'CONTAINS');
 
-          $results = $query->execute();
+          $results = $query->accessCheck()->execute();
           if ($results !== NULL && !empty($results)) {
             $productIds = [];
             if (is_array($results) && count($results) > 0) {
@@ -275,7 +274,7 @@ class ApicApiCommands extends DrushCommands {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'api')
         ->condition('apic_ref', $apiRefs, 'NOT IN');
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
       if ($results !== NULL) {
         foreach ($results as $item) {
           $nids[] = $item;

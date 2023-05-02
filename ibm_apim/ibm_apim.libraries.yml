@@ -35,6 +35,8 @@ delay_validate:
 
 validate_password:
   version: 1.x
+  dependencies:
+    - core/once
   js:
     js/zxcvbn.js: {}
     js/validatePassword.js: {}

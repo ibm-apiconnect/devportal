@@ -2,7 +2,7 @@ name: 'APIC Default Monetization Create Payment Method'
 type: module
 description: 'Default implementation for allowing creation of payment methods as part of APIC monetization.'
 package: 'IBM API Developer Portal'
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^8 || ^9 || ^10
 version: 8.x-1.0.1
 project: ibm_create_payment_method
 dependencies:

@@ -174,7 +174,6 @@ function drush_apic_app_cleanse_drush_command() {
 function drush_apic_app_createOrUpdate($content, $event, $func) {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
   if ($content !== NULL) {
-
     // if we receive an application  with no credentials it is invalid. This is likely because we receive an
     // app_update webhook on application delete, which is superfluous so we can just drop this.
     if (isset($content['app_credentials']) && \sizeof($content['app_credentials']) === 0) {
@@ -183,6 +182,7 @@ function drush_apic_app_createOrUpdate($content, $event, $func) {
       ]), 'warning');
     }
     else {
+      $time_start = microtime(true);
       // in case moderation is on we need to run as admin
       // save the current user so we can switch back at the end
       $accountSwitcher = Drupal::service('account_switcher');
@@ -195,18 +195,17 @@ function drush_apic_app_createOrUpdate($content, $event, $func) {
       }
       $ref = $content['id'];
       $createdOrUpdated = \Drupal::service('apic_app.application')->createOrUpdate($content, $event, NULL);
+
+      $time_end = microtime(true);
+      $execution_time = (microtime(true) - $time_start);
+
       if ($createdOrUpdated) {
-        drush_log(dt('Drush @func created application @app', [
-          '@func' => $func,
-          '@app' => $ref,
-        ]), 'success');
+        fprintf(STDERR, "Drush %s created Application '%s' in %f seconds\n", $func, $ref, $execution_time);
       }
       else {
-        drush_log(dt('Drush @func updated existing application @app', [
-          '@func' => $func,
-          '@app' => $ref,
-        ]), 'success');
+        fprintf(STDERR, "Drush %s updated existing Application '%s' in %f seconds\n", $func, $ref, $execution_time);
       }
+
       $moduleHandler = \Drupal::service('module_handler');
       if ($func !== 'MassUpdate' && $moduleHandler->moduleExists('views')) {
         views_invalidate_cache();
@@ -305,6 +304,7 @@ function drush_apic_app_delete($app, $event = 'app_del') {
  */
 function drush_apic_app_createOrUpdatesub($subInput, $event, $func) {
   ibm_apim_entry_trace(__FUNCTION__, $subInput);
+  $time_start = microtime(true);
   // in case moderation is on we need to run as admin
   // save the current user so we can switch back at the end
   $accountSwitcher = \Drupal::service('account_switcher');
@@ -319,17 +319,15 @@ function drush_apic_app_createOrUpdatesub($subInput, $event, $func) {
     }
     $ref = $subInput['id'];
     $createdOrUpdated = $subService->createOrUpdate($subInput);
+
+    $time_end = microtime(true);
+    $execution_time = (microtime(true) - $time_start);
+
     if ($createdOrUpdated) {
-      drush_log(dt('Drush @func created subscription @sub', [
-        '@func' => $func,
-        '@sub' => $ref,
-      ]), 'success');
+      fprintf(STDERR, "Drush %s created Subscription '%s' in %f seconds\n", $func, $ref, $execution_time);
     }
     else {
-      drush_log(dt('Drush @func updated existing subscription @sub', [
-        '@func' => $func,
-        '@sub' => $ref,
-      ]), 'success');
+      fprintf(STDERR, "Drush %s updated existing Subscription '%s' in %f seconds\n", $func, $ref, $execution_time);
     }
   }
   else {
@@ -467,7 +465,7 @@ function drush_apic_app_tidy($appUrls = []) {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application')
       ->condition('apic_url.value', $appUrls, 'NOT IN');
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     if ($results !== NULL) {
       foreach ($results as $item) {
         $nids[] = $item;
@@ -525,7 +523,7 @@ function drush_apic_app_deletecred($cred, $event = 'cred_del') {
       $query->condition('type', 'application');
       $query->condition('apic_url.value', $cred['app_url']);
 
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if (isset($nids) && !empty($nids)) {
         $credsService = Drupal::service('apic_app.credentials');
@@ -580,7 +578,7 @@ function drush_apic_app_createOrUpdateCred($cred, $event, $func) {
       $query->condition('type', 'application');
       $query->condition('apic_url.value', $cred['app_url']);
 
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if (isset($nids) && !empty($nids)) {
         $credsService = Drupal::service('apic_app.credentials');

@@ -92,6 +92,9 @@ class MockQuery {
   }
 
   public function condition(){}
+  public function accessCheck(){
+    return new MockQuery($this->queryResult);
+  }
   public function execute() {
     return $this->queryResult;
   }

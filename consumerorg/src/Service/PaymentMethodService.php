@@ -62,7 +62,7 @@ class PaymentMethodService {
       }
     }
 
-    $entityIds = $query->execute();
+    $entityIds = $query->accessCheck()->execute();
     if (isset($entityIds) && !empty($entityIds)) {
       $entityId = array_shift($entityIds);
       $paymentMethodEntity = PaymentMethod::load($entityId);
@@ -94,7 +94,7 @@ class PaymentMethodService {
       $newPayment->save();
       $query = \Drupal::entityQuery('consumerorg_payment_method');
       $query->condition('uuid', $paymentMethodObj->getId());
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         $paymentMethodEntityId = array_shift($entityIds);
       }
@@ -107,7 +107,7 @@ class PaymentMethodService {
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $paymentMethodObj->getOrgUrl());
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
     if (isset($nids) && !empty($nids)) {
       $nid = array_shift($nids);
       $node = Node::load($nid);
@@ -203,7 +203,7 @@ class PaymentMethodService {
         $createdOrUpdated = self::createOrUpdate($paymentMethod);
         $query = \Drupal::entityQuery('consumerorg_payment_method');
         $query->condition('uuid', $paymentMethod['id']);
-        $entityIds = $query->execute();
+        $entityIds = $query->accessCheck()->execute();
         if (isset($entityIds) && !empty($entityIds)) {
           $entityId = array_shift($entityIds);
           if ($createdOrUpdated !== NULL) {
@@ -223,7 +223,6 @@ class PaymentMethodService {
 
       // update the consumerorg
       $node->set('consumerorg_payment_method_refs', $newPaymentMethods);
-      $node->save();
     }
     return $node;
   }
@@ -240,7 +239,7 @@ class PaymentMethodService {
     $query = \Drupal::entityQuery('consumerorg_payment_method');
     $query->condition('uuid', $paymentMethodId);
 
-    $entityIds = $query->execute();
+    $entityIds = $query->accessCheck()->execute();
     if (isset($entityIds) && !empty($entityIds)) {
       foreach (array_chunk($entityIds, 50) as $chunk) {
         $paymentEntities = PaymentMethod::loadMultiple($chunk);
@@ -253,7 +252,7 @@ class PaymentMethodService {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $consumerOrgUrl);
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     $product = NULL;
     $planName = NULL;
@@ -290,7 +289,7 @@ class PaymentMethodService {
    */
   public static function decryptConfiguration($configuration) {
     $moduleHandler = \Drupal::service('module_handler');
-    if ($moduleHandler->moduleExists('encrypt')) {
+    if ($moduleHandler->moduleExists('encrypt') && isset($configuration)) {
       $ibmApimConfig = \Drupal::config('ibm_apim.settings');
       $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
       if (isset($encryptionProfileName)) {

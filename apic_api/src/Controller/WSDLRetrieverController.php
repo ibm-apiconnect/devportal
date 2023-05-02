@@ -86,7 +86,7 @@ class WSDLRetrieverController extends ControllerBase {
       $query->condition('type', 'api');
       $query->condition('apic_ref.value', $apiname . ':' . $apiver);
 
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
@@ -110,7 +110,7 @@ class WSDLRetrieverController extends ControllerBase {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'api');
       $query->condition('api_id.value', $api);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);

@@ -146,7 +146,7 @@ class IbmApimController extends ControllerBase {
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $orgUrl);
 
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if (isset($nids) && !empty($nids)) {
         $nid = array_shift($nids);
         $node = Node::load($nid);

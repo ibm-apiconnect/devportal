@@ -1242,3 +1242,15 @@ function apic_api_update_dependencies(): array {
     ],
   ];
 }
+
+/**
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_api_update_8303() {
+  // Set the api_swaggertags field to unlimited cardinality
+  $fieldConfig = FieldConfig::loadByName('node', 'api', 'api_swaggertags');
+  if ($fieldConfig != NULL) {
+    $fieldConfig->set('cardinality', -1);
+    $fieldConfig->save();
+  }
+}

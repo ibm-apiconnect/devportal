@@ -201,7 +201,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $accountStub = $this->createAccountStub();
 
       $tokenResponse = $this->generateTokenResponse();
-
+      $this->accountService->setDefaultLanguage(Argument::any());
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
       $meResponse = $this->createMeResponse($user);
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
@@ -210,7 +210,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
       $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())
         ->shouldBeCalled();
-      $this->userService->getCustomUserFields()->willReturn([]);
+      $this->userService->getMetadataFields()->willReturn([]);
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->willReturn(['url' => '/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
       $this->userUtils->setOrgSessionData()->shouldBeCalled();
@@ -247,6 +247,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $accountStub = $this->createAccountStub();
 
       $tokenResponse = $this->generateTokenResponse(TRUE);
+      $this->accountService->setDefaultLanguage(Argument::any());
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
       $meResponse = $this->createMeResponse($user);
@@ -256,7 +257,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
       $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())
         ->shouldBeCalled();
-      $this->userService->getCustomUserFields()->willReturn([]);
+      $this->userService->getMetadataFields()->willReturn([]);
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->willReturn(['url' => '/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
       $this->userUtils->setOrgSessionData()->shouldBeCalled();
@@ -359,6 +360,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $accountStub = $this->createBlockedAccountStub();
 
       $tokenResponse = $this->generateTokenResponse();
+      $this->accountService->setDefaultLanguage(Argument::any());
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
       $meResponse = $this->createMeResponse($user);
@@ -366,7 +368,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
       $this->userService->parseDrupalAccount($accountStub)->willReturn($user);
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
-      $this->userService->getCustomUserFields()->willReturn([]);
+      $this->userService->getMetadataFields()->willReturn([]);
 
       $this->sessionStore->set('auth', Argument::any())->shouldNotBeCalled();
       $this->consumerOrgLogin->createOrUpdateLoginOrg(Argument::any(), Argument::any())->shouldNotBeCalled();
@@ -400,13 +402,14 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $accountStub = $this->createAccountStubNoConsumerOrgs();
 
       $tokenResponse = $this->generateTokenResponse();
+      $this->accountService->setDefaultLanguage(Argument::any());
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
       $this->sessionStore->set('auth', Argument::any())->shouldBeCalled();
       $meResponse = $this->createMeResponse($user);
       $this->userStorage->loadUserByEmailAddress($meResponse->getUser()->getMail())->willReturn($accountStub);
       $this->userService->parseDrupalAccount($accountStub)->willReturn($user);
-      $this->userService->getCustomUserFields()->willReturn([]);
+      $this->userService->getMetadataFields()->willReturn([]);
 
       // Get no consumer orgs back on me response.
       $meResponse->getUser()->setConsumerorgs([]);
@@ -630,6 +633,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $accountStub = $this->createAccountStub();
 
       $tokenResponse = $this->generateTokenResponse();
+      $this->accountService->setDefaultLanguage(Argument::any());
 
       $this->mgmtServer->getAuth($user)->willReturn($tokenResponse);
       $this->sessionStore->set('auth', Argument::any())->shouldBeCalled();
@@ -640,7 +644,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
       $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())
         ->shouldBeCalled();
-      $this->userService->getCustomUserFields()->willReturn([]);
+      $this->userService->getMetadataFields()->willReturn([]);
 
       $this->userUtils->setCurrentConsumerorg(Argument::any())->willReturn(['url' => '/consumer-orgs/1234/5678/9abc'])->shouldBeCalled();
       $this->userUtils->setOrgSessionData()->shouldBeCalled();
@@ -754,12 +758,13 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
      * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException|\Drupal\ibm_apim\Rest\Exception\RestResponseParseException
      */
     public function testLoginViaAzCodeValid(): void {
+      $this->accountService->setDefaultLanguage(Argument::any());
 
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
       $this->userRegistryService->get('/reg/oidc1')->willReturn($this->oidcRegistry);
       $service = $this->generateServiceUnderTest();
-      $this->userService->getCustomUserFields()->willReturn([]);
+      $this->userService->getMetadataFields()->willReturn([]);
       $response = $service->loginViaAzCode('validCode', '/reg/oidc1');
 
       self::assertEquals('<front>', $response);
@@ -799,7 +804,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
-      $this->userService->getCustomUserFields()->willReturn([]);
+      $this->userService->getMetadataFields()->willReturn([]);
       $this->userRegistryService->get('/reg/oidc1')->willReturn($this->oidcRegistry);
 
       $first_time_user = $this->prophet->prophesize(User::class);
@@ -833,8 +838,9 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
     public function testLoginViaAzCodeCreateNewOrg(): void {
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
-      $this->userService->getCustomUserFields()->willReturn([]);
+      $this->userService->getMetadataFields()->willReturn([]);
       $this->userRegistryService->get('/reg/oidc1')->willReturn($this->oidcRegistry);
+      $this->accountService->setDefaultLanguage(Argument::any());
 
       $this->userUtils->getCurrentConsumerorg()->willReturn(NULL);
       $this->siteConfig->isSelfOnboardingEnabled()->willReturn(TRUE);
@@ -854,10 +860,11 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
      * @throws \JsonException|\Drupal\ibm_apim\Rest\Exception\RestResponseParseException
      */
     public function testLoginViaAzCodeNoOrgNoPerms(): void {
+      $this->accountService->setDefaultLanguage(Argument::any());
 
       $user = $this->setUpOidcLoginTest();
       $this->userService->parseDrupalAccount(Argument::any())->willReturn($user);
-      $this->userService->getCustomUserFields()->willReturn([]);
+      $this->userService->getMetadataFields()->willReturn([]);
       $this->userRegistryService->get('/reg/oidc1')->willReturn($this->oidcRegistry);
 
       $this->userUtils->getCurrentConsumerorg()->willReturn(NULL);
@@ -1000,6 +1007,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $meResponse->setCode(200);
 
       $this->mgmtServer->getMe('aBearerToken')->willReturn($meResponse);
+      $this->accountService->setDefaultLanguage(Argument::any());
       $this->userStorage->loadUserByEmailAddress('oidcandre@example.com')->willReturn(NULL);
       $this->accountService->createOrUpdateLocalAccount($meResponse->getUser())->willReturn($accountStub)->shouldBeCalled();
       $this->consumerOrgLogin->createOrUpdateLoginOrg($meResponse->getUser()->getConsumerorgs()[0], $meResponse->getUser())

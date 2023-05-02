@@ -2,8 +2,8 @@ name: API
 type: module
 description: Provides the API node content type
 package: IBM API Developer Portal
-core_version_requirement: ^8 || ^9
-version: 8.x-5.2.1
+core_version_requirement: ^8 || ^9 || ^10
+version: 8.x-5.3.6
 project: apic_api
 dependencies:
 - path

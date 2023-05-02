@@ -14,7 +14,7 @@
 namespace Drupal\ibm_apim\EventSubscriber;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Psr\Log\LoggerInterface;
 use Drupal\ibm_apim\Service\UserUtils;
@@ -68,13 +68,15 @@ class ConsumerOrgCheckSubscriber implements EventSubscriberInterface
    *
    * @throws \Drupal\Core\TempStore\TempStoreException
    */
-  public function consumerorgCheck(GetResponseEvent $event): void
+  public function consumerorgCheck(RequestEvent $event): void
   {
     if (
       \Drupal::routeMatch()->getRouteName() === 'consumerorg.create' ||
       \Drupal::routeMatch()->getRouteName() === 'auth_apic.oidc_first_time_login' ||
       \Drupal::routeMatch()->getRouteName() === 'ibm_apim.noperms' ||
       \Drupal::routeMatch()->getRouteName() === 'session_limit.limit_form' ||
+      \Drupal::routeMatch()->getRouteName() === 'auth_apic.invitation' ||
+      \Drupal::routeMatch()->getRouteName() === 'user.logout' ||
       !\Drupal::currentUser()->isAuthenticated() ||
       (int) \Drupal::currentUser()->id() === 0 ||
       (int) \Drupal::currentUser()->id() === 1 ||

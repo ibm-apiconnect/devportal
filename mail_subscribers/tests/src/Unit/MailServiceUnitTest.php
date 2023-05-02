@@ -246,11 +246,12 @@ class MailServiceUnitTest extends UnitTestCase {
   public function testGetProductSubscribingOwnersNoPlan(): void {
 
     $this->subscriptionQuery->condition('product_url', "prod1url")->willReturn(NULL);
+    $this->subscriptionQuery->accessCheck()->willReturn($this->subscriptionQuery);
     $this->subscriptionQuery->execute()->willReturn(['sub1']);
     $this->entitySubscriptionStorage->load("sub1")->willReturn($this->sub1);
     $this->sub1->consumerorg_url()->willReturn("consorg1");
 
-
+    $this->entityQuery->accessCheck()->willReturn($this->entityQuery);
     $this->entityQuery->execute()->willReturn(['consorg1']);
     $this->entityNodeStorage->loadMultiple(['consorg1'])->willReturn([$this->cOrgNode1]);
     $this->cOrgNode1->get('consumerorg_owner')
@@ -288,10 +289,12 @@ class MailServiceUnitTest extends UnitTestCase {
    */
   public function testGetProductSubscribingMembersNoPlan(): void {
     $this->subscriptionQuery->condition('product_url', "prod1url")->willReturn(NULL);
+    $this->subscriptionQuery->accessCheck()->willReturn($this->subscriptionQuery);
     $this->subscriptionQuery->execute()->willReturn(['sub1']);
     $this->entitySubscriptionStorage->load("sub1")->willReturn($this->sub1);
     $this->sub1->consumerorg_url()->willReturn("consorg1");
 
+    $this->entityQuery->accessCheck()->willReturn($this->entityQuery);
     $this->entityQuery->execute()->willReturn(['consorg1']);
     $this->entityNodeStorage->loadMultiple(['consorg1'])->willReturn([$this->cOrgNode1]);
     $this->cOrgNode1->get('application_consumer_org_url')->willReturn($this->createSimpleObject('value', 'consorg1'));
@@ -331,12 +334,14 @@ class MailServiceUnitTest extends UnitTestCase {
   public function testGetProductSubscribingOwnersWithPlan(): void {
     $this->subscriptionQuery->condition('product_url', "/consumer-api/products/c025bc00-92ab-413a-af78-34eabdecacac")->willReturn(NULL);
     $this->subscriptionQuery->condition('plan', "default-plan")->willReturn(NULL);
+    $this->subscriptionQuery->accessCheck()->willReturn($this->subscriptionQuery);
     $this->subscriptionQuery->execute()->willReturn(['sub1', 'sub2']);
     $this->entitySubscriptionStorage->load("sub1")->willReturn($this->sub1);
     $this->entitySubscriptionStorage->load("sub2")->willReturn($this->sub2);
     $this->sub1->consumerorg_url()->willReturn("consorg1");
     $this->sub2->consumerorg_url()->willReturn("consorg2");
 
+    $this->entityQuery->accessCheck()->willReturn($this->entityQuery);
     $this->entityQuery->execute()->willReturn(["consorg1", "consorg2"]);
     $this->entityNodeStorage->loadMultiple(['consorg1', 'consorg2'])->willReturn([$this->cOrgNode1, $this->cOrgNode2]);
     $this->cOrgNode1->get('consumerorg_owner')
@@ -385,12 +390,14 @@ class MailServiceUnitTest extends UnitTestCase {
   public function testGetProductSubscribingMembersWithPlan(): void {
     $this->subscriptionQuery->condition('product_url', "/consumer-api/products/c025bc00-92ab-413a-af78-34eabdecacac")->willReturn(NULL);
     $this->subscriptionQuery->condition('plan', "default-plan")->willReturn(NULL);
+    $this->subscriptionQuery->accessCheck()->willReturn($this->subscriptionQuery);
     $this->subscriptionQuery->execute()->willReturn(['sub1', 'sub2']);
     $this->entitySubscriptionStorage->load("sub1")->willReturn($this->sub1);
     $this->entitySubscriptionStorage->load("sub2")->willReturn($this->sub2);
     $this->sub1->consumerorg_url()->willReturn("consorg1");
     $this->sub2->consumerorg_url()->willReturn("consorg2");
 
+    $this->entityQuery->accessCheck()->willReturn($this->entityQuery);
     $this->entityQuery->execute()->willReturn(["consorg1", "consorg2"]);
     $this->entityNodeStorage->loadMultiple(['consorg1', 'consorg2'])->willReturn([$this->cOrgNode1, $this->cOrgNode2]);
     $this->memberString1->getValue()->willReturn([
@@ -453,6 +460,7 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->apiNode1->get('apic_ref')->willReturn($this->createSimpleObject('value', 'api1'));
     $this->entityQuery->condition('product_apis.value', 'api1', 'CONTAINS')->willReturn(NULL);
 
+    $this->entityQuery->accessCheck()->willReturn($this->entityQuery);
     $this->entityQuery->execute()->willReturn(['prodnid1', 'prodnid2'], ['consorg1'], ['consorg2']);
 
     $this->prodNode1->get('apic_url')->willReturn($this->createSimpleObject('value', 'url1'));
@@ -466,7 +474,7 @@ class MailServiceUnitTest extends UnitTestCase {
 
     $this->entityQuery->condition('type', 'application')->willReturn(NULL);
 
-
+    $this->subscriptionQuery->accessCheck()->willReturn($this->subscriptionQuery);
     $this->subscriptionQuery->execute()->willReturn(['sub1', 'sub3'], ['sub2', 'sub4']);
     $this->entitySubscriptionStorage->load("sub1")->willReturn($this->sub1);
     $this->entitySubscriptionStorage->load("sub2")->willReturn($this->sub2);
@@ -539,6 +547,7 @@ class MailServiceUnitTest extends UnitTestCase {
     $this->apiNode1->get('apic_ref')->willReturn($this->createSimpleObject('value', 'api1'));
     $this->entityQuery->condition('product_apis.value', 'api1', 'CONTAINS')->willReturn(NULL);
 
+    $this->entityQuery->accessCheck()->willReturn($this->entityQuery);
     $this->entityQuery->execute()->willReturn(['prodnid1', 'prodnid2'], ['consorg1'], ['consorg2']);
 
     $this->prodNode1->get('apic_url')->willReturn($this->createSimpleObject('value', 'url1'));
@@ -552,7 +561,7 @@ class MailServiceUnitTest extends UnitTestCase {
 
     $this->entityQuery->condition('type', 'application')->willReturn(NULL);
 
-
+    $this->subscriptionQuery->accessCheck()->willReturn($this->subscriptionQuery);
     $this->subscriptionQuery->execute()->willReturn(['sub1', 'sub3'], ['sub2', 'sub4']);
     $this->entitySubscriptionStorage->load("sub1")->willReturn($this->sub1);
     $this->entitySubscriptionStorage->load("sub2")->willReturn($this->sub2);
@@ -620,6 +629,7 @@ class MailServiceUnitTest extends UnitTestCase {
    */
   public function testGetAllSubscribingOwners(): void {
     $this->entityQuery->condition('type', 'consumerorg')->willReturn(NULL);
+    $this->entityQuery->accessCheck()->willReturn($this->entityQuery);
     $this->entityQuery->execute()->willReturn(['consorg1', 'consorg2']);
     $this->entityNodeStorage->loadMultiple(["consorg1", "consorg2"])->willReturn([$this->cOrgNode1, $this->cOrgNode2]);
     $this->cOrgNode1->get('application_consumer_org_url')->willReturn($this->createSimpleObject('value', 'org1'));
@@ -662,6 +672,7 @@ class MailServiceUnitTest extends UnitTestCase {
    */
   public function testGetAllSubscribingMembers(): void {
     $this->entityQuery->condition('type', 'consumerorg')->willReturn(NULL);
+    $this->entityQuery->accessCheck()->willReturn($this->entityQuery);
     $this->entityQuery->execute()->willReturn(["consorg1", "consorg2"]);
     $this->entityNodeStorage->loadMultiple(['consorg1', 'consorg2'])->willReturn([$this->cOrgNode1, $this->cOrgNode2]);
     $this->memberString1->getValue()->willReturn([

@@ -248,14 +248,15 @@ class IbmApimThemeInstallController extends ThemeController {
 
     if (isset($theme) && !empty($theme)) {
       // Get current list of themes.
-      $themes = $this->themeHandler->listInfo();
-      $customThemes = \Drupal::service('ibm_apim.utils')->getCustomThemeDirectories();
-      if (in_array($theme, $customThemes, TRUE)) {
+      $themes = \Drupal::service('theme_handler')->listInfo();
+      $customThemeDirectories = \Drupal::service('ibm_apim.utils')->getCustomThemeDirectories();
+      $theme_path = \Drupal::service('extension.list.theme')->getPath($theme);
+      $theme_directory = @array_pop(explode('/', $theme_path));
+      if (in_array($theme_directory, $customThemeDirectories, TRUE)) {
         // Check if the specified theme is disabled
         if (!array_key_exists($theme, $themes)) {
-          $item_path = \Drupal::service('extension.list.theme')->getPath($theme);
-          if (isset($item_path) && !empty($item_path)) {
-            $this->utils->file_delete_recursive($item_path);
+          if (isset($theme_path) && !empty($theme_path)) {
+            $this->utils->file_delete_recursive($theme_path);
             // clear all caches otherwise reinstalling the same theme will fail
             drupal_flush_all_caches();
 
@@ -315,7 +316,7 @@ class IbmApimThemeInstallController extends ThemeController {
         }
 
         $scssIn = file_get_contents(preg_replace('#/+#', '/', implode('/', [$theme_path, $input_scss])));
-        $cssOut = $scss->compile($scssIn);
+        $cssOut = $scss->compileString($scssIn)->getCss();
 
         $output_css = $scss_compile_settings['output-css'];
         if (!preg_match('/^[a-z0-9_\-.]+$/', $output_css)) {
@@ -357,7 +358,7 @@ class IbmApimThemeInstallController extends ThemeController {
           }
 
           $mailScssIn = file_get_contents(preg_replace('#/+#', '/', implode('/', [$theme_path, $mail_input_scss])));
-          $mailCssOut = $scss->compile($mailScssIn);
+          $mailCssOut = $scss->compileString($mailScssIn)->getCss();
 
           $mail_output_css = $scss_compile_settings['mail-output-css'];
           if (!preg_match('/^[a-z0-9_\-.]+$/', $mail_output_css)) {

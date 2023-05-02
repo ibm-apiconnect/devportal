@@ -1,9 +1,0 @@
---- modules/jquery_ui_accordion/jquery.ui/themes/base/accordion.css
-+++ modules/jquery_ui_accordion/jquery.ui/themes/base/accordion.css
-@@ -1,5 +1,5 @@
- /*!
-- * jQuery UI Accordion 1.12.1
-+ * jQuery UI Accordion 1.13.2
-  * http://jqueryui.com
-  *
-  * Copyright jQuery Foundation and other contributors

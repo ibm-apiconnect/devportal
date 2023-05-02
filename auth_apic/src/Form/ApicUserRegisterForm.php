@@ -606,6 +606,7 @@ class ApicUserRegisterForm extends RegisterForm {
       while (is_array($val) && !empty($val)) {
         $val = array_shift($val);
       }
+      $val = ($val === null) ? '' : $val;
       if (strlen($val) > 255 || strpos($val, 'http://') !== false || strpos($val, 'https://') !== false) {
         $form_state->setErrorByName('', t('A problem occurred while attempting to create your account. Inputs cannot exceed max length or include URLs'));
       }
@@ -740,7 +741,7 @@ class ApicUserRegisterForm extends RegisterForm {
       $loaded_user = $this->userStorage->load($new_user);
       if ($loaded_user) {
         $this->accountService->setDefaultLanguage($loaded_user);
-        $customFields = $this->userService->getCustomUserFields('register');
+        $customFields = $this->userService->getMetadataFields('register');
         $customFieldValues = $this->utils->handleFormCustomFields($customFields, $form_state);
         $this->utils->saveCustomFields($loaded_user, $customFields, $customFieldValues, FALSE);
       }

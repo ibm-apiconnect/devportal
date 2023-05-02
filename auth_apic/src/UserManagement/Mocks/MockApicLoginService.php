@@ -17,6 +17,7 @@ use Drupal\auth_apic\UserManagement\ApicLoginServiceInterface;
 use Drupal\auth_apic\UserManagerResponse;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\user\Entity\User;
+use Drupal\apictest\ApicTestUtils;
 
 class MockApicLoginService implements ApicLoginServiceInterface {
 
@@ -71,7 +72,7 @@ class MockApicLoginService implements ApicLoginServiceInterface {
       // search on it because of the login form functionality in these cases we will fall
       // back to older logic and do a more crude search on username.
 
-      $ids = \Drupal::entityQuery('user')->execute();
+      $ids = \Drupal::entityQuery('user')->accessCheck()->execute();
       $users = User::loadMultiple($ids);
 
       foreach ($users as $listUser) {
@@ -86,11 +87,32 @@ class MockApicLoginService implements ApicLoginServiceInterface {
     if ($loginuser !== NULL) {
       user_login_finalize($loginuser);
 
+      $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
+      $userService = \Drupal::service('ibm_apim.apicuser');
+      $apic_user = $userService->parseDrupalAccount($loginuser);
+
       if ($username === 'andre_member_exists') {
         $loginuser->set("consumerorg_url", "/consumer-orgs/1234/5678/a18843f3e4b07631568a159d")->save();
+        $cOrg = $consumerOrgService->get("/consumer-orgs/1234/5678/a18843f3e4b07631568a159d");
+        $cOrg->setOrgUrl('/orgs/1234');
+        $orgRoles = $cOrg->getRoles();
+        foreach ($orgRoles as $role) {
+          $roleName = $role->getName();
+          if ($roleName == 'developer') {
+            ApicTestUtils::addMemberToOrg($cOrg, $apic_user, [$role]);
+          }
+        }
       }
       if ($username === 'andre_owner_exists') {
-        $loginuser->set("consumerorg_url", "/consumer-api/orgs/c534c180-88ee-43fa-86d1-15a7a93a3958")->save();
+        $loginuser->set("consumerorg_url", "/consumer-orgs/1234/5678/c534c180-88ee-43fa-86d1-15a7a93a3958")->save();
+        $properties = [
+          "title" => "Consorg",
+          "name" => "consorg",
+          "id" => "c534c180-88ee-43fa-86d1-15a7a93a3958",
+          "owner_uid" => $loginuser->id(),
+          "owner" => "andre_owner_exists"
+        ];
+        ApicTestUtils::createConsumerOrg($properties);
       }
 
       $umResponse->setSuccess(TRUE);

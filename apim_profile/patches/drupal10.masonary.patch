@@ -1,0 +1,89 @@
+--- modules/masonry/masonry.info.yml    2022-12-15 10:08:39
++++ modules/masonry/masonry.info.yml       2022-12-15 15:38:44
+@@ -3,5 +3,4 @@
+ description: "Provides an API for integrating the jQuery Masonry plugin with Drupal."
+ package: Masonry
+
+-core: 8.x
+-core_version_requirement: ^8 || ^9
++core_version_requirement: ^8 || ^9 || ^10
+
+--- modules/masonry/src/Services/MasonryService.php     2022-12-15 15:47:26
++++ modules/masonry/src/Services/MasonryService.php        2022-12-15 15:47:22
+@@ -335,11 +335,7 @@
+
+     if (\Drupal::hasService('library.libraries_directory_file_finder')) {
+       $library_path = \Drupal::service('library.libraries_directory_file_finder')->find('masonry/dist/masonry.pkgd.min.js');
+-    }
+-    elseif ($this->moduleHandler->moduleExists('libraries')) {
+-      $library_path = libraries_get_path('masonry') . '/dist/masonry.pkgd.min.js';
+-    }
+-    else {
++    } else {
+       $library_path = 'libraries/masonry/dist/masonry.pkgd.min.js';
+     }
+
+@@ -356,11 +352,7 @@
+
+     if (\Drupal::hasService('library.libraries_directory_file_finder')) {
+       $library_path = \Drupal::service('library.libraries_directory_file_finder')->find('imagesloaded/imagesloaded.pkgd.min.js');
+-    }
+-    elseif ($this->moduleHandler->moduleExists('libraries')) {
+-      $library_path = libraries_get_path('imagesloaded') . '/imagesloaded.pkgd.min.js';
+-    }
+-    else {
++    } else {
+       $library_path = 'libraries/imagesloaded/imagesloaded.pkgd.min.js';
+     }
+
+--- modules/masonry/masonry.libraries.yml       2023-01-13 11:30:57
++++ modules/masonry/masonry.libraries.yml  2023-01-13 12:25:23
+@@ -26,6 +26,6 @@
+   dependencies:
+     - core/jquery
+     - core/drupal
+-    - core/jquery.once
++    - core/once
+     - masonry/imagesloaded
+     - masonry/masonry
+
+--- modules/masonry/js/masonry.js       2023-01-13 12:52:50
++++ modules/masonry/js/masonry.js  2023-01-13 12:52:44
+@@ -5,7 +5,7 @@
+  * Sponsored by: www.freelance-drupal.com
+  */
+
+-(function ($, Drupal, drupalSettings) {
++(function ($, Drupal, drupalSettings, once) {
+   'use strict';
+
+   Drupal.behaviors.masonry = {
+@@ -16,10 +16,10 @@
+        */
+       function _buildMasonry($container, options) {
+         // If no masonry find in container: init it...
+-        if ($container.findOnce('masonry').length === 0) {
+-          $container.once('masonry').addClass('masonry').masonry(options);
++        if ($(once.filter('masonry', $container)).length === 0) {
++          $(once('masonry', $container)).addClass('masonry').masonry(options);
+           $(window).resize(function () {
+-            $container.findOnce('masonry').masonry('bindResize');
++            $(once.filter('masonry', $container)).masonry('bindResize');
+           });
+         } else {
+           // ...otherwise, simply rebuild the layout.
+@@ -51,7 +51,7 @@
+             });
+           });
+
+-          $('img.' + options.lazyloadSelector, $container).once('imgloaded').each(function() {
++          $(once('imgloaded', 'img.' + options.lazyloadSelector, $container)).each(function() {
+             observer.observe(this, { attributes: true });
+           });
+         }
+@@ -150,4 +150,4 @@
+
+     }
+   };
+-})(jQuery, Drupal, drupalSettings);
++})(jQuery, Drupal, drupalSettings, once);

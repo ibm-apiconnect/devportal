@@ -1,0 +1,37 @@
+--- modules/gutenberg/modules/gutenberg_cloud/js/gutenberg_cloud.js     2023-02-13 11:23:25
++++ modules/gutenberg/modules/gutenberg_cloud/js/gutenberg_cloud.js        2023-02-13 11:23:20
+@@ -3,7 +3,7 @@
+  * Javascript behaviors for the Gutenberg Cloud module admin.
+  */
+
+-(function ($, Drupal) {
++(function ($, Drupal, once) {
+
+   /**
+    * Filters gutenberg blocks.
+@@ -66,7 +66,7 @@
+         $(this).removeClass('active');
+       });
+
+-      $search.once().on('keyup change onpaste', Drupal.debounce(function () {
++      $(once($search)).on('keyup change onpaste', Drupal.debounce(function () {
+         $filterItems.trigger('filterInactive');
+
+         var $items = $(itemsSelector, context);
+@@ -95,4 +95,4 @@
+     },
+   };
+
+-})(jQuery, Drupal);
++})(jQuery, Drupal, once);
+
+--- modules/gutenberg/modules/gutenberg_cloud/gutenberg_cloud.libraries.yml     2023-02-13 11:24:50
++++ modules/gutenberg/modules/gutenberg_cloud/gutenberg_cloud.libraries.yml        2023-02-13 11:24:47
+@@ -9,6 +9,7 @@
+     - core/jquery
+     - core/drupal
+     - core/drupal.debounce
++    - core/once
+
+ details:
+   version: VERSION

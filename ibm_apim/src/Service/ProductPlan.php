@@ -426,7 +426,7 @@ class ProductPlan {
     }
     $returnValue = [];
     foreach (array_keys($plan) as $key) {
-      if (strpos($key, 'x-') === 0) {
+      if ($key !== 'x-ibm-languages' && strpos($key, 'x-') === 0) {
         $keyName = substr($key, strlen('x-'));
         $returnValue[$keyName] = $plan[$key];
       }

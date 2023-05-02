@@ -253,7 +253,7 @@ class ApicTaxonomy {
    */
   private function get_vocabulary_by_name($vocabulary_name) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $vocabulary_name);
-    $vocabularies = \Drupal::entityQuery('taxonomy_vocabulary')->execute();
+    $vocabularies = \Drupal::entityQuery('taxonomy_vocabulary')->accessCheck()->execute();
     $returnValue = $vocabularies[$vocabulary_name] ?? NULL;
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $returnValue;
@@ -358,8 +358,6 @@ class ApicTaxonomy {
       }
 
       $node->set('apic_tags', $currentTags);
-      $node->save();
-
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
@@ -403,7 +401,6 @@ class ApicTaxonomy {
       }
 
       $node->set('apic_tags', $currentTags);
-      $node->save();
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }

@@ -136,7 +136,7 @@ class ResendInviteForm extends ConfirmFormBase {
       $moduleHandler = \Drupal::service('module_handler');
       if ($moduleHandler->moduleExists('honeypot')) {
         // add honeypot to this form to prevent it being used to spam user's mailboxes
-        honeypot_add_form_protection($form, $form_state, ['honeypot', 'time_restriction']);
+        \Drupal::service('honeypot')->addFormProtection($form, $form_state, ['honeypot', 'time_restriction']);
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

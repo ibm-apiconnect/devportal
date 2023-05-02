@@ -72,7 +72,7 @@ class AdminForm extends ConfigFormBase {
     $throttleDesc = $this->t('Sets the numbers of messages sent per cron run. Failure to send will also be counted. Cron execution must not exceed the PHP maximum execution time of %max seconds.',
       ['%max' => ini_get('max_execution_time')]);
     if (\Drupal::moduleHandler()->moduleExists('dblog')) {
-      $throttleDesc .= ' ' . $this->t('You find the time spent to send e-mails in the <a href="@dblog-url">recent log messages</a>.', ['@dblog-url' => Url::fromRoute('dblog.overview')]);
+      $throttleDesc .= ' ' . $this->t('You find the time spent to send e-mails in the <a href="@dblog-url">recent log messages</a>.', ['@dblog-url' => Url::fromRoute('dblog.overview')->toString()]);
     }
     $form['throttle'] = [
       '#type' => 'select',

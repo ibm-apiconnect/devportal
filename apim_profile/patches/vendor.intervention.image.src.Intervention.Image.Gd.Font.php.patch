@@ -1,0 +1,11 @@
+--- vendor/intervention/image/src/Intervention/Image/Gd/Font.php	2022-05-21 17:30:32.000000000 +0000
++++ vendor/intervention/image/src/Intervention/Image/Gd/Font.php	2022-11-25 12:21:17.953546587 +0000
+@@ -207,7 +207,7 @@
+             imagealphablending($image->getCore(), true);
+
+             // draw ttf text
+-            imagettftext($image->getCore(), $this->getPointSize(), $this->angle, $posx, $posy, $color->getInt(), $this->file, $this->text);
++            imagettftext($image->getCore(), $this->getPointSize(), $this->angle, intval($posx), intval($posy), $color->getInt(), $this->file, $this->text);
+
+         } else {
+

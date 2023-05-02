@@ -50,7 +50,7 @@
           depth this forum resides at. This will allow us to use CSS
           left-margin for indenting.
         #}
-        {% for i in 1..forum.depth if forum.depth > 0 %}<div class="indent">{% endfor %}
+        {% for i in 1..forum.depth %}{% if forum.depth > 0 %}<div class="indent">{% endif %}{% endfor %}
           <div title="{{ forum.icon_title }}">
             <span class="visually-hidden">{{ forum.icon_title }}</span>
           </div>
@@ -58,7 +58,7 @@
           {% if forum.description.value %}
             <div>{{ forum.description.value }}</div>
           {% endif %}
-        {% for i in 1..forum.depth if forum.depth > 0 %}</div>{% endfor %}
+        {% for i in 1..forum.depth %}{% if forum.depth > 0 %}</div>{% endif %}{% endfor %}
       </td>
       {% if forum.is_container == false %}
         <td headers="topicCountHeader">

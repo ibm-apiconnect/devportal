@@ -31,7 +31,14 @@ class CollectionListenerTest extends UnitTestCase {
   public function testMockSnapshot(): void {
     $filePath = __DIR__ . '/data/snapshot.json';
     $UUID = '';
-    $listener = new CollectionListener([$this, 'processContent'], $UUID);
+     $data = [
+      'fileHandles' => [],
+      'startTime' => 0,
+      'uStartTime' => 0,
+      'memory_limit' => 512 * 1024 * 1024,
+    ];
+
+    $listener = new CollectionListener([$this, 'processContent'], $UUID, 0, $data);
     $stream = fopen($filePath, 'rb');
     try {
       $parser = new Parser($stream, $listener);

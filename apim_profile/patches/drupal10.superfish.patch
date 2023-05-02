@@ -1,0 +1,40 @@
+diff --git modules/superfish/superfish.info.yml modules/superfish/superfish.info.yml
+index 3cc3902..651e875 100644
+--- modules/superfish/superfish.info.yml
++++ modules/superfish/superfish.info.yml
+@@ -3,4 +3,4 @@ type: module
+ description: 'Adds jQuery Superfish plugin to menu blocks.'
+ package: User interface
+ core: 8.x
+-core_version_requirement: ^8 || ^9
++core_version_requirement: ^8 || ^9 || ^10
+diff --git modules/superfish/templates/superfish-menu-items.html.twig modules/superfish/templates/superfish-menu-items.html.twig
+index f396137..9d744ae 100644
+--- modules/superfish/templates/superfish-menu-items.html.twig
++++ modules/superfish/templates/superfish-menu-items.html.twig
+@@ -20,7 +20,7 @@
+ #}
+
+ {% set classes = [] %}
+-{% spaceless %}
++{% apply spaceless %}
+ {% for item in menu_items %}
+
+   {% if item.children is not empty %}
+@@ -52,4 +52,4 @@
+   </li>
+
+ {% endfor %}
+-{% endspaceless %}
++{% endapply %}
+
+--- modules/superfish/superfish.module  2023-01-13 11:30:58
++++ modules/superfish/superfish.module     2023-01-13 12:24:15
+@@ -71,7 +71,6 @@
+           'core/jquery',
+           'core/drupal',
+           'core/drupalSettings',
+-          'core/jquery.once',
+         ],
+       ],
+       'init' => [

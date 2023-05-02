@@ -1,4 +1,14 @@
 changes:
+  8.x-5.3.4:
+  - allow dblog (#67)
+  8.x-5.3.3:
+  - event comes first now (#65) (#66)
+  8.x-5.3.2:
+  - Use non-dep way to load includes (#64)
+  8.x-5.3.1:
+  - Mass merge for Drupal 10 Changes (#63)
+  8.x-5.3.0:
+  - update version 8.x-5.2.1 -> 8.x-5.3.0
   8.x-5.2.0:
   - update version 8.x-5.1.2 -> 8.x-5.2.0
   8.x-5.1.1:
@@ -96,7 +106,4 @@ changes:
   - Updated the Jenkins file to use promotableBranch again
   8.x-1.1.31:
   - Changed promotableBranch to p.common for the test reason
-  - Logging all the changes between the two successfull build. all the commits since
-    the last saccessfull build are fetched and stored and the changes-log.yml file.
-    Commits are also filtered before logging them. commits with the text INT or bump
-    version are ommited.
+  - Logging all the changes between the two successfull build. all the commits since the last saccessfull build are fetched and stored and the changes-log.yml file. Commits are also filtered before logging them. commits with the text INT or bump version are ommited.

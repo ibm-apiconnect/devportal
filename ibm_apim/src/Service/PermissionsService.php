@@ -117,8 +117,12 @@ class PermissionsService implements PermissionsServiceInterface {
       if (!is_array($current_data)) {
         $current_data = [];
       }
-      $current_data[$key] = $data;
-      $this->state->set('ibm_apim.permissions_objects', $current_data);
+      if (empty($current_data[$key]) || $current_data[$key] != $data) {
+        $current_data[$key] = $data;
+        $this->state->set('ibm_apim.permissions_objects', $current_data);
+      } else {
+        $this->logger->notice('Skipped updating permission @key as it already had the correct value',[ '@key' => $key ]);
+      }
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

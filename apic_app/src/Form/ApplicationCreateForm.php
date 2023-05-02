@@ -37,6 +37,7 @@ class ApplicationCreateForm extends FormBase {
 
     $entity = \Drupal::entityTypeManager()->getStorage('node')->create([
       'type' => 'application',
+      'uid' => 1,
     ]);
     $entity_form = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('node.application.default');
 

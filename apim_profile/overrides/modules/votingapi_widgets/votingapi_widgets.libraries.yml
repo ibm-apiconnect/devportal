@@ -8,6 +8,7 @@ fivestar:
       css/fivestar.css: {}
   dependencies:
     - core/jquery
+    - core/once
     - core/drupal
     - votingapi_widgets/fontawesome
     - votingapi_widgets/barrating
@@ -32,7 +33,7 @@ barrating:
       css/bars-reversed.min.css: {}
       css/bootstrap-stars.min.css: {}
 
- 
+
 useful:
   version: VERSION
   js:
@@ -42,5 +43,19 @@ useful:
       css/useful.css: {}
   dependencies:
     - core/jquery
+    - core/once
+    - core/drupal
+    - votingapi_widgets/fontawesome
+
+like:
+  version: VERSION
+  js:
+    js/like.js : {}
+  css:
+    theme:
+      css/like.css: {}
+  dependencies:
+    - core/jquery
+    - core/once
     - core/drupal
     - votingapi_widgets/fontawesome

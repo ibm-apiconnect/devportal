@@ -84,11 +84,11 @@ class ApicActivationService implements ApicActivationInterface {
     $mgmt_response = $this->mgmtServer->activateFromJWT($jwt);
     if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
       if ($this->moduleHandler->moduleExists('contact')) {
-        $contact_link = Link::fromTextAndUrl(t('Contact the site administrator.'), Url::fromRoute('contact.site_page'));
+        $contact_link = $this->linkGenerator->generate(t('Contact the site administrator.'), Url::fromRoute('contact.site_page'));
       }
       else {
-        $contact_link = Link::fromTextAndUrl(t('Contact the site administrator.'), Url::fromUri('mailto:' . \Drupal::config('system.site')
-            ->get('mail')));
+        $contact_link = $this->linkGenerator->generate(t('Contact the site administrator.'), Url::fromUri('mailto:' . \Drupal::config('system.site')
+          ->get('mail')));
       }
     }
     else {

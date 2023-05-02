@@ -154,7 +154,7 @@ class EventLogService {
       if ($range !== NULL && is_int($range)) {
         $query->range(0, $range);
       }
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         foreach (array_chunk($entityIds, 50) as $chunk) {
           $eventEntities = EventLog::loadMultiple($chunk);
@@ -187,7 +187,7 @@ class EventLogService {
       if ($range !== NULL && is_int($range)) {
         $query->range(0, $range);
       }
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         foreach (array_chunk($entityIds, 50) as $chunk) {
           $eventEntities = EventLog::loadMultiple($chunk);
@@ -341,7 +341,7 @@ class EventLogService {
         $query = \Drupal::entityQuery('node');
         $query->condition('type', 'product');
         $query->condition('apic_url.value', $data['productUrl']);
-        $nids = $query->execute();
+        $nids = $query->accessCheck()->execute();
         if ($nids !== NULL && !empty($nids)) {
           $nid = array_shift($nids);
           $product = Node::load($nid);

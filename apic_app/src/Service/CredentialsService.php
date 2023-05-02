@@ -86,7 +86,7 @@ class CredentialsService {
         ->execute();
       if ($result !== NULL) {
         $record = $result->fetch();
-        $this->moduleHandler->invokeAll('apic_app_credential_pre_delete', ['credId' => $uuid]);    
+        $this->moduleHandler->invokeAll('apic_app_credential_pre_delete', ['credId' => $uuid]);
 
         // Delete the subscription from all relevant tables
         Database::getConnection()
@@ -122,7 +122,7 @@ class CredentialsService {
       }
       $query = \Drupal::entityQuery('apic_app_application_creds');
       $query->condition('uuid', $cred['id']);
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         $credEntities = ApplicationCredentials::loadMultiple($entityIds);
         $credEntity = array_shift($credEntities);
@@ -137,23 +137,23 @@ class CredentialsService {
           // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
           $timestamp = strtotime($cred['created_at']);
           if ($timestamp < 2147483647 && $timestamp > 0) {
-            $credEntity->set('created_at', $timestamp);
+            $credEntity->set('created_at', strval($timestamp));
           } else {
-            $credEntity->set('created_at', time());
+            $credEntity->set('created_at', strval(time()));
           }
         } else {
-          $credEntity->set('created_at', time());
+          $credEntity->set('created_at', strval(time()));
         }
         if (array_key_exists('updated_at', $cred) && is_string($cred['updated_at'])) {
           // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
           $timestamp = strtotime($cred['updated_at']);
           if ($timestamp < 2147483647 && $timestamp > 0) {
-            $credEntity->set('updated_at', $timestamp);
+            $credEntity->set('updated_at', strval($timestamp));
           } else {
-            $credEntity->set('updated_at', time());
+            $credEntity->set('updated_at', strval(time()));
           }
         } else {
-          $credEntity->set('updated_at', time());
+          $credEntity->set('updated_at', strval(time()));
         }
         $credEntity->save();
         $newEntityId = array_shift($entityIds);
@@ -185,7 +185,7 @@ class CredentialsService {
         $newCred->save();
         $query = \Drupal::entityQuery('apic_app_application_creds');
         $query->condition('uuid', $cred['id']);
-        $entityIds = $query->execute();
+        $entityIds = $query->accessCheck()->execute();
         if (isset($entityIds) && !empty($entityIds)) {
           $newEntityId = array_shift($entityIds);
         }
@@ -235,7 +235,7 @@ class CredentialsService {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function createOrUpdateCredentialsList(NodeInterface $node, array $creds): NodeInterface {
+  public function createOrUpdateCredentialsList(NodeInterface $node, array $creds, $save = TRUE): NodeInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if ($creds !== NULL && $node !== NULL) {
       $newCreds = [];
@@ -253,14 +253,17 @@ class CredentialsService {
       foreach ($oldCreds as $cred) {
         if (!in_array(['target_id' => $cred->id()], $newCreds, FALSE)) {
           $credId = $cred->id();
-          $this->moduleHandler->invokeAll('apic_app_credential_pre_delete', ['credId' => $credId]);    
+          $this->moduleHandler->invokeAll('apic_app_credential_pre_delete', ['credId' => $credId]);
           \Drupal::entityTypeManager()->getStorage('apic_app_application_creds')->load($credId)->delete();
-          $this->moduleHandler->invokeAll('apic_app_credential_post_delete', ['credId' => $credId]);    
+          $this->moduleHandler->invokeAll('apic_app_credential_post_delete', ['credId' => $credId]);
         }
       }
       // update the application
       $node->set('application_credentials_refs', $newCreds);
-      $node->save();
+
+      if ($save) {
+        $node->save();
+      }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $node;
@@ -302,7 +305,7 @@ class CredentialsService {
     if (isset($org['url'])) {
       $query = \Drupal::entityQuery('apic_app_application_creds');
       $query->condition('consumerorg_url', $org['url']);
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         $credEntityIds = $entityIds;
       }

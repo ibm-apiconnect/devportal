@@ -9149,3 +9149,12 @@ body.bx--global-light-ui.context--user-login, body.bx--global-light-ui.context--
   background-image: url(../images/ibmcarbon/svg/ckeditor/script.svg) !important;
   background-position: -2px -1px !important;
   background-size: 17px !important; }
+
+.form-item-keys .input-group-addon > .glyphicon-refresh:nth-of-type(2) {
+  display: none;
+}
+
+.form-item-keys .input-group-addon > .input-group-addon {
+  background-color: unset!important;
+  padding:0;
+}

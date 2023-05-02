@@ -44,157 +44,80 @@ use Drupal\Core\Field\BaseFieldDefinition;
 class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface {
 
   /**
-   * Drupal entity ID
-   *
-   * @var int|NULL
-   */
-  protected ?int $id = NULL;
-
-  /**
-   * APIM UUID
-   *
-   * @var string|NULL
-   */
-  protected ?string $uuid = NULL;
-
-  /**
-   * The payment method title
-   *
-   * @var string|NULL
-   */
-  protected ?string $title = NULL;
-
-  /**
-   * The payment method schema type url.
-   *
-   * @var string|NULL
-   */
-  protected ?string $payment_method_type_url = NULL;
-
-  /**
-   * The configured billing integration URL.
-   *
-   * @var string|NULL
-   */
-  protected ?string $billing_url = NULL;
-
-  /**
-   * The payment method integration (in JSON form).
-   *
-   * @var string|NULL
-   */
-  protected ?string $configuration = NULL;
-
-  /**
-   * The owning consumer organization URL.
-   *
-   * @var string|NULL
-   */
-  protected ?string $consumerorg_url = NULL;
-
-  /**
-   * APIC Creation timestamp
-   *
-   * @var int|NULL
-   */
-  protected ?int $created_at = NULL;
-
-  /**
-   * APIC Modification timestamp
-   *
-   * @var int|NULL
-   */
-  protected ?int $updated_at = NULL;
-
-  /**
-   * APIC Creation user url
-   *
-   * @var string|NULL
-   */
-  protected ?string $created_by = NULL;
-
-  /**
-   * APIC Modification user url
-   *
-   * @var string|NULL
-   */
-  protected ?string $updated_by = NULL;
-
-  /**
    * {@inheritdoc}
    */
   public function id() {
-    return $this->id;
+    return $this->get('id')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function uuid() {
-    return $this->uuid;
+    return $this->get('uuid')->value;
   }
 
   /**
    * @return string|null
    */
-  public function title(): ?string {
-    return $this->title;
+  public function title() {
+    return $this->get('title')->value;
   }
 
   /**
    * @return string|null
    */
-  public function payment_method_type_url(): ?string {
-    return $this->payment_method_type_url;
+  public function payment_method_type_url() {
+    return $this->get('payment_method_type_url')->value;
   }
 
   /**
    * @return string|null
    */
-  public function billing_url(): ?string {
-    return $this->billing_url;
+  public function billing_url() {
+    return $this->get('billing_url')->value;
   }
 
   /**
    * @return string|null
    */
-  public function configuration(): ?string {
-    return $this->configuration;
+  public function configuration() {
+    return $this->get('configuration')->value;
   }
 
   /**
    * @return string|null
    */
-  public function consumerorg_url(): ?string {
-    return $this->consumerorg_url;
+  public function consumerorg_url() {
+    return $this->get('consumerorg_url')->value;
   }
 
   /**
    * @return int|null
    */
-  public function created_at(): ?int {
-    return $this->created_at;
+  public function created_at() {
+    return $this->get('created_at')->value;
   }
 
   /**
    * @return int|null
    */
-  public function updated_at(): ?int {
-    return $this->updated_at;
+  public function updated_at() {
+    return $this->get('updated_at')->value;
   }
 
   /**
    * @return string|null
    */
-  public function created_by(): ?string {
-    return $this->created_by;
+  public function created_by() {
+    return $this->get('created_by')->value;
   }
 
   /**
    * @return string|null
    */
-  public function updated_by(): ?string {
-    return $this->updated_by;
+  public function updated_by() {
+    return $this->get('updated_by')->value;
   }
 
   /**
@@ -202,17 +125,17 @@ class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface 
    */
   public function toArray(): array {
     return [
-      'id' => $this->id,
-      'uuid' => $this->uuid,
-      'title' => $this->title,
-      'configuration' => $this->configuration,
-      'consumerorg_url' => $this->consumerorg_url,
-      'billing_url' => $this->billing_url,
-      'payment_method_type_url' => $this->payment_method_type_url,
-      'created_at' => $this->created_at,
-      'updated_at' => $this->updated_at,
-      'created_by' => $this->created_by,
-      'updated_by' => $this->updated_by,
+      'id' => $this->get('id')->value,
+      'uuid' => $this->get('uuid')->value,
+      'title' => $this->get('title')->value,
+      'configuration' => $this->get('configuration')->value,
+      'consumerorg_url' => $this->get('consumerorg_url')->value,
+      'billing_url' => $this->get('billing_url')->value,
+      'payment_method_type_url' => $this->get('payment_method_type_url')->value,
+      'created_at' => $this->get('created_at')->value,
+      'updated_at' => $this->get('updated_at')->value,
+      'created_by' => $this->get('created_by')->value,
+      'updated_by' => $this->get('updated_by')->value,
     ];
   }
 

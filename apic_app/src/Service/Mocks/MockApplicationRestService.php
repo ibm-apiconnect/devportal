@@ -220,6 +220,7 @@ class MockApplicationRestService implements ApplicationRestInterface {
     $result = new \stdClass();
     $result->data = ['id' => 'x',
                      'plan' => 'default:plan',
+                     'state' => 'enabled',
     ];
     $result->code = 201;
     return $result;

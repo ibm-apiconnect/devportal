@@ -105,6 +105,11 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
    */
   protected $requestStack;
 
+    /**
+   * @var \Prophecy\Prophecy\ObjectProphecy|\Symfony\Component\HttpFoundation\Request
+   */
+  protected $request;
+
 
   protected function setup(): void {
     $this->prophet = new Prophet();
@@ -118,6 +123,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->storeFactory = $this->prophet->prophesize('Drupal\Core\TempStore\PrivateTempStoreFactory');
     $this->store = $this->prophet->prophesize('Drupal\Core\TempStore\PrivateTempStore');
     $this->requestStack = $this->prophet->prophesize('Symfony\Component\HttpFoundation\RequestStack');
+    $this->request = $this->prophet->prophesize('Symfony\Component\HttpFoundation\Request');
     $this->query = $this->prophet->prophesize('Symfony\Component\HttpFoundation\ParameterBag');
     $this->mgmtServer = $this->prophet->prophesize('Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface');
     $this->messenger = $this->prophet->prophesize('Drupal\Core\Messenger\Messenger');
@@ -144,7 +150,8 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
       $this->messenger->reveal()
     );
     $this->controller->setStringTranslation($translator->reveal());
-    $this->requestStack->query = $this->query;
+    $this->request->reveal();
+    $this->request->query = $this->query;
   }
 
   protected function tearDown(): void {
@@ -155,7 +162,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
    * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function testValidateOidcRedirect(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
@@ -175,7 +182,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
    * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function testValidateOidcRedirectError(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn('code 20805');
     $this->query->get('error_description')->willReturn('Server crashed');
 
@@ -187,7 +194,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
    * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function testValidateOidcRedirectMissingCode(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn();
 
@@ -199,7 +206,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
    * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function testValidateOidcRedirectMissingState(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('code');
     $this->query->get('state')->willReturn();
@@ -212,7 +219,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
    * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function testValidateOidcRedirectIncorrectState(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
@@ -227,7 +234,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
    * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function testValidateOidcRedirectLoginFailed(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
@@ -244,7 +251,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
 
 
   public function testValidateApimOidcRedirect(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==_apimstate');
@@ -269,7 +276,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcRedirectWithExtraParams(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==_apimstate');
@@ -299,7 +306,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcRedirectError(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn('code 20805');
     $this->query->get('error_description')->willReturn('Server died');
 
@@ -308,7 +315,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcRedirectMissingState(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('state')->willReturn();
 
@@ -317,7 +324,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcRedirectMissingCode(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('state')->willReturn('state');
     $this->query->get('code')->willReturn();
@@ -327,7 +334,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcRedirectMissingApimState(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('state')->willReturn('badState');
     $this->query->get('code')->willReturn('code');
@@ -337,7 +344,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcRedirectInvalidStateReceived(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');
     $this->query->get('state')->willReturn('badState_apimstate');
@@ -351,7 +358,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcRedirectIncorrectResponseCode(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==_apimstate');
@@ -377,7 +384,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcRedirectMissingLocationHeader(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==_apimstate');
@@ -405,7 +412,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
 
   public function testValidateApimOidcAz(): void {
     $userRegistry = $this->prophet->prophesize('Drupal\ibm_apim\ApicType\UserRegistry');
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
@@ -440,7 +447,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
 
   public function testValidateApimOidcAzWithPort(): void {
     $userRegistry = $this->prophet->prophesize('Drupal\ibm_apim\ApicType\UserRegistry');
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
@@ -475,7 +482,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcAzMissingClientId(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn();
 
@@ -484,7 +491,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcAzMissingState(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn();
@@ -494,7 +501,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcAzMissingRedirect(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('state');
@@ -505,7 +512,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcAzMissingRealm(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('state');
@@ -517,7 +524,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcAzMissingResponseType(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('state');
@@ -530,7 +537,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
   }
 
   public function testValidateApimOidcAzIncorrectResponseType(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('state');
@@ -545,7 +552,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
 
   public function testValidateApimOidcAzIncorrectState(): void {
     $userRegistry = $this->prophet->prophesize('Drupal\ibm_apim\ApicType\UserRegistry');
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('badState');
@@ -554,14 +561,14 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('response_type')->willReturn('code');
     $this->query->get('invitation_scope')->willReturn();
     $this->query->get('title')->willReturn();
-    $this->utils->base64_url_decode('badState')->willReturn();
+    $this->utils->base64_url_decode('badState')->willReturn('');
 
     $this->logger->error("validateApimOidcAz error: Invalid state parameter: @state", ["@state" => "badState"])->shouldBeCalled();
     self::assertEquals("<front>", $this->controller->validateApimOidcAz());
   }
 
   public function testValidateApimOidcAzInvalidRegistryUrl(): void {
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
@@ -596,7 +603,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
 
   public function testValidateApimOidcAzInvalidRealm(): void {
     $userRegistry = $this->prophet->prophesize('Drupal\ibm_apim\ApicType\UserRegistry');
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
@@ -621,7 +628,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
 
   public function testValidateApimOidcAzInvalidClientId(): void {
     $userRegistry = $this->prophet->prophesize('Drupal\ibm_apim\ApicType\UserRegistry');
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
@@ -646,7 +653,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
 
   public function testValidateApimOidcAzInvalidRedirect(): void {
     $userRegistry = $this->prophet->prophesize('Drupal\ibm_apim\ApicType\UserRegistry');
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
@@ -672,7 +679,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
 
   public function testValidateApimOidcAzWrongResponseCode(): void {
     $userRegistry = $this->prophet->prophesize('Drupal\ibm_apim\ApicType\UserRegistry');
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
@@ -707,7 +714,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
 
   public function testValidateApimOidcAzMissingLocationHeader(): void {
     $userRegistry = $this->prophet->prophesize('Drupal\ibm_apim\ApicType\UserRegistry');
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
@@ -742,7 +749,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
 
   public function testValidateApimOidcAzInvalidUrl(): void {
     $userRegistry = $this->prophet->prophesize('Drupal\ibm_apim\ApicType\UserRegistry');
-    $this->requestStack->getCurrentRequest()->willReturn($this->requestStack);
+    $this->requestStack->getCurrentRequest()->willReturn($this->request);
     $this->query->get('error')->willReturn();
     $this->query->get('client_id')->willReturn('clientId');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');

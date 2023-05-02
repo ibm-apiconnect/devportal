@@ -47,135 +47,71 @@ use Drupal\Core\Field\BaseFieldDefinition;
  */
 class EventLog extends ContentEntityBase implements EventLogInterface {
 
-  /**
-   * Drupal entity ID
-   *
-   * @var ?int
-   */
-  protected ?int $id = NULL;
-
-  /**
-   * The artifact type
-   *
-   * @var ?string
-   */
-  protected ?string $artifact_type = NULL;
-
-  /**
-   * The time the event happened
-   *
-   * @var ?int
-   */
-  protected ?int $timestamp = NULL;
-
-  /**
-   * The type of event.
-   *
-   * @var ?string
-   */
-  protected ?string $event = NULL;
-
-  /**
-   * The URL of the artifact.
-   *
-   * @var ?string
-   */
-  protected ?string $artifact_url = NULL;
-
-  /**
-   * The URL of the user who performed the event
-   *
-   * @var ?string
-   */
-  protected ?string $user_url = NULL;
-
-  /**
-   * The payment method integration (in JSON form).
-   *
-   * @var ?string
-   */
-  protected ?string $data = NULL;
-
-  /**
-   * The owning consumer organization URL.
-   *
-   * @var ?string
-   */
-  protected ?string $consumerorg_url = NULL;
-
-  /**
-   * The application URL.
-   * This will only be set for events for apps, creds and subs
-   *
-   * @var ?string
-   */
-  protected ?string $app_url = NULL;
-
-  public function id(): ?int {
-    return $this->getId();
+  public function id() {
+    return $this->get('id')->value;
   }
 
   /**
    * Get the entity ID
    */
-  public function getId(): ?int {
-    return $this->id;
+  public function getId() {
+    return $this->get('id')->value;
   }
 
   /**
    * Return the artifact type (e.g. application)
    */
-  public function getArtifactType(): ?string {
-    return $this->artifact_type;
+  public function getArtifactType() {
+    return $this->get('artifact_type')->value;
   }
 
   /**
    * Return the artifact URL
    */
-  public function getArtifactUrl(): ?string {
-    return $this->artifact_url;
+  public function getArtifactUrl() {
+    return $this->get('artifact_url')->value;
   }
 
   /**
    * Return the application URL
    */
-  public function getAppUrl(): ?string {
-    return $this->app_url;
+  public function getAppUrl() {
+    return $this->get('app_url')->value;
   }
 
   /**
    * Return the event type (e.g. create)
    */
-  public function getEvent(): ?string {
-    return $this->event;
+  public function getEvent() {
+    return $this->get('event')->value;
   }
 
   /**
    * Return the timestamp
    */
-  public function getTimestamp(): ?int {
-    return $this->timestamp;
+  public function getTimestamp() {
+    return $this->get('timestamp')->value;
   }
 
   /**
    * Return the event data
    */
-  public function getData(): ?string {
-    return $this->data;
+  public function getData() {
+    return $this->get('data')->value;
   }
 
   /**
    * Return the consumer org url
    */
-  public function getConsumerorgUrl(): ?string {
-    return $this->consumerorg_url;
+  public function getConsumerorgUrl() {
+    return $this->get('consumerorg_url')->value;
   }
 
   /**
    * Return the user URL
    */
-  public function getUserUrl(): ?string {
-    return $this->user_url;
+  public function getUserUrl() {
+    return $this->get('user_url')->value;
   }
 
   /**
@@ -185,15 +121,15 @@ class EventLog extends ContentEntityBase implements EventLogInterface {
    */
   public function toArray(): array {
     return [
-      'id' => $this->id,
-      'timestamp' => $this->timestamp,
-      'artifact_type' => $this->artifact_type,
-      'data' => $this->data,
-      'consumerorg_url' => $this->consumerorg_url,
-      'artifact_url' => $this->artifact_url,
-      'app_url' => $this->app_url,
-      'user_url' => $this->user_url,
-      'event' => $this->event,
+      'id' => $this->get('id')->value,
+      'timestamp' => $this->get('timestamp')->value,
+      'artifact_type' => $this->get('artifact_type')->value,
+      'data' => $this->get('data')->value,
+      'consumerorg_url' => $this->get('consumerorg_url')->value,
+      'artifact_url' => $this->get('artifact_url')->value,
+      'app_url' => $this->get('app_url')->value,
+      'user_url' => $this->get('user_url')->value,
+      'event' => $this->get('event')->value,
     ];
   }
 

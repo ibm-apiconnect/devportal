@@ -29,7 +29,7 @@ class ApicNodeListController extends ControllerBase {
     $query->condition('type', $nodeType);
     $query->condition('status', 1);
 
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     if ($results !== NULL && !empty($results)) {
       foreach (array_chunk($results, 50) as $chunk) {
         $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($chunk);
@@ -113,7 +113,7 @@ class ApicNodeListController extends ControllerBase {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'api');
       $query->condition('apic_ref.value', $apiname . ':' . $apiver);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
@@ -138,7 +138,7 @@ class ApicNodeListController extends ControllerBase {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'api');
       $query->condition('api_id.value', $input);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
@@ -198,7 +198,7 @@ class ApicNodeListController extends ControllerBase {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product');
       $query->condition('apic_ref.value', $productname . ':' . $productver);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
@@ -223,7 +223,7 @@ class ApicNodeListController extends ControllerBase {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product');
       $query->condition('product_id.value', $input);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
@@ -267,7 +267,7 @@ class ApicNodeListController extends ControllerBase {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'application');
       $query->condition('application_id.value', $input);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
@@ -307,7 +307,7 @@ class ApicNodeListController extends ControllerBase {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_id.value', $input);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);

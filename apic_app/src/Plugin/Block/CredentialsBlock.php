@@ -165,12 +165,8 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
     else {
       $clipboard = ['enabled' => FALSE];
     }
-    $moduleHandler = \Drupal::service('module_handler');
-    if ($moduleHandler->moduleExists('view_password')) {
-      // Adding js for the view_password lib since it only attaches to forms by default.
-      $libraries[] = 'view_password/pwd_lb';
-    }
-    return [
+
+    $block = [
       '#theme' => 'app_credentials',
       '#node' => $nodeArray,
       '#userHasAppManage' => $userHasAppManage,
@@ -183,6 +179,30 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
         'drupalSettings' => $drupalSettings,
       ],
     ];
+
+    $moduleHandler = \Drupal::service('module_handler');
+    if ($moduleHandler->moduleExists('view_password')) {
+      // Adding js for the view_password lib since it only attaches to forms by default.
+      $block['#attached']['library'][] = 'view_password/pwd_lb';
+      $block['#cache'] = [
+        'tags' => [
+            'config:view_password.settings',
+        ],
+      ];
+      $block['#attributes'] = [
+        'class' => [
+            'pwd-see',
+        ],
+      ];
+      $span_classes = \Drupal::config('view_password.settings')->get('span_classes');
+      $block['#attached']['drupalSettings']['view_password'] = [
+        'showPasswordLabel' => t("Show password"),
+        'hidePasswordLabel' => t("Hide password"),
+        'span_classes' => $span_classes
+      ];
+    }
+
+    return $block;
   }
 
 }

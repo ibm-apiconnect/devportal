@@ -1,0 +1,53 @@
+--- modules/metatag/metatag_open_graph/metatag_open_graph.install       2022-09-29 18:31:11
++++ modules/metatag/metatag_open_graph/metatag_open_graph.install  2023-01-10 15:12:12
+@@ -53,7 +53,7 @@
+           // type that have "article_tags" in the serialized array.
+           $q = \Drupal::entityQuery($entity_type);
+           $q->condition($field_name, "article_tags", "CONTAINS");
+-          $count = $q->count()->execute();
++          $count = $q->count()->accessCheck()->execute();
+
+           if ($count > 0) {
+             $sandbox['todo'][$entity_type][$field_name] = 0;
+@@ -85,7 +85,7 @@
+       $q->condition($id_col, $last, ">");
+       $q->sort($id_col);
+       $q->pager(20);
+-      $res = $q->execute();
++      $res = $q->accessCheck()->execute();
+
+       if (empty($res)) {
+         unset($sandbox['todo'][$entity_type][$field_name]);
+
+--- modules/metatag/metatag_routes/src/Form/MetatagCustomCreateForm.php 2023-01-10 15:14:14
++++ modules/metatag/metatag_routes/src/Form/MetatagCustomCreateForm.php    2023-01-10 15:14:16
+@@ -144,7 +144,7 @@
+       }
+
+       // Validate that the route doesn't have metatags created already.
+-      $ids = $this->entityTypeManager->getStorage('metatag_defaults')->getQuery()->condition('id', $route_name)->execute();
++      $ids = $this->entityTypeManager->getStorage('metatag_defaults')->getQuery()->condition('id', $route_name)->accessCheck()->execute();
+       if ($ids) {
+         $form_state->setErrorByName('metatag_url',
+           $this->t('There are already metatags created for this route.'));
+
+--- modules/metatag/src/MetatagDefaultsListBuilder.php  2023-01-10 15:15:14
++++ modules/metatag/src/MetatagDefaultsListBuilder.php     2023-01-10 15:15:08
+@@ -25,7 +25,7 @@
+       $query->pager($this->limit);
+     }
+
+-    $entity_ids = $query->execute();
++    $entity_ids = $query->accessCheck()->execute();
+
+     // Load global entity always.
+     $parents = $this->getParentIds($entity_ids);
+@@ -60,7 +60,7 @@
+     }
+     $parents_query = $this->getStorage()->getQuery()
+       ->condition('id', $parents, 'IN');
+-    return $parents_query->execute();
++    return $parents_query->accessCheck()->execute();
+   }
+
+   /**

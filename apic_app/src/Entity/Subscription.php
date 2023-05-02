@@ -2,7 +2,7 @@
 
 namespace Drupal\apic_app\Entity;
 
-@trigger_error('The ' . __NAMESPACE__ . '\Subscription is deprecated in 2018.4.1.10 
+@trigger_error('The ' . __NAMESPACE__ . '\Subscription is deprecated in 2018.4.1.10
 Instead, use \Drupal\apic_app\Entity\ApplicationSubscription.', E_USER_DEPRECATED);
 
 use Drupal\apic_app\SubscriptionInterface;
@@ -35,6 +35,15 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *     "state" = "state",
  *     "billing_url" = "billing_url",
  *     "consumerorg_url" = "consumerorg_url"
+ *   },
+ *   config_export = {
+ *     "id",
+ *     "app_url",
+ *     "product_url",
+ *     "plan",
+ *     "state",
+ *     "billing_url",
+ *     "consumerorg_url",
  *   }
  * )
  */

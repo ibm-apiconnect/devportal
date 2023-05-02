@@ -20,6 +20,7 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
 use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
+use Drupal\Core\Session\UserSession;
 
 class ApiContext extends RawDrupalContext {
 
@@ -81,8 +82,18 @@ class ApiContext extends RawDrupalContext {
         ->save();
     }
 
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
     $api = new Api();
     $nid = $api->create($object);
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
 
     print('Saved spi ' . $name . ' as nid ' . $nid);
   }
@@ -161,7 +172,7 @@ class ApiContext extends RawDrupalContext {
     }
 
     // Remove any existing terms within the tags vocabulary
-    $tids = \Drupal::entityQuery('taxonomy_term')->condition('vid', 'tags')->execute();
+    $tids = \Drupal::entityQuery('taxonomy_term')->condition('vid', 'tags')->accessCheck()->execute();
     try {
       $controller = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
       $entities = $controller->loadMultiple($tids);
@@ -169,8 +180,18 @@ class ApiContext extends RawDrupalContext {
     } catch (InvalidPluginDefinitionException | PluginNotFoundException $e) {
     }
 
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
     $api = new Api();
     $nid = $api->create($object);
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
 
     print('Saved spi ' . $name . ' as nid ' . $nid);
   }
@@ -219,8 +240,18 @@ class ApiContext extends RawDrupalContext {
       \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->set('autotag_with_phase', TRUE)->save();
     }
 
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
     $api = new Api();
     $nid = $api->create($object);
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
 
     print('Saved spi ' . $name . ' as nid ' . $nid);
   }
@@ -293,8 +324,18 @@ class ApiContext extends RawDrupalContext {
       \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->set('autocreate_apiforum', TRUE)->save();
     }
 
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
     $api = new Api();
     $nid = $api->create($object);
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
 
     print('Saved spi ' . $name . ' as nid ' . $nid);
   }
@@ -357,8 +398,18 @@ class ApiContext extends RawDrupalContext {
       \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->set('autocreate_apiforum', FALSE)->save();
     }
 
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
     $api = new Api();
     $nid = $api->create($object);
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
 
     print('Saved spi ' . $name . ' as nid ' . $nid);
   }
@@ -400,8 +451,18 @@ class ApiContext extends RawDrupalContext {
   public function iPublishAnApiWithTheNameAndId($name, $id): void {
     $this->tempObject = $this->createApiObject($name, $id);
 
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
     $api = new Api();
     $created = $api->createOrUpdate($this->tempObject, 'internal');
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
 
     if ($created) {
       print("Api with the name $name and id $id was created successfully. ");
@@ -460,8 +521,18 @@ class ApiContext extends RawDrupalContext {
   public function iPublishAnApiWithTheName($name): void {
     $object = $this->createApiObject($name);
 
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
     $api = new Api();
     $created = $api->createOrUpdate($object, 'internal');
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
 
     if ($created) {
       print("Api with the name $name was created successfully. ");
@@ -501,7 +572,7 @@ class ApiContext extends RawDrupalContext {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'api');
     $query->condition('title.value', $name);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
 
     if (empty($results)) {
       print("The api with the name $name was deleted successfully. ");
@@ -529,7 +600,7 @@ class ApiContext extends RawDrupalContext {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'api');
     $query->condition('title.value', $name);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
 
     if ($results !== NULL && !empty($results)) {
       $queryNid = array_shift($results);
@@ -559,7 +630,7 @@ class ApiContext extends RawDrupalContext {
       ->condition('type', 'api')
       ->condition('title.value', $name)
       ->accessCheck(TRUE);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
 
     print('Query results: ' . serialize($results) . PHP_EOL);
 
@@ -590,7 +661,7 @@ class ApiContext extends RawDrupalContext {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'api');
     $query->condition('title.value', $name);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
 
     print('Query results: ' . serialize($results) . PHP_EOL);
 
@@ -687,7 +758,7 @@ class ApiContext extends RawDrupalContext {
     $query->condition('type', 'api');
     $query->condition('title.value', $name);
 
-    return $query->execute();
+    return $query->accessCheck()->execute();
   }
 
 }

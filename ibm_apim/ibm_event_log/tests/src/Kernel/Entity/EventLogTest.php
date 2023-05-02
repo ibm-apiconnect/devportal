@@ -55,7 +55,7 @@ class EventLogTest extends KernelTestBase {
     $query->condition('consumerorg_url', '/org');
     $query->condition('artifact_url', '/foo');
     $query->condition('artifact_type', 'Application');
-    $entityIds = $query->execute();
+    $entityIds = $query->accessCheck()->execute();
     if (isset($entityIds) && !empty($entityIds)) {
       // an existing event has been found, no need to do anything more
       $entity = EventLog::load(array_shift($entityIds));

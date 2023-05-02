@@ -1,0 +1,17 @@
+FROM portal-site-template
+
+ARG JWK_B64_KEY
+ENV JWK_B64_KEY=${JWK_B64_KEY}
+ARG ARTIFACTORY_USER
+ENV ARTIFACTORY_USER=${ARTIFACTORY_USER}
+ARG ARTIFACTORY_PASS
+ENV ARTIFACTORY_PASS=${ARTIFACTORY_PASS}
+COPY sqlexports /tmp/sqlexports
+COPY po_files /tmp/po_files
+COPY composer-stub /tmp/composer-stub
+COPY libraries /tmp/libraries
+COPY overrides /tmp/overrides
+COPY apim_profile /tmp/apim_profile
+COPY patches /tmp/patches
+COPY getdeps.sh composer.json composer.lock site-template_setup.sh build_in_container.sh create_credentials.sh /tmp/
+RUN bash /tmp/build_in_container.sh

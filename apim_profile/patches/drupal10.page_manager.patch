@@ -1,0 +1,11 @@
+--- modules/page_manager/page_manager_ui/src/Form/PageGeneralForm.php   2023-01-10 15:26:53
++++ modules/page_manager/page_manager_ui/src/Form/PageGeneralForm.php      2023-01-10 15:26:49
+@@ -179,7 +179,7 @@
+       if (!$page->isNew()) {
+         $path_query->condition('id', $page->id(), '<>');
+       }
+-      $path = $path_query->execute();
++      $path = $path_query->accessCheck()->execute();
+       if ($path) {
+         $form_state->setErrorByName('path', $this->t('The page path must be unique.'));
+       }

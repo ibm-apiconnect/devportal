@@ -1,0 +1,247 @@
+--- modules/hierarchical_taxonomy_menu/hierarchical_taxonomy_menu.info.yml      2022-12-15 10:08:38
++++ modules/hierarchical_taxonomy_menu/hierarchical_taxonomy_menu.info.yml 2022-12-15 15:24:41
+@@ -1,8 +1,7 @@
+ name: 'Hierarchical Taxonomy Menu'
+ type: module
+ description: 'Create menus from taxonomy terms.'
+-core: 8.x
+-core_version_requirement: ^8 || ^9
++core_version_requirement: ^8 || ^9 || ^10
+ package: Menu
+ dependencies:
+   - drupal:taxonomy
+
+diff --git  modules/hierarchical_taxonomy_menu/src/Plugin/Block/HierarchicalTaxonomyMenuBlock.php  modules/hierarchical_taxonomy_menu/src/Plugin/Block/HierarchicalTaxonomyMenuBlock.php
+index 0e79e1b..8201cb2 100644
+--- modules/hierarchical_taxonomy_menu/src/Plugin/Block/HierarchicalTaxonomyMenuBlock.php
++++ modules/hierarchical_taxonomy_menu/src/Plugin/Block/HierarchicalTaxonomyMenuBlock.php
+@@ -790,11 +790,11 @@ class HierarchicalTaxonomyMenuBlock extends BlockBase implements ContainerFactor
+           $path = $style->buildUrl($file->getFileUri());
+         }
+         else {
+-          $path = Url::fromUri(file_create_url($file->getFileUri()));
++          $path = \Drupal::service('file_url_generator')->generate($file->getFileUri());
+         }
+       }
+       else {
+-        $path = Url::fromUri(file_create_url($file->getFileUri()));
++        $path = \Drupal::service('file_url_generator')->generate($file->getFileUri());
+       }
+       return $path;
+     }
+diff --git  modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuCacheTest.php  modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuCacheTest.php
+index c07de9e..7db7980 100644
+--- modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuCacheTest.php
++++ modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuCacheTest.php
+@@ -24,7 +24,7 @@ class HierarchicalTaxonomyMenuCacheTest extends BrowserTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = [
++  protected static $modules = [
+     'block',
+     'image',
+     'hierarchical_taxonomy_menu',
+@@ -52,7 +52,7 @@ class HierarchicalTaxonomyMenuCacheTest extends BrowserTestBase {
+   /**
+    * {@inheritdoc}
+    */
+-  protected function setUp() {
++  protected function setUp(): void {
+     parent::setUp();
+
+     $vocabulary = $this->createVocabulary();
+@@ -98,12 +98,12 @@ class HierarchicalTaxonomyMenuCacheTest extends BrowserTestBase {
+     $this->drupalGet('taxonomy/term/1');
+     $this->assertCacheContext('url.path');
+     $block_title_element = $this->getSession()->getPage()->find('css', '#block-hierarchicaltaxonomymenu h2');
+-    $this->assertEqual($block_title_element->getText(), 'Term 1');
++    $this->assertEquals($block_title_element->getText(), 'Term 1');
+
+     $this->drupalGet('taxonomy/term/2');
+     $this->assertCacheContext('url.path');
+     $block_title_element = $this->getSession()->getPage()->find('css', '#block-hierarchicaltaxonomymenu h2');
+-    $this->assertEqual($block_title_element->getText(), 'Term 2');
++    $this->assertEquals($block_title_element->getText(), 'Term 2');
+   }
+
+   /**
+@@ -118,12 +118,12 @@ class HierarchicalTaxonomyMenuCacheTest extends BrowserTestBase {
+     $this->drupalGet('taxonomy/term/1');
+     $this->assertCacheContext('url.path');
+     $block_title_element = $this->getSession()->getPage()->find('css', '#block-hierarchicaltaxonomymenu h2');
+-    $this->assertEqual($block_title_element->getText(), 'Term 1');
++    $this->assertEquals($block_title_element->getText(), 'Term 1');
+
+     $this->drupalGet('taxonomy/term/2');
+     $this->assertCacheContext('url.path');
+     $block_title_element = $this->getSession()->getPage()->find('css', '#block-hierarchicaltaxonomymenu h2');
+-    $this->assertEqual($block_title_element->getText(), 'Term 2');
++    $this->assertEquals($block_title_element->getText(), 'Term 2');
+   }
+
+   /**
+diff --git  modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuImageTest.php  modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuImageTest.php
+index bd5ae7e..02dcfab 100644
+--- modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuImageTest.php
++++ modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuImageTest.php
+@@ -26,7 +26,7 @@ class HierarchicalTaxonomyMenuImageTest extends BrowserTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = [
++  protected static $modules = [
+     'block',
+     'image',
+     'hierarchical_taxonomy_menu',
+@@ -54,7 +54,7 @@ class HierarchicalTaxonomyMenuImageTest extends BrowserTestBase {
+   /**
+    * {@inheritdoc}
+    */
+-  protected function setUp() {
++  protected function setUp(): void {
+     parent::setUp();
+
+     $vocabulary = $this->createVocabulary();
+diff --git  modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuTest.php  modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuTest.php
+index 765153a..f6dede4 100644
+--- modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuTest.php
++++ modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuTest.php
+@@ -19,7 +19,7 @@ class HierarchicalTaxonomyMenuTest extends BrowserTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = [
++  protected static $modules = [
+     'block',
+     'image',
+     'hierarchical_taxonomy_menu',
+@@ -33,7 +33,7 @@ class HierarchicalTaxonomyMenuTest extends BrowserTestBase {
+   /**
+    * {@inheritdoc}
+    */
+-  protected function setUp() {
++  protected function setUp(): void {
+     parent::setUp();
+
+     $admin_user = $this->drupalCreateUser([
+diff --git  modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuTranslationTest.php  modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuTranslationTest.php
+index 0004ff1..2b0cd70 100644
+--- modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuTranslationTest.php
++++ modules/hierarchical_taxonomy_menu/tests/src/Functional/HierarchicalTaxonomyMenuTranslationTest.php
+@@ -23,7 +23,7 @@ class HierarchicalTaxonomyMenuTranslationTest extends BrowserTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = [
++  protected static $modules = [
+     'block',
+     'image',
+     'hierarchical_taxonomy_menu',
+@@ -39,7 +39,7 @@ class HierarchicalTaxonomyMenuTranslationTest extends BrowserTestBase {
+   /**
+    * {@inheritdoc}
+    */
+-  protected function setUp() {
++  protected function setUp(): void {
+     parent::setUp();
+
+     $language = ConfigurableLanguage::createFromLangcode('sr');
+@@ -163,11 +163,11 @@ class HierarchicalTaxonomyMenuTranslationTest extends BrowserTestBase {
+   public function testDynamicBlockTitle() {
+     $this->drupalGet('taxonomy/term/1');
+     $block_title_element = $this->getSession()->getPage()->find('css', '#block-hierarchicaltaxonomymenu h2');
+-    $this->assertEqual($block_title_element->getText(), 'Parent');
++    $this->assertEquals($block_title_element->getText(), 'Parent');
+
+     $this->drupalGet('sr/taxonomy/term/1');
+     $block_title_element = $this->getSession()->getPage()->find('css', '#block-hierarchicaltaxonomymenu h2');
+-    $this->assertEqual($block_title_element->getText(), 'Roditelj');
++    $this->assertEquals($block_title_element->getText(), 'Roditelj');
+   }
+
+ }
+diff --git  modules/hierarchical_taxonomy_menu/tests/src/FunctionalJavascript/HierarchicalTaxonomyMenuAdvancedTest.php  modules/hierarchical_taxonomy_menu/tests/src/FunctionalJavascript/HierarchicalTaxonomyMenuAdvancedTest.php
+index 1672840..d044eee 100644
+--- modules/hierarchical_taxonomy_menu/tests/src/FunctionalJavascript/HierarchicalTaxonomyMenuAdvancedTest.php
++++ modules/hierarchical_taxonomy_menu/tests/src/FunctionalJavascript/HierarchicalTaxonomyMenuAdvancedTest.php
+@@ -27,7 +27,7 @@ class HierarchicalTaxonomyMenuAdvancedTest extends WebDriverTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = [
++  protected static $modules = [
+     'block',
+     'image',
+     'hierarchical_taxonomy_menu',
+@@ -63,7 +63,7 @@ class HierarchicalTaxonomyMenuAdvancedTest extends WebDriverTestBase {
+   /**
+    * {@inheritdoc}
+    */
+-  protected function setUp() {
++  protected function setUp(): void {
+     parent::setUp();
+
+     $admin_user = $this->drupalCreateUser([
+diff --git  modules/hierarchical_taxonomy_menu/tests/src/FunctionalJavascript/HierarchicalTaxonomyMenuBasicTest.php  modules/hierarchical_taxonomy_menu/tests/src/FunctionalJavascript/HierarchicalTaxonomyMenuBasicTest.php
+index 53b74f8..cd961ee 100644
+--- modules/hierarchical_taxonomy_menu/tests/src/FunctionalJavascript/HierarchicalTaxonomyMenuBasicTest.php
++++ modules/hierarchical_taxonomy_menu/tests/src/FunctionalJavascript/HierarchicalTaxonomyMenuBasicTest.php
+@@ -22,7 +22,7 @@ class HierarchicalTaxonomyMenuBasicTest extends WebDriverTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = [
++  protected static $modules = [
+     'block',
+     'image',
+     'hierarchical_taxonomy_menu',
+@@ -58,7 +58,7 @@ class HierarchicalTaxonomyMenuBasicTest extends WebDriverTestBase {
+   /**
+    * {@inheritdoc}
+    */
+-  protected function setUp() {
++  protected function setUp(): void {
+     parent::setUp();
+
+     $admin_user = $this->drupalCreateUser([
+@@ -205,7 +205,7 @@ class HierarchicalTaxonomyMenuBasicTest extends WebDriverTestBase {
+
+     $this->drupalGet('taxonomy/term/1');
+     $block_title_element = $this->getSession()->getPage()->find('css', '#block-hierarchicaltaxonomymenu h2');
+-    $this->assertEqual($block_title_element->getText(), 'Parent term 1');
++    $this->assertEquals($block_title_element->getText(), 'Parent term 1');
+   }
+
+   /**
+@@ -222,7 +222,7 @@ class HierarchicalTaxonomyMenuBasicTest extends WebDriverTestBase {
+
+     $this->drupalGet('taxonomy/term/1');
+     $block_title_element = $this->getSession()->getPage()->find('css', '#block-hierarchicaltaxonomymenu h2');
+-    $this->assertEqual($block_title_element->getText(), 'Hierarchical Taxonomy Menu');
++    $this->assertEquals($block_title_element->getText(), 'Hierarchical Taxonomy Menu');
+   }
+
+   /**
+diff --git  modules/hierarchical_taxonomy_menu/tests/src/FunctionalJavascript/HierarchicalTaxonomyMenuDynamicTest.php  modules/hierarchical_taxonomy_menu/tests/src/FunctionalJavascript/HierarchicalTaxonomyMenuDynamicTest.php
+index ff94e28..6616688 100644
+--- modules/hierarchical_taxonomy_menu/tests/src/FunctionalJavascript/HierarchicalTaxonomyMenuDynamicTest.php
++++ modules/hierarchical_taxonomy_menu/tests/src/FunctionalJavascript/HierarchicalTaxonomyMenuDynamicTest.php
+@@ -22,7 +22,7 @@ class HierarchicalTaxonomyMenuDynamicTest extends WebDriverTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = [
++  protected static $modules = [
+     'block',
+     'image',
+     'hierarchical_taxonomy_menu',
+@@ -58,7 +58,7 @@ class HierarchicalTaxonomyMenuDynamicTest extends WebDriverTestBase {
+   /**
+    * {@inheritdoc}
+    */
+-  protected function setUp() {
++  protected function setUp(): void {
+     parent::setUp();
+
+     $admin_user = $this->drupalCreateUser([

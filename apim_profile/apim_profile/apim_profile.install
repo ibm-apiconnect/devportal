@@ -27,6 +27,7 @@ use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\user\RoleInterface;
 use Drupal\views\Views;
+use Drupal\Core\Config\FileStorage;
 
 
 /**
@@ -54,13 +55,11 @@ function apim_profile_install() {
     'filter',
     'block_content',
     'breakpoint',
-    'color',
     'config',
     'comment',
     'contextual',
     'datetime',
     'contact',
-    'quickedit',
     'help',
     'image',
     'options',
@@ -74,7 +73,6 @@ function apim_profile_install() {
     'views',
     'views_ui',
     'editor',
-    'ckeditor',
     'automated_cron',
     'ban',
     'menu_ui',
@@ -90,6 +88,8 @@ function apim_profile_install() {
     'inline_form_errors',
     'big_pipe',
     'media',
+    'ckeditor5',
+    'search',
   ];
 
   $module_dependencies = [
@@ -136,7 +136,6 @@ function apim_profile_install() {
     'change_pwd_page',
     'libraries',
     'responsive_image',
-    'editor_file',
     'config_update',
     'password_policy',
     'password_policy_length',
@@ -148,24 +147,16 @@ function apim_profile_install() {
     'perimeter',
     'check_dns',
     'views_bootstrap',
-    'ckeditor_media_embed',
     'social_media_links',
     'linkit',
     'health_check',
     'editor_advanced_link',
-    'restrict_by_ip',
     'file_upload_secure_validator',
     'select_or_other',
     'crop',
     'focal_point',
-    'entity_browser',
     'dropzonejs',
     'dropzonejs_eb_widget',
-    'entity_browser_enhanced',
-    'file_browser',
-    'embed',
-    'content_browser',
-    'entity_embed',
     'honeypot',
     'masonry',
     'masonry_views',
@@ -182,7 +173,6 @@ function apim_profile_install() {
     'key',
     'encrypt',
     'real_aes',
-    'unlimited_number',
     'avatars',
     'mimemail',
     'views_autocomplete_filters',
@@ -212,6 +202,9 @@ function apim_profile_install() {
     'drush_language',
     'maintenance200',
     'trusted_reverse_proxy',
+    'unlimited_number',
+    'restrict_by_ip',
+    'addtoany',
   ];
 
   $our_modules = [
@@ -253,8 +246,7 @@ function apim_profile_install() {
     ->set('page.front', '/home')
     ->save(TRUE);
 
-  // TODO remove bartik from this list
-  $themes = ['bartik', 'seven', 'connect_theme'];
+  $themes = ['olivero', 'claro', 'connect_theme'];
   $theme_installer = \Drupal::service('theme_installer');
   foreach ($themes as $theme) {
     $theme_installer->install([$theme]);
@@ -276,14 +268,14 @@ function apim_profile_install() {
   // Enable default permissions for system roles.
   user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, [
     'access comments',
-    'use search autocomplete',
     'use page load progress',
+    'display eu cookie compliance popup',
+    'use search_api_autocomplete for search_content',
   ]);
   user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, [
     'access comments',
     'post comments',
     'skip comment approval',
-    'use search autocomplete',
     'create forum content',
     'edit own forum content',
     'vote on node:api:apic_rating',
@@ -298,7 +290,20 @@ function apim_profile_install() {
     'avatars avatar_generator user letter_generator',
     'avatars avatar_generator user user_upload',
     'use page load progress',
+    'display eu cookie compliance popup',
+    'use search_api_autocomplete for search_content',
   ]);
+
+  user_role_grant_permissions('administrator', ['access panels in-place editing', 'access workbench',
+  'administer CAPTCHA settings', 'skip CAPTCHA', 'administer addtoany', 'administer autologout', 'administer blazy',
+  'administer mail subscribers', 'administer meta tags', 'administer recaptcha', 'administer seckit',
+  'administer slick', 'administer ultimate cron', 'administer workbench', 'change own logout threshold',
+  'display eu cookie compliance popup', 'mail subscribers', 'run cron jobs', 'view cron jobs', 'use search_api_autocomplete for search_content',
+  ]);
+
+  user_role_grant_permissions('content_author', ['access workbench', 'display eu cookie compliance popup', 'mail subscribers']);
+
+  user_role_grant_permissions('forum_moderator', ['display eu cookie compliance popup']);
 
   user_role_grant_permissions('administrator', ['administer page load progress']);
 
@@ -313,6 +318,7 @@ function apim_profile_install() {
   // load apim_profile translations in to the database
   apim_profile_load_translations();
 
+  require_once $path . '/apim_profile.homepage.inc';
   // create main menu links
   apim_profile_main_menu_links();
 
@@ -327,7 +333,6 @@ function apim_profile_install() {
   apim_profile_place_blocks();
 
   // front page
-  require_once $path . '/apim_profile.homepage.inc';
   apim_profile_create_homepage_blocks();
   apim_profile_create_forum_block();
 
@@ -338,9 +343,9 @@ function apim_profile_install() {
   user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, ['access site-wide contact form']);
   user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, ['access site-wide contact form']);
 
-  // Allow all users to use search.
-  user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, ['search content']);
-  user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, ['search content']);
+  // Allow all users to view media.
+  user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, ['view media']);
+  user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, ['view media']);
 
   // forum moderator permissions
   user_role_grant_permissions('forum_moderator', [
@@ -376,251 +381,6 @@ function apim_profile_install() {
 
   // enable paranoia last to avoid it blocking other config setup
   //$module_installer->install(['paranoia']);
-}
-
-/**
- * @throws \Drupal\Core\Entity\EntityStorageException
- */
-function apim_profile_main_menu_links() {
-  $menu_name = 'main';
-
-  $home_link = MenuLinkContent::create([
-    'title' => t('Home', [], ['langcode' => 'en']),
-    'description' => t('Portal homepage', [], ['langcode' => 'en']),
-    'link' => ['uri' => 'internal:/'],
-    'menu_name' => $menu_name,
-    'expanded' => TRUE,
-    'weight' => -1,
-  ]);
-  $home_link->save();
-  add_home_link_translations($home_link);
-
-  $apis_link = MenuLinkContent::create([
-    'title' => t('API Products', [], ['langcode' => 'en']),
-    'description' => t('Browse available APIs', [], ['langcode' => 'en']),
-    'link' => ['uri' => 'internal:/product', [], ['langcode' => 'en']],
-    'menu_name' => $menu_name,
-    'weight' => 5,
-    'langcode' => 'en',
-  ]);
-  $apis_link->save();
-  add_apis_link_translations($apis_link);
-
-  $apps_link = MenuLinkContent::create([
-    'title' => t('Apps', [], ['langcode' => 'en']),
-    'description' => t('Create and manage your apps', [], ['langcode' => 'en']),
-    'link' => ['uri' => 'internal:/application', [], ['langcode' => 'en']],
-    'menu_name' => $menu_name,
-    'weight' => 10,
-    'langcode' => 'en',
-  ]);
-  $apps_link->save();
-  add_apps_link_translations($apps_link);
-
-  $forum_link = MenuLinkContent::create([
-    'title' => t('Forums'),
-    'description' => t('Interact with our community'),
-    'link' => ['uri' => 'internal:/forum'],
-    'menu_name' => $menu_name,
-    'expanded' => TRUE,
-    'weight' => 25,
-  ]);
-  $forum_link->save();
-  add_forum_link_translations($forum_link);
-
-  // update weight of the blogs link
-  $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
-  $blog_menu_id = 'views_view:views.blog.blog_all';
-  $blogs_link = $menu_link_manager->getDefinition($blog_menu_id);
-  $blogs_link['weight'] = 21;
-  $menu_link_manager->updateDefinition($blog_menu_id, $blogs_link);
-  $cache = \Drupal::cache('menu');
-  $cache->deleteAll();
-}
-
-/**
- * @param $link
- */
-function add_forum_link_translations($link): void {
-
-  $languages = \Drupal::languageManager()->getLanguages();
-  foreach ($languages as $language) {
-    $lang = $language->getId();
-    if ($lang === 'en') {
-      continue;
-    }
-    if ($link->hasTranslation($lang)) {
-      $link->removeTranslation($lang);
-    }
-    $translation = [
-      'title' => t('Forums', [], ['langcode' => $lang]),
-      'description' => t('Interact with our community', [], ['langcode' => $lang]),
-      'link' => ['uri' => 'internal:/forum'],
-      'menu_name' => 'main',
-      'expanded' => TRUE,
-      'weight' => 25,
-    ];
-    $link->addTranslation($lang, $translation);
-  }
-
-  $link->save();
-}
-
-/**
- * @param $link
- */
-function add_apps_link_translations($link): void {
-
-  $languages = \Drupal::languageManager()->getLanguages();
-  foreach ($languages as $language) {
-    $lang = $language->getId();
-    if ($lang === 'en') {
-      continue;
-    }
-    if ($link->hasTranslation($lang)) {
-      $link->removeTranslation($lang);
-    }
-    $translation = [
-      'title' => t('Apps', [], ['langcode' => $lang]),
-      'description' => t('Create and manage your apps', [], ['langcode' => $lang]),
-      'langcode' => $lang,
-    ];
-    $link->addTranslation($lang, $translation);
-  }
-  $link->save();
-}
-
-/**
- * @param $link
- */
-function add_apis_link_translations($link): void {
-  $languages = \Drupal::languageManager()->getLanguages();
-  foreach ($languages as $language) {
-    $lang = $language->getId();
-    if ($lang === 'en') {
-      continue;
-    }
-    if ($link->hasTranslation($lang)) {
-      $link->removeTranslation($lang);
-    }
-    $translation = [
-      'title' => t('API Products', [], ['langcode' => $lang]),
-      'description' => t('Browse available APIs', [], ['langcode' => $lang]),
-      'langcode' => $lang,
-    ];
-    $link->addTranslation($lang, $translation);
-  }
-  $link->save();
-}
-
-/**
- * @param $link
- */
-function add_home_link_translations($link): void {
-  $languages = \Drupal::languageManager()->getLanguages();
-  foreach ($languages as $language) {
-    $lang = $language->getId();
-    if ($lang === 'en') {
-      continue;
-    }
-    if ($link->hasTranslation($lang)) {
-      $link->removeTranslation($lang);
-    }
-    $translation = [
-      'title' => t('Home', [], ['langcode' => $lang]),
-      'description' => t('Portal homepage', [], ['langcode' => $lang]),
-      'link' => ['uri' => 'internal:/'],
-      'menu_name' => 'main',
-      'expanded' => TRUE,
-      'weight' => -1,
-    ];
-    $link->addTranslation($lang, $translation);
-  }
-
-  $link->save();
-}
-
-/**
- * @throws \Drupal\Core\Entity\EntityStorageException
- */
-function apim_profile_login_menu_links() {
-  $menu_name = 'login';
-
-  $login_link = MenuLinkContent::create([
-    'title' => t('Sign in'),
-    'description' => t('Sign in to your account'),
-    'link' => ['uri' => 'internal:/user/login'],
-    'menu_name' => $menu_name,
-    'expanded' => TRUE,
-    'weight' => 20,
-  ]);
-  $login_link->save();
-  add_sign_in_link_translations($login_link);
-
-
-  $register_link = MenuLinkContent::create([
-    'title' => t('Create account'),
-    'description' => t('Create a new account'),
-    'link' => ['uri' => 'internal:/user/register'],
-    'menu_name' => $menu_name,
-    'expanded' => TRUE,
-    'weight' => 10,
-  ]);
-  $register_link->save();
-  add_create_account_link_translations($register_link);
-}
-
-/**
- * @param $link
- */
-function add_create_account_link_translations($link): void {
-  $languages = \Drupal::languageManager()->getLanguages();
-  foreach ($languages as $language) {
-    $lang = $language->getId();
-    if ($lang === 'en') {
-      continue;
-    }
-    if ($link->hasTranslation($lang)) {
-      $link->removeTranslation($lang);
-    }
-    $translation = [
-      'title' => t('Create account', [], ['langcode' => $lang]),
-      'description' => t('Create a new account', [], ['langcode' => $lang]),
-      'link' => ['uri' => 'internal:/user/register'],
-      'menu_name' => 'login',
-      'expanded' => TRUE,
-      'weight' => 10,
-    ];
-    $link->addTranslation($lang, $translation);
-  }
-
-  $link->save();
-}
-
-/**
- * @param $link
- */
-function add_sign_in_link_translations($link): void {
-  $languages = \Drupal::languageManager()->getLanguages();
-  foreach ($languages as $language) {
-    $lang = $language->getId();
-    if ($lang === 'en') {
-      continue;
-    }
-    if ($link->hasTranslation($lang)) {
-      $link->removeTranslation($lang);
-    }
-    $translation = [
-      'title' => t('Sign in', [], ['langcode' => $lang]),
-      'description' => t('Sign in to your account', [], ['langcode' => $lang]),
-      'link' => ['uri' => 'internal:/user/login'],
-      'menu_name' => 'login',
-      'expanded' => TRUE,
-      'weight' => 20,
-    ];
-    $link->addTranslation($lang, $translation);
-  }
-  $link->save();
 }
 
 /**
@@ -693,7 +453,7 @@ function apim_profile_default_apic_config() {
   \Drupal::service('config.factory')
     ->getEditable('locale.settings')
     ->set('translation.use_source', 'local')
-    ->set('translation.path', \Drupal::service('site.path') . '/translations')
+    ->set('translation.path', \Drupal::getContainer()->getParameter('site.path') . '/translations')
     ->save();
 
   \Drupal::service('config.factory')
@@ -1009,7 +769,7 @@ function apim_profile_captcha_config() {
 function _apim_profile_enable_captcha_on_form($form_id) {
 
   $query = \Drupal::entityQuery('captcha_point')->condition('formId', $form_id);
-  $ids = $query->execute();
+  $ids = $query->accessCheck()->execute();
   if (count($ids) !== 1) {
     throw new Error('Unexpected number of ' . $form_id . ' captcha points: ' . count($ids));
   }
@@ -1510,7 +1270,7 @@ function apim_profile_update_8025() {
         $variant = reset($variants_array);
         $content = $variant->calculateDependencies()['content'];
         $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
-        module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
+        \Drupal::moduleHandler()->loadInclude('apim_profile', 'inc', 'apim_profile.homepage');
 
         foreach ($content as $block_content_id) {
           // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
@@ -1541,7 +1301,7 @@ function apim_profile_update_8025() {
   }
 
   // update node translations (FAQ, privacy, t&cs)
-  module_load_include('inc', 'apim_profile', 'apim_profile.import_nodes');
+  \Drupal::moduleHandler()->loadInclude('apim_profile', 'inc', 'apim_profile.import_nodes');
 
   $terms_node = \Drupal::entityTypeManager()->getStorage('node')->load(1);
   if ($terms_node !== NULL && $terms_node->getTitle() === 'Terms of use' && $terms_node->getType() === 'page') {
@@ -1614,6 +1374,7 @@ function apim_profile_update_8026() {
       \Drupal::database()->delete('key_value')
         ->condition('collection', 'system.schema')
         ->condition('name', ['node_type_count'], 'IN')
+        ->accessCheck()
         ->execute();
     }
 
@@ -1631,7 +1392,7 @@ function apim_profile_update_8027() {
   if ($moduleHandler->moduleExists('rules')) {
     // if there are still rules then leave them, else disable the modules
     $query = \Drupal::entityQuery('rules_reaction_rule');
-    $result = $query->count()->execute();
+    $result = $query->count()->accessCheck()->execute();
     if (!isset($result) || (int) $result < 1) {
       \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
       $module_installer = \Drupal::service('module_installer');
@@ -1666,7 +1427,7 @@ function apim_profile_update_8030() {
   $oldString1 = '<path d="M12.922,58.197c-1.703,0.707-3.305,1.746-4.689,3.131c-1.387,1.387-2.424,2.984-3.131,4.688';
   $oldString2 = '<path d="M54,42c4.418,0,8-3.58,8-8s-3.582-8-8-8s-8,3.58-8,8S49.582,42,54,42z M54,30c2.206,0,4,1.795,4,4s-1.794,4-4,4';
   $query = \Drupal::entityQuery('block_content');
-  $nids = $query->execute();
+  $nids = $query->accessCheck()->execute();
   if (isset($nids) && !empty($nids)) {
     foreach ($nids as $blockid) {
       $block = BlockContent::load($blockid);
@@ -1873,7 +1634,7 @@ function apim_profile_update_8104() {
         $variant = reset($variants_array);
         $content = $variant->calculateDependencies()['content'];
         $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
-        module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
+        \Drupal::moduleHandler()->loadInclude('apim_profile', 'inc', 'apim_profile.homepage');
 
         foreach ($content as $block_content_id) {
           // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
@@ -2147,7 +1908,7 @@ function apim_profile_update_8105() {
   }
 
   // create forum sidebar block
-  module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
+  \Drupal::moduleHandler()->loadInclude('apim_profile', 'inc', 'apim_profile.homepage');
   apim_profile_create_forum_block();
 }
 
@@ -2622,7 +2383,7 @@ function apim_profile_update_8205() {
         $variant = reset($variants_array);
         $content = $variant->calculateDependencies()['content'];
         $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
-        module_load_include('inc', 'apim_profile', 'apim_profile.homepage');
+        \Drupal::moduleHandler()->loadInclude('apim_profile', 'inc', 'apim_profile.homepage');
 
         foreach ($content as $block_content_id) {
           // id = block_content:basic:0b7e88e2-549b-4497-8a77-41a3c2885786
@@ -2651,11 +2412,12 @@ function apim_profile_update_8205() {
       }
     }
   }
-  module_load_include('inc', 'apim_profile', 'apim_profile.import_nodes');
+  \Drupal::moduleHandler()->loadInclude('apim_profile', 'inc', 'apim_profile.import_nodes');
 
   $api_faq_node_ids = \Drupal::entityQuery('node')
     ->condition('type', 'faq')
     ->condition('title', 'Using our APIs')
+    ->accessCheck()
     ->execute();
 
   if (count($api_faq_node_ids) === 1) {
@@ -2674,6 +2436,7 @@ function apim_profile_update_8205() {
   $app_faq_node_ids = \Drupal::entityQuery('node')
     ->condition('type', 'faq')
     ->condition('title', 'Apps')
+    ->accessCheck()
     ->execute();
 
   if (count($app_faq_node_ids) === 1) {
@@ -2852,6 +2615,7 @@ function apim_profile_update_8217() {
         \Drupal::database()->delete('key_value')
           ->condition('collection', 'system.schema')
           ->condition('name', ['letter_avatar'], 'IN')
+          ->accessCheck()
           ->execute();
     }
   }
@@ -2938,7 +2702,7 @@ function apim_profile_update_8301()
 function apim_profile_update_8302() {
   $role = Role::load('content_author');
   if ($role !== NULL) {
-    user_role_grant_permissions('content_author', ['bypass content access control', 'bypass node access', 'revert all revisions']);
+    user_role_grant_permissions('content_author', ['bypass node access', 'revert all revisions']);
   }
 }
 
@@ -2952,6 +2716,309 @@ function apim_profile_update_8303() {
     $module_installer = \Drupal::service('module_installer');
     $module_installer->install(['trusted_reverse_proxy']);
     \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  }
+}
+
+/**
+ * Drupal 10 Upgrade
+ */
+function apim_profile_update_10001() {
+
+  // Delete /tsandcs and /privacy route alias as they are created wrong in 2018
+  // and upgrading to v10.0.5.2 they will still be broken. So just delete them and recreate them
+  // we have to assume tsandcs is node 1 (it should be) and privacy is node 2 as we have no
+  // other sure way of knowing as the other info could have been edited by customer.
+  $alias_manager = \Drupal::service('path_alias.manager');
+  $path_alias_storage = \Drupal::entityTypeManager()->getStorage('path_alias');
+
+  $entities = $path_alias_storage->loadByProperties([
+      'alias' => '/tsandcs',
+  ]);
+  $path_alias_storage->delete($entities);
+  $path_alias = $path_alias_storage->create([
+    'path' => '/node/1',
+    'alias' => '/tsandcs',
+  ]);
+  $path_alias_storage->save($path_alias);
+
+  $entities = $path_alias_storage->loadByProperties([
+      'alias' => '/privacy',
+  ]);
+  $path_alias_storage->delete($entities);
+  $path_alias = $path_alias_storage->create([
+    'path' => '/node/2',
+    'alias' => '/privacy',
+  ]);
+  $path_alias_storage->save($path_alias);
+
+  // Removed roles from
+  user_role_revoke_permissions(RoleInterface::ANONYMOUS_ID, [
+    'use search autocomplete',
+    'use advanced search',
+    'access browse_content entity browser pages',
+    'search content',
+    'use search_api_autocomplete for search_content'
+  ]);
+
+  user_role_revoke_permissions(RoleInterface::AUTHENTICATED_ID, [
+    'use search autocomplete',
+    'use advanced search',
+    'search content',
+    'access browse_content entity browser pages',
+    'use search_api_autocomplete for search_content'
+  ]);
+
+  user_role_revoke_permissions('content_author', [
+    'access in-place editing',
+    'bypass content access control',
+    'access printer-friendly version',
+    'access browse_content_iframe entity browser pages',
+    'access browse_files entity browser pages',
+    'access browse_content entity browser pages',
+    'access browse_files_modal entity browser pages',
+    'use text format ghmarkdown'
+  ]);
+
+  user_role_revoke_permissions('administrator', [
+    'access flood unblock',
+    'access in-place editing',
+    'bypass content access control',
+    'access printer-friendly version',
+    'access browse_content entity browser pages',
+    'access browse_content_iframe entity browser pages',
+    'access browse_files entity browser pages',
+    'access browse_files_modal entity browser pages',
+    'use text format ghmarkdown',
+    'administer embed buttons',
+    'bypass password policies',
+    'use search_api_autocomplete for search_content',
+    'administer search',
+    'administer search autocomplete',
+    'administer addtoany'
+  ]);
+
+  $theme_installer = \Drupal::service('theme_installer');
+  $theme_installer->install(['claro']);
+  // set connect_theme to be default
+  \Drupal::configFactory()
+    ->getEditable('system.theme')
+    ->set('admin', 'claro')
+    ->save();
+
+  theme_uninstall(['bartik', 'seven', 'classy']);
+
+  delete_config(['block.block.seven_breadcrumbs', 'block.block.seven_content',
+  'block.block.seven_help', 'block.block.seven_local_actions', 'block.block.seven_login',
+  'block.block.seven_messages', 'block.block.seven_page_title', 'block.block.seven_primary_local_tasks',
+  'block.block.seven_secondary_local_tasks', 'core.entity_view_mode.entity_embed_fake_entity.token',
+  'embed.button.content_browser', 'embed.button.file_browser', 'embed.button.node', 'embed.settings',
+  'entity_browser.browser.browse_content', 'entity_browser.browser.browse_content_iframe',
+  'entity_embed.settings', 'views.view.file_entity_browser', 'block.block.bartik_account_menu',
+  'block.block.bartik_branding', 'block.block.bartik_breadcrumbs', 'block.block.bartik_content',
+  'block.block.bartik_footer', 'block.block.bartik_help', 'block.block.bartik_local_actions',
+  'block.block.bartik_local_tasks', 'block.block.bartik_main_menu', 'block.block.bartik_messages',
+  'block.block.bartik_page_title', 'block.block.bartik_powered', 'block.block.bartik_tools',
+  'seven.settings'
+  ]);
+
+  add_config(['block.block.claro_breadcrumbs', 'block.block.claro_content',
+  'block.block.claro_help', 'block.block.claro_local_actions', 'block.block.claro_login',
+  'block.block.claro_messages', 'block.block.claro_page_title', 'block.block.claro_primary_local_tasks',
+  'block.block.claro_secondary_local_tasks'
+  ]);
+
+  add_config(['filter.format.basic_html', 'editor.editor.full_html',
+  'filter.format.basic_html', 'filter.format.full_html', 'editor.editor.full_html',
+  'editor.editor.basic_html', 'editor.editor.full_html' ]);
+
+  delete_config(['views.view.content_browser', 'ckeditor_media_embed.settings']);
+
+  $uninstall_modules = [ 'ckeditor_media_embed', 'console',
+  'flood_unblock', 'message', 'message_notify', 'message_subscribe',
+  'video_embed_field', 'video_embed_html5', 'content_browser',
+  'entity_browser', 'entity_browser_enhanced', 'entity_embed',
+  'file_browser', 'editor_file', 'color', 'Unlimited_number',
+  'embed', 'ckeditor', 'quickedit',
+  ];
+  module_uninstall($uninstall_modules);
+
+  // Also need to remove a config to entity_browser here
+  \Drupal::configFactory()->getEditable('user.role.administrator')->clear("dependencies.module.entity_browser")->save(TRUE);
+
+  module_install(['addtoany', 'rdf', 'unlimited_number', 'ckeditor5', 'search']);
+
+  // Add role back after we enable the right modules
+  user_role_grant_permissions('administrator', [
+    'administer addtoany',
+    'search content',
+    'use advanced search',
+    'use search_api_autocomplete for search_content'
+  ]);
+
+  user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, [
+    'search content',
+    'use advanced search',
+    'use search_api_autocomplete for search_content'
+  ]);
+
+  user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, [
+    'search content',
+    'use advanced search',
+    'use search_api_autocomplete for search_content'
+  ]);
+
+  // Don't Add the addtoany to pages
+  \Drupal::service('config.factory')
+  ->getEditable('addtoany.settings')
+  ->set('entities', ['media' => 0, 'node' => 0, 'comment' => 0])
+  ->save();
+}
+
+/**
+* Update file upload secure validator to treat gzip and x-gtar as the same
+*/
+function apim_profile_update_10002() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('file_upload_secure_validator.settings');
+  $mime_types = $config->get('mime_types_equivalence_groups');
+  $module_tar = array("application/gzip", "application/x-gtar");
+  array_push($mime_types, $module_tar);
+  $config->set('mime_types_equivalence_groups', $mime_types);
+  $config->save(TRUE);
+}
+
+/**
+* Create a block for get help block content if it does not exist
+*/
+function apim_profile_update_10003() {
+  $gethelp_block = Block::load('get_help');
+  if ($gethelp_block == NULL) {
+    $ghBlockContent = \Drupal::entityTypeManager()->getStorage('block_content')->loadByProperties(['info' => 'Get Help [en]']);
+    $ghBlockContent = array_shift($ghBlockContent);
+    $gethelp_values = [
+      'id' => 'get_help',
+      'plugin' => 'block_content:' . $ghBlockContent->uuid(),
+      'provider' => NULL,
+      'region' => 'disabled',
+      'settings' => [
+        'id' => 'block_content:' . $ghBlockContent->uuid(),
+        'label' => 'Get Help',
+        'provider' => 'block_content',
+        'label_display' => FALSE,
+      ],
+      'theme' => 'connect_theme',
+      'visibility' => [],
+      'weight' => 520,
+    ];
+    $gethelp_block = Block::create($gethelp_values);
+    $gethelp_block->save();
+  }
+}
+
+function delete_config(array $configs) {
+  foreach ($configs as $config) {
+    try {
+      \Drupal::configFactory()->getEditable($config)->delete();
+      \Drupal::logger('apim_profile')->info('Config deleted: @config', [
+        '@config' => $config,
+      ]);
+    } catch (Throwable $e) {
+      \Drupal::logger('apim_profile')->info('Config does not exist, nothing to delete: @config', [
+        '@config' => $config,
+      ]);
+    }
+  }
+}
+
+function add_config(array $configs) {
+  $config_path = \Drupal::service('extension.list.profile')->getPath('apim_profile') . '/config/install';
+  $source = new FileStorage($config_path);
+  $config_storage = \Drupal::service('config.storage');
+
+  foreach ($configs as $name) {
+    $config_storage->write($name, $source->read($name));
+    \Drupal::logger('apim_profile')->info('Config added: @config', [
+        '@config' => $name,
+    ]);
+  }
+}
+
+function module_install(array $modules) {
+  foreach ($modules as $module) {
+    $moduleHandler = \Drupal::service('module_handler');
+    $module_installer = \Drupal::service('module_installer');
+    if (!$moduleHandler->moduleExists($module)) {
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+      $module_installer->install([$module]);
+      \Drupal::logger('apim_profile')->info('Installed module: @module', [
+        '@module' => $module,
+      ]);
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+    }
+  }
+}
+
+function module_uninstall(array $modules) {
+  foreach ($modules as $module) {
+    $module_installer = \Drupal::service('module_installer');
+    try {
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+      $module_installer->uninstall([$module]);
+      \Drupal::logger('apim_profile')->info('Uninstalled module: @module', [
+      '@module' => $module,
+      ]);
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+    } catch (Throwable $e) {
+        // if deleting the module fails (and it might since we've deleted the files), itll just be purged from the db next
+    }
+    \Drupal::logger('apim_profile')->info('Deleting module database key: @module', [
+      '@module' => $module,
+    ]);
+    \Drupal::database()->delete('key_value')
+          ->condition('collection', 'system.schema')
+          ->condition('name', $module, 'IN')
+          ->execute();
+    \Drupal::configFactory()->getEditable('core.extension')->clear("module.$module")->save(TRUE);
+  }
+}
+
+function theme_uninstall(array $themes) {
+  foreach ($themes as $theme) {
+    $theme_installer = \Drupal::service('theme_installer');
+    try {
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+      $theme_installer->uninstall([$theme]);
+      \Drupal::logger('apim_profile')->info('Uninstalled theme: @theme', [
+      '@theme' => $theme,
+      ]);
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+    } catch (Throwable $e) {
+        // if deleting the theme fails (and it might since we've deleted the files), itll just be purged from the db next
+    }
+    \Drupal::logger('apim_profile')->info('Deleting module database key: @module', [
+      '@module' => $module,
+    ]);
+    \Drupal::database()->delete('key_value')
+          ->condition('collection', 'system.schema')
+          ->condition('name', $theme, 'IN')
+          ->execute();
+    \Drupal::configFactory()->getEditable('core.extension')->clear("theme.$theme")->save(TRUE);
+  }
+}
+
+/**
+ * Add site default and english to search filter criteria
+ */
+function apim_profile_update_8501() {
+  $view = Views::getView('search_content');
+  if ($view !== NULL) {
+    $filters = $view->getDisplay()->getOption('filters');
+    if (isset($filters['search_api_language'], $filters['search_api_language']['value'])) {
+      $filters['search_api_language']['value']['***LANGUAGE_site_default***'] = '***LANGUAGE_site_default***';
+      $filters['search_api_language']['value']['en'] = 'en';
+      $view->getDisplay()->setOption('filters', $filters);
+      $view->save();
+    }
   }
 }
 

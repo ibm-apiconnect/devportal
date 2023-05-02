@@ -1,12 +1,10 @@
 --- core/modules/user/user.module	2019-05-08 16:00:55.000000000 +0000
 +++ core/modules/user/user.module	2019-05-23 15:55:02.603576790 +0000
-@@ -269,8 +269,17 @@
-  */
+@@ -194,7 +194,16 @@
  function user_load_by_name($name) {
    $users = \Drupal::entityTypeManager()->getStorage('user')
--    ->loadByProperties(['name' => $name]);
+     ->loadByProperties(['name' => $name]);
 -  return $users ? reset($users) : FALSE;
-+      ->loadByProperties(['name' => $name]);
 +
 +  if (sizeof($users) > 1) {
 +    throw new \Exception(sprintf('Attempt to load user by name (%s) returned multiple responses (%d). Unable to continue please contact your system administrator', $name, sizeof($users)));
@@ -18,23 +16,23 @@
 +    return FALSE;
 +  }
  }
- 
+
  /**
-@@ -1310,7 +1319,7 @@
- function user_cookie_save(array $values) {
+@@ -1116,7 +1125,7 @@
+   $request_time = \Drupal::time()->getRequestTime();
    foreach ($values as $field => $value) {
      // Set cookie for 365 days.
--    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), REQUEST_TIME + 31536000, '/');
-+    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), \Drupal::time()->getRequestTime() + 31536000, '/', NULL, TRUE, TRUE);
+-    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), $request_time + 31536000, '/');
++    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), $request_time + 31536000, '/', '', TRUE, TRUE);
    }
  }
- 
-@@ -1321,7 +1330,7 @@
+
+@@ -1127,7 +1136,7 @@
   *   A cookie name such as 'homepage'.
   */
  function user_cookie_delete($cookie_name) {
--  setrawcookie('Drupal.visitor.' . $cookie_name, '', REQUEST_TIME - 3600, '/');
-+  setrawcookie('Drupal.visitor.' . $cookie_name, '', \Drupal::time()->getRequestTime() - 3600, '/',NULL, TRUE, TRUE);
+-  setrawcookie('Drupal.visitor.' . $cookie_name, '', \Drupal::time()->getRequestTime() - 3600, '/');
++  setrawcookie('Drupal.visitor.' . $cookie_name, '', \Drupal::time()->getRequestTime() - 3600, '/', '', TRUE, TRUE);
  }
- 
+
  /**

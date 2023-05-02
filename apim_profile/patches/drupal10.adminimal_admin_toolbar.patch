@@ -1,0 +1,12 @@
+diff --git modules/adminimal_admin_toolbar/adminimal_admin_toolbar.info.yml modules/adminimal_admin_toolbar/adminimal_admin_toolbar.info.yml
+index 44c225d..1f97ab4 100755
+--- modules/adminimal_admin_toolbar/adminimal_admin_toolbar.info.yml
++++ modules/adminimal_admin_toolbar/adminimal_admin_toolbar.info.yml
+@@ -1,6 +1,5 @@
+ name: Adminimal Admin Toolbar
+-core: 8.x
+-core_version_requirement: ^8 || ^9
++core_version_requirement: ^8 || ^9 || ^10
+ description: Adminimal styling brought to admin toolbar.
+ package: Administration
+ configure: adminimal_admin_toolbar.settings

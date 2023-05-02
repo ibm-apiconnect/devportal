@@ -1,0 +1,39 @@
+--- core/themes/claro/css/components/system-status-report-general-info.css
++++ core/themes/claro/css/components/system-status-report-general-info.css
+@@ -102,6 +102,26 @@
+   }
+ }
+ 
++.system-status-general-info__item-icon--apic:before {
++  background-image: url(../../../../../modules/ibm_apim/images/apic.svg);
++}
++
++.system-status-general-info__item-icon--userfields:before {
++ background-image: url(../../../../../modules/ibm_apim/images/identification.svg);
++}
++
++.system-status-general-info__item-icon--nodefields:before {
++  background-image: url(../../../../../modules/ibm_apim/images/document.svg);
++}
++
++.system-status-general-info__item-icon--modules:before {
++  background-image: url(../../../../../modules/ibm_apim/images/development.svg);
++}
++
++.system-status-general-info__item-icon--themes:before {
++  background-image: url(../../../../../modules/ibm_apim/images/template.svg);
++}
++
+ .system-status-general-info__item-details {
+   position: relative;
+   display: inline-block;
+@@ -154,9 +174,6 @@
+     display: block;
+     width: 32%;
+   }
+-  .system-status-general-info__item:last-of-type {
+-    margin-left: 2%;
+-  }
+ }
+ 
+ @media screen and (max-width: 48em) {

@@ -1,0 +1,11 @@
+--- core/includes/form.inc
++++ core/includes/form.inc
+@@ -885,7 +885,7 @@ function batch_process($redirect = NULL, Url $url = NULL, $redirect_callback = N
+       'current_set' => 0,
+       'progressive' => TRUE,
+       'url' => $url ?? Url::fromRoute('system.batch_page.html'),
+-      'source_url' => Url::fromRouteMatch(\Drupal::routeMatch())->mergeOptions(['query' => \Drupal::request()->query->all()]),
++      'source_url' => \Drupal::routeMatch()->getRouteObject() ? Url::fromRouteMatch(\Drupal::routeMatch())->mergeOptions(['query' => \Drupal::request()->query->all()]) : Url::fromRoute('<none>'),
+       'batch_redirect' => $redirect,
+       'theme' => \Drupal::theme()->getActiveTheme()->getName(),
+       'redirect_callback' => $redirect_callback,

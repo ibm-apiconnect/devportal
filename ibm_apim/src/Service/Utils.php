@@ -17,6 +17,8 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
 use Drupal\Component\Datetime\DateTimePlus;
+use Drupal\user\Entity\User;
+use Drupal\node\Entity\Node;
 use Exception;
 use Throwable;
 
@@ -26,6 +28,85 @@ use Throwable;
 class Utils {
 
   public function __construct() {
+  }
+
+  /**
+   * Set a node field to a string value, or an empty array if the string value is ''
+   * to do a database update or not.
+   *
+   * @param $node
+   * @param $name
+   * @param $value
+   *
+   */
+    public function setNodeValue($node, $name, $value)
+    {
+      if ($value && $value != '') {
+        $node->set($name, $value);
+      } else {
+        $node->set($name, []);
+      }
+    }
+
+  /**
+   * create A hash value for the $node. This can be used to check if we need
+   * to do a database update or not.
+   *
+   * @param $node
+   *
+   * @return string
+   */
+  public function generateNodeHash($node, $label = NULL): string {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__);
+    }
+
+    $use_node_hash = getenv('PORTAL_USE_NODE_HASH');
+
+    if ($use_node_hash !==  'false') {
+      $use_node_hash = \Drupal::state()->get('ibm_apim.use_node_hash');
+    }
+
+    $hashVal = $label;
+    if ($use_node_hash !== 'false') {
+      $nodeArray = $node->toArray();
+      $data = json_encode($nodeArray);
+      $hashVal = hash('xxh128', $data);
+
+      $dumpHashedJson = \Drupal::state()->get('ibm_apim.dump_hashed_json');
+      if ($dumpHashedJson === 'true' && $label) {
+        file_put_contents('/tmp/' . $label, $data);
+      }
+    }
+
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $hashVal);
+    }
+    return $hashVal;
+  }
+
+  /**
+   * create A hash value for the $node. This can be used to check if we need
+   * to do a database update or not.
+   *
+   * @param $existing
+   * @param $updated
+   *
+   * @return string
+   */
+
+  public function hashMatch($existingHash, $updatedEntity, $label = NULL): string {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__);
+    }
+
+    $updatedHash = $this->generateNodeHash($updatedEntity, $label);
+    $matched = ($existingHash == $updatedHash );
+
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $matched);
+    }
+    return $matched;
   }
 
   /**
@@ -138,10 +219,10 @@ class Utils {
    *
    * @param $input
    *
-   * @return string|null
+   * @return string
    */
-  public function base64_url_decode($input): ?string {
-    return base64_decode(strtr($input, '-_,', '+/='));
+  public function base64_url_decode($input): string {
+    return base64_decode(strtr($input, '-_,', '+/=')) ?? '';
   }
 
   /**
@@ -333,7 +414,8 @@ class Utils {
       }
       else {
 
-        $info_yml = DRUPAL_ROOT . '/' . $sitePath . '/modules' . '/' . $cm . '/' . $cm . '.info.yml';
+        $info_yml = DRUPAL_ROOT . '/' . $sitePath . '/modules' . '/' . $cm . '/*.info.yml';
+        $info_yml = @array_pop(glob($info_yml));
 
         if (file_exists($info_yml) && !$this->isHidden($info_yml)) {
 
@@ -494,7 +576,7 @@ class Utils {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function saveCustomFields($node, $customFields, $customFieldValues, $isJSON): void {
+  public function saveCustomFields($node, $customFields, $customFieldValues, $isJSON, $save = TRUE): void {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -528,7 +610,9 @@ class Utils {
             $node->set($customField,$value);
           }
         }
-        $node->save();
+        if ($save) {
+          $node->save();
+        }
       }
 
     if (\function_exists('ibm_apim_exit_trace')) {

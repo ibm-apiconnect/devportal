@@ -733,7 +733,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       break;
     case 'system_site_maintenance_mode':
 			if (isset($form['maintenance_mode']['#description'])) {
-        $form['maintenance_mode']['#description'] = t('<em>Important:</em> Maintenance mode is designed for short-term site maintenance; it is not meant for long-term usage. While a site is in maintenance mode, the database is not updated with new content from API Manager. As soon as the maintenance tasks are finished, you must take the site out of maintenance mode. Do not log out of the Developer Portal while the site is in maintenance mode, as you will not be able to log back in to the UI. In this case, maintenance mode can be turned off only by using the CLI; see the following instructions for details.');
+        $form['maintenance_mode']['#description'] = t('<em>Important:</em> Maintenance mode is designed for short-term site maintenance; it is not meant for long-term usage. While a site is in maintenance mode, the database is not updated with new content from API Manager. As soon as the maintenance tasks are finished, you must take the site out of maintenance mode. Do not log out of the Developer Portal while the site is in maintenance mode, as you will not be able to log back in to the UI. In this case, maintenance mode can be turned off only by using the CLI; see: ') . ' <a href="https://www.ibm.com/docs/en/api-connect/10.0.x?topic=tasks-toggling-site-in-out-maintenance-mode" target="_new">' . t('Documentation') . '</a>' . t(' for details');
 			}
       break;
     case 'system_theme_settings':
@@ -1053,7 +1053,9 @@ function ibm_apim_password_policy_client_settings(array $form, FormStateInterfac
   foreach ($applicable_policies as $policy_id => $policy) {
     $policy_constraints = array_merge($policy_constraints, $policy->getConstraints());
   }
-
+  if (isset($form['user_id']['#value'])) {
+    $uid = $form['user_id']['#value'];
+  }
   foreach ($policy_constraints as $key => $constraint) {
     switch ($constraint['id']) {
       case 'character_types':
@@ -1075,6 +1077,9 @@ function ibm_apim_password_policy_client_settings(array $form, FormStateInterfac
         }
         elseif (isset($form['account']['name'])) {
           $policy_constraints[$key]['username'] = $form['account']['name'];
+        }
+        elseif (isset($uid)) {
+          $policy_constraints[$key]['username'] = User::load($uid)->getAccountName();
         }
         break;
       case 'password_strength_constraint':
@@ -1582,4 +1587,20 @@ function ibm_apim_preprocess_block(&$variables) {
   if (isset($variables['plugin_id'], $variables["attributes"]["role"]) && $variables['plugin_id'] == 'help_block') {
     unset($variables["attributes"]["role"]);
   }
+}
+
+/**
+ * @param $key
+ * @param $message
+ * @param $params
+ *
+ * This func is invoked by Drupal\Core\Mail\MailManager.php
+ */
+function ibm_apim_welcome_mail($key, &$message, $params) {
+  ibm_apim_entry_trace(__FUNCTION__, NULL);
+  require_once '/var/aegir/.drush/provision/platform/provision_welcome_mail.inc';
+  // $mail is magically set here by drupal
+  $message['subject'] = strtr($mail['subject'], $params['variables']);
+  $message['body'][0] = Markup::create(strtr($mail['body'], $params['variables']));
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
 }

@@ -167,7 +167,7 @@ class ApplicationContext extends RawDrupalContext {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     //$query->condition('title', $name);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     $queryNid = NULL;
     $query2Nid = NULL;
     print('Query results: ' . serialize($results));
@@ -186,7 +186,7 @@ class ApplicationContext extends RawDrupalContext {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('application_id.value', $id);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     if ($results !== NULL && !empty($results)) {
       $query2Nid = array_shift($results);
     }
@@ -220,7 +220,7 @@ class ApplicationContext extends RawDrupalContext {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('application_id.value', $id);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     print('Search for ' . $id . ': ' . serialize($results) . PHP_EOL);
     if ($results !== NULL && !empty($results)) {
       $query2nid = array_shift($results);
@@ -243,7 +243,7 @@ class ApplicationContext extends RawDrupalContext {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('title', $oldName);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     $queryNid = NULL;
     if ($results !== NULL && !empty($results)) {
       $queryNid = array_shift($results);
@@ -284,7 +284,7 @@ class ApplicationContext extends RawDrupalContext {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('title', $name);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     if ($results !== NULL && !empty($results)) {
       $nid = array_shift($results);
       $node = Node::load($nid);
@@ -303,7 +303,7 @@ class ApplicationContext extends RawDrupalContext {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('title', $name);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     if ($results !== NULL && !empty($results)) {
       $nid = array_shift($results);
       if ($nid === NULL || empty($nid)) {
@@ -320,7 +320,7 @@ class ApplicationContext extends RawDrupalContext {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('title', $name);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     if ($results !== NULL && !empty($results)) {
       $nid = array_shift($results);
       if ($nid === NULL || empty($nid)) {

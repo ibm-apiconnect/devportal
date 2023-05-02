@@ -22,7 +22,7 @@ function mail_subscribers_cron() {
   ibm_apim_entry_trace(__FUNCTION__, NULL);
 
   // Load cron functions.
-  module_load_include('cron.inc', 'mail_subscribers');
+  \Drupal::moduleHandler()->loadInclude('mail_subscribers', 'cron.inc');
 
   // Send pending messages from spool.
   mail_subscribers_send_from_spool();
@@ -86,7 +86,7 @@ function mail_subscribers_token_help($fields) {
  * Implements hook_token_info().
  */
 function mail_subscribers_token_info(): array {
-  module_load_include('helpers.inc', 'mail_subscribers');
+  \Drupal::moduleHandler()->loadInclude('mail_subscribers', 'helpers.inc');
   $data = [];
   foreach (_mail_subscribers_email_message_property_info() as $key => $info) {
     $data[$key] = [
@@ -155,7 +155,7 @@ function mail_subscribers_preprocess_breadcrumb(&$variables) {
  * @throws \Exception
  */
 function mail_subscribers_batch_deliver($message, &$context) {
-  module_load_include('helpers.inc', 'mail_subscribers');
+  \Drupal::moduleHandler()->loadInclude('mail_subscribers', 'helpers.inc');
   _mail_subscribers_prepare_mail($message);
   $result = mail_subscribers_deliver($message);
 
@@ -255,4 +255,3 @@ function mail_subscribers_theme(): array {
   ];
   return $themeTemplates;
 }
-

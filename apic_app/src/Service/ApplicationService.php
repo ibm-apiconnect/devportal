@@ -145,6 +145,7 @@ class ApplicationService {
 
     $node = Node::create([
       'type' => 'application',
+      'uid' => 1
     ]);
 
     // get the update method to do the update for us
@@ -187,6 +188,13 @@ class ApplicationService {
 
       $hostVariable = $this->siteConfig->getApimHost();
 
+      // Need to set this before we calculate the old hash, as it is repesented as a
+      // different type (string vs int etc.) when set compared to when queried from the DB
+      // Being as they are always the same value anyway they should always match between old and new
+      $node->setPromoted(NodeInterface::NOT_PROMOTED);
+
+      $existingNodeHash = $this->utils->generateNodeHash($node, 'old-app');
+
       if (isset($app['title'])) {
         $node->setTitle($this->utils->truncate_string($app['title']));
       }
@@ -196,7 +204,6 @@ class ApplicationService {
       else {
         $node->setTitle('No name');
       }
-      $node->setPromoted(NodeInterface::NOT_PROMOTED);
       $node->set('apic_hostname', $hostVariable);
       $node->set('apic_provider_id', $this->siteConfig->getOrgId());
       $node->set('apic_catalog_id', $this->siteConfig->getEnvId());
@@ -211,7 +218,7 @@ class ApplicationService {
       if (!isset($app['summary']) || empty($app['summary'])) {
         $app['summary'] = '';
       }
-      $node->set('apic_summary', $app['summary']);
+      $this->utils->setNodeValue($node, 'apic_summary', $app['summary']);
       if (isset($app['consumer_org_url'])) {
         $app['consumer_org_url'] = $this->apimUtils->removeFullyQualifiedUrl($app['consumer_org_url']);
         $node->set('application_consumer_org_url', $app['consumer_org_url']);
@@ -244,8 +251,8 @@ class ApplicationService {
         $app['lifecycle_state'] = 'PRODUCTION';
       }
       $node->set('application_lifecycle_state', strtoupper($app['lifecycle_state']));
-      if (isset($app['lifecycle_pending'])) {
-        $node->set('application_lifecycle_pending', $app['lifecycle_pending']);
+      if (isset($app['lifecycle_state_pending'])) {
+        $node->set('application_lifecycle_pending', $app['lifecycle_state_pending']);
       }
       else {
         $node->set('application_lifecycle_pending', NULL);
@@ -317,43 +324,42 @@ class ApplicationService {
         // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
         $timestamp = strtotime($app['created_at']);
         if ($timestamp < 2147483647 && $timestamp > 0) {
-          $node->set('apic_created_at', $timestamp);
+          $node->set('apic_created_at', strval($timestamp));
         } else {
-          $node->set('apic_created_at', time());
+          $node->set('apic_created_at', strval(time()));
         }
       } else {
-        $node->set('apic_created_at', time());
+        $node->set('apic_created_at', strval(time()));
       }
       if (array_key_exists('updated_at', $app) && is_string($app['updated_at'])) {
         // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
         $timestamp = strtotime($app['updated_at']);
         if ($timestamp < 2147483647 && $timestamp > 0) {
-          $node->set('apic_updated_at', $timestamp);
+          $node->set('apic_updated_at', strval($timestamp));
         } else {
-          $node->set('apic_updated_at', time());
+          $node->set('apic_updated_at', strval(time()));
         }
       } else {
-        $node->set('apic_updated_at', time());
+        $node->set('apic_updated_at', strval(time()));
       }
-      $node->save();
-      $node = $this->credentialsService->createOrUpdateCredentialsList($node, $creds);
+      $node = $this->credentialsService->createOrUpdateCredentialsList($node, $creds, FALSE);
 
       $node->set('application_data', serialize($app));
 
       if ($formState !== NULL && !empty($formState)) {
         $customFields = $this->getCustomFields();
         $customFieldValues = $this->utils->handleFormCustomFields($customFields, $formState);
-        $this->utils->saveCustomFields($node, $customFields, $customFieldValues, FALSE);
+        $this->utils->saveCustomFields($node, $customFields, $customFieldValues, FALSE, FALSE);
       }
       elseif (!empty($app['metadata'])) {
         $customFields = $this->getCustomFields();
-        $this->utils->saveCustomFields($node, $customFields, $app['metadata'], TRUE);
+        $this->utils->saveCustomFields($node, $customFields, $app['metadata'], TRUE, FALSE);
       }
 
       // ensure this application links to all its subscriptions
       $query = \Drupal::entityQuery('apic_app_application_subs');
       $query->condition('app_url', $app['url']);
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       $newArray = [];
       if (isset($entityIds) && !empty($entityIds)) {
         foreach ($entityIds as $entityId) {
@@ -362,20 +368,25 @@ class ApplicationService {
       }
       $node->set('application_subscription_refs', $newArray);
 
-      $node->save();
-      if ($node !== NULL && $event !== 'internal') {
-        // we have support for calling create hook here as well because of timing issues with webhooks coming in and sending us down
-        // the update path in createOrUpdate even when the initial user action was create
-        if ($event === 'create' || $event === 'app_create') {
-          \Drupal::logger('apic_app')->notice('Application @app created (update path)', ['@app' => $node->getTitle()]);
+      if ($this->utils->hashMatch($existingNodeHash, $node, 'new-app')) {
+        if ($event !== 'internal') {
+          \Drupal::logger('apic_app')->notice('App @app not updated as the hash matched', ['@app' => $node->getTitle()]);}
+      } else {
+        $node->save();
 
-          $this->invokeAppCreateHook($create_hook_app, $node);
-        }
-        else {
-          \Drupal::logger('apic_app')->notice('Application @app updated', ['@app' => $node->getTitle()]);
+        if ($node !== NULL && $event !== 'internal') {
+          // we have support for calling create hook here as well because of timing issues with webhooks coming in and sending us down
+          // the update path in createOrUpdate even when the initial user action was create
+          if ($event === 'create' || $event === 'app_create') {
+            \Drupal::logger('apic_app')->notice('Application @app created (update path)', ['@app' => $node->getTitle()]);
 
-          // Calling all modules implementing 'hook_apic_app_update':
-          $this->moduleHandler->invokeAll('apic_app_update', [$node, $app]);
+            $this->invokeAppCreateHook($create_hook_app, $node);
+          } else {
+            \Drupal::logger('apic_app')->notice('Application @app updated', ['@app' => $node->getTitle()]);
+
+            // Calling all modules implementing 'hook_apic_app_update':
+            $this->moduleHandler->invokeAll('apic_app_update', [$node, $app]);
+          }
         }
       }
       $returnValue = $node;
@@ -407,7 +418,7 @@ class ApplicationService {
     $query->condition('type', 'application');
     $query->condition('application_id.value', $app['id']);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if (isset($nids) && !empty($nids)) {
       $nid = array_shift($nids);
@@ -517,7 +528,7 @@ class ApplicationService {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('application_id.value', $app['id']);
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if (isset($nids) && !empty($nids)) {
       $nid = array_shift($nids);
@@ -552,7 +563,7 @@ class ApplicationService {
       $query = \Drupal::entityQuery('apic_app_application_subs');
       $query->condition('app_url.value', $node->apic_url->value);
 
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         foreach (array_chunk($entityIds, 50) as $chunk) {
           $subEntities = ApplicationSubscription::loadMultiple($chunk);
@@ -568,7 +579,7 @@ class ApplicationService {
       $query = \Drupal::entityQuery('apic_app_application_creds');
       $query->condition('app_url.value', $node->apic_url->value);
 
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         foreach (array_chunk($entityIds, 50) as $chunk) {
           $credEntities = ApplicationCredentials::loadMultiple($chunk);
@@ -632,7 +643,7 @@ class ApplicationService {
       $query->condition('type', 'application');
       $query->condition('application_id.value', $id);
 
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if (isset($nids) && !empty($nids)) {
         $nid = array_shift($nids);
@@ -666,7 +677,7 @@ class ApplicationService {
       $query->condition('type', 'application');
       $query->condition('apic_url.value', $url);
 
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if (isset($nids) && !empty($nids)) {
         $nid = array_shift($nids);
@@ -784,14 +795,14 @@ class ApplicationService {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'application');
 
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
     }
     elseif (isset($this->userUtils->getCurrentConsumerOrg()['url'])) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'application');
       $query->condition('application_consumer_org_url.value', $this->userUtils->getCurrentConsumerOrg()['url']);
 
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
     }
     if (isset($results) && !empty($results)) {
       $nids = array_values($results);
@@ -885,7 +896,7 @@ class ApplicationService {
         $query = \Drupal::entityQuery('node');
         $query->condition('type', 'product');
         $query->condition('apic_url.value', $sub->product_url());
-        $nids = $query->execute();
+        $nids = $query->accessCheck()->execute();
 
         if (isset($nids) && !empty($nids)) {
           $nid = array_shift($nids);
@@ -936,7 +947,7 @@ class ApplicationService {
                   $query->condition('type', 'product');
                   $query->condition('status', 1);
                   $query->condition('apic_url.value', $supersededByProductUrl);
-                  $results = $query->execute();
+                  $results = $query->accessCheck()->execute();
 
                   if (isset($results) && !empty($results)) {
                     $nid = array_shift($results);
@@ -1086,7 +1097,7 @@ class ApplicationService {
     $query->condition('type', 'application');
     $query->condition('apic_url.value', $url);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if (isset($nids) && !empty($nids)) {
       $nid = array_shift($nids);
@@ -1116,7 +1127,7 @@ class ApplicationService {
     $query->condition('type', 'application');
     $query->condition('apic_url.value', $url);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
@@ -1199,10 +1210,10 @@ class ApplicationService {
       $query->condition('product_url', $product->apic_url->value);
       $query->condition('app_url', $application->apic_url->value);
       $query->condition('plan', $planName);
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         $returnValue = TRUE;
-      } 
+      }
     }
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);

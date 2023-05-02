@@ -1,4 +1,30 @@
 changes:
+  8.x-5.3.12:
+  - only decrypt if set (#318) (#319)
+  8.x-5.3.11:
+  - Handle 202 response for create consumerorg request (#317)
+  8.x-5.3.10:
+  - Use un-dep honeypot method (#315)
+  8.x-5.3.9:
+  - Mass merge for Drupal 10 Changes (#314)
+  8.x-5.3.8:
+  - Always create consumerorgs with admin author (#311)
+  8.x-5.3.7:
+  - Add delete consumerorg event + error fix (#309)
+  8.x-5.3.6:
+  - Added uidToIgnore param to service->delete (#305)
+  - Reassign content on user delete (#302)
+  8.x-5.3.5:
+  - Changes for saving non-custom field metadata in apim (#301)
+  8.x-5.3.4:
+  - Allow users to remove themselves from an org (#294)
+  8.x-5.3.3:
+  - Only assign role if a valid role is provided (#288) (#289)
+  8.x-5.3.2: null
+  8.x-5.3.1:
+  - Merge pull request
+  8.x-5.3.0:
+  - update version 8.x-5.2.2 -> 8.x-5.3.0
   8.x-5.2.1:
   - Merge pull request
   8.x-5.2.0:
@@ -461,7 +487,4 @@ changes:
   - add drush command to be able to resend all invitations
   8.x-1.2.86:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since
-    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
-    are also filtered before logging them. Commits that start with 'INT' or 'bump
-    version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

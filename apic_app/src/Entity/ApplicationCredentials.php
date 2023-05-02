@@ -45,172 +45,95 @@ use Drupal\Core\Field\BaseFieldDefinition;
 class ApplicationCredentials extends ContentEntityBase implements ApplicationCredentialsInterface {
 
   /**
-   * Drupal entity ID
-   *
-   * @var int
-   */
-  protected $id;
-
-  /**
-   * APIM UUID
-   *
-   * @var string
-   */
-  protected $uuid;
-
-  /**
-   * The application URL.
-   *
-   * @var string
-   */
-  protected $app_url;
-
-  /**
-   * The Client ID.
-   *
-   * @var string
-   */
-  protected $client_id;
-
-  /**
-   * The credentials name.
-   *
-   * @var string
-   */
-  protected $name;
-
-  /**
-   * The title.
-   *
-   * @var string
-   */
-  protected $title;
-
-  /**
-   * The summary.
-   *
-   * @var string
-   */
-  protected $summary;
-
-  /**
-   * The owning consumer organization URL.
-   *
-   * @var string
-   */
-  protected $consumerorg_url;
-
-  /**
-   * The credentials URL
-   *
-   * @var string
-   */
-  protected $cred_url;
-
-  /**
-   * APIC Creation timestamp
-   *
-   * @var int
-   */
-  protected $created_at;
-
-  /**
-   * APIC Modification timestamp
-   *
-   * @var int
-   */
-  protected $updated_at;
-
-  /**
    * {@inheritdoc}
    */
   public function id() {
-    return $this->id;
+    return $this->get('id')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function uuid() {
-    return $this->uuid;
+    return $this->get('uuid')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function app_url() {
-    return $this->app_url;
+    return $this->get('app_url')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function client_id() {
-    return $this->client_id;
+    return $this->get('client_id')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function name() {
-    return $this->name;
+    return $this->get('name')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function title() {
-    return $this->title;
+    return $this->get('title')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function summary() {
-    return $this->summary;
+    return $this->get('summary')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function consumerorg_url() {
-    return $this->consumerorg_url;
+    return $this->get('consumerorg_url')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function cred_url() {
-    return $this->cred_url;
+    return $this->get('cred_url')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function created_at() {
-    return $this->created_at;
+    return $this->get('created_at')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function updated_at() {
-    return $this->updated_at;
+    return $this->get('updated_at')->value;
   }
 
   public function toArray(): array {
     return [
-      'id' => $this->id,
-      'uuid' => $this->uuid,
-      'cred_url' => $this->cred_url,
-      'title' => $this->title,
-      'summary' => $this->summary,
-      'name' => $this->name,
-      'consumerorg_url' => $this->consumerorg_url,
-      'client_id' => $this->client_id,
-      'app_url' => $this->app_url,
-      'created_at' => $this->created_at,
-      'updated_at' => $this->updated_at,
+      'id' => $this->get('id')->value,
+      'uuid' => $this->get('uuid')->value,
+      'cred_url' => $this->get('cred_url')->value,
+      'title' => $this->get('title')->value,
+      'summary' => $this->get('summary')->value,
+      'name' => $this->get('name')->value,
+      'consumerorg_url' => $this->get('consumerorg_url')->value,
+      'client_id' => $this->get('client_id')->value,
+      'app_url' => $this->get('app_url')->value,
+      'created_at' => $this->get('created_at')->value,
+      'updated_at' => $this->get('updated_at')->value,
     ];
   }
 

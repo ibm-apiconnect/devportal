@@ -1,4 +1,16 @@
 changes:
+  8.x-5.3.5:
+  - Use non-dep way to load includes (#179)
+  8.x-5.3.4:
+  - Mass merge for Drupal 10 Changes (#177)
+  8.x-5.3.3:
+  - markdown fix
+  8.x-5.3.2:
+  - Always create apis with admin author
+  8.x-5.3.1:
+  - Merge pull request
+  8.x-5.3.0:
+  - update version 8.x-5.2.1 -> 8.x-5.3.0
   8.x-5.2.0:
   - update version 8.x-5.1.2 -> 8.x-5.2.0
   8.x-5.1.1:
@@ -315,7 +327,4 @@ changes:
   - handle other languages
   8.x-1.1.64:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since
-    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
-    are also filtered before logging them. Commits that start with 'INT' or 'bump
-    version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

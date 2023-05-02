@@ -123,12 +123,13 @@ class ApicUserDeleteService implements ApicUserDeleteInterface {
       $response = TRUE;
     } else {
       $this->logger->notice('Deleting user - id = @id', ['@id' => $id]);
-           // DO NOT DELETE THE ADMIN USER!
+      // DO NOT DELETE THE ADMIN USER!
+      $performBatch = FALSE;
       if ((int) $id > 1) {
         user_cancel([], $id, 'user_cancel_reassign');
         $performBatch = TRUE;
       }
-      if (!empty($performBatch) && !isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      if ($performBatch && !isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
        $this->logger->notice('Processing batch delete of users...');
         $batch = &batch_get();
         $batch['progressive'] = FALSE;

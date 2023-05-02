@@ -14,10 +14,10 @@
  * Used for doing client side password validation
  */
 
-(function($, Drupal, drupalSettings) {
+(function($, Drupal, drupalSettings, once) {
   Drupal.behaviors.ibmApimValidatePassword = {
     attach: function attach(context, drupalSettings) {
-      var $passwordInput = $(context).find('input.js-password-field').once('ibmApimValidatePassword');
+      var $passwordInput = $(once('ibmApimValidatePassword', context)).find('input.js-password-field');
 
       if ($passwordInput.length) {
 
@@ -218,4 +218,4 @@
 
     return result;
   };
-})(jQuery, Drupal, drupalSettings);
+})(jQuery, Drupal, drupalSettings, once);

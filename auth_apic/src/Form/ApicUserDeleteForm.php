@@ -190,10 +190,9 @@ class ApicUserDeleteForm extends ConfirmFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-
     if ($org_url = $form_state->getValue('org_to_delete')) {
       $this->logger->info('Deleting %org_url as part of user deletion', ['%org_url' => $org_url]);
-      $org_delete_response = $this->orgService->delete($this->orgService->get($org_url)); // TODO - delete by url
+      $org_delete_response = $this->orgService->delete($this->orgService->get($org_url), \Drupal::currentUser()->id()); // TODO - delete by url
 
       if ($org_delete_response->success()) {
         $this->logger->debug('Organization successfully deleted from ApicUserDeleteForm.');

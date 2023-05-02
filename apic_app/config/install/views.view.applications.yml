@@ -271,6 +271,7 @@ display:
           order: ASC
           exposed: true
           expose:
+            field_identifier: title
             label: Name
           entity_type: node
           entity_field: title
@@ -285,6 +286,7 @@ display:
           order: ASC
           exposed: true
           expose:
+            field_identifier: created
             label: Created
           granularity: minute
           entity_type: node
@@ -300,6 +302,7 @@ display:
           order: ASC
           exposed: true
           expose:
+            field_identifier: changed
             label: Changed
           granularity: minute
           entity_type: node

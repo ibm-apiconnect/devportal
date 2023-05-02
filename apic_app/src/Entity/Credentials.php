@@ -2,7 +2,7 @@
 
 namespace Drupal\apic_app\Entity;
 
-@trigger_error('The ' . __NAMESPACE__ . '\Credentials is deprecated in 2018.4.1.10 
+@trigger_error('The ' . __NAMESPACE__ . '\Credentials is deprecated in 2018.4.1.10
 Instead, use \Drupal\apic_app\Entity\ApplicationCredentials.', E_USER_DEPRECATED);
 
 use Drupal\apic_app\CredentialsInterface;
@@ -36,6 +36,16 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *     "summary" = "summary",
  *     "consumerorg_url" = "consumerorg_url",
  *     "cred_url" = "cred_url"
+ *   },
+ *   config_export = {
+ *     "id",
+ *     "app_url",
+ *     "client_id",
+ *     "name",
+ *     "title",
+ *     "summary",
+ *     "consumerorg_url",
+ *     "cred_url",
  *   }
  * )
  */

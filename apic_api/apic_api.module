@@ -312,7 +312,7 @@ function apic_api_node_grants($account, $op): array {
  * @return \Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultForbidden|\Drupal\Core\Access\AccessResultNeutral
  */
 function apic_api_node_access(NodeInterface $node, $operation, AccountInterface $account) {
-  $type = $node->type;
+  $type = $node->getType();
   if ($type === 'api' && $operation === 'view') {
     $found = Api::checkAccess($node);
     // found so we're allowed to access this API
@@ -518,12 +518,12 @@ function apic_api_preprocess_node(&$variables): void {
       if (!$currentUser->isAnonymous() && (int) $currentUser->id() !== 1 && \Drupal::service('module_handler')->moduleExists('apic_app')) {
         $selectedProductNid = \Drupal::routeMatch()->getRawParameter('prodNode');
         // for x-pathalias then need to get the NID
-        if ((int) $selectedProductNid === 0) {
+        if (isset($selectedProductNid) && (int) $selectedProductNid === 0) {
           $pathQuery = Drupal::entityQuery('node');
           $pathQuery->condition('type', 'product');
           $pathQuery->condition('status', 1);
           $pathQuery->condition('apic_pathalias.value', $selectedProductNid);
-          $pathNids = $pathQuery->execute();
+          $pathNids = $pathQuery->accessCheck()->execute();
           if (count($pathNids) > 0) {
             $selectedProductNid = array_key_first($pathNids);
           }

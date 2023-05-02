@@ -112,7 +112,7 @@ class AnalyticsController extends ControllerBase {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $consumerOrg['url']);
-      $consumerorgResults = $query->execute();
+      $consumerorgResults = $query->accessCheck()->execute();
       if (isset($consumerorgResults) && !empty($consumerorgResults)) {
         $consumerorgNid = array_shift($consumerorgResults);
         $consumerorg = Node::load($consumerorgNid);
@@ -187,7 +187,7 @@ class AnalyticsController extends ControllerBase {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $consumerOrg['url']);
-      $consumerOrgResults = $query->execute();
+      $consumerOrgResults = $query->accessCheck()->execute();
       if (isset($consumerOrgResults) && !empty($consumerOrgResults)) {
         $first = array_shift($consumerOrgResults);
         $consumerorg = Node::load($first);

@@ -261,6 +261,6 @@ interface ManagementServerInterface {
    *
    * @return \Drupal\ibm_apim\Rest\RestResponse
    */
-  public function activateFromJWT(JWTToken $jwt): RestResponse;
+  public function activateFromJWT(JWTToken $jwt): ?RestResponse;
 
 }

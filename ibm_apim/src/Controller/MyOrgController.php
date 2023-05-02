@@ -119,7 +119,7 @@ class MyOrgController extends ControllerBase {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $org['url']);
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
     }
@@ -173,7 +173,7 @@ class MyOrgController extends ControllerBase {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $org['url']);
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
       $node = Node::load($nid);
@@ -294,7 +294,7 @@ class MyOrgController extends ControllerBase {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $org['url']);
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
       $node = Node::load($nid);

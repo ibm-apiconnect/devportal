@@ -13,5 +13,12 @@
     "psr-4": {
       "": "src/"
     }
+  },
+  "extra": {
+    "drush": {
+      "services": {
+        "drush.services.yml": ">=9"
+      }
+    }
   }
 }

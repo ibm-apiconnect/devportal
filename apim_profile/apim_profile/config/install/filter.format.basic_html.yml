@@ -2,9 +2,7 @@ langcode: en
 status: true
 dependencies:
   module:
-    - ckeditor_media_embed
     - editor
-    - entity_embed
     - linkit
     - noopener_filter
 name: 'Basic HTML'
@@ -43,18 +41,6 @@ filters:
     provider: editor
     status: true
     weight: -7
-    settings: {  }
-  filter_ckeditor_media_embed:
-    id: filter_ckeditor_media_embed
-    provider: ckeditor_media_embed
-    status: false
-    weight: -4
-    settings: {  }
-  entity_embed:
-    id: entity_embed
-    provider: entity_embed
-    status: false
-    weight: -3
     settings: {  }
   filter_url:
     id: filter_url

@@ -7,7 +7,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-(function ($, Drupal) {
+(function ($, Drupal, once) {
 
   $.fn.dropit = function (method) {
 
@@ -98,8 +98,8 @@
 
   Drupal.behaviors.dropit = {
     attach: function (context, settings) {
-      $(".dropitmenu", document.body).once().dropit();
+      $(once('dropitmenu', ".dropitmenu", document.body)).dropit();
     }
   };
 
-})(jQuery, Drupal);
+})(jQuery, Drupal, once);

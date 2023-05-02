@@ -141,7 +141,7 @@ class PaymentMethodCreateForm extends FormBase {
     $max_weight = 500;
     $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
     $form['#attached']['library'][] = 'core/jquery';
-    $form['#attached']['library'][] = 'core/jquery.once';
+    $form['#attached']['library'][] = 'core/once';
     $integrationService = \Drupal::service('ibm_apim.payment_method_schema');
     $billingProviders = \Drupal::service('ibm_apim.billing')->getAll();
     $billingProvider = NULL;
@@ -156,7 +156,10 @@ class PaymentMethodCreateForm extends FormBase {
             // this uses a key based on the integration URL to prevent there being the same integration type listed twice
             $urlIdParts = explode('/', $payment_method_integration_url);
             $urlId = end($urlIdParts);
-            $integrations[$payment_method_integration_url] = $integrationService->getById($urlId);
+            $integration = $integrationService->getById($urlId);
+            if (isset($integration)) {
+              $integrations[$payment_method_integration_url] = $integration;
+            }
           }
         }
       }
@@ -200,11 +203,12 @@ class PaymentMethodCreateForm extends FormBase {
     }
     elseif (count($integrations) === 1) {
       $populatedIntegration = array_shift($integrations);
+
       // only one integration type so just use it
       $this->step++;
       $this->chosen_integration = $populatedIntegration['name'];
       $this->getBillingProviderForIntegration();
-      $billingProvider = \Drupal::service('ibm_apim.billing')->decrypt($this->billingUrl);
+      $billingProvider = isset($this->billingUrl) ? \Drupal::service('ibm_apim.billing')->decrypt($this->billingUrl) : '';
       $form['title'] = [
         '#type' => 'textfield',
         '#title' => t('Payment Method Title'),

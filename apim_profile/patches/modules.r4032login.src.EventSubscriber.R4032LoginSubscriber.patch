@@ -1,0 +1,20 @@
+--- modules/r4032login/src/EventSubscriber/R4032LoginSubscriber.php     2023-01-06 12:22:16
++++ modules/r4032login/src/EventSubscriber/R4032LoginSubscriber.php        2023-01-06 12:22:18
+@@ -191,7 +191,7 @@
+         // Show custom access denied message if set.
+         if ($this->currentUser->isAnonymous() && $config->get('display_denied_message')) {
+           $message = $config->get('access_denied_message');
+-          $messageType = $config->get('access_denied_message_type');
++          $messageType = $config->get('access_denied_message_type') ?? '';
+           $this->messenger->addMessage(Markup::create(Xss::filterAdmin($message)), $messageType);
+         }
+         if ($this->currentUser->isAuthenticated()) {
+@@ -202,7 +202,7 @@
+           // Show custom access denied message for authenticated users if set.
+           if ($config->get('display_auth_denied_message')) {
+             $message = $config->get('access_denied_auth_message');
+-            $messageType = $config->get('access_denied_auth_message_type');
++            $messageType = $config->get('access_denied_auth_message_type') ?? '';
+             $this->messenger->addMessage(Markup::create(Xss::filterAdmin($message)), $messageType);
+           }
+         }

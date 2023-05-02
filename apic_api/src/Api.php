@@ -76,7 +76,7 @@ class Api {
       // if so then clone it and base new node on that.
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'api')->condition('api_xibmname.value', $xIbmName)->sort('nid', 'ASC');
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
         $oldNode = Node::load($nid);
@@ -113,7 +113,7 @@ class Api {
 
       // wipe all our fields to ensure they get set to new values
       $node->set('apic_tags', []);
-
+      $node->set('uid', 1);
       $node->set('apic_hostname', $hostVariable);
       $node->set('apic_provider_id', $configService->getOrgId());
       $node->set('apic_catalog_id', $configService->getEnvId());
@@ -143,6 +143,7 @@ class Api {
         'apic_hostname' => $hostVariable,
         'apic_provider_id' => $configService->getOrgId(),
         'apic_catalog_id' => $configService->getEnvId(),
+        'uid' => 1
       ]);
     }
 
@@ -218,9 +219,10 @@ class Api {
   public function update(NodeInterface $node, $api, $event = 'content_refresh'): ?NodeInterface {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if ($node !== NULL) {
+      $existingNodeHash = $this->utils->generateNodeHash($node, 'old-api');
       $returnValue = NULL;
-      module_load_include('inc', 'apic_api', 'apic_api.utils');
-      module_load_include('inc', 'apic_api', 'apic_api.files');
+      \Drupal::moduleHandler()->loadInclude('apic_api', 'inc', 'apic_api.utils');
+      \Drupal::moduleHandler()->loadInclude('apic_api', 'inc', 'apic_api.files');
       $configService = \Drupal::service('ibm_apim.site_config');
       $hostVariable = $configService->getApimHost();
       $moduleHandler = \Drupal::service('module_handler');
@@ -245,24 +247,7 @@ class Api {
         else {
           $node->setTitle($api['name']);
         }
-        if (isset($api['consumer_api']['info']['x-ibm-languages']['title']) && !empty($api['consumer_api']['info']['x-ibm-languages']['title'])) {
-          foreach ($api['consumer_api']['info']['x-ibm-languages']['title'] as $lang => $langArray) {
-            $lang = $this->utils->convert_lang_name_to_drupal($lang);
-            if (\in_array($lang, $languageList, FALSE)) {
-              $truncated_title = $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['title'][$lang]);
-              // title needs to actually have a value
-              if (isset($truncated_title) && !empty($truncated_title)) {
-                if (!$node->hasTranslation($lang)) {
-                  $translation = $node->addTranslation($lang, ['title' => $truncated_title]);
-                  $translation->save();
-                }
-                else {
-                  $node->getTranslation($lang)->setTitle($truncated_title)->save();
-                }
-              }
-            }
-          }
-        }
+
         $node->set('apic_hostname', $hostVariable);
         $node->set('apic_provider_id', $configService->getOrgId());
         $node->set('apic_catalog_id', $configService->getEnvId());
@@ -291,40 +276,16 @@ class Api {
         if (!isset($api['consumer_api']['info']['description']) || empty($api['consumer_api']['info']['description'])) {
           $api['consumer_api']['info']['description'] = '';
         }
-        if (isset($api['consumer_api']['info']['x-ibm-languages']['description']) && !empty($api['consumer_api']['info']['x-ibm-languages']['description'])) {
-          foreach ($api['consumer_api']['info']['x-ibm-languages']['description'] as $lang => $langArray) {
-            $lang = $this->utils->convert_lang_name_to_drupal($lang);
-            // if its one of our locales or the root of one of our locales
-            foreach ($languageList as $langListKey => $langListValue) {
-              if (\in_array($lang, $languageList, FALSE)) {
-                if (!$node->hasTranslation($lang)) {
-                  // ensure the translation has a title as its a required field
-                  $translation = $node->addTranslation($lang, [
-                    'title' => $truncated_title,
-                    'apic_description' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang]),
-                  ]);
-                  $translation->save();
-                }
-                else {
-                  $translation = $node->getTranslation($lang);
-                  // ensure the translation has a title as its a required field
-                  if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
-                    $translation->setTitle($truncated_title);
-                  }
-                  $translation->set('apic_description', $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang]))
-                    ->save();
-                }
-              }
-            }
-          }
-        }
         if ($moduleHandler->moduleExists('ghmarkdown')) {
           $format = 'ghmarkdown';
         }
         else {
           $format = 'full_html';
         }
-        $node->set('apic_description', ['value' => $api['consumer_api']['info']['description'], 'format' => $format]);
+        $description = $api['consumer_api']['info']['description'];
+        if ($description && $description != '') {
+          $node->set('apic_description', ['value' => $description, 'format' => $format]);
+        }
         // OAI3.1 has summary, so check for that first then fallback on x-ibm-summary
         $summaryField = 'x-ibm-summary';
         if (isset($api['consumer_api']['info']['summary']) && !empty($api['consumer_api']['info']['summary'])) {
@@ -334,37 +295,15 @@ class Api {
         if (!isset($api['consumer_api']['info'][$summaryField]) || empty($api['consumer_api']['info'][$summaryField])) {
           $api['consumer_api']['info'][$summaryField] = '';
         }
-        if (isset($api['consumer_api']['info']['x-ibm-languages'][$summaryField]) && !empty($api['consumer_api']['info']['x-ibm-languages'][$summaryField])) {
-          foreach ($api['consumer_api']['info']['x-ibm-languages'][$summaryField] as $lang => $langArray) {
-            $lang = $this->utils->convert_lang_name_to_drupal($lang);
-            // if its one of our locales or the root of one of our locales
-            foreach ($languageList as $langListKey => $langListValue) {
-              if (\in_array($lang, $languageList, FALSE)) {
-                if (!$node->hasTranslation($lang)) {
-                  // ensure the translation has a title as its a required field
-                  $translation = $node->addTranslation($lang, [
-                    'title' => $truncated_title,
-                    'apic_summary' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages'][$summaryField][$lang], 1000),
-                  ]);
-                  $translation->save();
-                }
-                else {
-                  $translation = $node->getTranslation($lang);
-                  // ensure the translation has a title as its a required field
-                  if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
-                    $translation->setTitle($truncated_title);
-                  }
-                  $translation->set('apic_summary', $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages'][$summaryField][$lang], 1000))
-                    ->save();
-                }
-              }
-            }
-          }
+        $summary = $this->utils->truncate_string($api['consumer_api']['info'][$summaryField], 1000);
+        if ($summary != '') {
+          $node->set('apic_summary', [
+            'value' => $this->utils->truncate_string($api['consumer_api']['info'][$summaryField], 1000),
+            'format' => 'plaintext',
+          ]);
+        } else {
+          $node->set('apic_summary', []);
         }
-        $node->set('apic_summary', [
-          'value' => $this->utils->truncate_string($api['consumer_api']['info'][$summaryField], 1000),
-          'format' => 'plaintext',
-        ]);
 
         $apiType = 'rest';
         if (isset($api['consumer_api']['x-ibm-configuration']['type'])) {
@@ -396,27 +335,26 @@ class Api {
 
         if (isset($api['created_at'])) {
           // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
-          $node->set('apic_created_at', strtotime($api['created_at']));
+          $node->set('apic_created_at', strval(strtotime($api['created_at'])));
         }
         if (isset($api['updated_at'])) {
           // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
-          $node->set('apic_updated_at', strtotime($api['updated_at']));
+          $node->set('apic_updated_at', strval(strtotime($api['updated_at'])));
         }
 
         if (!isset($api['consumer_api']['x-ibm-configuration']) || empty($api['consumer_api']['x-ibm-configuration'])) {
           $api['consumer_api']['x-ibm-configuration'] = '';
         }
         $node->set('api_ibmconfiguration', serialize($api['consumer_api']['x-ibm-configuration']));
-        $oaiVersion = 2;
+        $oaiVersion = '2';
         if (isset($api['consumer_api']['openapi']) && $this->utils->startsWith($api['consumer_api']['openapi'], '3.')) {
-          $oaiVersion = 3;
+          $oaiVersion = '3';
         }
         elseif (isset($api['consumer_api']['asyncapi'])) {
           $oaiVersion = 'asyncapi2';
           \Drupal::state()->set('ibm_apim.asyncapis_present', TRUE);
         }
         $node->set('api_oaiversion', $oaiVersion);
-        $node->save();
 
         try {
           // if empty securityDefinitions and others then needs to be object not array
@@ -481,7 +419,6 @@ class Api {
               $node->set('apic_ref', $apiRef);
             }
           }
-          $node->save();
         } catch (Throwable $e) {
           \Drupal::logger('apic_api')
             ->notice('Update of Open API document to database failed with: %data', ['%data' => $e->getMessage()]);
@@ -551,7 +488,6 @@ class Api {
                 }
               }
               $node->set('apic_attachments', $attachments);
-              $node->save();
             }
 
             if ($wsdlContentType === 'application/zip') {
@@ -561,7 +497,6 @@ class Api {
             if (($data !== NULL && !empty($data)) && ($node->api_wsdl->value !== $serialized)) {
               try {
                 $node->set('api_wsdl', $serialized);
-                $node->save();
               } catch (Throwable $e) {
                 \Drupal::logger('apic_api')
                   ->notice('Save of WSDL to database failed with: %data', ['%data' => $e->getMessage()]);
@@ -585,17 +520,102 @@ class Api {
           \Drupal::state()->set('ibm_apim.application_certificates', TRUE);
         }
 
-        if ($event !== 'internal') {
-          // Calling all modules implementing 'hook_apic_api_update':
-          $moduleHandler->invokeAll('apic_api_update', ['node' => $node, 'data' => $api]);
+        if ($this->utils->hashMatch($existingNodeHash, $node, 'new-api')) {
+          if ($event !== 'internal') {
+            \Drupal::logger('apic_api')->notice('Update api: No update required as the hash matched for @apiName @version', [
+              '@apiName' => $api['name'],
+              '@version' => $api['consumer_api']['info']['version'],
+            ]);
+          }
+        } else {
+          if (isset($api['consumer_api']['info']['x-ibm-languages']['title']) && !empty($api['consumer_api']['info']['x-ibm-languages']['title'])) {
+            foreach ($api['consumer_api']['info']['x-ibm-languages']['title'] as $lang => $langArray) {
+              $lang = $this->utils->convert_lang_name_to_drupal($lang);
+              if (\in_array($lang, $languageList, FALSE)) {
+                $truncated_title = $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['title'][$lang]);
+                // title needs to actually have a value
+                if (isset($truncated_title) && !empty($truncated_title)) {
+                  if (!$node->hasTranslation($lang)) {
+                    $translation = $node->addTranslation($lang, ['title' => $truncated_title]);
+                    $translation->save();
+                  }
+                  else {
+                    $node->getTranslation($lang)->setTitle($truncated_title)->save();
+                  }
+                }
+              }
+            }
+          }
 
-        }
+          if (isset($api['consumer_api']['info']['x-ibm-languages']['description']) && !empty($api['consumer_api']['info']['x-ibm-languages']['description'])) {
+            foreach ($api['consumer_api']['info']['x-ibm-languages']['description'] as $lang => $langArray) {
+              $lang = $this->utils->convert_lang_name_to_drupal($lang);
+              // if its one of our locales or the root of one of our locales
+              foreach ($languageList as $langListKey => $langListValue) {
+                if (\in_array($lang, $languageList, FALSE)) {
+                  if (!$node->hasTranslation($lang)) {
+                    // ensure the translation has a title as its a required field
+                    $translation = $node->addTranslation($lang, [
+                      'title' => $truncated_title,
+                      'apic_description' => [ 'value' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang]), 'format' => $format ],
+                    ]);
+                    $translation->save();
+                  }
+                  else {
+                    $translation = $node->getTranslation($lang);
+                    // ensure the translation has a title as its a required field
+                    if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
+                      $translation->setTitle($truncated_title);
+                    }
+                    $translation->set('apic_description', [
+                      'value' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages']['description'][$lang]),
+                      'format' => $format,
+                    ])->save();
+                  }
+                }
+              }
+            }
+          }
 
-        if ($event !== 'internal') {
-          \Drupal::logger('apic_api')->notice('API @api @version updated', [
-            '@api' => $node->getTitle(),
-            '@version' => $node->apic_version->value,
-          ]);
+          if (isset($api['consumer_api']['info']['x-ibm-languages'][$summaryField]) && !empty($api['consumer_api']['info']['x-ibm-languages'][$summaryField])) {
+            foreach ($api['consumer_api']['info']['x-ibm-languages'][$summaryField] as $lang => $langArray) {
+              $lang = $this->utils->convert_lang_name_to_drupal($lang);
+              // if its one of our locales or the root of one of our locales
+              foreach ($languageList as $langListKey => $langListValue) {
+                if (\in_array($lang, $languageList, FALSE)) {
+                  if (!$node->hasTranslation($lang)) {
+                    // ensure the translation has a title as its a required field
+                    $translation = $node->addTranslation($lang, [
+                      'title' => $truncated_title,
+                      'apic_summary' => $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages'][$summaryField][$lang], 1000),
+                    ]);
+                    $translation->save();
+                  }
+                  else {
+                    $translation = $node->getTranslation($lang);
+                    // ensure the translation has a title as its a required field
+                    if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
+                      $translation->setTitle($truncated_title);
+                    }
+                    $translation->set('apic_summary', $this->utils->truncate_string($api['consumer_api']['info']['x-ibm-languages'][$summaryField][$lang], 1000))
+                      ->save();
+                  }
+                }
+              }
+            }
+          }
+
+          $node->save();
+
+          if ($event !== 'internal') {
+            // Calling all modules implementing 'hook_apic_api_update':
+            $moduleHandler->invokeAll('apic_api_update', ['node' => $node, 'data' => $api]);
+
+            \Drupal::logger('apic_api')->notice('API @api @version updated', [
+              '@api' => $node->getTitle(),
+              '@version' => $node->apic_version->value,
+            ]);
+          }
         }
       }
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -625,7 +645,7 @@ class Api {
     $query->condition('type', 'api');
     $query->condition('apic_ref.value', $api['consumer_api']['info']['x-ibm-name'] . ':' . $api['consumer_api']['info']['version']);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
@@ -786,7 +806,7 @@ class Api {
       $query->condition('type', 'api');
       $query->condition('status', 1);
 
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
     }
     else {
       $refArray = [];
@@ -808,7 +828,7 @@ class Api {
         $query->condition('type', 'api');
         $query->condition('status', 1);
         $query->condition('apic_ref.value', $refArray, 'IN');
-        $results = $query->execute();
+        $results = $query->accessCheck()->execute();
       }
     }
     if ($results !== NULL && !empty($results)) {
@@ -903,7 +923,7 @@ class Api {
     $query->condition('type', 'page');
     $query->condition('status', 1);
     $query->condition('allapis.value', 1);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     if ($results !== NULL && !empty($results)) {
       $finalNids = array_values($results);
     }
@@ -911,7 +931,7 @@ class Api {
     $query->condition('type', 'page');
     $query->condition('status', 1);
     $query->condition('apiref.target_id', $nid);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     if ($results !== NULL && !empty($results)) {
       $nids = array_values($results);
       $finalNids = array_merge($finalNids, $nids);
@@ -950,7 +970,7 @@ class Api {
     $query->condition('type', 'api');
     $query->condition('apic_url.value', $url);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
@@ -982,7 +1002,7 @@ class Api {
     $query->condition('type', 'api');
     $query->condition('apic_url.value', $url);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
@@ -1020,7 +1040,7 @@ class Api {
     $query->condition('type', 'api');
     $query->condition('apic_url.value', $url);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
@@ -1047,6 +1067,7 @@ class Api {
         $api = unserialize($node->api_swagger->value, ['allowed_classes' => FALSE]);
         if (isset($api['x-ibm-configuration']['categories'])) {
           $this->apicTaxonomy->process_api_categories($api, $node);
+          $node->save();
         }
       }
     }
@@ -1066,7 +1087,7 @@ class Api {
     if (isset($oldNid, $newNid)) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'page')->condition('apiref', $oldNid, 'CONTAINS');
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         foreach ($nids as $nid) {
           $node = Node::load($nid);

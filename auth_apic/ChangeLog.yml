@@ -1,4 +1,17 @@
 changes:
+  8.x-5.3.5:
+  - mock environment correctly for invites (#749) (#750)
+  8.x-5.3.4:
+  - Mass merge for Drupal 10 Changes (#748)
+  8.x-5.3.3:
+  - Save codesnippet language to apim (#746)
+  8.x-5.3.2:
+  - DeleteUserForm Fix - Delete owner after corg (#743)
+  8.x-5.3.1:
+  - Fix for password_policy_username on password reset form
+  - Metadata save v10.0.5 (#737)
+  8.x-5.3.0:
+  - update version 8.x-5.2.3 -> 8.x-5.3.0
   8.x-5.2.2:
   - Fix OIDC redirects to homepage (#725)
   8.x-5.2.1:
@@ -311,7 +324,4 @@ changes:
   - disable caching entirely for the core user invitation / activation routes
   8.x-1.2.106:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since
-    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
-    are also filtered before logging them. Commits that start with 'INT' or 'bump
-    version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

@@ -1,0 +1,17 @@
+--- modules/facets/modules/facets_range_widget/facets_range_widget.libraries.yml        2022-12-16 15:52:14
++++ modules/facets/modules/facets_range_widget/facets_range_widget.libraries.yml   2023-01-13 11:59:46
+@@ -23,6 +23,5 @@
+   dependencies:
+     - core/drupal
+     - core/drupalSettings
+-    - core/jquery.once
+     - facets_range_widget/jquery.ui.slider.pips
+     - jquery_ui_touch_punch/touch-punch
+
+--- modules/facets/modules/facets_searchbox_widget/facets_searchbox_widget.libraries.yml        2022-12-16 15:52:14
++++ modules/facets/modules/facets_searchbox_widget/facets_searchbox_widget.libraries.yml   2023-01-13 12:01:07
+@@ -8,4 +8,3 @@
+   dependencies:
+     - core/drupal
+     - core/drupalSettings
+-    - core/jquery.once

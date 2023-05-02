@@ -174,7 +174,7 @@ class ApicTypeCountController extends ControllerBase {
     $query = \Drupal::entityQuery('node')
       ->condition('status', $status)
       ->condition('type', $type);
-    return $query->count()->execute();
+    return $query->count()->accessCheck()->execute();
   }
 
   /**
@@ -192,7 +192,7 @@ class ApicTypeCountController extends ControllerBase {
     if ($role_type_machine_name !== 'authenticated') {
       $query->condition('roles', $role_type_machine_name);
     }
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     return count($results);
   }
 
@@ -207,7 +207,7 @@ class ApicTypeCountController extends ControllerBase {
     $result = NULL;
     if ($type !== NULL) {
       $query = \Drupal::entityQuery($type);
-      $result = $query->count()->execute();
+      $result = $query->count()->accessCheck()->execute();
     }
     return $result;
   }

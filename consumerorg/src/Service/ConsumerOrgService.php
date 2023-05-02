@@ -251,50 +251,56 @@ class ConsumerOrgService {
 
     $apimResponse = $this->apimServer->createConsumerOrg($org);
 
-    if ($apimResponse !== NULL && $apimResponse->getCode() === 201) {
-      $org->setUrl($apimResponse->getData()['url']);
-      $org->setId($apimResponse->getData()['id']);
-      $org->setTitle($name);
-      $org->setOwnerUrl($apimResponse->getData()['owner_url']);
-      $org->setTags($apimResponse->getData()['group_urls']);
-      if (isset($apimResponse->getData()['roles'])) {
-        $org->setRolesFromArray($apimResponse->getData()['roles']);
-      }
-      if (isset($apimResponse->getData()['members'])) {
-        $org->setMembersFromArray($apimResponse->getData()['members']);
-      }
-      if (isset($apimResponse->getData()['created_at'])) {
-        $org->setCreatedAt(strtotime($apimResponse->getData()['created_at']));
-      }
-      if (isset($apimResponse->getData()['updated_at'])) {
-        $org->setUpdatedAt(strtotime($apimResponse->getData()['updated_at']));
-      }
-      if (isset($apimResponse->getData()['created_by'])) {
-        $org->setCreatedBy($apimResponse->getData()['created_by']);
-      }
-      if (isset($apimResponse->getData()['updated_by'])) {
-        $org->setUpdatedBy($apimResponse->getData()['updated_by']);
-      }
+    if ($apimResponse !== NULL && ($apimResponse->getCode() === 201 || $apimResponse->getCode() === 202)) {
+      if ($apimResponse->getCode() === 201) {
+        $org->setUrl($apimResponse->getData()['url']);
+        $org->setId($apimResponse->getData()['id']);
+        $org->setTitle($name);
+        $org->setOwnerUrl($apimResponse->getData()['owner_url']);
+        $org->setTags($apimResponse->getData()['group_urls']);
+        if (isset($apimResponse->getData()['roles'])) {
+          $org->setRolesFromArray($apimResponse->getData()['roles']);
+        }
+        if (isset($apimResponse->getData()['members'])) {
+          $org->setMembersFromArray($apimResponse->getData()['members']);
+        }
+        if (isset($apimResponse->getData()['created_at'])) {
+          $org->setCreatedAt(strtotime($apimResponse->getData()['created_at']));
+        }
+        if (isset($apimResponse->getData()['updated_at'])) {
+          $org->setUpdatedAt(strtotime($apimResponse->getData()['updated_at']));
+        }
+        if (isset($apimResponse->getData()['created_by'])) {
+          $org->setCreatedBy($apimResponse->getData()['created_by']);
+        }
+        if (isset($apimResponse->getData()['updated_by'])) {
+          $org->setUpdatedBy($apimResponse->getData()['updated_by']);
+        }
 
-      $this->createNode($org, 'consumer_org_create');
+        $this->createNode($org, 'consumer_org_create');
+        $response->setMessage(t('Consumer organization created successfully.'));
+        $this->logger->notice('Consumer organization @orgname created by @username', [
+          '@orgname' => $name,
+          '@username' => $this->currentUser->getAccountName(),
+        ]);
 
-      $response->setMessage(t('Consumer organization created successfully.'));
-      $this->logger->notice('Consumer organization @orgname created by @username', [
-        '@orgname' => $name,
-        '@username' => $this->currentUser->getAccountName(),
-      ]);
+        $this->session->set('consumer_organizations', NULL);
+        $this->userUtils->addConsumerOrgToUser($apimResponse->getData()['url'], NULL);
+        $this->userUtils->loadConsumerorgs();
+        $this->cacheTagsInvalidator->invalidateTags(['config:block.block.consumerorganizationselection']);
 
-      $this->session->set('consumer_organizations', NULL);
-      $this->userUtils->addConsumerOrgToUser($apimResponse->getData()['url'], NULL);
-      $this->userUtils->loadConsumerorgs();
-      $this->cacheTagsInvalidator->invalidateTags(['config:block.block.consumerorganizationselection']);
-
-      $this->userUtils->setCurrentConsumerorg($org->getUrl());
-      $this->userUtils->setOrgSessionData();
-
+        $this->userUtils->setCurrentConsumerorg($org->getUrl());
+        $this->userUtils->setOrgSessionData();
+        // invalidate the devorg select block cache
+        $this->cacheTagsInvalidator->invalidateTags(['consumer_org_select_block:uid:' . $this->currentUser->id()]);
+      } else {
+        $response->setMessage(t('Your consumer organization was created successfully and is pending approval. You will receive an email once your request is approved.'));
+        $this->logger->notice('Consumer organization @orgname created by @username is pending approval.', [
+          '@orgname' => $name,
+          '@username' => $this->currentUser->getAccountName(),
+        ]);
+      }
       $response->setSuccess(TRUE);
-      // invalidate the devorg select block cache
-      $this->cacheTagsInvalidator->invalidateTags(['consumer_org_select_block:uid:' . $this->currentUser->id()]);
     }
     else {
       $response->setMessage(t('Failed to create consumer organization.'));
@@ -316,12 +322,13 @@ class ConsumerOrgService {
    * Delete consumer org in apim and locally.
    *
    * @param \Drupal\consumerorg\ApicType\ConsumerOrg $org
+   * @param int $uidToIgnore - Does not delete this user from portal
    *
    * @return \Drupal\auth_apic\UserManagerResponse
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \Drupal\Core\TempStore\TempStoreException|\JsonException
    */
-  public function delete(ConsumerOrg $org): UserManagerResponse {
+  public function delete(ConsumerOrg $org, $uidToIgnore = null): UserManagerResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $response = new UserManagerResponse();
 
@@ -333,10 +340,10 @@ class ConsumerOrgService {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $org->getUrl());
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       $orgNode = NULL;
       if ($nids !== NULL && !empty($nids)) {
-        $this->deleteNode(array_shift($nids));
+        $this->deleteNode(array_shift($nids), $uidToIgnore);
       }
       // invalidate the devorg select block cache
       $this->userUtils->removeConsumerOrgFromUser($org->getUrl(), NULL);
@@ -383,7 +390,7 @@ class ConsumerOrgService {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $consumer->getUrl())->sort('nid', 'ASC');
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
         $oldNode = Node::load($nid);
@@ -397,6 +404,7 @@ class ConsumerOrgService {
 
       // wipe all our fields to ensure they get set to new values
       $node->set('apic_hostname', NULL);
+      $node->set('uid', 1);
       $node->set('apic_catalog_id', NULL);
       $node->set('apic_provider_id', NULL);
       $node->set('apic_created_at', NULL);
@@ -420,6 +428,7 @@ class ConsumerOrgService {
     else {
       $node = Node::create([
         'type' => 'consumerorg',
+        'uid' => 1
       ]);
     }
 
@@ -487,17 +496,22 @@ class ConsumerOrgService {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $consumer->getUrl());
     $returnValue = NULL;
     if ($node !== NULL) {
-      $utils = \Drupal::service('ibm_apim.utils');
-      $hostvariable = $this->siteconfig->getApimHost();
-      $node->setTitle($utils->truncate_string($consumer->getTitle()));
+      // Need to set these two before we calculate the old hash, as they are repesented as a
+      // different type (string vs int etc.) when set compared to when queried from the DB
+      // Being as they are always the same value anyway they should always match between old and new
       $node->setPromoted(NodeInterface::NOT_PROMOTED);
       $node->setPublished();
+
+      $existingNodeHash = $this->utils->generateNodeHash($node, 'old-consumer_org');
+
+      $hostvariable = $this->siteconfig->getApimHost();
+      $node->setTitle($this->utils->truncate_string($consumer->getTitle()));
       $node->set('apic_hostname', $hostvariable);
       $node->set('apic_provider_id', $this->siteconfig->getOrgId());
       $node->set('apic_catalog_id', $this->siteconfig->getEnvId());
       $node->set('consumerorg_id', $consumer->getId());
       $node->set('consumerorg_url', $consumer->getUrl());
-      $node->set('consumerorg_name', $utils->truncate_string($consumer->getName(), 128));
+      $node->set('consumerorg_name', $this->utils->truncate_string($consumer->getName(), 128));
       $node->set('consumerorg_owner', $consumer->getOwnerUrl());
       $node->set('apic_created_at', $consumer->getCreatedAt());
       $node->set('apic_updated_at', $consumer->getUpdatedAt());
@@ -506,7 +520,7 @@ class ConsumerOrgService {
         $consumer->setTags([]);
       }
       $node->set('consumerorg_tags', $consumer->getTags());
-      $this->utils->saveCustomFields($node, $this->getCustomFields(), $consumer->getCustomFields(), FALSE);
+      $this->utils->saveCustomFields($node, $this->getCustomFields(), $consumer->getCustomFields(), FALSE, FALSE);
 
       $roles = [];
       if ($consumer->getRoles() !== NULL) {
@@ -607,6 +621,14 @@ class ConsumerOrgService {
             }
 
             if ($userAccount) {
+              // For all non-admin users, don't store their password in our database.
+              // We have to do this here as well as inside updateLocalAccount so that the hashes
+              // will match if nothing has changed
+              if ((int) $userAccount->id() !== 1) {
+                $userAccount->setPassword(NULL);
+              }
+
+              $existingUserAccountHash = $this->utils->generateNodeHash($userAccount, 'old-account');
               // consumerorg_url is a multi value field which Drupal represents using a FieldItemList class
               // this causes headaches as seen below....
               $consumerorg_urls = $userAccount->consumerorg_url->getValue();
@@ -615,21 +637,28 @@ class ConsumerOrgService {
               }
 
               // Doesn't update the custom fields since they're not in the right format
-              $updatedAccount = $this->accountService->updateLocalAccount($user);
+              $updatedAccount = $this->accountService->updateLocalAccount($user, $userAccount, FALSE);
               if ($updatedAccount !== NULL) {
                 $userAccount = $updatedAccount;
               }
 
               // Add the custom fields to the user
-              $customFields = $this->userService->getCustomUserFields();
-              $this->utils->saveCustomFields($userAccount, $customFields, $memberArray['user'], TRUE);
+              $customFields = $this->userService->getMetadataFields();
+              $this->utils->saveCustomFields($userAccount, $customFields, $memberArray['user'], TRUE, FALSE);
 
               // Add the consumerorg if it isn't already associated with this user
               if (!$this->isConsumerorgAssociatedWithAccount($consumer->getUrl(), $userAccount)) {
                 $consumerorg_urls[] = $consumer->getUrl();
                 $userAccount->set('consumerorg_url', $consumerorg_urls);
               }
-              $userAccount->save();
+
+              if ($this->utils->hashMatch($existingUserAccountHash, $userAccount, 'new-account')) {
+                if ($event !== 'internal') {
+                  $this->logger->notice('UserAccount @user not updated as the hash matched', ['@user' => $userAccount->id()]);}
+              } else {
+                $this->logger->notice('UserAccount @user updated', ['@user' => $userAccount->id()]);
+                $userAccount->save();
+              }
             }
           }
 
@@ -646,66 +675,73 @@ class ConsumerOrgService {
         }
       }
       $node->set('consumerorg_invites', $invites);
-      $node->save();
 
       if ($consumer->getPaymentMethods() !== NULL) {
         $paymentMethodService = \Drupal::service('consumerorg.paymentmethod');
         $node = $paymentMethodService->createOrUpdatePaymentMethodList($node, $consumer->getPaymentMethods());
       }
 
-      if ($node !== NULL && $event !== 'internal') {
-        // Add Activity Feed Event Log
-        $eventEntity = new ApicEvent();
-        $eventEntity->setArtifactType('consumer_org');
-        if ($this->currentUser->isAuthenticated() && (int) $this->currentUser->id() !== 1) {
-          $current_user = User::load($this->currentUser->id());
-          if ($current_user !== NULL) {
-            // we only set the user if we're running as someone other than admin
-            // if running as admin then we're likely doing things on behalf of the admin
-            // TODO we might want to check if there is a passed in user_url and use that too
-            $eventEntity->setUserUrl($current_user->get('apic_url')->value);
-          }
+      if ($this->utils->hashMatch($existingNodeHash, $node, 'new-consumer_org')) {
+        if ($event !== 'internal') {
+          $this->logger->notice('Consumer organization @consumerorg not updated as the hash matched', ['@consumerorg' => $node->getTitle()]);
         }
-        elseif ($consumer->getUpdatedBy() !== NULL && $this->apimUtils->isConsumerApiURL($consumer->getUpdatedBy())) {
-          $eventEntity->setUserUrl($this->apimUtils->removeFullyQualifiedUrl($consumer->getUpdatedBy()));
-        }
-        $timestamp = $node->apic_updated_at->value;
-        // if timestamp still not set default to current time
-        if ($timestamp === NULL) {
-          $timestamp = time();
-        }
-        $eventEntity->setTimestamp((int) $timestamp);
-        $eventEntity->setEvent('update');
-        $eventEntity->setArtifactUrl($consumer->getUrl());
-        $eventEntity->setConsumerOrgUrl($consumer->getUrl());
-        $eventEntity->setData(['orgName' => $consumer->getTitle()]);
+      } else {
+        $node->save();
 
-        // check if there is a create event needed too
-        if ($consumer->getCreatedAt() !== NULL) {
-          $createEventEntity = clone $eventEntity;
-          $createEventEntity->setEvent('create');
-          if ($this->apimUtils->isConsumerApiURL($consumer->getCreatedBy())) {
-            $createEventEntity->setUserUrl($this->apimUtils->removeFullyQualifiedUrl($consumer->getCreatedBy()));
-          }
-          $createEventEntity->setTimestamp($consumer->getCreatedAt());
-          $this->eventLogService->createIfNotExist($createEventEntity);
-        }
-        if ($consumer->getCreatedAt() !== $consumer->getUpdatedAt()) {
-          if ($this->apimUtils->isConsumerApiURL($consumer->getUpdatedBy())) {
+        if ($node !== NULL && $event !== 'internal') {
+          // Add Activity Feed Event Log
+          $eventEntity = new ApicEvent();
+          $eventEntity->setArtifactType('consumer_org');
+          if ($this->currentUser->isAuthenticated() && (int) $this->currentUser->id() !== 1) {
+            $current_user = User::load($this->currentUser->id());
+            if ($current_user !== NULL) {
+              // we only set the user if we're running as someone other than admin
+              // if running as admin then we're likely doing things on behalf of the admin
+              // TODO we might want to check if there is a passed in user_url and use that too
+              $eventEntity->setUserUrl($current_user->get('apic_url')->value);
+            }
+          } elseif ($consumer->getUpdatedBy() !== NULL && $this->apimUtils->isConsumerApiURL($consumer->getUpdatedBy())) {
             $eventEntity->setUserUrl($this->apimUtils->removeFullyQualifiedUrl($consumer->getUpdatedBy()));
           }
 
-          // intentionally create the create one before update so they appear in sequence in the db
-          $this->eventLogService->createIfNotExist($eventEntity);
-        }
+          $timestamp = $node->apic_updated_at->value;
+          // if timestamp still not set default to current time
+          if ($timestamp === NULL) {
+            $timestamp = time();
+          }
+          $eventEntity->setTimestamp((int) $timestamp);
+          $eventEntity->setEvent('update');
+          $eventEntity->setArtifactUrl($consumer->getUrl());
+          $eventEntity->setConsumerOrgUrl($consumer->getUrl());
+          $eventEntity->setData(['orgName' => $consumer->getTitle()]);
 
-        $this->logger->notice('Consumer organization @consumerorg updated', ['@consumerorg' => $node->getTitle()]);
-        // Calling all modules implementing 'hook_consumerorg_update':
-        $this->moduleHandler->invokeAll('consumerorg_update', ['node' => $node, 'data' => $consumer]);
+          // check if there is a create event needed too
+          if ($consumer->getCreatedAt() !== NULL) {
+            $createEventEntity = clone $eventEntity;
+            $createEventEntity->setEvent('create');
+            if ($this->apimUtils->isConsumerApiURL($consumer->getCreatedBy())) {
+              $createEventEntity->setUserUrl($this->apimUtils->removeFullyQualifiedUrl($consumer->getCreatedBy()));
+            }
+            $createEventEntity->setTimestamp($consumer->getCreatedAt());
+            $this->eventLogService->createIfNotExist($createEventEntity);
+          }
+          if ($consumer->getCreatedAt() !== $consumer->getUpdatedAt()) {
+            if ($this->apimUtils->isConsumerApiURL($consumer->getUpdatedBy())) {
+              $eventEntity->setUserUrl($this->apimUtils->removeFullyQualifiedUrl($consumer->getUpdatedBy()));
+            }
 
+            // intentionally create the create one before update so they appear in sequence in the db
+            $this->eventLogService->createIfNotExist($eventEntity);
+          }
+
+          // Calling all modules implementing 'hook_consumerorg_update':
+          $this->moduleHandler->invokeAll('consumerorg_update', ['node' => $node, 'data' => $consumer]);
+
+          // invalidate myorg page cache
+          $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $consumer->getUrl()]);
+          }
       }
-      // invalidate myorg page cache
-      $this->cacheTagsInvalidator->invalidateTags(['myorg:url:' . $consumer->getUrl()]);
+
       ibm_apim_exit_trace(__FUNCTION__, NULL);
       $returnValue = $node;
     }
@@ -739,7 +775,7 @@ class ConsumerOrgService {
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $consumer->getUrl());
 
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
         $node = Node::load($nid);
@@ -781,7 +817,7 @@ class ConsumerOrgService {
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $invitation['consumer_org_url']);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
       $node = Node::load($nid);
@@ -893,7 +929,7 @@ class ConsumerOrgService {
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $invitation['consumer_org_url']);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
       $node = Node::load($nid);
@@ -946,9 +982,17 @@ class ConsumerOrgService {
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function deleteNode($nid): void {
+  public function deleteNode($nid, $uidToIgnore = null): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $nid);
     $node = Node::load($nid);
+    $eventEntity = new ApicEvent();
+    $corg = $this->getByNid($nid);
+    $eventEntity->setConsumerOrgUrl($corg->getUrl());
+    $eventEntity->setData(['orgName' => $corg->getTitle()]);
+    $eventEntity->setArtifactType('consumer_org');
+    $eventEntity->setTimestamp(time());
+    $eventEntity->setEvent('delete');
+    $eventEntity->setArtifactUrl($corg->getUrl());
     if ($node !== NULL) {
       $hookData = $this->createOrgHookData($node);
       // this hook will be used in the apic_app module to delete the applications
@@ -964,7 +1008,7 @@ class ConsumerOrgService {
       $query = \Drupal::entityQuery('consumerorg_payment_method');
       $query->condition('consumerorg_url.value', $consumerorg_url);
 
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         foreach (array_chunk($entityIds, 50) as $chunk) {
           $paymentMethodEntities = PaymentMethod::loadMultiple($chunk);
@@ -973,11 +1017,12 @@ class ConsumerOrgService {
           }
         }
       }
-
+      $performBatch = FALSE;
       // remove the consumerorg assignment from all users since we're deleting it
       $query = $this->userQuery;
       $query->condition('consumerorg_url.value', $consumerorg_url, 'CONTAINS');
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
+      $performBatch = FALSE;
       if ($results !== NULL && !empty($results)) {
         $uids = array_values($results);
         if (!empty($uids)) {
@@ -994,8 +1039,9 @@ class ConsumerOrgService {
                     unset($consumerorg_urls[$index]);
                   }
                 }
-                if (empty($consumerorg_urls)) {
-                  $account->delete();
+                if (empty($consumerorg_urls) && (!isset($uidToIgnore) || $account->id() !== $uidToIgnore)) {
+                  user_cancel([], $account->id(), 'user_cancel_reassign');
+                  $performBatch = TRUE;
                 } else {
                   $account->set('consumerorg_url', $consumerorg_urls);
                   $account->save();
@@ -1005,7 +1051,11 @@ class ConsumerOrgService {
           }
         }
       }
-
+      if ($performBatch && !isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+        $batch = &batch_get();
+        $batch['progressive'] = FALSE;
+        batch_process();
+      }
       // Calling all modules implementing 'hook_consumerorg_delete':
       $description = 'The consumerorg_delete hook is deprecated and will be removed. Please use the consumerorg_pre_delete or consumerorg_post_delete hook instead.';
       $this->moduleHandler->invokeAllDeprecated($description, 'consumerorg_delete', ['node' => $node]);
@@ -1017,7 +1067,7 @@ class ConsumerOrgService {
           'data' => $hookData,
         ]);
       $this->logger->notice('Consumer organization @consumerorg deleted', ['@consumerorg' => $node->getTitle()]);
-
+      $this->eventLogService->createIfNotExist($eventEntity);
       unset($node);
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -1118,7 +1168,7 @@ class ConsumerOrgService {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $orgUrl);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
         $node = Node::load($nid);
@@ -1152,7 +1202,7 @@ class ConsumerOrgService {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $orgUrl);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
         $node = Node::load($nid);
@@ -1243,7 +1293,7 @@ class ConsumerOrgService {
       //        $query->condition('consumerorg_memberlist.value', $this->currentUser->getAccountName(), 'CONTAINS');
       //      }
 
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
 
       if ($results !== NULL && !empty($results)) {
         $nid = array_shift($results);
@@ -1272,7 +1322,7 @@ class ConsumerOrgService {
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $url);
 
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
 
       if ($results !== NULL && !empty($results)) {
         $nid = array_shift($results);
@@ -1297,7 +1347,7 @@ class ConsumerOrgService {
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_memberlist.value', $account->apic_url->value, 'CONTAINS');
 
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
       if ($results !== NULL && !empty($results)) {
         $list = array_values($results);
       }
@@ -1820,7 +1870,7 @@ class ConsumerOrgService {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $org->getUrl());
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         $orgNid = array_shift($nids);
         $orgNode = Node::load($orgNid);
@@ -1881,7 +1931,7 @@ class ConsumerOrgService {
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_memberlist.value', $userUrl, 'CONTAINS');
 
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if ($nids !== NULL && !empty($nids)) {
         foreach (array_chunk($nids, 50) as $chunk) {
@@ -2049,7 +2099,7 @@ class ConsumerOrgService {
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $url);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
@@ -2103,7 +2153,7 @@ class ConsumerOrgService {
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $url);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
@@ -2134,7 +2184,7 @@ class ConsumerOrgService {
     $query->condition('type', 'consumerorg');
     $query->condition('consumerorg_url.value', $url);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
@@ -2197,7 +2247,7 @@ class ConsumerOrgService {
         $query->condition('type', 'consumerorg');
         $query->condition('consumerorg_url.value', $org);
 
-        $nids = $query->execute();
+        $nids = $query->accessCheck()->execute();
         if ($nids !== NULL && !empty($nids)) {
           $nid = array_shift($nids);
           $consumerOrg = Node::load($nid);

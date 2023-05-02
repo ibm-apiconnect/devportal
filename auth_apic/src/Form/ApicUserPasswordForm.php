@@ -29,6 +29,8 @@ use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\user\Form\UserPasswordForm;
 use Drupal\user\UserInterface;
 use Drupal\user\UserStorageInterface;
+use Drupal\Core\TypedData\TypedDataManagerInterface;
+use Drupal\Component\Utility\EmailValidatorInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -103,6 +105,8 @@ class ApicUserPasswordForm extends UserPasswordForm {
    * @param \Drupal\Core\Messenger\Messenger $messenger
    * @param \Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface $oidc_service
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $session_store_factory
+   * @param \Drupal\Core\TypedData\TypedDataManagerInterface $typed_data_manager
+   * @param \Drupal\Component\Utility\EmailValidatorInterface $email_validator
    */
   public function __construct(UserStorageInterface $user_storage,
                               LanguageManagerInterface $language_manager,
@@ -115,8 +119,10 @@ class ApicUserPasswordForm extends UserPasswordForm {
                               ApicPasswordInterface $password_service,
                               Messenger $messenger,
                               OidcRegistryServiceInterface $oidc_service,
-                              PrivateTempStoreFactory $session_store_factory) {
-    parent::__construct($user_storage, $language_manager, $config_factory, $flood);
+                              PrivateTempStoreFactory $session_store_factory,
+                              TypedDataManagerInterface $typed_data_manager,
+                              EmailValidatorInterface $email_validator) {
+    parent::__construct($user_storage, $language_manager, $config_factory, $flood, $typed_data_manager, $email_validator);
     $this->mgmtServer = $mgmtServer;
     $this->logger = $logger;
     $this->registryService = $registry_service;
@@ -147,6 +153,8 @@ class ApicUserPasswordForm extends UserPasswordForm {
       $container->get('messenger'),
       $container->get('auth_apic.oidc'),
       $container->get('tempstore.private'),
+      $container->get('typed_data_manager'),
+      $container->get('email.validator')
     );
   }
 

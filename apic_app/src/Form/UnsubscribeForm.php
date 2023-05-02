@@ -157,7 +157,7 @@ class UnsubscribeForm extends ConfirmFormBase {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product');
       $query->condition('apic_url.value', $this->sub->product_url());
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if (isset($nids) && !empty($nids)) {
         $nids = array_values($nids);
       }

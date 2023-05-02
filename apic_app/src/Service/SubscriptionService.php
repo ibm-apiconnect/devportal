@@ -52,8 +52,8 @@ class SubscriptionService {
    * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
    * @param \Drupal\ibm_apim\Service\ApimUtils $apimUtils
    */
-  public function __construct(UserUtils $userUtils, 
-                              ApimUtils $apimUtils, 
+  public function __construct(UserUtils $userUtils,
+                              ApimUtils $apimUtils,
                               ModuleHandler $moduleHandler) {
     $this->userUtils = $userUtils;
     $this->apimUtils = $apimUtils;
@@ -148,8 +148,6 @@ class SubscriptionService {
       // Add the update event log entry
       $this->addEventLog('update', $updated_at, $appEntityId, $fields, $updated_by);
     } else {
-      // We didn't need to do an update to the subscription but we still need to make sure we have the correct event log entries
-      $this->addEventLog('create', $created_at, $appEntityId, $fields, $created_by);
       \Drupal::logger('apic_app')->notice('Subscription @subid already existed and had not changed. No update was carried out', [
         '@subid' => $subId,
       ]);
@@ -607,7 +605,7 @@ class SubscriptionService {
     if (isset($org['url'])) {
       $query = \Drupal::entityQuery('apic_app_application_subs');
       $query->condition('consumerorg_url', $org['url']);
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         $credEntityIds = $entityIds;
       }

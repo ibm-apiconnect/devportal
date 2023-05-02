@@ -52,6 +52,7 @@ class ConsumerOrgCommands extends DrushCommands {
   public function drush_consumerorg_createOrUpdate($content, $event, $func): void {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
     if ($content !== NULL) {
+      $time_start = microtime(true);
       // in case moderation is on we need to run as admin
       // save the current user so we can switch back at the end
       $accountSwitcher = \Drupal::service('account_switcher');
@@ -66,17 +67,15 @@ class ConsumerOrgCommands extends DrushCommands {
       if ($org !== NULL) {
         $ref = $org->getUrl();
         $createdOrUpdated = $consumerOrgService->createOrUpdateNode($org, $event);
+
+        $time_end = microtime(true);
+        $execution_time = (microtime(true) - $time_start);
+
         if ($createdOrUpdated) {
-          \Drupal::logger('consumerorg')->info('Drush @func created organization @org', [
-            '@func' => $func,
-            '@org' => $ref,
-          ]);
+          fprintf(STDERR, "Drush %s created Organization '%s' in %f seconds\n", $func, $ref, $execution_time);
         }
         else {
-          \Drupal::logger('consumerorg')->info('Drush @func updated existing organization @org', [
-            '@func' => $func,
-            '@org' => $ref,
-          ]);
+          fprintf(STDERR, "Drush %s updated existing Organization '%s' in %f seconds\n", $func, $ref, $execution_time);
         }
       }
       else {
@@ -159,11 +158,11 @@ class ConsumerOrgCommands extends DrushCommands {
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $content['consumer_org']['url']);
 
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
         $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
-        $consumerOrgService->deleteNode($nid, $event);
+        $consumerOrgService->deleteNode($nid);
         \Drupal::logger('consumerorg')->info('Drush DeleteOrg deleted organization @org', ['@org' => $content['consumer_org']['title']]);
       }
       else {
@@ -214,7 +213,7 @@ class ConsumerOrgCommands extends DrushCommands {
       $nids = [];
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg')->condition('consumerorg_id', $consumerorgIds, 'NOT IN');
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
       if ($results !== NULL) {
         foreach ($results as $item) {
           $nids[] = $item;
@@ -223,7 +222,7 @@ class ConsumerOrgCommands extends DrushCommands {
 
       foreach ($nids as $nid) {
         $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
-        $consumerOrgService->deleteNode($nid, 'content_refresh');
+        $consumerOrgService->deleteNode($nid);
       }
     }
     ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -609,6 +608,7 @@ class ConsumerOrgCommands extends DrushCommands {
     else {
       $members = $corg->getMembers();
       if ($members !== NULL && !empty($members)) {
+        $updated = false;
         foreach ($members as $key => $existingMember) {
           if ($existingMember->getUserUrl() === $payload['user_url']) {
             $members[$key]->setRoleUrls($payload['role_urls']);
@@ -620,15 +620,20 @@ class ConsumerOrgCommands extends DrushCommands {
             if (!empty($payload['updated_at'])) {
               $members[$key]->setUpdatedAt(strtotime($payload['updated_at']));
             }
+            $updated = true;
           }
         }
-        $corg->setMembers($members);
-        \Drupal::logger('consumerorg')->notice('Updated member @username in consumer org @id', [
-          '@username' => $payload['user']['username'],
-          '@id' => $corg->getId(),
-        ]);
+
+        if ($updated) {
+          $corg->setMembers($members);
+          \Drupal::logger('consumerorg')->notice('Updated member @username in consumer org @id', [
+            '@username' => $payload['user']['username'],
+            '@id' => $corg->getId(),
+          ]);
+        }
       }
-      else {
+
+      if (!$updated) {
         $member = new Member();
         $member->setUrl($payload['url']);
         $member->setUser($user_service->getUserFromJSON($payload['user']));

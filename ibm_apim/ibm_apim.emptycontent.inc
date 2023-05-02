@@ -314,7 +314,7 @@ function ibm_apim_update_no_content_blocks() {
       $block_content_id = $parts[1];
       $query = \Drupal::entityQuery('block_content');
       $query->condition('uuid.value', $block_content_id);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if (isset($nids) && !empty($nids)) {
         $blockid = array_shift($nids);
         $block_content = BlockContent::load($blockid);
@@ -338,7 +338,7 @@ function ibm_apim_update_no_content_blocks() {
       $block_content_id = $parts[1];
       $query = \Drupal::entityQuery('block_content');
       $query->condition('uuid.value', $block_content_id);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if (isset($nids) && !empty($nids)) {
         $blockid = array_shift($nids);
         $block_content = BlockContent::load($blockid);
@@ -362,7 +362,7 @@ function ibm_apim_update_no_content_blocks() {
       $block_content_id = $parts[1];
       $query = \Drupal::entityQuery('block_content');
       $query->condition('uuid.value', $block_content_id);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if (isset($nids) && !empty($nids)) {
         $blockid = array_shift($nids);
         $block_content = BlockContent::load($blockid);
@@ -393,7 +393,7 @@ function ibm_apim_update_blogs_no_content_blocks() {
       $block_content_id = $parts[1];
       $query = \Drupal::entityQuery('block_content');
       $query->condition('uuid.value', $block_content_id);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if (isset($nids) && !empty($nids)) {
         $blockid = array_shift($nids);
         $block_content = BlockContent::load($blockid);

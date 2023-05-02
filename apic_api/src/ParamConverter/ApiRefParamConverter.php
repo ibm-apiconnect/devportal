@@ -28,7 +28,7 @@ class ApiRefParamConverter implements ParamConverterInterface {
     $query->condition('type', 'api');
     $query->condition('status', 1);
     $query->condition('apic_ref.value', $ref);
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);

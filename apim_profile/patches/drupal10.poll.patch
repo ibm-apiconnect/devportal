@@ -1,0 +1,27 @@
+--- modules/poll/js/poll.admin.js       2023-02-10 11:08:58
++++ modules/poll/js/poll.admin.js  2023-02-10 11:08:54
+@@ -1,7 +1,7 @@
+-(function ($, Drupal) {
++(function ($, Drupal, once) {
+
+   $('.poll-existing-choice').on('focus', function (event) {
+-    $(document).once('poll-existing-choice').each(function () {
++    $(once('poll-existing-choice', document)).each(function () {
+       $(Drupal.theme('pollChoiceDeleteWarning')).insertBefore($('#choice-values')).hide().fadeIn('slow');
+     });
+   });
+@@ -17,4 +17,4 @@
+     }
+   });
+
+-})(jQuery, Drupal);
++})(jQuery, Drupal, once);
+
+--- modules/poll/poll.libraries.yml     2023-02-10 11:10:18
++++ modules/poll/poll.libraries.yml        2023-02-10 11:10:08
+@@ -8,3 +8,5 @@
+ admin:
+   js:
+       js/poll.admin.js: {}
++  dependencies:
++    - core/once

@@ -2,25 +2,25 @@
 +++ core/modules/system/system.module	2018-08-02 12:35:07.444222208 +0000
 @@ -155,7 +155,7 @@
        return $output;
- 
+
      case 'system.modules_uninstall':
 -      return '<p>' . t('The uninstall process removes all data related to a module.') . '</p>';
 +      return '<p>' . t('The disable process removes all data related to a module.') . '</p>';
- 
+
      case 'entity.block.edit_form':
        if (($block = $route_match->getParameter('block')) && $block->getPluginId() == 'system_powered_by_block') {
 
 --- core/modules/system/src/Form/ModulesUninstallForm.php	2018-08-02 11:55:43.302432936 +0000
 +++ core/modules/system/src/Form/ModulesUninstallForm.php	2018-08-02 12:37:24.645471095 +0000
 @@ -131,7 +131,7 @@
- 
+
        $form['uninstall'][$module->getName()] = [
          '#type' => 'checkbox',
 -        '#title' => $this->t('Uninstall @module module', ['@module' => $name]),
 +        '#title' => $this->t('Disable @module module', ['@module' => $name]),
          '#title_display' => 'invisible',
        ];
- 
+
 @@ -157,7 +157,7 @@
      $form['actions'] = ['#type' => 'actions'];
      $form['actions']['submit'] = [
@@ -28,7 +28,7 @@
 -      '#value' => $this->t('Uninstall'),
 +      '#value' => $this->t('Disable'),
      ];
- 
+
      return $form;
 
 --- core/modules/system/templates/system-modules-uninstall.html.twig	2018-08-02 13:04:27.951955222 +0000
@@ -43,10 +43,10 @@
        <th>{{ 'Description'|t }}</th>
      </tr>
 
---- core/themes/stable/templates/admin/system-modules-uninstall.html.twig	2018-08-02 13:02:17.710786006 +0000
-+++ core/themes/stable/templates/admin/system-modules-uninstall.html.twig	2018-08-02 13:02:32.170915760 +0000
+--- core/themes/stable9/templates/admin/system-modules-uninstall.html.twig	2018-08-02 13:02:17.710786006 +0000
++++ core/themes/stable9/templates/admin/system-modules-uninstall.html.twig	2018-08-02 13:02:32.170915760 +0000
 @@ -24,7 +24,7 @@
- <table class="responsive-enabled" data-striping="1">
+ <table class="responsive-enabled">
    <thead>
      <tr>
 -      <th>{{ 'Uninstall'|t }}</th>
@@ -106,4 +106,3 @@
 +    $this->messenger()->addStatus($this->t('The selected modules have been disabled.'));
      $form_state->setRedirectUrl($this->getCancelUrl());
    }
-

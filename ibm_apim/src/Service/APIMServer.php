@@ -652,7 +652,7 @@ class APIMServer implements ManagementServerInterface {
 
     if ($responseObject !== NULL) {
       $code = $responseObject->getCode();
-      if ($code >= 200 && $code < 400) {
+      if ($code === 201) {
         $data = $responseObject->getData();
 
         $data['url'] = $this->apim_utils->removeFullyQualifiedUrl($data['url']);
@@ -844,9 +844,10 @@ class APIMServer implements ManagementServerInterface {
    * @inheritDoc
    * @throws \Exception
    */
-  public function activateFromJWT(JWTToken $jwt): RestResponse {
+  public function activateFromJWT(JWTToken $jwt): ?RestResponse  {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
+    $result = null;
     $headers = [
       'Content-Type: application/json',
       'Accept: application/json',
@@ -855,11 +856,19 @@ class APIMServer implements ManagementServerInterface {
       'X-IBM-Client-Id: ' . $this->siteConfig->getClientId(),
       'X-IBM-Client-Secret: ' . $this->siteConfig->getClientSecret(),
     ];
+    $pos = strpos($jwt->getUrl(), '?activation_id=');
+    if ($pos !== false) {
+      $activationID = substr($jwt->getUrl(), $pos+15);
+      if (preg_match('/^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/', $activationID)) {
+        $url = '/consumer-api/activate?activation_id='  . $activationID;
+      }
+    }
+    if (isset($url)) {
+      $mgmt_result = ApicRest::json_http_request($url, 'POST', $headers, '');
+      $result = $this->restResponseReader->read($mgmt_result);
+    }
 
-    $mgmt_result = ApicRest::json_http_request($jwt->getUrl(), 'POST', $headers, '');
-    $result = $this->restResponseReader->read($mgmt_result);
-
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $result->getCode());
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $result?->getCode());
     return $result;
   }
 

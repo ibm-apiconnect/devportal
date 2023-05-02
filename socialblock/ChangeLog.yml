@@ -1,4 +1,8 @@
 changes:
+  8.x-5.3.1:
+  - Mass merge for Drupal 10 Changes (#57)
+  8.x-5.3.0:
+  - update version 8.x-5.2.1 -> 8.x-5.3.0
   8.x-5.2.0:
   - update version 8.x-5.1.1 -> 8.x-5.2.0
   8.x-5.1.0:
@@ -71,7 +75,4 @@ changes:
   - Bump Major version in master to differentiate from the service stream
   8.x-1.1.17:
   - Merge pull request
-  - Logging all the changes between the two successfull builds. All the commits since
-    the last saccessfull build are fetched and stored in the ChangeLog.yml file. Commits
-    are also filtered before logging them. Commits that start with 'INT' or 'bump
-    version' are ommited
+  - Logging all the changes between the two successfull builds. All the commits since the last saccessfull build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are ommited

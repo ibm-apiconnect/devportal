@@ -126,7 +126,7 @@ class PaymentMethodDeleteForm extends ConfirmFormBase {
       $query = \Drupal::entityQuery('consumerorg_payment_method');
       $query->condition('consumerorg_url.value', $org['url']);
 
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       if (isset($entityIds) && !empty($entityIds) && in_array($escapedId, $entityIds, TRUE)) {
         $found = TRUE;
         $this->paymentMethodId = $escapedId;

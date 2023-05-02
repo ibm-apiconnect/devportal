@@ -399,6 +399,7 @@ display:
           exposed: true
           expose:
             label: Name
+            field_identifier: title
           entity_type: node
           entity_field: title
           plugin_id: standard
@@ -413,6 +414,7 @@ display:
           exposed: true
           expose:
             label: Version
+            field_identifier: apic_version_value
           plugin_id: standard
         apic_rating_status:
           id: apic_rating_status
@@ -425,6 +427,7 @@ display:
           exposed: true
           expose:
             label: Rating
+            field_identifier: apic_rating_status
           plugin_id: standard
         created:
           id: created
@@ -437,6 +440,7 @@ display:
           exposed: true
           expose:
             label: Created
+            field_identifier: created
           granularity: minute
           entity_type: node
           entity_field: created
@@ -452,6 +456,7 @@ display:
           exposed: true
           expose:
             label: Changed
+            field_identifier: changed
           granularity: minute
           entity_type: node
           entity_field: changed

@@ -18,10 +18,10 @@ use Drupal\auth_apic\UserManagement\ApicInvitationInterface;
 use Drupal\auth_apic\UserManagement\ApicLoginServiceInterface;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Extension\ModuleHandler;
-use Drupal\Core\Flood\FloodInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Render\BareHtmlPageRendererInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicType\ApicUser;
@@ -99,9 +99,9 @@ class ApicUserLoginForm extends UserLoginForm {
   protected ApicInvitationInterface $invitationService;
 
   /**
-   * @var \Drupal\Core\Flood\FloodInterface
+   * @var \Drupal\user\UserFloodControl
    */
-  protected $flood;
+  protected $userFloodControl;
 
   /**
    * @var \Drupal\auth_apic\Service\Interfaces\TokenParserInterface
@@ -123,10 +123,11 @@ class ApicUserLoginForm extends UserLoginForm {
   /**
    * ApicUserLoginForm constructor.
    *
-   * @param \Drupal\Core\Flood\FloodInterface $flood
+   * @param \Drupal\user\UserFloodControlInterface $user_flood_control
    * @param \Drupal\user\UserStorageInterface $user_storage
    * @param \Drupal\user\UserAuthInterface $user_auth
    * @param \Drupal\Core\Render\RendererInterface $renderer
+   * @param \Drupal\Core\Render\BareHtmlPageRendererInterface $bare_html_renderer
    * @param \Psr\Log\LoggerInterface $logger
    * @param \Drupal\ibm_apim\UserManagement\ApicAccountInterface $account_service
    * @param \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface $user_registry_service
@@ -141,10 +142,11 @@ class ApicUserLoginForm extends UserLoginForm {
    * @param \Drupal\Core\Messenger\Messenger $messenger
    * @param \Drupal\Core\Extension\ModuleHandler $module_handler
    */
-  public function __construct(FloodInterface $flood,
+  public function __construct($user_flood_control,
                               UserStorageInterface $user_storage,
                               UserAuthInterface $user_auth,
                               RendererInterface $renderer,
+                              BareHtmlPageRendererInterface $bare_html_renderer,
                               LoggerInterface $logger,
                               ApicAccountInterface $account_service,
                               UserRegistryServiceInterface $user_registry_service,
@@ -159,8 +161,8 @@ class ApicUserLoginForm extends UserLoginForm {
                               Messenger $messenger,
                               ModuleHandler $module_handler,
                               TokenParserInterface $token_parser) {
-    parent::__construct($flood, $user_storage, $user_auth, $renderer);
-    $this->flood = $flood;
+    parent::__construct($user_flood_control, $user_storage, $user_auth, $renderer, $bare_html_renderer);
+    $this->userFloodControl = $user_flood_control;
     $this->logger = $logger;
     $this->accountService = $account_service;
     $this->userRegistryService = $user_registry_service;
@@ -185,10 +187,11 @@ class ApicUserLoginForm extends UserLoginForm {
   public static function create(ContainerInterface $container) {
     /** @noinspection PhpParamsInspection */
     return new static(
-      $container->get('flood'),
+      $container->get('user.flood_control'),
       $container->get('entity_type.manager')->getStorage('user'),
       $container->get('user.auth'),
       $container->get('renderer'),
+      $container->get('bare_html_page_renderer'),
       $container->get('logger.channel.auth_apic'),
       $container->get('ibm_apim.account'),
       $container->get('ibm_apim.user_registry'),
@@ -673,7 +676,7 @@ class ApicUserLoginForm extends UserLoginForm {
       // independent of the per-user limit to catch attempts from one IP to log
       // in to many different user accounts.  We have a reasonably high limit
       // since there may be only one apparent IP for all users at an institution.
-      if (!$this->flood->isAllowed('user.failed_login_ip', $flood_config->get('ip_limit'), $flood_config->get('ip_window'))) {
+      if (!$this->userFloodControl->isAllowed('user.failed_login_ip', $flood_config->get('ip_limit'), $flood_config->get('ip_window'))) {
         $form_state->set('flood_control_triggered', 'ip');
         $returnValue = FALSE;
       }
@@ -695,7 +698,7 @@ class ApicUserLoginForm extends UserLoginForm {
 
         // Don't allow login if the limit for this user has been reached.
         // Default is to allow 5 failed attempts every 6 hours.
-        if (!$this->flood->isAllowed('user.failed_login_user', $flood_config->get('user_limit'), $flood_config->get('user_window'), $identifier)) {
+        if (!$this->userFloodControl->isAllowed('user.failed_login_user', $flood_config->get('user_limit'), $flood_config->get('user_window'), $identifier)) {
           $form_state->set('flood_control_triggered', 'user');
           $returnValue = FALSE;
         }
@@ -744,11 +747,6 @@ class ApicUserLoginForm extends UserLoginForm {
         $current_user = User::load($current_user->id());
         $first_time_login = $current_user->first_time_login->value;
         $subscription_wizard_cookie = \Drupal::request()->cookies->get('Drupal_visitor_startSubscriptionWizard');
-      }
-
-      // If this is the first login, set language for user to browser language.
-      if (isset($current_user) && (int) $first_time_login !== 0) {
-        $this->accountService->setDefaultLanguage($current_user);
       }
 
       // check if the user we just logged in is a member of at least one dev org

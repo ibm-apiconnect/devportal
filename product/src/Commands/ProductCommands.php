@@ -14,6 +14,7 @@
 namespace Drupal\product\Commands;
 
 use Drupal\apic_api\Api;
+use Drupal\Core\Cache\Cache;
 use Drupal\apic_api\Commands\ApicApiCommands;
 use Drupal\Core\Session\UserSession;
 use Drupal\node\Entity\Node;
@@ -71,7 +72,7 @@ class ProductCommands extends DrushCommands {
   public function drush_product_createOrUpdate($content, $event, $func): void {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
     if ($content !== NULL) {
-
+      $time_start = microtime(true);
       // in case moderation is on we need to run as admin
       // save the current user so we can switch back at the end
       $accountSwitcher = \Drupal::service('account_switcher');
@@ -96,17 +97,14 @@ class ProductCommands extends DrushCommands {
           $portalProduct = new Product();
           $createdOrUpdated = $portalProduct->createOrUpdate($product, $event);
 
+          $time_end = microtime(true);
+          $execution_time = (microtime(true) - $time_start);
+
           if ($createdOrUpdated) {
-            \Drupal::logger('product')->info('Drush @func created Product @prod', [
-              '@func' => $func,
-              '@prod' => $ref,
-            ]);
+            fprintf(STDERR, "Drush %s created Product '%s' in %f seconds\n", $func, $ref, $execution_time);
           }
           else {
-            \Drupal::logger('product')->info('Drush @func updated existing Product @prod', [
-              '@func' => $func,
-              '@prod' => $ref,
-            ]);
+            fprintf(STDERR, "Drush %s updated existing Product '%s' in %f seconds\n", $func, $ref, $execution_time);
           }
         }
         $moduleHandler = \Drupal::service('module_handler');
@@ -204,14 +202,29 @@ class ProductCommands extends DrushCommands {
       $query->condition('type', 'product');
       $query->condition('apic_ref.value', $product['product']['name'] . ':' . $product['product']['version']);
 
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
         $productNode = Node::load($nid);
         if ($productNode !== NULL) {
           $productUrl = $productNode->apic_url->value;
+          // Get apps subscribed to the product
+          $subIds = Product::getSubIdsFromProductUrl($productUrl);
+          if (!empty($subIds)) {
+            $tags = [];
+            $appEntityIds = Product::getAppIdsFromSubIds($subIds);
+
+            foreach ($appEntityIds as $appId) {
+              $tags[] = 'node:' . $appId;
+            }
+          }
         }
         Product::deleteNode($nid, $event);
+        // Clear the cache
+        if (isset($tags, $appEntityIds) && (!empty($tags) || !empty($appEntityIds))) {
+          Cache::invalidateTags($tags);
+          \Drupal::entityTypeManager()->getStorage('node')->resetCache($appEntityIds);
+        }
         \Drupal::logger('product')->info('Drush DeleteProduct deleted Product @prod', ['@prod' => $product['product']['id']]);
       }
       else {
@@ -225,7 +238,7 @@ class ProductCommands extends DrushCommands {
             $query->condition('type', 'api');
             $query->condition('status', 1);
             $query->condition('apic_url', $consumer_api['url']);
-            $apiNids = $query->execute();
+            $apiNids = $query->accessCheck()->execute();
             if ($apiNids !== NULL && !empty($apiNids)) {
               $apiNid = array_shift($apiNids);
               Api::deleteNode($apiNid, $event);
@@ -246,6 +259,7 @@ class ProductCommands extends DrushCommands {
     else {
       \Drupal::logger('product')->error('Drush DeleteProduct No Product provided.', []);
     }
+
     ibm_apim_exit_trace(__FUNCTION__, NULL);
   }
 
@@ -278,7 +292,7 @@ class ProductCommands extends DrushCommands {
             $query = \Drupal::entityQuery('node');
             $query->condition('type', 'product');
             $query->condition('apic_ref.value', $product['name'] . ':' . $product['version']);
-            $nids = $query->execute();
+            $nids = $query->accessCheck()->execute();
             if ($nids !== NULL && !empty($nids)) {
               $oldNid = array_shift($nids);
             }
@@ -289,7 +303,7 @@ class ProductCommands extends DrushCommands {
             $query = \Drupal::entityQuery('node');
             $query->condition('type', 'product');
             $query->condition('apic_ref.value', $product['name'] . ':' . $product['version']);
-            $nids = $query->execute();
+            $nids = $query->accessCheck()->execute();
             if ($nids !== NULL && !empty($nids)) {
               $newNid = array_shift($nids);
             }
@@ -312,7 +326,7 @@ class ProductCommands extends DrushCommands {
               $query->condition('type', 'api');
               $query->condition('status', 1);
               $query->condition('apic_url', $consumer_api['url']);
-              $apiNids = $query->execute();
+              $apiNids = $query->accessCheck()->execute();
               if ($apiNids !== NULL && !empty($apiNids)) {
                 $apiNid = array_shift($apiNids);
                 Api::deleteNode($apiNid, 'product_supersede');
@@ -328,7 +342,7 @@ class ProductCommands extends DrushCommands {
         if (isset($deprecatedProdUrl)) {
           $query = \Drupal::entityQuery('apic_app_application_subs');
           $query->condition('product_url', $deprecatedProdUrl);
-          $subIds = $query->execute();
+          $subIds = $query->accessCheck()->execute();
           if (isset($subIds) && !empty($subIds)) {
             foreach (array_chunk($subIds, 50) as $chunk) {
               $subEntities = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->loadMultiple($chunk);
@@ -360,6 +374,46 @@ class ProductCommands extends DrushCommands {
     }
     else {
       \Drupal::logger('product')->error('Drush product supersede : no content provided.', []);
+    }
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+  }
+
+  /**
+   * @param $content
+   *
+   * @throws JsonException
+   * @throws Throwable
+   */
+  function drush_product_migrate_subscriptions($content) {
+    ibm_apim_entry_trace(__FUNCTION__);
+    if ($content !== NULL) {
+      if (is_string($content)) {
+        $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
+      }
+
+      if (isset($content['plan_map']) && !empty($content['plan_map']) && isset($content['subscription_urls']) && !empty($content['subscription_urls'])) {
+        Product::processPlanMappingWithSubscriptionUrls($content['plan_map'], $content['subscription_urls']);
+      }
+    }
+    ibm_apim_exit_trace(__FUNCTION__, NULL);
+  }
+
+  /**
+   * @param $content
+   *
+   * @throws JsonException
+   * @throws Throwable
+   */
+  function drush_product_execute_migration_target($content) {
+    ibm_apim_entry_trace(__FUNCTION__);
+    if ($content !== NULL) {
+      if (is_string($content)) {
+        $content = json_decode($content, TRUE, 512, JSON_THROW_ON_ERROR);
+      }
+
+      if (isset($content['plan_map']) && !empty($content['plan_map'])) {
+        Product::processPlanMapping($content['plan_map']);
+      }
     }
     ibm_apim_exit_trace(__FUNCTION__, NULL);
   }
@@ -398,7 +452,7 @@ class ProductCommands extends DrushCommands {
               $query->condition('type', 'api');
               $query->condition('status', 1);
               $query->condition('apic_url', $consumer_api['url']);
-              $apiNids = $query->execute();
+              $apiNids = $query->accessCheck()->execute();
               if ($apiNids !== NULL && !empty($apiNids)) {
                 $apiNid = array_shift($apiNids);
                 Api::deleteNode($apiNid, 'product_supersede');
@@ -415,7 +469,7 @@ class ProductCommands extends DrushCommands {
             $query = \Drupal::entityQuery('node');
             $query->condition('type', 'product');
             $query->condition('apic_ref.value', $product['name'] . ':' . $product['version']);
-            $nids = $query->execute();
+            $nids = $query->accessCheck()->execute();
             if ($nids !== NULL && !empty($nids)) {
               $oldNid = array_shift($nids);
             }
@@ -428,7 +482,7 @@ class ProductCommands extends DrushCommands {
             $query = \Drupal::entityQuery('node');
             $query->condition('type', 'product');
             $query->condition('apic_ref.value', $product['name'] . ':' . $product['version']);
-            $nids = $query->execute();
+            $nids = $query->accessCheck()->execute();
             if ($nids !== NULL && !empty($nids)) {
               $oldNid = array_shift($nids);
             }
@@ -439,7 +493,7 @@ class ProductCommands extends DrushCommands {
             $query = \Drupal::entityQuery('node');
             $query->condition('type', 'product');
             $query->condition('apic_ref.value', $product['name'] . ':' . $product['version']);
-            $nids = $query->execute();
+            $nids = $query->accessCheck()->execute();
             if ($nids !== NULL && !empty($nids)) {
               $newNid = array_shift($nids);
             }
@@ -514,7 +568,7 @@ class ProductCommands extends DrushCommands {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product')
         ->condition('apic_ref', $prodRefs, 'NOT IN');
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
       if ($results !== NULL) {
         foreach ($results as $item) {
           $nids[] = $item;

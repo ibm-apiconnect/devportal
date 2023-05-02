@@ -227,7 +227,9 @@ display:
           admin_label: ''
           operator: in
           value:
+            '***LANGUAGE_site_default***': '***LANGUAGE_site_default***'
             '***LANGUAGE_language_interface***': '***LANGUAGE_language_interface***'
+            en: en
             zxx: zxx
             und: und
           group: 1

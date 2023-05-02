@@ -1,0 +1,13 @@
+diff --git modules/change_pwd_page/src/Form/ChangePasswordForm.php modules/change_pwd_page/src/Form/ChangePasswordForm.php
+index e2d289dd86d1e1397f054671f8c8d86727b75679..60cd5e887ac535a0663b0856ffbebb7e21ccd39e 100644
+--- modules/change_pwd_page/src/Form/ChangePasswordForm.php
++++ modules/change_pwd_page/src/Form/ChangePasswordForm.php
+@@ -145,7 +145,7 @@ class ChangePasswordForm extends FormBase {
+    * {@inheritdoc}
+    */
+   public function validateForm(array &$form, FormStateInterface $form_state) {
+-    $current_pass_input = trim($form_state->getValue('current_pass'));
++    $current_pass_input = trim($form_state->getValue('current_pass') ?? "");
+     if ($current_pass_input) {
+       $user = User::load(\Drupal::currentUser()->id());
+       if (!$this->passwordHasher->check($current_pass_input, $user->getPassword())) {

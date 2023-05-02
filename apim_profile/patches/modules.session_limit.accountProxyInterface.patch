@@ -27,3 +27,12 @@
      $this->routeMatch = $routeMatch;
      $this->database = $database;
      $this->eventDispatcher = $eventDispatcher;
+@@ -507,7 +507,7 @@
+    */
+   public function getMessageSeverity() {
+     return $this->configFactory->get('session_limit.settings')
+-      ->get('session_limit_logged_out_message_severity');
++      ->get('session_limit_logged_out_message_severity') ?? '';
+   }
+
+   /**

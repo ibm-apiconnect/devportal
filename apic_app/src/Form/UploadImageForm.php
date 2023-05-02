@@ -181,7 +181,7 @@ class UploadImageForm extends FormBase {
     }
     else {
       // Make it a permanent file so it doesn't get deleted by cron.
-      $fileTemp->status = FILE_STATUS_PERMANENT;
+      $fileTemp->setPermanent();
       // Save.
       $fileTemp->save();
 

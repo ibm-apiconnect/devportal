@@ -1,0 +1,26 @@
+--- modules/cshs/build/cshs.js  2023-01-13 15:53:58
++++ modules/cshs/build/cshs.js     2023-01-13 15:53:59
+@@ -7,19 +7,19 @@
+  */
+
+
+-(function ($) {
++(function ($, once) {
+   'use strict';
+
+   Drupal.behaviors.cshs = {
+     attach: function attach(context, settings) {
+-      $('select.simpler-select-root', context).once('cshs').each(function (index, element) {
++      $(once('cshs', 'select.simpler-select-root', context)).each(function (index, element) {
+         if (settings === null || settings === void 0 ? void 0 : settings.cshs[element.id]) {
+           $(element).simplerSelect(settings.cshs[element.id]);
+         }
+       });
+     }
+   };
+-})(jQuery);
++})(jQuery, once);
+ /******/ })()
+ ;
+ //# sourceMappingURL=cshs.js.map
+\ No newline at end of file

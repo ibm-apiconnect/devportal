@@ -82,6 +82,7 @@ class ApicAppCommands extends DrushCommands {
         ]);
       }
       else {
+        $time_start = microtime(true);
         // in case moderation is on we need to run as admin
         // save the current user so we can switch back at the end
         $accountSwitcher = \Drupal::service('account_switcher');
@@ -94,17 +95,15 @@ class ApicAppCommands extends DrushCommands {
         }
         $ref = $content['id'];
         $createdOrUpdated = \Drupal::service('apic_app.application')->createOrUpdate($content, $event, NULL);
+
+        $time_end = microtime(true);
+        $execution_time = (microtime(true) - $time_start);
+
         if ($createdOrUpdated) {
-          \Drupal::logger('apic_app')->info('Drush @func created application @app', [
-            '@func' => $func,
-            '@app' => $ref,
-          ]);
+          fprintf(STDERR, "Drush %s created Application '%s' in %f seconds\n", $func, $ref, $execution_time);
         }
         else {
-          \Drupal::logger('apic_app')->info('Drush @func updated existing application @app', [
-            '@func' => $func,
-            '@app' => $ref,
-          ]);
+          fprintf(STDERR, "Drush %s updated existing Application '%s' in %f seconds\n", $func, $ref, $execution_time);
         }
         $moduleHandler = \Drupal::service('module_handler');
         if ($func !== 'MassUpdate' && $moduleHandler->moduleExists('views')) {
@@ -209,6 +208,7 @@ class ApicAppCommands extends DrushCommands {
    */
   public function drush_apic_app_createOrUpdatesub($subInput, $event, $func): void {
     ibm_apim_entry_trace(__FUNCTION__, $subInput);
+    $time_start = microtime(true);
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = \Drupal::service('account_switcher');
@@ -223,17 +223,15 @@ class ApicAppCommands extends DrushCommands {
       }
       $ref = $subInput['id'];
       $createdOrUpdated = $subService->createOrUpdate($subInput);
+
+      $time_end = microtime(true);
+      $execution_time = (microtime(true) - $time_start);
+
       if ($createdOrUpdated) {
-        \Drupal::logger('apic_app')->info('Drush @func created subscription @sub', [
-          '@func' => $func,
-          '@sub' => $ref,
-        ]);
+        fprintf(STDERR, "Drush %s created Subscription '%s' in %f seconds\n", $func, $ref, $execution_time);
       }
       else {
-        \Drupal::logger('apic_app')->info('Drush @func updated existing subscription @sub', [
-          '@func' => $func,
-          '@sub' => $ref,
-        ]);
+        fprintf(STDERR, "Drush %s updated existing Subscription '%s' in %f seconds\n", $func, $ref, $execution_time);
       }
     }
     else {
@@ -393,7 +391,7 @@ class ApicAppCommands extends DrushCommands {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'application')
         ->condition('apic_url.value', $appUrls, 'NOT IN');
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
       if ($results !== NULL) {
         foreach ($results as $item) {
           $nids[] = $item;
@@ -466,7 +464,7 @@ class ApicAppCommands extends DrushCommands {
         $query->condition('type', 'application');
         $query->condition('apic_url.value', $cred['app_url']);
 
-        $nids = $query->execute();
+        $nids = $query->accessCheck()->execute();
 
         if (isset($nids) && !empty($nids)) {
           $credsService = \Drupal::service('apic_app.credentials');
@@ -521,7 +519,7 @@ class ApicAppCommands extends DrushCommands {
         $query->condition('type', 'application');
         $query->condition('apic_url.value', $cred['app_url']);
 
-        $nids = $query->execute();
+        $nids = $query->accessCheck()->execute();
 
         if (isset($nids) && !empty($nids)) {
           $credsService = \Drupal::service('apic_app.credentials');

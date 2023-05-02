@@ -339,7 +339,7 @@ class ApicUserProfileForm extends ProfileForm {
       $editUser->setPassword($password);
     }
     $editUser->setApicUserRegistryUrl($this->entity->get('registry_url')->value);
-    $customFields =  \Drupal::service('ibm_apim.apicuser')->getCustomUserFields();
+    $customFields =  \Drupal::service('ibm_apim.apicuser')->getMetadataFields();
     $customFieldValues = \Drupal::service('ibm_apim.utils')->handleFormCustomFields($customFields, $form_state);
     foreach($customFieldValues as $customField => $value) {
       $editUser->addCustomField($customField, $value);

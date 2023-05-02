@@ -41,15 +41,6 @@ class ApimUtils {
     $this->siteConfig = $site_config;
   }
 
-
-  /**
-   * Given a url fragment such as we receive from webhooks, return a fully
-   * qualified url including the hostname.
-   *
-   * @param $url
-   *
-   * @return string
-   */
   public function createFullyQualifiedUrl($url): string {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
@@ -86,7 +77,7 @@ class ApimUtils {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
     }
 
-    if (strpos($url, 'https://') === 0) {
+    if ($url != null && strpos($url, 'https://') === 0) {
 
       $hostname = $this->siteConfig->getApimHost();
 
@@ -97,13 +88,13 @@ class ApimUtils {
       $redacted_url = str_replace($hostname, '', $url);
     }
     else {
-      $redacted_url = $url;
+      $redacted_url = $url ?? '';
     }
 
     // Should start with a /
-    if (strpos($redacted_url, '/') !== 0) {
+    if (strlen($redacted_url) > 0 && strpos($redacted_url, '/') !== 0) {
       $redacted_url = '/' . $redacted_url;
-      $this->logger->debug('removeFullyQualifiedUrl: url does not start with / so updated to %redacted_url', ['%redacted_url' => $redacted_url]);
+      $this->logger->debug('removeFullyQualifiedUrl: url does not start with / so updated from %url to %redacted_url', ['%url' => $url, '%redacted_url' => $redacted_url]);
     }
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $redacted_url);

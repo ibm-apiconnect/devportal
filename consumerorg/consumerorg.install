@@ -28,6 +28,7 @@ use Drupal\Core\Entity\EntityStorageException;
 function consumerorg_update_8101() {
   $nids = \Drupal::entityQuery('node')
     ->condition('type', 'consumerorg')
+    ->accessCheck()
     ->execute();
 
   foreach ($nids as $nid) {

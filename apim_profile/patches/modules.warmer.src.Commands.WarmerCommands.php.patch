@@ -1,65 +1,60 @@
---- modules/warmer/src/Commands/WarmerCommands.php	2022-09-24 09:24:21.000000000 +0100
-+++ modules/warmer/src/Commands/WarmerCommands.php	2022-09-28 16:21:45.000000000 +0100
-@@ -10,6 +10,7 @@
- use Drupal\warmer\Plugin\WarmerPluginManager;
- use Drupal\warmer\QueueManager;
- use Drush\Commands\DrushCommands;
-+use Drupal\warmer\QueueCommandDrush8Wrapper;
- use Drush\Drupal\Commands\core\QueueCommands;
- use Drush\Utils\StringUtils;
-
-@@ -37,7 +38,7 @@
-   /**
-    * The queue commands.
-    *
--   * @var \Drush\Drupal\Commands\core\QueueCommands
-+   * @var \Drupal\warmer\QueueCommandDrush8Wrapper
-    */
-   private $queueCommands;
-
-@@ -48,14 +49,15 @@
-    *   The warmer manager.
-    * @param \Drupal\warmer\QueueManager $queue_manager
-    *   The queue manager.
--   * @param \Drush\Drupal\Commands\core\QueueCommands $queue_commands
-+   * @param \Drupal\warmer\QueueCommandDrush8Wrapper $queue_commands
-    *   The service related to queue commands.
-    */
--  public function __construct(WarmerPluginManager $warmer_manager, QueueManager $queue_manager, QueueCommands $queue_commands) {
-+  public function __construct(WarmerPluginManager $warmer_manager, QueueManager $queue_manager, QueueCommandDrush8Wrapper $queue_commands) {
-     parent::__construct();
-     $this->warmerManager = $warmer_manager;
-     $this->queueManager = $queue_manager;
-     $this->queueCommands = $queue_commands;
-+    $this->logger = \Drupal::service('logger.channel.warmer');
-   }
-
-   /**
-@@ -87,7 +89,7 @@
-    * @throws \Exception
-    */
-   public function enqueue(array $warmer_ids, array $options = ['run-queue' => FALSE]) {
--    $warmer_ids = array_unique(StringUtils::csvToArray($warmer_ids));
-+    $warmer_ids = array_unique($warmer_ids);
-     $warmers = $this->warmerManager->getWarmers($warmer_ids);
-     $batch_count = 0;
-     $count_list = array_map(function (WarmerPluginBase $warmer) use (&$batch_count) {
-@@ -101,16 +103,16 @@
-       return $count;
-     }, $warmers);
-     $total = array_sum($count_list);
--    $this->logger()->success(
-+    $this->logger->info(
-       dt('@total items enqueued for cache warming.', ['@total' => $total])
-     );
-     if (!$options['run-queue']) {
--      $this->logger()->notice(
-+      $this->logger->notice(
-         dt('If you need your items into cache right away you can run "drush queue-run warmer".')
-       );
+--- modules/warmer/src/Commands/WarmerCommands.php      2022-09-24 09:24:21
++++ modules/warmer/src/Commands/WarmerCommands.php 2023-02-08 16:15:46
+@@ -111,7 +111,7 @@
        return;
      }
--    $this->logger()->success(dt('Warming caches in @count batches from the "warmer" queue.', ['@count' => $batch_count]));
-+    $this->logger->info(dt('Warming caches in @count batches from the "warmer" queue.', ['@count' => $batch_count]));
-     $this->queueCommands->run('warmer', ['time-limit' => static::VERY_HIGH_NUMBER]);
+     $this->logger()->success(dt('Warming caches in @count batches from the "warmer" queue.', ['@count' => $batch_count]));
+-    $this->queueCommands->run('warmer', ['time-limit' => static::VERY_HIGH_NUMBER]);
++    $this->queueCommands->run('warmer', ['time-limit' => static::VERY_HIGH_NUMBER, 'items-limit' => $total]);
    }
+
+   /**
+@@ -175,6 +175,48 @@
+       return new CommandError($message);
+     }
+     return NULL;
++  }
++
++  /**
++   * Set cdn urls
++   *
++   * @param array $cdnurls
++   *   List of all the cdn urls
++   *
++   * @usage warmer-setcdn https://example.com,https://drupal.com
++   *   Add the urls to the cdn warmer config
++   *
++   * @command warmer:setcdn
++   * @aliases warmer-setcdn
++   *
++   * @throws \Exception
++   */
++  function drush_warmer_setcdn($cdnurls) {
++    $urls = array_unique(StringUtils::csvToArray($cdnurls));
++    $existingConfig = \Drupal::config('warmer.settings');
++    $headers = [];
++    $frequency = '300';
++    $batchSize = '50';
++    if ($existingConfig !== null) {
++      $cdn = $existingConfig->get('cdn');
++      if (isset($cdn['urls'])) {
++        $urls = array_merge($urls,$cdn['urls']);
++        $urls = array_unique($urls);
++      }
++      if (isset($cdn['headers'])) {
++        $headers = $cdn['headers'];
++      }
++      if (isset($cdn['frequency'])) {
++        $frequency = $cdn['frequency'];
++      }
++      if (isset($cdn['batchSize'])) {
++        $batchSize = $cdn['batchSize'];
++      }
++    }
++    \Drupal::service('config.factory')
++      ->getEditable('warmer.settings')
++      ->set('cdn', ['id' => 'cdn', 'frequency' => $frequency, 'batchSize' => $batchSize, 'urls' => $urls, 'headers' => $headers])
++      ->save();
+   }
+
+ }

@@ -92,7 +92,7 @@ class ConsumerOrgContext extends RawDrupalContext {
       }
       else {
         // Need to update the user record with a consumerorg_url as well
-        $ids = \Drupal::entityQuery('user')->execute();
+        $ids = \Drupal::entityQuery('user')->accessCheck()->execute();
         $users = User::loadMultiple($ids);
 
         foreach ($users as $drupalUser) {

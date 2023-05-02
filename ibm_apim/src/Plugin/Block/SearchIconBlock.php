@@ -30,13 +30,6 @@ class SearchIconBlock extends BlockBase {
   /**
    * {@inheritdoc}
    */
-  protected function blockAccess(AccountInterface $account): AccessResult {
-    return AccessResult::allowedIfHasPermission($account, 'search content');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function build(): array {
     return [
       '#theme' => 'ibm_apim_search_icon_block',

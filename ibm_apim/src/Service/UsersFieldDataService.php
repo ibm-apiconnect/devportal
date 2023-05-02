@@ -183,6 +183,7 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
     $entity_ids = $storage->getQuery()
       ->condition('uid', [0, 1], 'NOT IN')
       ->condition('registry_url', NULL, 'IS NULL')
+      ->accessCheck()
       ->execute();
 
     foreach ($entity_ids as $user_id) {
@@ -235,7 +236,7 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
     $results = $query->fetchAll();
     foreach ($results as $res) {
       $user = $this->entityTypeManager->getStorage('user')->load($res->id);
-      if ($user) {
+      if (isset($user) && !empty($user->get('name')->getString())) {
         $urls = $res->url;
         if (empty($urls)) {
           $user->set('consumerorg_url', $urls)->save();
@@ -259,7 +260,7 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
     $query = \Drupal::entityQuery('user');
     $query->condition('apic_state', 'pending_approval');
     $query->condition('created', $now - $approvalInvtitationTTLs, "<=");
-    $uids = $query->execute();
+    $uids = $query->accessCheck()->execute();
     if (!empty($uids)) {
       foreach (array_chunk($uids, 50) as $chunk) {
         $users = User::loadMultiple($chunk);

@@ -1,4 +1,17 @@
 changes:
+  8.x-5.3.5:
+  - Fix double refresh icon on search page (#236)
+  8.x-5.3.4:
+  - force shortcuts toolbar to be full height
+  8.x-5.3.3:
+  - use non-dep method (#235)
+  8.x-5.3.2:
+  - Mass merge for Drupal 10 Changes (#234)
+  8.x-5.3.1:
+  - correct ck not selector
+  - ckeditor now using buttons
+  8.x-5.3.0:
+  - update version 8.x-5.2.4 -> 8.x-5.3.0
   8.x-5.2.3:
   - consumer a7s snagging
   8.x-5.2.2:
@@ -383,7 +396,4 @@ changes:
   - Bump Major version in master to differentiate from the service stream
   8.x-1.1.25:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since
-    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
-    are also filtered before logging them. Commits that start with 'INT' or 'bump
-    version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

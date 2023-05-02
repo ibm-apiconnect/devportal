@@ -14,5 +14,12 @@
   "minimum-stability": "dev",
   "require-dev": {
     "phpunit/phpunit": "*"
+  },
+  "extra": {
+    "drush": {
+      "services": {
+        "drush.services.yml": ">=9"
+      }
+    }
   }
 }

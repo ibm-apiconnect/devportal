@@ -22,9 +22,9 @@ use Drupal\Core\Updater\UpdaterException;
 class ApicModule extends Module {
 
   /**
-   * @var string|null
+   * @var string
    */
-  public ?string $title = NULL;
+  public string $title = '';
 
   /**
    * ApicModule constructor.
@@ -68,11 +68,11 @@ class ApicModule extends Module {
     foreach ($files as $file) {
       $rc = self::checkFunctionNames($file->uri);
       if ($rc !== TRUE) {
-        throw new UpdaterException(t('The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/support/knowledgecenter/en/SSMNED_v10/com.ibm.apic.devportal.doc/rapic_portal_custom_modules_drupal8.html', ['%file' => $file->uri]));
+        throw new UpdaterException(t('The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/docs/en/api-connect/10.0.x?topic=extend-custom-module-development-background-prerequisites', ['%file' => $file->uri]));
       }
     }
 
-    return $info['name'];
+    return $info['name'] ?? '';
   }
 
   /**
@@ -157,7 +157,7 @@ class ApicModule extends Module {
     if (!self::canUpdate($this->name)) {
       return [];
     }
-    module_load_include('install', $this->name);
+    \Drupal::moduleHandler()->loadInclude('install', $this->name);
 
     if (!$updates = \Drupal::service('update.update_hook_registry')->getAvailableUpdates($this->name)) {
       return [];

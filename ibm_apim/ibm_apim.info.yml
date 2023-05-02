@@ -2,8 +2,8 @@ name: IBM APIC
 type: module
 description: Core IBM API Management integration
 package: IBM API Developer Portal
-core_version_requirement: ^8 || ^9
-version: 8.x-5.2.14
+core_version_requirement: ^8 || ^9 || ^10
+version: 8.x-5.3.26
 project: ibm_apim
 dependencies:
 - telephone

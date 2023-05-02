@@ -74,7 +74,7 @@ class Product {
       // if so then clone it and base new node on that.
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product')->condition('product_name.value', $xName)->sort('nid', 'ASC');
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         $nid = array_shift($nids);
         $oldNode = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
@@ -112,6 +112,7 @@ class Product {
       // wipe all our fields to ensure they get set to new values
       $node->set('apic_tags', []);
 
+      $node->set('uid', 1);
       $node->set('apic_hostname', $hostVariable);
       $node->set('apic_provider_id', $siteConfig->getOrgId());
       $node->set('apic_catalog_id', $siteConfig->getEnvId());
@@ -150,6 +151,7 @@ class Product {
         'apic_hostname' => $hostVariable,
         'apic_provider_id' => $siteConfig->getOrgId(),
         'apic_catalog_id' => $siteConfig->getEnvId(),
+        'uid' => 1,
       ]);
     }
 
@@ -229,6 +231,7 @@ class Product {
     $returnValue = NULL;
     if ($node !== NULL) {
       $utils = \Drupal::service('ibm_apim.utils');
+      $existingNodeHash = $utils->generateNodeHash($node, 'old-product');
       $siteConfig = \Drupal::service('ibm_apim.site_config');
       $moduleHandler = \Drupal::service('module_handler');
       $hostVariable = $siteConfig->getApimHost();
@@ -329,10 +332,14 @@ class Product {
         else {
           $format = 'full_html';
         }
-        $node->set('apic_description', [
-          'value' => $product['catalog_product']['info']['description'],
-          'format' => $format,
-        ]);
+        if ($product['catalog_product']['info']['description'] != '') {
+          $node->set('apic_description', [
+            'value' => $product['catalog_product']['info']['description'],
+            'format' => $format,
+          ]);
+        } else {
+          $node->set('apic_description', []);
+        }
         if (isset($product['catalog_product']['info']['x-ibm-languages']['description']) && !empty($product['catalog_product']['info']['x-ibm-languages']['description'])) {
           foreach ($product['catalog_product']['info']['x-ibm-languages']['description'] as $lang => $langArray) {
             $lang = $utils->convert_lang_name_to_drupal($lang);
@@ -343,8 +350,10 @@ class Product {
                   // ensure the translation has a title as its a required field
                   $translation = $node->addTranslation($lang, [
                     'title' => $truncated_title,
-                    'apic_description' => $product['catalog_product']['info']['x-ibm-languages']['description'][$lang],
-                  ]);
+                    'apic_description' => [
+                        'value' => $product['catalog_product']['info']['x-ibm-languages']['description'][$lang],
+                        'format' => $format,
+                    ]]);
                   $translation->save();
                 }
                 else {
@@ -353,8 +362,10 @@ class Product {
                   if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
                     $translation->setTitle($truncated_title);
                   }
-                  $translation->set('apic_description', $product['catalog_product']['info']['x-ibm-languages']['description'][$lang])
-                    ->save();
+                  $translation->set('apic_description', [
+                    'value' => $product['catalog_product']['info']['x-ibm-languages']['description'][$lang],
+                    'format' => $format,
+                  ])->save();
                 }
               }
             }
@@ -392,10 +403,15 @@ class Product {
             }
           }
         }
-        $node->set('apic_summary', [
-          'value' => $utils->truncate_string($product['catalog_product']['info']['summary'], 1000),
-          'format' => 'plaintext',
-        ]);
+        $summary = $utils->truncate_string($product['catalog_product']['info']['summary'], 1000);
+        if ($summary != '') {
+          $node->set('apic_summary', [
+            'value' => $summary,
+            'format' => 'plaintext',
+          ]);
+        } else {
+          $node->set('apic_summary', []);
+        }
 
         if (!isset($product['catalog_product']['info']['contact'])) {
           $product['catalog_product']['info']['contact'] = [
@@ -413,57 +429,17 @@ class Product {
         if (!isset($product['catalog_product']['info']['contact']['url'])) {
           $product['catalog_product']['info']['contact']['url'] = '';
         }
-        $node->set('product_contact_name', $product['catalog_product']['info']['contact']['name']);
-        $node->set('product_contact_email', $product['catalog_product']['info']['contact']['email']);
-        $node->set('product_contact_url', $product['catalog_product']['info']['contact']['url']);
+        $utils->setNodeValue($node, 'product_contact_name', $product['catalog_product']['info']['contact']['name']);
+        $utils->setNodeValue($node, 'product_contact_email', $product['catalog_product']['info']['contact']['email']);
+        $utils->setNodeValue($node, 'product_contact_url', $product['catalog_product']['info']['contact']['url']);
         if (!isset($product['catalog_product']['info']['license'])) {
           $product['catalog_product']['info']['license'] = [
             'name' => '',
             'url' => '',
           ];
         }
-        $node->set('product_license_name', $product['catalog_product']['info']['license']['name']);
-        $node->set('product_license_url', $product['catalog_product']['info']['license']['url']);
-        if (!isset($product['catalog_product']['info']['termsOfService']) || empty($product['catalog_product']['info']['termsOfService'])) {
-          $product['catalog_product']['info']['termsOfService'] = '';
-        }
-        if ($moduleHandler->moduleExists('ghmarkdown')) {
-          $format = 'ghmarkdown';
-        }
-        else {
-          $format = 'full_html';
-        }
-        $node->set('product_terms_of_service', [
-          'value' => $product['catalog_product']['info']['termsOfService'],
-          'format' => $format,
-        ]);
-        if (isset($product['catalog_product']['info']['x-ibm-languages']['termsOfService']) && !empty($product['catalog_product']['info']['x-ibm-languages']['termsOfService'])) {
-          foreach ($product['catalog_product']['info']['x-ibm-languages']['termsOfService'] as $lang => $langArray) {
-            $lang = $utils->convert_lang_name_to_drupal($lang);
-            // if its one of our locales or the root of one of our locales
-            foreach ($languageList as $langListKey => $langListValue) {
-              if (\in_array($lang, $languageList, FALSE)) {
-                if (!$node->hasTranslation($lang)) {
-                  // ensure the translation has a title as its a required field
-                  $translation = $node->addTranslation($lang, [
-                    'title' => $truncated_title,
-                    'product_terms_of_service' => $product['catalog_product']['info']['x-ibm-languages']['termsOfService'][$lang],
-                  ]);
-                  $translation->save();
-                }
-                else {
-                  $translation = $node->getTranslation($lang);
-                  // ensure the translation has a title as its a required field
-                  if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
-                    $translation->setTitle($truncated_title);
-                  }
-                  $translation->set('product_terms_of_service', $product['catalog_product']['info']['x-ibm-languages']['termsOfService'][$lang])
-                    ->save();
-                }
-              }
-            }
-          }
-        }
+        $utils->setNodeValue($node, 'product_license_name', $product['catalog_product']['info']['license']['name']);
+        $utils->setNodeValue($node, 'product_license_url', $product['catalog_product']['info']['license']['url']);
         $node->set('product_visibility', []);
         // If there is a 'visibility' block in the product use that to determine visibility,
         // otherwise use the one inside catalog_product
@@ -483,28 +459,28 @@ class Product {
         }
         // default to product visibility being enabled to avoid bugs in apim where the value is not getting set correctly
         if (isset($visBlock['view']) && array_key_exists('enabled', $visBlock['view']) && (boolean) $visBlock['view']['enabled'] === FALSE) {
-          $node->set('product_view_enabled', 0);
+          $node->set('product_view_enabled', '0');
         }
         else {
-          $node->set('product_view_enabled', 1);
+          $node->set('product_view_enabled', '1');
         }
         if (isset($visBlock['subscribe']['enabled']) && (boolean) $visBlock['subscribe']['enabled'] === TRUE) {
-          $node->set('product_subscribe_enabled', 1);
+          $node->set('product_subscribe_enabled', '1');
         }
         else {
-          $node->set('product_subscribe_enabled', 0);
+          $node->set('product_subscribe_enabled', '0');
         }
         if (isset($visBlock['view']['type']) && mb_strtolower($visBlock['view']['type']) === 'public') {
-          $node->set('product_visibility_public', 1);
+          $node->set('product_visibility_public', '1');
         }
         else {
-          $node->set('product_visibility_public', 0);
+          $node->set('product_visibility_public', '0');
         }
         if (isset($visBlock['view']['type']) && mb_strtolower($visBlock['view']['type']) === 'authenticated') {
-          $node->set('product_visibility_authenticated', 1);
+          $node->set('product_visibility_authenticated', '1');
         }
         else {
-          $node->set('product_visibility_authenticated', 0);
+          $node->set('product_visibility_authenticated', '0');
         }
         $productVisibilityCustomOrgs = [];
         if (isset($visBlock['view']['type'], $visBlock['view']['org_urls']) && $visBlock['view']['type'] === 'custom') {
@@ -524,11 +500,11 @@ class Product {
 
         if (isset($product['created_at'])) {
           // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
-          $node->set('apic_created_at', strtotime($product['created_at']));
+          $node->set('apic_created_at', strval(strtotime($product['created_at'])));
         }
         if (isset($product['updated_at'])) {
           // store as epoch, incoming format will be like 2021-02-26T12:18:59.000Z
-          $node->set('apic_updated_at', strtotime($product['updated_at']));
+          $node->set('apic_updated_at', strval(strtotime($product['updated_at'])));
         }
 
         if (isset($product['catalog_product']['info']['x-pathalias'])) {
@@ -591,66 +567,124 @@ class Product {
           $node->set('product_apis', []);
         }
         $node->set('product_data', \yaml_emit($product['catalog_product'], YAML_UTF8_ENCODING));
-        $node->save();
 
-        // need to trigger save of all apis in order to build up ACL
-        if (isset($product['catalog_product']['apis']) && !empty($product['catalog_product']['apis'])) {
-          $apiRefs = [];
-          foreach ($product['catalog_product']['apis'] as $key => $prodref) {
-            $apiRefs[$key] = $prodref['name'];
+        if (!isset($product['catalog_product']['info']['termsOfService']) || empty($product['catalog_product']['info']['termsOfService'])) {
+          $product['catalog_product']['info']['termsOfService'] = '';
+        }
+        if ($moduleHandler->moduleExists('ghmarkdown')) {
+          $format = 'ghmarkdown';
+        } else {
+          $format = 'full_html';
+        }
+
+        if ($product['catalog_product']['info']['termsOfService'] != '') {
+          $node->set('product_terms_of_service', [
+            'value' => $product['catalog_product']['info']['termsOfService'],
+            'format' => $format,
+          ]);
+        } else {
+          $node->set('product_terms_of_service', []);
+        }
+
+        if ($utils->hashMatch($existingNodeHash, $node, 'new-product')) {
+          if ($event !== 'internal') {
+            \Drupal::logger('apic_api')->notice('Update product: No update required as the hash matched for @productName @version', [
+              '@productName' => $product['catalog_product']['info']['name'],
+              '@version' => $product['catalog_product']['info']['version'],
+            ]);
           }
-          $query = \Drupal::entityQuery('node');
-          $query->condition('type', 'api');
-          $query->condition('status', 1);
-          $query->condition('apic_ref.value', $apiRefs, 'IN');
-          $results = $query->execute();
-          if ($results !== NULL && !empty($results)) {
-            $apiNids = array_values($results);
-            if (count($apiNids) > 0) {
-              $node->set('product_api_nids', []);
-              $product_api_nids = [];
-              foreach (array_chunk($apiNids, 50) as $chunk) {
-                $apis = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($chunk);
-                foreach ($apis as $api) {
-                  $product_api_nids[] = $api->id();
-                  // this save is needed to trigger the update of the API's node access permissions
-                  $api->save();
+        } else {
+          if (isset($product['catalog_product']['info']['x-ibm-languages']['termsOfService']) && !empty($product['catalog_product']['info']['x-ibm-languages']['termsOfService'])) {
+            foreach ($product['catalog_product']['info']['x-ibm-languages']['termsOfService'] as $lang => $langArray) {
+              $lang = $utils->convert_lang_name_to_drupal($lang);
+              // if its one of our locales or the root of one of our locales
+              foreach ($languageList as $langListKey => $langListValue) {
+                if (\in_array($lang, $languageList, FALSE)) {
+                  if (!$node->hasTranslation($lang)) {
+                    // ensure the translation has a title as its a required field
+                    $translation = $node->addTranslation($lang, [
+                      'title' => $truncated_title,
+                      'product_terms_of_service' => $product['catalog_product']['info']['x-ibm-languages']['termsOfService'][$lang],
+                    ]);
+                    $translation->save();
+                  } else {
+                    $translation = $node->getTranslation($lang);
+                    // ensure the translation has a title as its a required field
+                    if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
+                      $translation->setTitle($truncated_title);
+                    }
+                    $translation->set('product_terms_of_service', $product['catalog_product']['info']['x-ibm-languages']['termsOfService'][$lang])
+                      ->save();
+                  }
                 }
               }
-              $node->set('product_api_nids', $product_api_nids);
+            }
+          }
+
+          // Product Categories
+          $categoriesEnabled = (boolean) $config->get('categories')['enabled'];
+          if ($categoriesEnabled === TRUE && isset($product['catalog_product']['info']['categories'])) {
+            $this->apicTaxonomy->process_product_categories($product, $node);
+          }
+
+          // need to trigger save of all apis in order to build up ACL
+          $node->set('product_api_nids', []);
+          if (isset($product['catalog_product']['apis']) && !empty($product['catalog_product']['apis'])) {
+            $apiRefs = [];
+            foreach ($product['catalog_product']['apis'] as $key => $prodref) {
+              $apiRefs[$key] = $prodref['name'];
+            }
+            $query = \Drupal::entityQuery('node');
+            $query->condition('type', 'api');
+            $query->condition('status', 1);
+            $query->condition('apic_ref.value', $apiRefs, 'IN');
+            $results = $query->accessCheck()->execute();
+            if ($results !== NULL && !empty($results)) {
+              $apiNids = array_values($results);
+              if (count($apiNids) > 0) {
+                // Product has to be saved before the APIs so the ACL will work
+                $node->set('product_api_nids', $apiNids);
+                $node->save();
+                foreach (array_chunk($apiNids, 50) as $chunk) {
+                  $apis = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($chunk);
+                  foreach ($apis as $api) {
+                    // this save is needed to trigger the update of the API's node access permissions
+                    $api->save();
+                  }
+                }
+              } else {
+                $node->save();
+              }
+            } else {
               $node->save();
+            }
+          } else {
+            $node->save();
+          }
+
+          // if invoked from the create code then don't invoke the update event - will be invoked from create instead
+          if ($node !== NULL) {
+            if ($event !== 'internal') {
+              \Drupal::logger('product')->notice('Product @product @version updated', [
+                '@product' => $node->getTitle(),
+                '@version' => $node->apic_version->value,
+              ]);
+              // Calling all modules implementing 'hook_product_update':
+              $moduleHandler->invokeAll('product_update', [
+                'node' => $node,
+                'data' => $product,
+              ]);
             }
           }
         }
-
-        // Product Categories
-        $categoriesEnabled = (boolean) $config->get('categories')['enabled'];
-        if ($categoriesEnabled === TRUE && isset($product['catalog_product']['info']['categories'])) {
-          $this->apicTaxonomy->process_product_categories($product, $node);
-        }
-
-        // if invoked from the create code then don't invoke the update event - will be invoked from create instead
-        if ($node !== NULL) {
-          if ($event !== 'internal') {
-            \Drupal::logger('product')->notice('Product @product @version updated', [
-              '@product' => $node->getTitle(),
-              '@version' => $node->apic_version->value,
-            ]);
-            // Calling all modules implementing 'hook_product_update':
-            $moduleHandler->invokeAll('product_update', [
-              'node' => $node,
-              'data' => $product,
-            ]);
-          }
-          ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
-          $returnValue = $node;
-        }
-        else {
-          \Drupal::logger('product')->error('Update product: no node provided.', []);
-          ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-          $returnValue = NULL;
-        }
       }
+
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
+      $returnValue = $node;
+    } else {
+      \Drupal::logger('product')->error('Update product: no node provided.', []);
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      $returnValue = NULL;
     }
     return $returnValue;
   }
@@ -673,7 +707,7 @@ class Product {
     $query->condition('type', 'product');
     $query->condition('apic_ref.value', $product['catalog_product']['info']['name'] . ':' . $product['catalog_product']['info']['version']);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
@@ -829,7 +863,7 @@ class Product {
         // if we're subscribed then allowed access
         $query = \Drupal::entityQuery('apic_app_application_subs');
         $query->condition('consumerorg_url', $myorg['url']);
-        $entityIds = $query->execute();
+        $entityIds = $query->accessCheck()->execute();
         if (isset($entityIds) && !empty($entityIds)) {
           foreach ($entityIds as $entityId) {
             $sub = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->load($entityId);
@@ -871,7 +905,7 @@ class Product {
           $query->condition('type', 'consumerorg');
           $query->condition('consumerorg_url.value', $myorg['url']);
 
-          $consumerOrgResults = $query->execute();
+          $consumerOrgResults = $query->accessCheck()->execute();
           if ($consumerOrgResults !== NULL && !empty($consumerOrgResults)) {
             $nid = array_shift($consumerOrgResults);
             $consumerOrg = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
@@ -912,7 +946,7 @@ class Product {
       $query->condition('status', 1);
       $query->condition('product_state.value', 'published');
 
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
       if ($results !== NULL && !empty($results)) {
         $nids = array_values($results);
         if (!empty($nids)) {
@@ -927,7 +961,7 @@ class Product {
       $query->condition('product_state.value', 'published');
       $query->condition('product_view_enabled.value', 1);
       $query->condition('product_visibility_public.value', 1);
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
       if ($results !== NULL && !empty($results)) {
         $nids = array_values($results);
         if (!empty($nids)) {
@@ -941,7 +975,7 @@ class Product {
         $query->condition('product_state.value', 'published');
         $query->condition('product_view_enabled.value', 1);
         $query->condition('product_visibility_authenticated.value', 1);
-        $results = $query->execute();
+        $results = $query->accessCheck()->execute();
         if ($results !== NULL && !empty($results)) {
           $nids = array_values($results);
           if (!empty($nids)) {
@@ -956,7 +990,7 @@ class Product {
           $query->condition('product_state.value', 'published');
           $query->condition('product_view_enabled.value', 1);
           $query->condition('product_visibility_custom_orgs.value', $myorg['url'], 'CONTAINS');
-          $results = $query->execute();
+          $results = $query->accessCheck()->execute();
           if ($results !== NULL && !empty($results)) {
             $nids = array_values($results);
             if (!empty($nids)) {
@@ -967,7 +1001,7 @@ class Product {
           $query = \Drupal::entityQuery('node');
           $query->condition('type', 'consumerorg');
           $query->condition('consumerorg_url.value', $myorg['url']);
-          $consumerOrgResults = $query->execute();
+          $consumerOrgResults = $query->accessCheck()->execute();
           if ($consumerOrgResults !== NULL && !empty($consumerOrgResults)) {
             $consumerOrgNid = array_shift($consumerOrgResults);
 
@@ -990,7 +1024,7 @@ class Product {
                   $query->condition('product_state.value', 'published');
                   $query->condition('product_view_enabled.value', 1);
                   $query->condition('product_visibility_custom_tags.value', $groups, 'IN');
-                  $results = $query->execute();
+                  $results = $query->accessCheck()->execute();
                   if ($results !== NULL && !empty($results)) {
                     $nids = array_values($results);
                     if (!empty($nids)) {
@@ -1003,27 +1037,20 @@ class Product {
           }
 
           // also grab any products we're subscribed to in order to include deprecated products
-          $query = \Drupal::entityQuery('apic_app_application_subs');
-          $query->condition('consumerorg_url', $myorg['url']);
-          $entityIds = $query->execute();
-          if (isset($entityIds) && !empty($entityIds)) {
-            $additional = [[]];
-            foreach ($entityIds as $entityId) {
-              $sub = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->load($entityId);
-              if ($sub !== NULL) {
-                $query = \Drupal::entityQuery('node');
-                $query->condition('type', 'product');
-                $query->condition('apic_url.value', $sub->product_url());
-                $results = $query->execute();
-                if ($results !== NULL && !empty($results)) {
-                  $nids = array_values($results);
-                  $additional[] = $nids;
-                }
-              }
-            }
-            $additional = array_merge(...$additional);
-            $returnNids = array_merge($returnNids, $additional);
+          $options = ['target' => 'default'];
+          $query = Database::getConnection($options['target'])
+          ->query("SELECT entity_id
+          FROM `node__apic_url` apic_url
+          INNER JOIN `apic_app_application_subs` sub ON apic_url.apic_url_value = sub.product_url
+          WHERE consumerorg_url = '" . $myorg['url'] . "'", [], $options);
+          $doResults = $query->fetchAll();
+
+          $additional = [];
+          foreach ($doResults as $do) {
+            $additional[] = $do->entity_id;
           }
+          $additional = array_unique($additional);
+          $returnNids = array_merge($returnNids, $additional);
         }
       }
     }
@@ -1129,7 +1156,7 @@ class Product {
     $query->condition('type', 'page');
     $query->condition('status', 1);
     $query->condition('allproducts.value', 1);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     if ($results !== NULL && !empty($results)) {
       $finalNids = array_values($results);
     }
@@ -1137,7 +1164,7 @@ class Product {
     $query->condition('type', 'page');
     $query->condition('status', 1);
     $query->condition('prodref.target_id', $nid);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     if ($results !== NULL && !empty($results)) {
       $nids = array_values($results);
       $finalNids = array_merge($finalNids, $nids);
@@ -1177,7 +1204,7 @@ class Product {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product');
       $query->condition('product_api_nids', $apiNid, 'IN');
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
       if ($results !== NULL && !empty($results)) {
         $products = array_values($results);
       }
@@ -1203,7 +1230,7 @@ class Product {
     $query->condition('type', 'product');
     $query->condition('apic_url.value', $url);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
@@ -1235,7 +1262,7 @@ class Product {
     $query->condition('type', 'product');
     $query->condition('apic_url.value', $url);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
@@ -1295,7 +1322,7 @@ class Product {
     $query->condition('type', 'product');
     $query->condition('apic_url.value', $url);
 
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
 
     if ($nids !== NULL && !empty($nids)) {
       $nid = array_shift($nids);
@@ -1325,6 +1352,7 @@ class Product {
         $product = yaml_parse($node->product_data->value);
         if (isset($product['info']['categories'])) {
           $this->apicTaxonomy->process_product_categories($product, $node);
+          $node->save();
         }
       }
     }
@@ -1666,7 +1694,7 @@ class Product {
     if (isset($oldNid)) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'page')->condition('prodref', $oldNid, 'CONTAINS');
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         foreach ($nids as $nid) {
           $node = Node::load($nid);

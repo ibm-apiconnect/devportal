@@ -38,9 +38,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-totals
    *   Count nodes of each type.
    * @aliases nodecount
-   * @format table
    */
-  public function drush_apic_type_count_totals(): array {
+  public function drush_apic_type_count_totals(array $options = [ 'format' => 'json' ]): array {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = \Drupal::service('account_switcher');
@@ -76,9 +75,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-users
    *   Count users of each role.
    * @aliases usercount
-   * @format table
    */
-  public function drush_apic_type_count_users(): array {
+  public function drush_apic_type_count_users(array $options = [ 'format' => 'json' ]): array {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = \Drupal::service('account_switcher');
@@ -114,9 +112,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-entities
    *   Count entities of each type.
    * @aliases entitycount
-   * @format table
    */
-  public function drush_apic_type_count_entities(): array {
+  public function drush_apic_type_count_entities(array $options = [ 'format' => 'json' ]): array {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = \Drupal::service('account_switcher');
@@ -151,9 +148,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-productlist
    *   List products.
    * @aliases productlist
-   * @format table
    */
-  public function drush_apic_type_count_productlist(): array {
+  public function drush_apic_type_count_productlist(array $options = [ 'format' => 'json' ]): array {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = \Drupal::service('account_switcher');
@@ -186,9 +182,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-apilist
    *   List APIs.
    * @aliases apilist
-   * @format table
    */
-  public function drush_apic_type_count_apilist(): array {
+  public function drush_apic_type_count_apilist(array $options = [ 'format' => 'json' ]): array {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = \Drupal::service('account_switcher');
@@ -221,9 +216,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-consumerorglist
    *   List Consumer orgs.
    * @aliases consumerorglist
-   * @format table
    */
-  public function drush_apic_type_count_consumerorglist(): array {
+  public function drush_apic_type_count_consumerorglist(array $options = [ 'format' => 'json' ]): array {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = \Drupal::service('account_switcher');
@@ -256,9 +250,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-applicationlist
    *   List applications.
    * @aliases applicationlist
-   * @format table
    */
-  public function drush_apic_type_count_applicationlist(): array {
+  public function drush_apic_type_count_applicationlist(array $options = [ 'format' => 'json' ]): array {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = \Drupal::service('account_switcher');
@@ -291,9 +284,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-apiget
    *   Get an api.
    * @aliases apiget
-   * @format json
    */
-  public function drush_apic_type_count_apiget($input): ?array {
+  public function drush_apic_type_count_apiget($input, array $options = [ 'format' => 'json' ]): ?array {
     $results = NULL;
     if ($input !== NULL) {
       // in case moderation is on we need to run as admin
@@ -330,9 +322,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-apidocument
    *   Get an api document.
    * @aliases apidocument
-   * @format string
    */
-  public function drush_apic_type_count_apidocument($input): ?string {
+  public function drush_apic_type_count_apidocument($input, array $options = [ 'format' => 'string' ]): ?string {
     $results = NULL;
     if ($input !== NULL) {
       // in case moderation is on we need to run as admin
@@ -369,9 +360,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-productget
    *   Get a product.
    * @aliases productget
-   * @format json
    */
-  public function drush_apic_type_count_productget($input): ?array {
+  public function drush_apic_type_count_productget($input, array $options = [ 'format' => 'json' ]): ?array {
     $results = NULL;
     if ($input !== NULL) {
       // in case moderation is on we need to run as admin
@@ -407,9 +397,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-productdocument
    *   Get a product document.
    * @aliases productdocument
-   * @format json
    */
-  public function drush_apic_type_count_productdocument($input): ?array {
+  public function drush_apic_type_count_productdocument($input, array $options = [ 'format' => 'json' ]): ?array {
     $results = NULL;
     if ($input !== NULL) {
       // in case moderation is on we need to run as admin
@@ -445,9 +434,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-applicationget
    *   Get an application.
    * @aliases applicationget
-   * @format json
    */
-  public function drush_apic_type_count_applicationget($input): ?array {
+  public function drush_apic_type_count_applicationget($input, array $options = [ 'format' => 'json' ]): ?array {
     $results = NULL;
     if ($input !== NULL) {
       // in case moderation is on we need to run as admin
@@ -484,9 +472,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-consumerorgget
    *   Get a Consumer org.
    * @aliases consumerorgget
-   * @format json
    */
-  public function drush_apic_type_count_consumerorgget($input): ?array {
+  public function drush_apic_type_count_consumerorgget($input, array $options = [ 'format' => 'json' ]): ?array {
     $results = NULL;
     if ($input !== NULL) {
       // in case moderation is on we need to run as admin
@@ -521,9 +508,8 @@ class ApicTypeCountCommands extends DrushCommands {
    * @usage drush apic_type_count-apic_config
    *   Get a site configuration.
    * @aliases apic-config apicconfig
-   * @format json
    */
-  public function drush_apic_type_count_apic_config(): ?array {
+  public function drush_apic_type_count_apic_config(array $options = [ 'format' => 'json' ]): ?array {
     // in case moderation is on we need to run as admin
     // save the current user so we can switch back at the end
     $accountSwitcher = \Drupal::service('account_switcher');

@@ -313,7 +313,7 @@ class FeaturedContentBlock extends BlockBase {
           break;
       }
 
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
     }
     else {
       // using custom nodes so make sure there aren't more nodes than specified.
@@ -365,13 +365,14 @@ class FeaturedContentBlock extends BlockBase {
         }
         elseif ($rawNode->bundle() === static::TYPE_PRODUCT) {
           $data['summary'] = $rawNode->apic_summary->value;
+          $string = $rawNode->apic_description->value ?? '';
           // if ghmarkdown is available then use that
           if ($moduleHandler->moduleExists('ghmarkdown')) {
-            $string = $rawNode->apic_description->value ?? '';
-            $data['description'] = $utils->truncate_string(strip_tags(\Drupal\ghmarkdown\Plugin\Filter\GHMarkdown::parse($string)), 300);
+            $parsedString = \Drupal\ghmarkdown\Plugin\Filter\GHMarkdown::parse($string);
+            $data['description'] = $parsedString === null ? '' : $utils->truncate_string(strip_tags($parsedString), 300);
           }
           else {
-            $data['description'] = $utils->truncate_string(strip_tags($rawNode->apic_description->value), 300);
+            $data['description'] = $utils->truncate_string(strip_tags($string), 300);
           }
           $data['id'] = $rawNode->product_id->value;
           $data['version'] = $rawNode->apic_version->value;
@@ -409,4 +410,3 @@ class FeaturedContentBlock extends BlockBase {
   }
 
 }
-

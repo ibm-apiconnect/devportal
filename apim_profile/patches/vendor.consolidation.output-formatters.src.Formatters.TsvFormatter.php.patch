@@ -1,0 +1,10 @@
+--- vendor/consolidation/output-formatters/src/Formatters/TsvFormatter.php     2023-02-10 12:11:51
++++ vendor/consolidation/output-formatters/src/Formatters/TsvFormatter.php        2023-02-10 11:47:17
+@@ -33,6 +33,7 @@
+     {
+         return implode("\t", array_map(
+             function ($item) {
++                $item = is_array($item) ? implode(" ", $item) : $item;
+                 return str_replace(["\t", "\n"], ['\t', '\n'], $item);
+             },
+             $data

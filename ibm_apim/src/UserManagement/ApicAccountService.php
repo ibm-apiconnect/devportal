@@ -156,7 +156,7 @@ class ApicAccountService implements ApicAccountInterface {
   /**
    * @inheritDoc
    */
-  public function updateLocalAccount(ApicUser $user) {
+  public function updateLocalAccount(ApicUser $user, $userAccount = NULL, $save = TRUE) {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $user);
     }
@@ -165,7 +165,7 @@ class ApicAccountService implements ApicAccountInterface {
       $account = User::load(1);
     }
     else {
-      $account = $this->userStorage->load($user);
+      $account = $userAccount ?? $this->userStorage->load($user);
     }
 
     if ($account === FALSE || $account === NULL) {
@@ -200,10 +200,10 @@ class ApicAccountService implements ApicAccountInterface {
       $account->set('apic_state', $user->getState());
 
       //Add the custom fields to the user
-      $customFields = $this->userService->getCustomUserFields();
+      $customFields = $this->userService->getMetadataFields();
       if (!empty($customFields)) {
         $metadata = $user->getMetadata();
-        \Drupal::service('ibm_apim.utils')->saveCustomFields($account, $customFields, $metadata, TRUE);
+        \Drupal::service('ibm_apim.utils')->saveCustomFields($account, $customFields, $metadata, TRUE, FALSE);
       }
 
       // For all non-admin users, don't store their password in our database.
@@ -211,7 +211,9 @@ class ApicAccountService implements ApicAccountInterface {
         $account->setPassword(NULL);
       }
 
-      $account->save();
+      if ($save) {
+        $account->save();
+      }
     }
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

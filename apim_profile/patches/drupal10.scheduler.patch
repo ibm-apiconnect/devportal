@@ -1,0 +1,37 @@
+--- modules/scheduler/js/scheduler_default_time_8x.js 2023-02-10 10:56:24
++++ modules/scheduler/js/scheduler_default_time_8x.js     2023-02-10 10:56:18
+@@ -5,7 +5,7 @@
+  * This is a legacy version to maintain compatibility with Drupal 8.9.
+  */
+
+-(function ($, drupalSettings) {
++(function ($, drupalSettings, once) {
+
+   'use strict';
+
+@@ -24,7 +24,7 @@
+       // Drupal.behaviors are called many times per page. Using .once() adds the
+       // class onto the matched DOM element and uses this to prevent it running
+       // on subsequent calls.
+-      const $default_time = $(context).find('#edit-scheduler-settings').once('default-time-done');
++      const $default_time = $(context).find(once('default-time-done', '#edit-scheduler-settings'));
+
+       if ($default_time.length && typeof drupalSettings.schedulerDefaultTime !== "undefined") {
+         var operations = ["publish", "unpublish"];
+@@ -51,4 +51,4 @@
+
+     }
+   };
+-})(jQuery, drupalSettings);
++})(jQuery, drupalSettings, once);
+
+--- modules/scheduler/scheduler.libraries.yml   2023-02-10 10:57:37
++++ modules/scheduler/scheduler.libraries.yml    2023-02-10 10:57:32
+@@ -15,6 +15,7 @@
+     js/scheduler_default_time_8x.js: {}
+   dependencies:
+     - core/jquery
++    - core/once
+ admin-css:
+   css:
+     component:

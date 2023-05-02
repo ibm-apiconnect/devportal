@@ -55,9 +55,9 @@ class ApplicationRestService implements ApplicationRestInterface {
    * @param \Drupal\ibm_apim\Service\ApimUtils $apimUtils
    * @param \Drupal\apic_app\Service\SubscriptionService $subscriptionService
    */
-  public function __construct(ApplicationService $applicationService, 
-                              UserUtils $userUtils, 
-                              ApimUtils $apimUtils, 
+  public function __construct(ApplicationService $applicationService,
+                              UserUtils $userUtils,
+                              ApimUtils $apimUtils,
                               SubscriptionService $subscriptionService,
                               Utils $utils
                               ) {
@@ -397,7 +397,7 @@ class ApplicationRestService implements ApplicationRestInterface {
         $query = \Drupal::entityQuery('node');
         $query->condition('type', 'application');
         $query->condition('apic_url.value', $appUrl);
-        $dbNids = $query->execute();
+        $dbNids = $query->accessCheck()->execute();
         if ($dbNids !== NULL && !empty($dbNids)) {
           $appNid = array_shift($dbNids);
           $node = Node::load($appNid);

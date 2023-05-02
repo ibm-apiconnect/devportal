@@ -696,7 +696,7 @@ function apic_app_consumerorg_pre_delete($node, $data) {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');
     $query->condition('application_consumer_org_url.value', $node->consumerorg_url->value);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
     if (isset($results) && !empty($results)) {
       $appNids = array_values($results);
       foreach ($appNids as $appNid) {

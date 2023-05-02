@@ -1,0 +1,46 @@
+--- modules/views_autocomplete_filters/js/views-autocomplete-filters-dependent.js       2023-01-13 14:39:54
++++ modules/views_autocomplete_filters/js/views-autocomplete-filters-dependent.js  2023-01-13 14:39:49
+@@ -3,7 +3,7 @@
+  * Autocomplete based on jQuery UI.
+  */
+
+-(function ($, Drupal) {
++(function ($, Drupal, once) {
+
+   'use strict';
+
+@@ -225,7 +225,7 @@
+   Drupal.behaviors.autocomplete = {
+     attach: function (context) {
+       // Act on textfields with the "form-autocomplete" class.
+-      var $autocomplete = $(context).find('input.form-autocomplete').once('autocomplete');
++      var $autocomplete = $(once('autocomplete', 'input.form-autocomplete', context));
+       if ($autocomplete.length) {
+         // Allow options to be overriden per instance.
+         var blacklist = $autocomplete.attr('data-autocomplete-first-character-blacklist');
+@@ -241,8 +241,7 @@
+     },
+     detach: function (context, settings, trigger) {
+       if (trigger === 'unload') {
+-        $(context).find('input.form-autocomplete')
+-          .removeOnce('autocomplete')
++        $(once.remove('autocomplete', 'input.form-autocomplete', context))
+           .autocomplete('destroy');
+       }
+     }
+@@ -300,4 +299,4 @@
+       .serializeArray();
+   };
+
+-})(jQuery, Drupal);
++})(jQuery, Drupal, once);
+
+--- modules/views_autocomplete_filters/views_autocomplete_filters.libraries.yml 2023-01-13 14:41:11
++++ modules/views_autocomplete_filters/views_autocomplete_filters.libraries.yml    2023-01-13 14:40:33
+@@ -12,5 +12,6 @@
+     js/views-autocomplete-filters-dependent.js: {}
+   dependencies:
+     - core/jquery
++    - core/once
+     - core/drupal
+     - core/drupal.form

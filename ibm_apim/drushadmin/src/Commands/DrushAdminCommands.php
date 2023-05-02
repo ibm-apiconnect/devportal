@@ -38,11 +38,13 @@ class DrushAdminCommands extends DrushCommands {
   public function drush_drushadmin_theme_delete($theme_name): void {
     if ($theme_name !== NULL) {
       $themes = \Drupal::service('theme_handler')->listInfo();
-      $customThemes = \Drupal::service('ibm_apim.utils')->getCustomThemeDirectories();
+      $customThemeDirectories = \Drupal::service('ibm_apim.utils')->getCustomThemeDirectories();
+      $theme_path = \Drupal::service('extension.list.theme')->getPath($theme_name);
+      $theme_directory = @array_pop(explode('/', $theme_path));
       $inputThemes = explode(',', $theme_name);
       foreach ($inputThemes as $inputTheme) {
         // Check if the specified theme is disabled and is a custom theme
-        if (!array_key_exists($inputTheme, $themes) && in_array($inputTheme, $customThemes, TRUE)) {
+        if (!array_key_exists($inputTheme, $themes) && in_array($theme_directory, $customThemeDirectories, TRUE)) {
           $item_path = \Drupal::service('extension.list.theme')->getPath($inputTheme);
           if (isset($item_path) && !empty($item_path)) {
             \Drupal::service('ibm_apim.utils')->file_delete_recursive($item_path);
@@ -188,10 +190,10 @@ class DrushAdminCommands extends DrushCommands {
     if ($ur_url !== NULL) {
       $query->condition("apic_user_registry_url", $ur_url);
     }
-    $result = $query->execute();
+    $result = $query->accessCheck()->execute();
+    $performBatch = FALSE;
 
     foreach ($result as $id) {
-
       // DO NOT DELETE THE ADMIN USER!
       if ((int) $id > 1) {
         user_cancel([], $id, 'user_cancel_reassign');
@@ -199,7 +201,7 @@ class DrushAdminCommands extends DrushCommands {
       }
     }
 
-    if (!empty($performBatch)) {
+    if ($performBatch) {
       \Drupal::logger('drushadmin')->notice('Processing batch delete of users...');
       $batch = &batch_get();
       $batch['progressive'] = FALSE;

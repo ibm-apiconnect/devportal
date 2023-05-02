@@ -1,0 +1,19 @@
+--- modules/graphql/examples/graphql_example/src/Wrappers/QueryConnection.php   2023-01-10 14:46:16
++++ modules/graphql/examples/graphql_example/src/Wrappers/QueryConnection.php      2023-01-10 14:46:37
+@@ -31,14 +31,14 @@
+     $query = clone $this->query;
+     $query->range(NULL, NULL)->count();
+     /** @var int */
+-    return $query->execute();
++    return $query->accessCheck()->execute();
+   }
+
+   /**
+    * @return array|\GraphQL\Deferred
+    */
+   public function items() {
+-    $result = $this->query->execute();
++    $result = $this->query->accessCheck()->execute();
+     if (empty($result)) {
+       return [];
+     }

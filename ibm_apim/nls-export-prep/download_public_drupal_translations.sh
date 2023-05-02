@@ -31,19 +31,19 @@ function downloadNonCore() {
   local project_name=''
   local project_version=''
   local messages=()
+
   # loop over all project,version entries
   while IFS=, read -r project_name project_version
   do
+    local failed_langs=
     messages+=("$project_name ($project_version) start")
     if [[ -z $project_version ]]
     then
       messages+=("  No version available - SKIPPING")
     else
-      local failed_langs=
       for lang in "${dllangs[@]}"
       do
         local url="http://ftp.drupal.org/files/translations/8.x/$project_name/$project_name-$project_version.$lang.po"
-
         wget -q $url --no-check-certificate && RC=$? || RC=$?
         if [[ $RC -ne 0 ]]
         then

@@ -1,7 +1,7 @@
 name: 'IBM API Developer Portal'
 type: profile
 description: 'Provides modules to access the content in an API Manager node and a skeleton site which application developers can use to browse APIs.'
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^8 || ^9 || ^10
 
 # Optional: Declare your installation profile as a distribution
 # This will make the installer auto-select this installation profile.
@@ -12,6 +12,7 @@ distribution:
 
 # Required modules
 install:
+  - search
   - node
   - history
   - block
@@ -20,13 +21,11 @@ install:
   - block_content
   - dynamic_page_cache
   - breakpoint
-  - color
   - config
   - comment
   - datetime
   - contextual
   - contact
-  - quickedit
   - help
   - image
   - options
@@ -41,13 +40,11 @@ install:
   - views
   - views_ui
   - editor
-  - ckeditor
   - automated_cron
   - ban
   - menu_ui
   - forum
   - blog
-  - content_browser
   - big_pipe
   - apic_letter_avatar
   - avatars
@@ -70,7 +67,6 @@ install:
   - change_pwd_page
   - libraries
   - responsive_image
-  - editor_file
   - config_update
   - password_policy
   - password_policy_length
@@ -80,23 +76,16 @@ install:
   - bootstrap_layouts
   - views_bootstrap
   - taxonomy_menu
-  - ckeditor_media_embed
   - social_media_links
   - health_check
   - editor_advanced_link
   - linkit
-  - restrict_by_ip
   - file_upload_secure_validator
   - select_or_other
   - crop
   - focal_point
-  - entity_browser
   - dropzonejs
   - dropzonejs_eb_widget
-  - entity_browser_enhanced
-  - file_browser
-  - embed
-  - entity_embed
   - honeypot
   - twig_tweak
   - masonry
@@ -114,7 +103,6 @@ install:
   - key
   - encrypt
   - real_aes
-  - unlimited_number
   - mimemail
   - password_strength
   - csp
@@ -140,9 +128,12 @@ install:
   - themegenerator
   - drushadmin
   - drush_language
-
+  - unlimited_number
+  - restrict_by_ip
+  - ckeditor5
+  - media
 
 themes:
-  - bartik
-  - seven
+  - olivero
+  - claro
   - connect_theme

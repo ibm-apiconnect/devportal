@@ -227,7 +227,7 @@ class ApicUser {
    * @return string|null
    */
   public function getId(): ?string {
-    return basename($this->url);
+    return basename($this->url ?? '');
   }
 
   /**
@@ -434,7 +434,7 @@ class ApicUser {
       $this->setAuthcode($content['authcode']);
     }
 
-    $customFields = \Drupal::service('ibm_apim.apicuser')->getCustomUserFields();
+    $customFields = \Drupal::service('ibm_apim.apicuser')->getMetadataFields();
     foreach ($customFields as $field) {
       if (array_key_exists($field, $content)) {
         $this->addCustomField($field, json_decode($content[$field], TRUE, 512, JSON_THROW_ON_ERROR));
@@ -490,7 +490,7 @@ class ApicUser {
     if ($this->authcode !== NULL) {
       $content['authcode'] = $this->authcode;
     }
-    $customFields = \Drupal::service('ibm_apim.apicuser')->getCustomUserFields();
+    $customFields = \Drupal::service('ibm_apim.apicuser')->getMetadataFields();
     foreach ($customFields as $field) {
       if (isset($this->custom_fields[$field])) {
         $content[$field] = json_encode($this->custom_fields[$field], JSON_THROW_ON_ERROR);

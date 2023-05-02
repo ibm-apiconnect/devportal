@@ -5,7 +5,6 @@ explorer:
   js:
     js/explorer-callback.js: { weight: -2 }
   dependencies:
-    - core/jquery.once
     - core/drupalSettings
   css:
     component:

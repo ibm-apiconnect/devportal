@@ -1,0 +1,38 @@
+--- modules/intense/js/intense.load.js  2023-02-10 11:13:46
++++ modules/intense/js/intense.load.js     2023-02-10 11:13:24
+@@ -5,7 +5,7 @@
+  * Intense video full screen requires Blazy 2.x.
+  */
+
+-(function ($, Drupal, _win, _doc) {
++(function ($, Drupal, once, _win, _doc) {
+
+   'use strict';
+
+@@ -272,10 +272,10 @@
+
+       // @todo replace with core/once when min D9.2:
+       if (items.length) {
+-        $.once($.forEach(items, doIntense));
++        $(once($.forEach(items, doIntense)));
+       }
+     }
+
+   };
+
+-})(dBlazy, Drupal, this, this.document);
++})(dBlazy, Drupal, once, this, this.document);
+
+--- modules/intense/js/intense.load.min.js      2023-02-10 11:14:57
++++ modules/intense/js/intense.load.min.js 2023-02-10 11:14:54
+@@ -1 +1 @@
+-(function(g,c,l,a){var m="intense";var n=m+"-gallery";var p=n+"--on";var i="is-intensed";var e="[data-"+n+"]:not(."+p+"), ."+n+":not(."+p+")";var h=".intensed__arrow";var k=".intensed__prev";var o=".intensed__next";var f="visually-hidden";var d="is-hidden";var q=0;var b=c.blazyBox||{};c.intense=c.intense||{$box:null,$blazyBox:null,$gallery:null,$prev:null,$next:null,$arrow:null,$triggers:[],clickedIndex:0,currentIndex:0,totalCount:0,buildOut:function(){var s=this;var r=s.$box;if(a.body.querySelector(h)===null){a.body.insertAdjacentHTML("beforeend",c.theme("intense"))}a.body.classList.add(i);l.setTimeout(function(){s.$arrow=s.$arrow||a.querySelector(h);s.$prev=s.$prev||a.querySelector(k);s.$next=s.$next||a.querySelector(o);if(s.$prev!==null){g.on(a.body,"click."+m+"Prev",k,s.goPrev.bind(s));g.on(a.body,"click."+m+"Next",o,s.goNext.bind(s));s.$prev.classList[s.currentIndex===0?"add":"remove"](d);s.$next.classList[s.currentIndex===s.totalCount-1?"add":"remove"](d)}},100);if(r!==null){r.classList.add("intensed");g.bindEvent(r,"click",s.closeOut.bind(s))}},check:function(){var r=this;r.$box=a.body.querySelector("figure:last-child")},toggle:function(s){var r=this;a.body.classList[s?"add":"remove"](i);l.setTimeout(function(){r.check();if(s){r.buildOut()}},100)},navigate:function(){var t=this;t.check();if(t.$blazyBox&&!t.$blazyBox.classList.contains(f)){var u=t.$blazyBox.querySelector(".blazybox__close");if(u){u.click()}}if(t.$box===null){return}var r=t.$box.querySelector("img");if(r){r.click()}var s=t.$triggers[t.currentIndex];if(s&&typeof s!=="undefined"){g.trigger(s,"click");t.toggle(true)}},goPrev:function(){var r=this;r.currentIndex--;if(r.currentIndex<0){r.currentIndex=0}r.navigate()},goNext:function(){var r=this;r.currentIndex++;if(r.currentIndex>r.totalCount-1){r.currentIndex=r.totalCount-1}r.navigate()},closeOut:function(){var r=this;r.toggle(false)},getIndex:function(t){var s=this;var r=0;g.forEach(s.$triggers,function(v,u){if(v===t){r=u;return false}});return r}};c.theme.intense=function(){var r;r='<div class="intensed__arrow">';r+='<button class="intensed__prev" data-role="none">'+c.t("Previous")+"</button>";r+='<button class="intensed__next" data-role="none">'+c.t("Next")+"</button>";r+="</div>";return r};function j(v){var u=c.intense;var t=v.querySelector(".media--video")!==null;u.$gallery=v;u.$triggers=v.querySelectorAll("[data-intense-trigger], .intense");u.totalCount=u.$triggers.length;if(t&&b){b.attach();if(b.options){b.options.hideCloseBtn=true}u.$blazyBox=b.el}var s=[];g.forEach(u.$triggers,function(w){if(!w.dataset.oembedUrl){s.push(w)}});new Intense(s);function r(A){var y=this;var z=g.parse(y.dataset.media)||{};var x=z&&z.type==="video";if(x&&b){var w=y.dataset.oembedUrl||y.getAttribute("href");b.open(w)}A.preventDefault();l.clearTimeout(q);q=l.setTimeout(function(){u.clickedIndex=u.currentIndex=u.getIndex(y);u.toggle(true)},100)}g.on(v,"click","[data-intense-trigger], .intense",r);v.classList.add(p)}c.behaviors.intense={attach:function(s){s=s instanceof HTMLDocument?s:a;var r=s.querySelectorAll(e);if(r.length){g.once(g.forEach(r,j))}}}})(dBlazy,Drupal,this,this.document);
++!function(e,t,n,r,i){"use strict";var o="intense",l=o+"-gallery",s=l+"--on",a="is-intensed",c="[data-"+l+"]:not(."+s+"), ."+l+":not(."+s+")",u=".intensed__arrow",d=".intensed__prev",g=".intensed__next",v="is-hidden",h=0,x=t.blazyBox||{};function b(n){var i=t.intense,o=null!==n.querySelector(".media--video");i.$gallery=n,i.$triggers=n.querySelectorAll("[data-intense-trigger], .intense"),i.totalCount=i.$triggers.length,o&&x&&(x.attach(),x.options&&(x.options.hideCloseBtn=!0),i.$blazyBox=x.el);var l=[];e.forEach(i.$triggers,function(e){e.dataset.oembedUrl||l.push(e)}),new Intense(l),e.on(n,"click","[data-intense-trigger], .intense",function t(n){var o=this,l=e.parse(o.dataset.media)||{};if(l&&"video"===l.type&&x){var s=o.dataset.oembedUrl||o.getAttribute("href");x.open(s)}n.preventDefault(),r.clearTimeout(h),h=r.setTimeout(function(){i.clickedIndex=i.currentIndex=i.getIndex(o),i.toggle(!0)},100)}),n.classList.add(s)}t.intense=t.intense||{$box:null,$blazyBox:null,$gallery:null,$prev:null,$next:null,$arrow:null,$triggers:[],clickedIndex:0,currentIndex:0,totalCount:0,buildOut:function(){var n=this,l=n.$box;null===i.body.querySelector(u)&&i.body.insertAdjacentHTML("beforeend",t.theme("intense")),i.body.classList.add(a),r.setTimeout(function(){n.$arrow=n.$arrow||i.querySelector(u),n.$prev=n.$prev||i.querySelector(d),n.$next=n.$next||i.querySelector(g),null!==n.$prev&&(e.on(i.body,"click."+o+"Prev",d,n.goPrev.bind(n)),e.on(i.body,"click."+o+"Next",g,n.goNext.bind(n)),n.$prev.classList[0===n.currentIndex?"add":"remove"](v),n.$next.classList[n.currentIndex===n.totalCount-1?"add":"remove"](v))},100),null!==l&&(l.classList.add("intensed"),e.bindEvent(l,"click",n.closeOut.bind(n)))},check:function(){var e=this;e.$box=i.body.querySelector("figure:last-child")},toggle:function(e){var t=this;i.body.classList[e?"add":"remove"](a),r.setTimeout(function(){t.check(),e&&t.buildOut()},100)},navigate:function(){if(this.check(),this.$blazyBox&&!this.$blazyBox.classList.contains("visually-hidden")){var t=this.$blazyBox.querySelector(".blazybox__close");t&&t.click()}if(null!==this.$box){var n=this.$box.querySelector("img");n&&n.click();var r=this.$triggers[this.currentIndex];r&&void 0!==r&&(e.trigger(r,"click"),this.toggle(!0))}},goPrev:function(){var e=this;e.currentIndex--,e.currentIndex<0&&(e.currentIndex=0),e.navigate()},goNext:function(){var e=this;e.currentIndex++,e.currentIndex>e.totalCount-1&&(e.currentIndex=e.totalCount-1),e.navigate()},closeOut:function(){this.toggle(!1)},getIndex:function(t){var n=0;return e.forEach(this.$triggers,function(e,r){if(e===t)return n=r,!1}),n}},t.theme.intense=function(){var e;return e='<div class="intensed__arrow">',e+='<button class="intensed__prev" data-role="none">'+t.t("Previous")+"</button>",e+='<button class="intensed__next" data-role="none">'+t.t("Next")+"</button>",e+="</div>"},t.behaviors.intense={attach:function(t){var r=(t=t instanceof HTMLDocument?t:i).querySelectorAll(c);r.length&&e(n(e.forEach(r,b)))}}}(dBlazy,Drupal,once,this,this.document);
+
+--- modules/intense/intense.libraries.yml       2023-02-10 11:15:53
++++ modules/intense/intense.libraries.yml  2023-02-10 11:15:50
+@@ -18,3 +18,4 @@
+     # @todo enable when min D9.2 - core/once
+     - blazy/blazybox
+     - intense/intense
++    - core/once

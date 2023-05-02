@@ -491,7 +491,7 @@ function product_preprocess_node(&$variables) {
       $query->condition('type', 'api');
       $query->condition('status', 1);
       $query->condition('apic_ref.value', $apiNames, 'IN');
-      $results = $query->execute();
+      $results = $query->accessCheck()->execute();
       if ($results !== NULL && !empty($results)) {
         $apiNids = array_values($results);
       }
@@ -625,7 +625,7 @@ function product_preprocess_node(&$variables) {
       // custom extensions
       $customExtensions = [];
       foreach (array_keys($productData['info']) as $key) {
-        if (strpos($key, 'x-') === 0) {
+        if ($key !== 'x-ibm-languages' && strpos($key, 'x-') === 0) {
           $keyName = substr($key, strlen('x-'));
           $customExtensions[$keyName] = $productData['info'][$key];
         }

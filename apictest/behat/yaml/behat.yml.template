@@ -28,12 +28,21 @@ default:
         - Drupal\DrupalExtension\Context\DrushContext
   extensions:
     Behat\MinkExtension:
-      goutte:
-        guzzle_parameters:
-          verify: false
+      sessions:
+        my_session:
+          goutte:
+            guzzle_parameters:
+              verify: false
+            server_parameters:
+              verify_peer: false
+              verify_host: false
+              timeout: 90
+              max_duration: 90
       base_url: "SITEURL"
-      default_session: goutte
+      default_session: my_session
     Drupal\DrupalExtension:
+      text:
+        log_in: "Sign in"
       api_driver: "drupal"
       drupal:
         drupal_root: "PLATFORMDIR"

@@ -38,7 +38,7 @@ class CredUuidParamConverter implements ParamConverterInterface {
     if (!empty($value)) {
       $query = \Drupal::entityQuery('apic_app_application_creds');
       $query->condition('uuid', Html::escape($value));
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       if (isset($entityIds) && !empty($entityIds)) {
         $cred = ApplicationCredentials::load(array_shift($entityIds));
         if ($cred !== NULL) {

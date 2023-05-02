@@ -130,7 +130,7 @@ class MockApicAccountService implements ApicAccountInterface {
   /**
    * @inheritDoc
    */
-  public function updateLocalAccount(ApicUser $user) {
+  public function updateLocalAccount(ApicUser $user, $userAcount = NULL, $save = TRUE) {
 
     $dbUser = $this->loadUserFromDatabase($user);
     if ($dbUser !== NULL) {

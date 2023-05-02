@@ -40,7 +40,7 @@ class AppIdParamConverter implements ParamConverterInterface {
       $query->condition('type', 'application');
       $query->condition('application_id.value', Html::escape($value));
 
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if (isset($nids) && !empty($nids)) {
         $nid = array_shift($nids);

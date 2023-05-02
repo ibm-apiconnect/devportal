@@ -112,7 +112,7 @@ class PlanSubscribersWizard extends FormWizardBase {
   public function initValues() {
     $values = [];
     $event = new WizardEvent($this, $values);
-    $this->dispatcher->dispatch(FormWizardInterface::LOAD_VALUES, $event);
+    $this->dispatcher->dispatch($event, FormWizardInterface::LOAD_VALUES);
     $tempValues = $event->getValues();
     $tempValues['objectType'] = 'plan';
     $event->setValues($tempValues);

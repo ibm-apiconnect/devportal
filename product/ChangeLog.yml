@@ -1,4 +1,23 @@
 changes:
+  8.x-5.3.9:
+  - add exception for x-ibm-languages (#264)
+  8.x-5.3.8: null
+  8.x-5.3.7:
+  - update product.css
+  8.x-5.3.6:
+  - apimesh/devportal#8239 Direct db query to include deprecated products (#261) (#262)
+  8.x-5.3.5:
+  - Mass merge for Drupal 10 Changes (#260)
+  8.x-5.3.4:
+  - markdown fix
+  8.x-5.3.3:
+  - Always create products with admin author (#253)
+  8.x-5.3.2:
+  - Fixed unreliable test (#247) (#249)
+  8.x-5.3.1:
+  - Fix productacl for new search404
+  8.x-5.3.0:
+  - update version 8.x-5.2.1 -> 8.x-5.3.0
   8.x-5.2.0:
   - update version 8.x-5.1.2 -> 8.x-5.2.0
   8.x-5.1.1:
@@ -429,8 +448,5 @@ changes:
   - ensure we do not load retired products
   8.x-1.1.51:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since
-    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
-    are also filtered before logging them. Commits that start with 'INT' or 'bump
-    version' are omitted
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted
   - styling updates

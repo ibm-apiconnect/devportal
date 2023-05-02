@@ -320,7 +320,7 @@ class MailService {
       if (isset($planName) && !empty($planName)) {  // ignore any static analysis tool complaints about this line
         $query->condition('plan', $planName);
       }
-      $entityIds = $query->execute();
+      $entityIds = $query->accessCheck()->execute();
       if ($entityIds !== NULL && !empty($entityIds)) {
         foreach ($entityIds as $entityId) {
           $sub = $this->subscriptionStorage->load($entityId);
@@ -338,7 +338,7 @@ class MailService {
         $query = $this->nodeStorage->getQuery();
         $query->condition('type', 'consumerorg');
         $query->condition('consumerorg_url.value', $org);
-        $nids = $query->execute();
+        $nids = $query->accessCheck()->execute();
         if ($nids !== NULL && !empty($nids)) {
           $recipients += $this->getConsumerOrgRecipients($nids, $type);
         }
@@ -440,7 +440,7 @@ class MailService {
         $query->condition('type', 'product');
         $query->condition('product_apis.value', $api->get('apic_ref')->value, 'CONTAINS');
 
-        $prodNids = $query->execute();
+        $prodNids = $query->accessCheck()->execute();
         if ($prodNids !== NULL) {
           // get the consumer orgs of subscribed apps to those products
           foreach ($prodNids as $prodNid) {
@@ -448,7 +448,7 @@ class MailService {
             if ($product !== NULL) {
               $query = $this->subscriptionStorage->getQuery();
               $query->condition('product_url', $product->get('apic_url')->value);
-              $entityIds = $query->execute();
+              $entityIds = $query->accessCheck()->execute();
               if ($entityIds !== NULL && !empty($entityIds)) {
                 foreach ($entityIds as $entityId) {
                   $sub = $this->subscriptionStorage->load($entityId);
@@ -470,7 +470,7 @@ class MailService {
         $query = $this->nodeStorage->getQuery();
         $query->condition('type', 'consumerorg');
         $query->condition('consumerorg_url.value', $org);
-        $nids = $query->execute();
+        $nids = $query->accessCheck()->execute();
         if ($nids !== NULL) {
           $recipients += $this->getConsumerOrgRecipients($nids, $type);
         }
@@ -516,7 +516,7 @@ class MailService {
     // get users in all orgs
     $query = $this->nodeStorage->getQuery();
     $query->condition('type', 'consumerorg');
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
     if ($nids !== NULL) {
       $recipients += $this->getConsumerOrgRecipients($nids, $type);
     }
@@ -539,7 +539,7 @@ class MailService {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-    module_load_include('helpers.inc', 'mail_subscribers');
+    \Drupal::moduleHandler()->loadInclude('mail_subscribers', 'helpers.inc');
     $siteConfig = \Drupal::config('system.site');
     if (!isset($from['name']) || empty($from['name'])) {
       $from['name'] = $siteConfig->get('name');
@@ -769,7 +769,7 @@ class MailService {
       $query->condition('plan', $planName);
     }
     $appUrls = [];
-    $entityIds = $query->execute();
+    $entityIds = $query->accessCheck()->execute();
     if ($entityIds !== NULL && !empty($entityIds)) {
       foreach ($entityIds as $entityId) {
         $sub = $this->subscriptionStorage->load($entityId);
@@ -783,7 +783,7 @@ class MailService {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'application');
       $query->condition('apic_url.value', $appUrls, 'IN');
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if (isset($nids) && !empty($nids)) {
         return Node::loadMultiple($nids);
       }
@@ -802,7 +802,7 @@ class MailService {
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'product');
     $query->condition('product_apis.value', $api->get('apic_ref')->value, 'CONTAINS');
-    $nids = $query->execute();
+    $nids = $query->accessCheck()->execute();
     if (isset($nids) && !empty($nids)) {
       return Node::loadMultiple($nids);
     }

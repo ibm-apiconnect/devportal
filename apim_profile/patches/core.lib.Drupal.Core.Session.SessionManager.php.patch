@@ -3,7 +3,7 @@
 @@ -340,4 +340,18 @@
        ->execute();
    }
- 
+
 +  /**
 +   * Checks if the session is started.
 +   *
@@ -15,7 +15,7 @@
 +   * @return bool
 +   *   True if started, false otherwise
 +   */
-+  public function isStarted() {
++  public function isStarted(): bool {
 +    return parent::isStarted() || $this->startedLazy;
 +  }
  }

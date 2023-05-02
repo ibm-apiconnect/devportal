@@ -1,0 +1,11 @@
+--- modules/ultimate_cron/src/UltimateCron.php  2023-01-10 15:38:35
++++ modules/ultimate_cron/src/UltimateCron.php     2023-01-10 15:38:32
+@@ -42,7 +42,7 @@
+     $job_ids = \Drupal::entityQuery('ultimate_cron_job')
+       ->condition('status', TRUE)
+       ->sort('weight', 'ASC')
+-
++      ->accessCheck()
+       ->execute();
+
+     $launcher_jobs = array();

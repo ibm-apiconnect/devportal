@@ -1,0 +1,53 @@
+--- core/modules/ckeditor5/src/Controller/CKEditor5ImageController.php
++++ core/modules/ckeditor5/src/Controller/CKEditor5ImageController.php
+@@ -25,6 +25,7 @@
+ use Symfony\Component\HttpKernel\Exception\HttpException;
+ use Symfony\Component\Mime\MimeTypeGuesserInterface;
+ use Symfony\Component\Validator\ConstraintViolation;
++use Drupal\Core\Entity\EntityConstraintViolationList;
+ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+ 
+@@ -179,10 +180,10 @@ public function upload(Request $request) {
+       @trigger_error('\Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesserInterface is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Implement \Symfony\Component\Mime\MimeTypeGuesserInterface instead. See https://www.drupal.org/node/3133341', E_USER_DEPRECATED);
+     }
+ 
+-    $file->setFileUri($file_uri);
++    $file->setFileUri($temp_file_path);
+     $file->setSize(@filesize($temp_file_path));
+ 
+-    $violations = $this->validate($file, $validators);
++    $violations = $this->validate($file, $validators, $file_uri);
+     if ($violations->count() > 0) {
+       throw new UnprocessableEntityHttpException($violations->__toString());
+     }
+@@ -236,12 +237,8 @@ public function imageUploadEnabledAccess(Editor $editor) {
+    * @return \Drupal\Core\Entity\EntityConstraintViolationListInterface
+    *   The list of constraint violations, if any.
+    */
+-  protected function validate(FileInterface $file, array $validators) {
+-    $violations = $file->validate();
+-
+-    // Remove violations of inaccessible fields as they cannot stem from our
+-    // changes.
+-    $violations->filterByFieldAccess();
++  protected function validate(FileInterface $file, array $validators, string $destinationFilename) {
++    $violations = new EntityConstraintViolationList($file, []);
+ 
+     // Validate the file based on the field definition configuration.
+     $errors = file_validate($file, $validators);
+@@ -258,7 +255,15 @@ protected function validate(FileInterface $file, array $validators) {
+         $violations->add($violation);
+       }
+     }
++    $file->setFileUri($destinationFilename);
++
++    $entity_violations = $file->validate();
++
++    // Remove violations of inaccessible fields as they cannot stem from our
++    // changes.
++    $entity_violations->filterByFieldAccess();
+ 
++    $violations->addAll($entity_violations);
+     return $violations;
+   }

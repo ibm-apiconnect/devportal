@@ -128,6 +128,7 @@ class JWTParserTest extends UnitTestCase {
 
     $this->logger->error('payload.scopes.url not available in activation JWT')->shouldBeCalled();
     $parser = new JWTParser($this->logger->reveal(), $this->utils->reveal(), $this->mgmtServer->reveal(), $this->state->reveal());
+    $this->utils->base64_url_decode(Argument::any())->willReturn('');
     $result = $parser->parse($this->getEncodedJWTWithMissingUrl());
     self::assertNull($result, 'Unexpected response when parsing a token with missing URL');
 

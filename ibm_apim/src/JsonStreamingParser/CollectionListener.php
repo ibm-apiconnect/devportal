@@ -53,15 +53,17 @@ class CollectionListener implements ListenerInterface {
   protected bool $assoc = TRUE;
 
   protected $UUID;
+  protected $data;
+  protected $count = 0;
 
   /**
    * @param callback|callable $callback callback for parsed collection item
    * @param bool $assoc When true, returned objects will be converted into associative arrays
    */
-  public function __construct(callable $callback, $UUID, $assoc = TRUE) {
+  public function __construct(callable $callback, $UUID, $data) {
     $this->callback = $callback;
     $this->UUID = $UUID;
-    $this->assoc = $assoc;
+    $this->data = $data;
   }
 
   public function startDocument(): void {
@@ -90,7 +92,8 @@ class CollectionListener implements ListenerInterface {
       $obj = array_pop($this->stack);
       $obj = reset($obj);
 
-      call_user_func($this->callback, $obj, $this->UUID);
+      call_user_func($this->callback, $obj, $this->UUID, $this->count, $this->data);
+      $this->count++;
     }
   }
 

@@ -1,0 +1,65 @@
+--- modules/search_api/src/Plugin/views/filter/SearchApiFulltext.php	2022-11-07 09:39:57
++++ modules/search_api/src/Plugin/views/filter/SearchApiFulltext.php	2023-02-23 15:46:36
+@@ -204,7 +204,7 @@
+       '#description' => $this->t('Minimum length of each word in the search keys. Leave empty to allow all words.'),
+       '#type' => 'number',
+       '#min' => 1,
+-      '#default_value' => $this->options['min_length'],
++      '#default_value' => $this->getMinWordLength(),
+     ];
+   }
+ 
+@@ -348,18 +348,18 @@
+     }
+ 
+     // Only continue if there is a minimum word length set.
+-    if ($this->options['min_length'] < 2) {
++    if ($this->getMinWordLength() < 2) {
+       return;
+     }
+ 
+     $words = preg_split('/\s+/', $input);
+     foreach ($words as $i => $word) {
+-      if (mb_strlen($word) < $this->options['min_length']) {
++      if (mb_strlen($word) < $this->getMinWordLength()) {
+         unset($words[$i]);
+       }
+     }
+-    if (!$words) {
+-      $vars['@count'] = $this->options['min_length'];
++    if (!$words && $this->validateOrigin()) {
++      $vars['@count'] = $this->getMinWordLength();
+       $msg = $this->t('You must include at least one positive keyword with @count characters or more.', $vars);
+       $form_state->setErrorByName($identifier, $msg);
+     }
+@@ -495,6 +495,30 @@
+     }
+ 
+     return $fields;
++  }
++
++  protected function validateOrigin() {
++    $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
++    foreach ($backtrace as $caller) {
++        if (isset($caller['file']) && strpos($caller['file'], "autocomplete") == true) {
++            return false;
++        }
++    }
++    return true;
++  }
++
++  protected function getMinWordLength() {
++      if (!is_null($this->getQuery()) && !is_null($this->getQuery()->getIndex())) {
++        $indexId = $this->getQuery()->getIndex()->id();
++        $index = \Drupal\search_api\Entity\Index::load($indexId);
++        $server = $index->getServerInstance();
++        $minL = $server->getBackendConfig()['min_chars'];
++      }
++      else {
++        $minL = $this->options['min_length'];
++      }
++
++      return $minL;
+   }
+ 
+ }

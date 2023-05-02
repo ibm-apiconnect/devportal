@@ -25,7 +25,7 @@ use Drupal\Core\Database\Database;
  * Process the spool queue at cron run.
  */
 function mail_subscribers_send_from_spool() {
-  module_load_include('helpers.inc', 'mail_subscribers');
+  \Drupal::moduleHandler()->loadInclude('mail_subscribers', 'helpers.inc');
 
   $limit = \Drupal::config('mail_subscribers.settings')->get('throttle');
   $ok = $fail = $check = 0;

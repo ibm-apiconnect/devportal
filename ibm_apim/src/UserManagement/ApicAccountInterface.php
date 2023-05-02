@@ -46,7 +46,7 @@ interface ApicAccountInterface {
    *
    * @return null|UserInterface|EntityInterface
    */
-  public function updateLocalAccount(ApicUser $user);
+  public function updateLocalAccount(ApicUser $user, $userAccount, $save);
 
   /**
    * Updates the roles of a given user. The roles specified replace all existing

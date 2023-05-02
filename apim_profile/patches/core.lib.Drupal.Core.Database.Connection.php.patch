@@ -1,0 +1,11 @@
+--- core/lib/Drupal/Core/Database/Connection.php	2022-10-06 15:57:08.000000000 +0000
++++ core/lib/Drupal/Core/Database/Connection.php	2022-11-28 13:18:11.521019260 +0000
+@@ -1522,7 +1522,7 @@
+    *   The escaped string.
+    */
+   public function escapeLike($string) {
+-    return addcslashes($string, '\%_');
++    return $string ===  null ? '' : addcslashes($string, '\%_');
+   }
+ 
+   /**

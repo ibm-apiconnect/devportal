@@ -376,7 +376,7 @@ ul.apicProductApiList {
 }
 
 .productApiWrapper .titleInnerWrapper .leftTitle {
-  width: calc(100% - 10rem);
+  width: calc(100% - 12rem);
 }
 
 .apicApiState {

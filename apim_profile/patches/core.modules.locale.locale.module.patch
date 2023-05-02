@@ -1,0 +1,28 @@
+--- core/modules/locale/locale.module   2023-04-13 10:23:34
++++ core/modules/locale/locale.module      2023-04-13 11:20:58
+@@ -1060,8 +1060,25 @@
+     }
+   }
+
++  refreshAPICBlocks();
++
+   // Throw locale.save_translation event.
+   \Drupal::service('event_dispatcher')->dispatch(new LocaleEvent($langcodes, $lids), LocaleEvents::SAVE_TRANSLATION);
++}
++
++// We need to recreate our APIC custom blocks when a translations gets added
++// in case any has been added or changed
++function refreshAPICBlocks() {
++    $ibmPath = \Drupal::service('extension.list.module')->getPath('ibm_apim');
++    $apimProfilePath = \Drupal::service('extension.list.profile')->getPath('apim_profile');
++    require_once $ibmPath . '/ibm_apim.emptycontent.inc';
++    require_once $apimProfilePath . '/apim_profile.homepage.inc';
++    require_once $apimProfilePath . '/apim_profile.import_nodes.inc';
++    ibm_apim_update_no_content_blocks();
++    apim_profile_update_homepage_blocks();
++    apim_profile_update_forumsidebar_block();
++    apim_profile_update_nodes();
++    apim_profile_update_menu_links();
+ }
+
+ /**

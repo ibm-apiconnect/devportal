@@ -28,7 +28,7 @@ class ProdIdParamConverter implements ParamConverterInterface {
       $query->condition('type', 'product');
       $query->condition('status', 1);
       $query->condition('product_id.value', $value);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
 
       if (isset($nids) && !empty($nids)) {
         $nid = array_shift($nids);

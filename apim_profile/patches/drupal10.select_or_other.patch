@@ -1,0 +1,34 @@
+--- modules/select_or_other/js/MultipleSelectStatesHack.js     2023-02-10 10:52:08
++++ modules/select_or_other/js/MultipleSelectStatesHack.js        2023-02-10 10:52:04
+@@ -3,7 +3,7 @@
+  * Contains a workaround for drupal core issue #1149078.
+  */
+
+-(function ($) {
++(function ($, once) {
+   'use strict';
+   function select_or_other_check_and_show($select, speed) {
+     var $select_id = $select.attr('id').replace('select', 'other').replace('edit-field-', '')
+@@ -30,7 +30,7 @@
+    */
+   Drupal.behaviors.select_or_other = {
+     attach: function (context) {
+-      $(".js-form-type-select-or-other-select", context).once().each(function () {
++      $(once(".js-form-type-select-or-other-select", context)).each(function () {
+         var $select = $('select', this);
+         // Hide the other field if applicable.
+         select_or_other_check_and_show($select, 0);
+@@ -47,4 +47,4 @@
+     }
+   };
+
+-})(jQuery);
++})(jQuery, once);
+
+--- modules/select_or_other/select_or_other.libraries.yml       2023-02-10 12:24:50
++++ modules/select_or_other/select_or_other.libraries.yml  2023-02-10 12:24:46
+@@ -4,3 +4,4 @@
+   dependencies:
+     - core/drupal
+     - core/jquery
++    - core/once

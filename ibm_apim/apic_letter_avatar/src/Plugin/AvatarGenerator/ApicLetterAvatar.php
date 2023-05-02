@@ -47,6 +47,7 @@ class ApicLetterAvatar extends AvatarGeneratorBase {
         ->getStorage('file')
         ->getQuery()
         ->condition('uri', $path)
+        ->accessCheck()
         ->execute();
 
       if ($id = reset($ids)) {

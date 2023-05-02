@@ -15,7 +15,6 @@ permissions:
   - 'delete forum revisions'
   - 'delete own forum content'
   - 'delete terms in forums'
-  - 'display eu cookie compliance popup'
   - 'edit any forum content'
   - 'edit terms in forums'
   - 'revert forum revisions'

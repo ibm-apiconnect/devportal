@@ -1,0 +1,63 @@
+--- modules/search_api/src/Task/TaskManager.php 2023-01-10 11:43:48
++++ modules/search_api/src/Task/TaskManager.php    2023-01-10 12:39:01
+@@ -151,7 +151,7 @@
+       'server_id' => $server_id,
+       'index_id' => $index_id,
+       'data' => $data,
+-    ])->execute();
++    ])->accessCheck()->execute();
+     if ($result) {
+       return $this->getTaskStorage()->load(reset($result));
+     }
+@@ -170,7 +170,7 @@
+    * {@inheritdoc}
+    */
+   public function loadTasks(array $conditions = []) {
+-    $task_ids = $this->getTasksQuery($conditions)->execute();
++    $task_ids = $this->getTasksQuery($conditions)->accessCheck()->execute();
+     if ($task_ids) {
+       return $this->getTaskStorage()->loadMultiple($task_ids);
+     }
+@@ -195,6 +195,7 @@
+     while (TRUE) {
+       $task_ids = $this->getTasksQuery($conditions)
+         ->range(0, 100)
++        ->accessCheck()
+         ->execute();
+       if (!$task_ids) {
+         break;
+@@ -228,7 +229,7 @@
+    * {@inheritdoc}
+    */
+   public function executeSingleTask(array $conditions = []) {
+-    $task_id = $this->getTasksQuery($conditions)->range(0, 1)->execute();
++    $task_id = $this->getTasksQuery($conditions)->range(0, 1)->accessCheck()->execute();
+     if ($task_id) {
+       $task_id = reset($task_id);
+       /** @var \Drupal\search_api\Task\TaskInterface $task */
+@@ -252,7 +253,7 @@
+       if (isset($limit)) {
+         $query->range(0, $limit - $executed);
+       }
+-      $task_ids = $query->execute();
++      $task_ids = $query->accessCheck()->execute();
+
+       if (!$task_ids) {
+         break;
+@@ -284,7 +285,7 @@
+    * {@inheritdoc}
+    */
+   public function setTasksBatch(array $conditions = []) {
+-    $task_ids = $this->getTasksQuery($conditions)->range(0, 100)->execute();
++    $task_ids = $this->getTasksQuery($conditions)->range(0, 100)->accessCheck()->execute();
+
+     if (!$task_ids) {
+       return;
+@@ -362,6 +363,7 @@
+     if (!$context['sandbox']['task_ids']) {
+       $context['sandbox']['task_ids'] = $this->getTasksQuery($conditions)
+         ->range(0, 100)
++        ->accessCheck()
+         ->execute();
+       if (!$context['sandbox']['task_ids']) {
+         $context['finished'] = 1;

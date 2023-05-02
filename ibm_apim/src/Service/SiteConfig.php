@@ -765,7 +765,9 @@ class SiteConfig {
         // decrypt socialblock config
         $socialBlockConfig = \Drupal::config('socialblock.settings');
         $data = $socialBlockConfig->get('credentials');
-        $socialBlockSettings = unserialize($encryptionService->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
+        if (!empty($data)){
+          $socialBlockSettings = unserialize($encryptionService->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
+        }
 
         // decrypt OIDC state service data
         $oidcStateService = \Drupal::service('auth_apic.oidc_state');
@@ -786,7 +788,7 @@ class SiteConfig {
               ->schema()
               ->tableExists("consumerorg_payment_methods")) {
             $query = \Drupal::entityQuery('consumerorg_payment_method');
-            $queryIds = $query->execute();
+            $queryIds = $query->accessCheck()->execute();
 
             foreach (array_chunk($queryIds, 50) as $chunk) {
               $paymentEntities = \Drupal::entityTypeManager()->getStorage('consumerorg_payment_method')->loadMultiple($chunk);
@@ -805,8 +807,10 @@ class SiteConfig {
         $encryptionProfile->save();
 
         // re-encrypt socialblock config
-        $encryptedSocialBlockSettings = $encryptionService->encrypt(serialize($socialBlockSettings), $encryptionProfile);
-        $this->configFactory->getEditable('socialblock.settings')->set('credentials', $encryptedSocialBlockSettings)->save();
+        if (isset($socialBlockSettings)) {
+          $encryptedSocialBlockSettings = $encryptionService->encrypt(serialize($socialBlockSettings), $encryptionProfile);
+          $this->configFactory->getEditable('socialblock.settings')->set('credentials', $encryptedSocialBlockSettings)->save();
+        }
 
         // re-encrypt OIDC state service data
         $encryptedState = [];
@@ -823,7 +827,7 @@ class SiteConfig {
             $configuration = $encryptionService->encrypt(serialize($encryptedConfiguration), $encryptionProfile);
             $query = \Drupal::entityQuery('consumerorg_payment_method');
             $query->condition('id', $id);
-            $queryIds = $query->execute();
+            $queryIds = $query->accessCheck()->execute();
             if (isset($queryIds) && !empty($queryIds)) {
               $entityId = array_shift($queryIds);
               $paymentMethodEntity = \Drupal\consumerorg\Entity\PaymentMethod::load($entityId);

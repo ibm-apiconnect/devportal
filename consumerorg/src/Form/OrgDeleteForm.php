@@ -187,7 +187,7 @@ class OrgDeleteForm extends ConfirmFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    $apim_response = $this->consumerOrgService->delete($this->currentOrg);
+    $apim_response = $this->consumerOrgService->delete($this->currentOrg, null);
     if ($apim_response->success()) {
       $this->messenger->addMessage(t('Organization deleted successfully.'));
     }

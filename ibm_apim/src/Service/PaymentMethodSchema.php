@@ -121,10 +121,11 @@ class PaymentMethodSchema {
     $targetIntegration = NULL;
     if (isset($id)) {
       $current_data = $this->state->get('ibm_apim.payment_method_schemas');
-
-      foreach ($current_data as $integration) {
-        if ($integration['id'] === $id) {
-          $targetIntegration = $integration;
+      if (isset($current_data)) {
+        foreach ($current_data as $integration) {
+          if ($integration['id'] === $id) {
+            $targetIntegration = $integration;
+          }
         }
       }
     }

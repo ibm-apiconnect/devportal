@@ -28,6 +28,7 @@ use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\user\Entity\User;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\session_limit\Services\SessionLimit;
 
 /**
  * Defines application features from the specific context.
@@ -119,6 +120,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     if ($params['useMockServices'] === TRUE) {
       MockServiceHandler::install($params['siteDirectory'], $params['modulesDirectory'], $params['userRegistry'], TRUE);
     }
+    \Drupal::configFactory()->getEditable('session_limit.settings')->set('session_limit_behaviour', SessionLimit::ACTION_DROP_OLDEST)->save();
   }
 
   /** @AfterSuite */
@@ -127,6 +129,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     if ($params['useMockServices'] === TRUE) {
       MockServiceHandler::uninstall($params['siteDirectory']);
     }
+    \Drupal::configFactory()->getEditable('session_limit.settings')->set('session_limit_behaviour', SessionLimit::ACTION_ASK)->save();
   }
 
   /** @AfterFeature */
@@ -321,7 +324,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       $current_user = $this->getUserManager()->getCurrentUser();
 
       if (!isset($current_user->uid) || $current_user->uid === NULL) {
-        $ids = \Drupal::entityQuery('user')->execute();
+        $ids = \Drupal::entityQuery('user')->accessCheck()->execute();
         $users = User::loadMultiple($ids);
 
         $current_user_registry_url = $current_user->registry_url ?? NULL;
@@ -359,7 +362,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       $startofusername = \strlen($parameter_check);
       $username = substr($chunktoreplace, $startofusername, -1);
 
-      $ids = \Drupal::entityQuery('user')->execute();
+      $ids = \Drupal::entityQuery('user')->accessCheck()->execute();
       $users = User::loadMultiple($ids);
 
       print 'searching for username: ' . $username . "\n";
@@ -1628,7 +1631,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     $query = \Drupal::entityQuery('node');
     $query->condition('type', $nodeType);
     $query->condition('title.value', $nodeTitle);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
 
     if ($results !== NULL && !empty($results)) {
       $nid = array_shift($results);
@@ -1652,7 +1655,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
     $query = \Drupal::entityQuery('node');
     $query->condition('type', $nodeType);
     $query->condition('title.value', $nodeTitle);
-    $results = $query->execute();
+    $results = $query->accessCheck()->execute();
 
     if ($results !== NULL && !empty($results)) {
       $nid = array_shift($results);

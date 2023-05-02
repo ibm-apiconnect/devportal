@@ -630,7 +630,7 @@ class AdminForm extends ConfigFormBase {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'api');
       $query->condition('status', 1);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         foreach ($nids as $nid) {
           $batch['operations'][] = ['\Drupal\apic_api\Api::processCategoriesForNode', [$nid]];
@@ -641,7 +641,7 @@ class AdminForm extends ConfigFormBase {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product');
       $query->condition('status', 1);
-      $nids = $query->execute();
+      $nids = $query->accessCheck()->execute();
       if ($nids !== NULL && !empty($nids)) {
         foreach ($nids as $nid) {
           $batch['operations'][] = ['\Drupal\product\Product::processCategoriesForNode', [$nid]];

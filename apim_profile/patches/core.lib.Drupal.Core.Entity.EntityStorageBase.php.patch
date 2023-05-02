@@ -1,0 +1,11 @@
+--- core/lib/Drupal/Core/Entity/EntityStorageBase.php	2023-02-02 15:45:50.139762521 +0000
++++ core/lib/Drupal/Core/Entity/EntityStorageBase.php	2023-02-02 15:49:36.029639160 +0000
+@@ -80,7 +80,7 @@
+    *
+    * @var \Drupal\Core\Cache\MemoryCache\MemoryCacheInterface
+    */
+-  protected $memoryCache;
++  public $memoryCache;
+ 
+   /**
+    * The memory cache tag.

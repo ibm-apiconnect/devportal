@@ -1,0 +1,43 @@
+--- modules/warmer/warmer.info.yml      2022-12-16 11:59:54
++++ modules/warmer/warmer.info.yml 2022-12-16 12:07:26
+@@ -1,5 +1,5 @@
+ name: Warmer
+ description: Module that provides infrastructure for common cache warming/pre-fetching techniques.
+ type: module
+-core_version_requirement: '^8.8 || ^9.0'
++core_version_requirement: '^8.8 || ^9.0 || ^10'
+ configure: warmer.settings
+
+--- modules/warmer/modules/warmer_cdn/warmer_cdn.info.yml       2022-12-16 15:24:59
++++ modules/warmer/modules/warmer_cdn/warmer_cdn.info.yml  2022-12-16 15:31:18
+@@ -2,6 +2,6 @@
+ description: Executes HTTP requests to warm the edge caches. It is useful without a CDN as well, as it will also warm Varnish and Page Cache.
+ type: module
+ core: 8.x
+-core_version_requirement: '^8 || ^9'
++core_version_requirement: '^8 || ^9 || ^10'
+ dependencies:
+   - warmer:warmer
+
+--- modules/warmer/modules/warmer_entity/warmer_entity.info.yml 2022-12-16 15:39:22
++++ modules/warmer/modules/warmer_entity/warmer_entity.info.yml    2022-12-16 15:39:16
+@@ -2,6 +2,6 @@
+ description: Warms the entity cache for the configured entity types.
+ type: module
+ core: 8.x
+-core_version_requirement: '^8 || ^9'
++core_version_requirement: '^8 || ^9 || ^10'
+ dependencies:
+   - warmer:warmer
+
+--- modules/warmer/modules/warmer_entity/src/Plugin/warmer/EntityWarmer.php     2022-12-20 15:40:05
++++ modules/warmer/modules/warmer_entity/src/Plugin/warmer/EntityWarmer.php        2022-12-20 15:40:00
+@@ -140,7 +140,7 @@
+         if (!empty($bundle_key)) {
+           $query->condition($bundle_key, $bundle);
+         }
+-        $results = $query->execute();
++        $results = $query->accessCheck()->execute();
+         $entity_ids = array_filter((array) array_values($results));
+         $iids = array_merge($iids, array_map(
+           function ($id) use ($entity_type_id) {

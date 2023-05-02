@@ -213,7 +213,7 @@ class Billing {
       $data = $this->get($key);
 
       $moduleHandler = \Drupal::service('module_handler');
-      if ($moduleHandler->moduleExists('encrypt')) {
+      if ($moduleHandler->moduleExists('encrypt') && isset($data) ) {
         $ibmApimConfig = \Drupal::config('ibm_apim.settings');
         $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
         if (isset($encryptionProfileName)) {

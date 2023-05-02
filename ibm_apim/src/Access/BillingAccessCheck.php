@@ -27,7 +27,9 @@ class BillingAccessCheck implements AccessInterface {
     $allowed = FALSE;
     $billingEnabled = \Drupal::service('ibm_apim.billing')->isEnabled();
     $current_user = \Drupal::currentUser();
-    $billingProviderConfig = unserialize(\Drupal::config('ibm_apim.settings')->get('billing_providers'), ['allowed_classes' => FALSE]);
+
+    $billingProvider = \Drupal::config('ibm_apim.settings')->get('billing_providers');
+    $billingProviderConfig = $billingProvider === null ? NULL : unserialize($billingProvider, ['allowed_classes' => FALSE]);
 
     if ($billingEnabled === TRUE && isset($billingProviderConfig) && !empty($billingProviderConfig) && !$current_user->isAnonymous() && (int) $current_user->id() !== 1) {
       $allowed = TRUE;

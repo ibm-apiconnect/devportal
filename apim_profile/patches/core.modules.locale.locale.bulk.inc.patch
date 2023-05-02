@@ -1,0 +1,11 @@
+--- core/modules/locale/locale.bulk.inc	2023-04-13 10:27:20
++++ core/modules/locale/locale.bulk.inc	2023-04-13 10:27:17
+@@ -353,6 +353,8 @@
+     $context['message'] = t('Updated default configuration.');
+     $context['finished'] = 1;
+   }
++
++  refreshAPICBlocks();
+ }
+
+ /**

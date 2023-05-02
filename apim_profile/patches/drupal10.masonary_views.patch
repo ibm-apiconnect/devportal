@@ -1,0 +1,14 @@
+diff --git modules/masonry_views/masonry_views.info.yml modules/masonry_views/masonry_views.info.yml
+index c8adede..4396115 100644
+--- modules/masonry_views/masonry_views.info.yml
++++ modules/masonry_views/masonry_views.info.yml
+@@ -2,8 +2,7 @@ name: Masonry Views
+ type: module
+ description: "Provides a Views plugin for displaying content in a Masonry layout."
+ package: Masonry
+-core: 8.x
+-core_version_requirement: ^8 || ^9
++core_version_requirement: ^8 || ^9 || ^10
+ dependencies:
+   - masonry:masonry
+   - drupal:views

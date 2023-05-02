@@ -48,7 +48,7 @@ class StripeConfigForm extends ConfigFormBase {
     $publishableKey = $config->get('publishable_key');
     $secretKey = $config->get('secret_key');
     $moduleHandler = \Drupal::service('module_handler');
-    if ($moduleHandler->moduleExists('encrypt')) {
+    if ($moduleHandler->moduleExists('encrypt') && isset($publishableKey) && isset($secretKey) ) {
       $ibmApimConfig = \Drupal::config('ibm_apim.settings');
       $encryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
       if (isset($encryptionProfileName)) {

@@ -103,6 +103,7 @@ class ModalApplicationCreateForm extends FormBase {
 
     $entity = \Drupal::entityTypeManager()->getStorage('node')->create([
       'type' => 'application',
+      'uid' => 1,
     ]);
     $entity_form = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('node.application.default');
 
@@ -192,6 +193,17 @@ class ModalApplicationCreateForm extends FormBase {
       // Adding js for the view_password lib since it only attaches to forms by default.
       $form['#attached']['library'][] = 'view_password/pwd_lb';
       $form['#attributes']['class'][] = 'pwd-see';
+      $form['#cache'] = [
+        'tags' => [
+            'config:view_password.settings',
+        ],
+      ];
+      $span_classes = \Drupal::config('view_password.settings')->get('span_classes');
+      $form['#attached']['drupalSettings']['view_password'] = [
+        'showPasswordLabel' => t("Show password"),
+        'hidePasswordLabel' => t("Hide password"),
+        'span_classes' => $span_classes
+      ];
     }
 
     // remove any admin fields if they exist
@@ -353,6 +365,17 @@ class ModalApplicationCreateForm extends FormBase {
           // Adding js for the view_password lib since it only attaches to forms by default.
           $credsForm['#attached']['library'][] = 'view_password/pwd_lb';
           $credsForm['#attributes']['class'][] = 'pwd-see';
+          $credsForm['#cache'] = [
+            'tags' => [
+                'config:view_password.settings',
+            ],
+          ];
+          $span_classes = \Drupal::config('view_password.settings')->get('span_classes');
+          $credsForm['#attached']['drupalSettings']['view_password'] = [
+            'showPasswordLabel' => t("Show password"),
+            'hidePasswordLabel' => t("Hide password"),
+            'span_classes' => $span_classes
+          ];
         }
 
         $response->addCommand(new OpenModalDialogCommand(t('Credentials for your new application'), $credsForm));

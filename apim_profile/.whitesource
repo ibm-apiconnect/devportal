@@ -1,6 +1,10 @@
 {
-  "settingsInheritedFrom": "whitesource-config/whitesource-config@issues_none",
-  "scanSetting": {
-    "baseBranches": ["v10.0","v10.0.1"]
+  "settingsInheritedFrom": "whitesource-config/whitesource-config@master",
+  "scanSettings": {
+    "baseBranches": [ "master", "v10.0.5" ]
+  },
+  "issueSettings": {
+    "issueRepoName": "whitesource",
+    "customLabels": ["squad:portal"]
   }
 }

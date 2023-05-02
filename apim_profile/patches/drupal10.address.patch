@@ -1,0 +1,11 @@
+--- modules/address/address.post_update.php     2023-01-10 12:56:40
++++ modules/address/address.post_update.php        2023-01-10 12:56:42
+@@ -29,7 +29,7 @@
+   $field_name = $field[1];
+   $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
+   $query = $storage->getQuery()->exists($field_name . '.country_code');
+-  $entities = $storage->loadMultiple($query->execute());
++  $entities = $storage->loadMultiple($query->accessCheck()->execute());
+   foreach ($entities as $entity) {
+     _address_update_entity($entity, $field_name);
+     $entity->save();

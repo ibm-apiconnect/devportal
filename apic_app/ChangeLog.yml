@@ -1,4 +1,25 @@
 changes:
+  8.x-5.3.9:
+  - only decrypt if set (#357) (#358)
+  8.x-5.3.8: null
+  8.x-5.3.7:
+  - Fix show password eye (#356)
+  - Fix show password eye (#354) (#355)
+  8.x-5.3.6:
+  - D11 fixes (#353)
+  8.x-5.3.5:
+  - Mass merge for Drupal 10 Changes (#352)
+  8.x-5.3.4:
+  - application lifecycle state pending to upgrade fix
+  8.x-5.3.3:
+  - Always create apps with admin author (#345)
+  8.x-5.3.2:
+  - Merge pull request
+  8.x-5.3.1:
+  - Update ApplicationCredentials.php
+  - Merge pull request
+  8.x-5.3.0:
+  - update version 8.x-5.2.4 -> 8.x-5.3.0
   8.x-5.2.3:
   - refine padding for consumer analytics in app
   8.x-5.2.2:
@@ -519,7 +540,4 @@ changes:
   - issue
   8.x-1.5.65:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since
-    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
-    are also filtered before logging them. Commits that start with 'INT' or 'bump
-    version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

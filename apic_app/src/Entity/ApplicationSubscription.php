@@ -44,101 +44,31 @@ use Drupal\Core\Field\BaseFieldDefinition;
 class ApplicationSubscription extends ContentEntityBase implements ApplicationSubscriptionInterface {
 
   /**
-   * Drupal entity ID
-   *
-   * @var int
-   */
-  protected $id;
-
-  /**
-   * APIM UUID
-   *
-   * @var string
-   */
-  protected $uuid;
-
-  /**
-   * The application URL.
-   *
-   * @var string
-   */
-  protected $app_url;
-
-  /**
-   * The product URL.
-   *
-   * @var string
-   */
-  protected $product_url;
-
-  /**
-   * The owning consumer organization URL.
-   *
-   * @var string
-   */
-  protected $consumerorg_url;
-
-  /**
-   * The plan name.
-   *
-   * @var string
-   */
-  protected $plan;
-
-  /**
-   * The subscription state.
-   *
-   * @var string
-   */
-  protected $state;
-
-  /**
-   * The billing URL.
-   *
-   * @var string
-   */
-  protected $billing_url;
-
-  /**
-   * APIC Creation timestamp
-   *
-   * @var int
-   */
-  protected $created_at;
-
-  /**
-   * APIC Modification timestamp
-   *
-   * @var int
-   */
-  protected $updated_at;
-
-  /**
    * {@inheritdoc}
    */
   public function id() {
-    return $this->id;
+    return $this->get('id')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function uuid() {
-    return $this->uuid;
+    return $this->get('uuid')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function app_url() {
-    return $this->app_url;
+    return $this->get('app_url')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function product_url() {
-    return $this->product_url;
+    return $this->get('product_url')->value;
   }
 
 
@@ -146,42 +76,42 @@ class ApplicationSubscription extends ContentEntityBase implements ApplicationSu
    * {@inheritdoc}
    */
   public function consumerorg_url() {
-    return $this->consumerorg_url;
+    return $this->get('consumerorg_url')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function plan() {
-    return $this->plan;
+    return $this->get('plan')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function state() {
-    return $this->state;
+    return $this->get('state')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function billing_url() {
-    return $this->billing_url;
+    return $this->get('billing_url')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function created_at() {
-    return $this->created_at;
+    return $this->get('created_at')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function updated_at() {
-    return $this->updated_at;
+    return $this->get('updated_at')->value;
   }
 
   /**

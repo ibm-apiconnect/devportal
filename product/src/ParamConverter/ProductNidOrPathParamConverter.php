@@ -41,7 +41,7 @@ class ProductNidOrPathParamConverter implements ParamConverterInterface {
         $query->condition('type', 'product');
         $query->condition('status', 1);
         $query->condition('apic_pathalias.value', $value);
-        $nids = $query->execute();
+        $nids = $query->accessCheck()->execute();
 
         if ($nids !== NULL && !empty($nids)) {
           $nid = array_shift($nids);
@@ -61,7 +61,7 @@ class ProductNidOrPathParamConverter implements ParamConverterInterface {
           $query->condition('type', 'product');
           $query->condition('status', 1);
           $query->condition('apic_ref.value', $value);
-          $nids = $query->execute();
+          $nids = $query->accessCheck()->execute();
 
           if ($nids !== NULL && !empty($nids)) {
             $nid = array_shift($nids);

@@ -1,0 +1,12 @@
+--- core/themes/starterkit_theme/templates/block/block--local-tasks-block.html.twig     2023-03-01 14:01:00
++++ core/themes/starterkit_theme/templates/block/block--local-tasks-block.html.twig        2023-03-08 15:12:02
+@@ -7,7 +7,8 @@
+ #}
+ {% block content %}
+   {% if content %}
+-    <nav class="tabs" role="navigation" aria-label="{{ 'Tabs'|t }}">
++    {% set aria_label = configuration.label ? configuration.label|replace({' ': ''}) : 'Tabs'|t %}
++    <nav class="tabs" role="navigation" aria-label="{{ aria_label }}">
+       {{ content }}
+     </nav>
+   {% endif %}

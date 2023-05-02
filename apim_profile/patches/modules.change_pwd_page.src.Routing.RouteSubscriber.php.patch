@@ -1,0 +1,13 @@
+--- modules/change_pwd_page/src/Routing/RouteSubscriber.php     2023-02-09 11:00:51
++++ modules/change_pwd_page/src/Routing/RouteSubscriber.php        2023-02-09 11:00:45
+@@ -18,7 +18,10 @@
+     // override user.reset route with change_pwd_page.reset route to show the
+     // Change Password form instead of default.
+     if ($route = $collection->get('user.reset')) {
+-      $route->setPath('/user/reset/{uid}/{timestamp}/{hash}/new');
++      $route->setPath('/user/reset/{uid}/{timestamp}/{hash}/new/login');
++    }
++    if ($route = $collection->get('user.reset.login')) {
++      $route->setPath('/user/reset/{uid}/{timestamp}/{hash}/new/login');
+     }
+   }

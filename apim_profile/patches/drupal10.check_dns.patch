@@ -1,0 +1,12 @@
+diff --git modules/check_dns/check_dns.info.yml b/check_dns.info.yml
+index 60278cc..e29bdf6 100644
+--- modules/check_dns/check_dns.info.yml
++++ modules/check_dns/check_dns.info.yml
+@@ -1,6 +1,5 @@
+ name: Check DNS
+ type: module
+ description: Checks if email domain has DNS Record before user registration.
+-core: 8.x
+-core_version_requirement: '^8 || ^9'
++core_version_requirement: ^8 || ^9 || ^10
+ package: Check DNS

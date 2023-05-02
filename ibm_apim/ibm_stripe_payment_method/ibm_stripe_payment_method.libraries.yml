@@ -13,7 +13,7 @@ stripemessages:
   js:
     js/stripe.messages.js: { }
   dependencies:
-    - classy/messages
+    - starterkit_theme/messages
     - core/jquery
     - core/drupal
 stripeform:
@@ -26,6 +26,7 @@ stripeform:
   dependencies:
     - core/jquery
     - core/drupal
-    - core/jquery.once
+    - core/once
+    - core/drupalSettings
     - ibm_stripe_payment_method/stripemessages
     - ibm_stripe_payment_method/stripe

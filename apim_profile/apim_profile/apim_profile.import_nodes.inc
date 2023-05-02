@@ -36,6 +36,132 @@ function apim_profile_create_nodes() {
 }
 
 /**
+ * Update the node incase translations or new langcodes are added
+ */
+function apim_profile_update_nodes() {
+  try {
+    apim_profile_update_footerlinks();
+    apim_profile_update_terms_page();
+    apim_profile_update_privacy_page();
+    apim_profile_update_faqs();
+    apim_profile_update_asyncapi_pages();
+  } catch (PluginNotFoundException | PluginException | EntityStorageException $e) {
+  }
+}
+
+function apim_profile_update_footerlinks() {
+  $contactMenu = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/contact']);
+  $contactMenu = reset($contactMenu);
+  if ($contactMenu !== NULL) {
+    add_contact_menu_translations($contactMenu);
+  }
+}
+
+function apim_profile_update_terms_page() {
+  // Get the node id from the path alias
+  $tandcsPath = \Drupal::entityTypeManager()->getStorage('path_alias')->loadByProperties(['alias' => '/tsandcs']);
+  $tandcsPath = reset($tandcsPath)->getPath();
+  $tandcsNodeId = substr($tandcsPath, strrpos($tandcsPath, '/' )+1);
+
+  $node = Node::load($tandcsNodeId);
+  if ($node !== NULL) {
+    add_terms_node_translations($node);
+  }
+
+  $tandcsMenu = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/tsandcs']);
+  $tandcsMenu = reset($tandcsMenu);
+  if ($tandcsMenu !== NULL) {
+    add_terms_menu_translations($tandcsMenu);
+  }
+}
+
+function apim_profile_update_privacy_page() {
+  // Get the node id from the path alias
+  $privacyPath = \Drupal::entityTypeManager()->getStorage('path_alias')->loadByProperties(['alias' => '/privacy']);
+  $privacyPath = reset($privacyPath)->getPath();
+  $privacyNodeId = substr($privacyPath, strrpos($privacyPath, '/' )+1);
+
+  $node = Node::load($privacyNodeId);
+  if ($node !== NULL) {
+    add_privacy_node_translations($node);
+  }
+
+  $privacyMenu = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/privacy']);
+  $privacyMenu = reset($privacyMenu);
+  if ($privacyMenu !== NULL) {
+    add_privacy_menu_translations($privacyMenu);
+  }
+}
+
+function apim_profile_update_faqs() {
+  $api_faq_node_ids = \Drupal::entityQuery('node')
+  ->condition('type', 'faq')
+  ->condition('title', 'Using our APIs')
+  ->accessCheck()
+  ->execute();
+
+  if (count($api_faq_node_ids) === 1) {
+    $api_faq_node = \Drupal::entityTypeManager()->getStorage('node')->load(array_pop($api_faq_node_ids));
+    if ($api_faq_node !== NULL) {
+      add_api_faq_node_translations($api_faq_node);
+    }
+  }
+  else {
+    \Drupal::logger('apim_profile')
+      ->warning('Expected 1 node for FAQ "Using our APIs" but there were @count. Will not update the content translations.', ['@count' => count($api_faq_node_ids)]);
+  }
+
+  $app_faq_node_ids = \Drupal::entityQuery('node')
+    ->condition('type', 'faq')
+    ->condition('title', 'Apps')
+    ->accessCheck()
+    ->execute();
+
+  if (count($app_faq_node_ids) === 1) {
+    $app_faq_node = \Drupal::entityTypeManager()->getStorage('node')->load(array_pop($app_faq_node_ids));
+    if ($app_faq_node !== NULL) {
+      add_app_faq_node_translations($app_faq_node);
+    }
+  }
+  else {
+    \Drupal::logger('apim_profile')
+      ->warning('Expected 1 node for FAQ "Apps" but there were @count. Will not update the content translations.', ['@count' => count($app_faq_node_ids)]);
+  }
+}
+
+function apim_profile_update_asyncapi_pages() {
+  // Get the node id from the path alias
+  $asyncapiPath = \Drupal::entityTypeManager()->getStorage('path_alias')->loadByProperties(['alias' => '/asyncapi']);
+  $asyncapiPath = reset($asyncapiPath)->getPath();
+  $asyncapiNodeId = substr($asyncapiPath, strrpos($asyncapiPath, '/' )+1);
+
+  $node = Node::load($asyncapiNodeId);
+  if ($node !== NULL) {
+    add_asyncapi_node_translations($node);
+  }
+
+  // Get the node id from the path alias
+  $asyncapikafkaPath = \Drupal::entityTypeManager()->getStorage('path_alias')->loadByProperties(['alias' => '/asyncapi-kafka']);
+  $asyncapikafkaPath = reset($asyncapikafkaPath)->getPath();
+  $asyncapikafkaNodeId = substr($asyncapikafkaPath, strrpos($asyncapikafkaPath, '/' )+1);
+
+  $node = Node::load($asyncapikafkaNodeId);
+  if ($node !== NULL) {
+    add_asyncapi_kafka_node_translations($node);
+  }
+
+  // Get the node id from the path alias
+  $asyncapimqPath = \Drupal::entityTypeManager()->getStorage('path_alias')->loadByProperties(['alias' => '/asyncapi-mq']);
+  $asyncapimqPath = reset($asyncapimqPath)->getPath();
+  $asyncapimqNodeId = substr($asyncapimqPath, strrpos($asyncapimqPath, '/' )+1);
+
+  $node = Node::load($asyncapimqNodeId);
+  if ($node !== NULL) {
+    add_asyncapi_mq_node_translations($node);
+  }
+}
+
+/**
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apim_profile_create_terms_page() {
@@ -173,7 +299,6 @@ function apim_profile_create_privacy_page() {
  * @param $link
  */
 function add_privacy_menu_translations($link): void {
-
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
@@ -592,5 +717,3 @@ function add_asyncapi_mq_node_translations($node): void {
   }
   $node->save();
 }
-
-
