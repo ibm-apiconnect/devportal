@@ -1,4 +1,8 @@
 changes:
+  8.x-2.13.1:
+  - apimesh/devportal#8239 Direct db query to include deprecated products (#261) (#263)
+  8.x-2.13.0:
+  - update version 8.x-2.12.6 -> 8.x-2.13.0
   8.x-2.12.5:
   - Revert "markdown fix"
   8.x-2.12.4:

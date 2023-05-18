@@ -3,7 +3,7 @@ type: module
 description: Block for featured Products or APIs
 package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9
-version: 8.x-2.12.1
+version: 8.x-2.13.1
 project: featuredcontent
 dependencies:
 - block

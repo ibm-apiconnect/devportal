@@ -22,11 +22,6 @@ use Drupal\Core\Updater\UpdaterException;
 class ApicModule extends Module {
 
   /**
-   * @var string|null
-   */
-  public ?string $title = NULL;
-
-  /**
    * ApicModule constructor.
    *
    * @param string $source

@@ -1,4 +1,6 @@
 changes:
+  8.x-2.12.0:
+  - update version 8.x-2.11.8 -> 8.x-2.12.0
   8.x-2.11.7:
   - Always create consumerorgs with admin author (#310)
   8.x-2.11.6:

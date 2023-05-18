@@ -1,4 +1,6 @@
 changes:
+  8.x-2.12.0:
+  - update version 8.x-2.11.1 -> 8.x-2.12.0
   8.x-2.11.0:
   - update version 8.x-2.10.2 -> 8.x-2.11.0
   8.x-2.10.1:
@@ -283,7 +285,4 @@ changes:
   - Bump Major version in master to differentiate from the service stream
   8.x-1.1.25:
   - Merge pull request
-  - Logging all the changes between the two successful builds. All the commits since
-    the last successful build are fetched and stored in the ChangeLog.yml file. Commits
-    are also filtered before logging them. Commits that start with 'INT' or 'bump
-    version' are omitted.
+  - Logging all the changes between the two successful builds. All the commits since the last successful build are fetched and stored in the ChangeLog.yml file. Commits are also filtered before logging them. Commits that start with 'INT' or 'bump version' are omitted.

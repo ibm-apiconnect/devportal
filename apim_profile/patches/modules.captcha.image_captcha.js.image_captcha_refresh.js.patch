@@ -5,7 +5,7 @@
          // Send post query for getting new captcha data.
          var date = new Date();
 -        var url = $(this).attr('href') + '?' + date.getTime();
-+        var url = $(this).attr('href').replace(/^\/+/, '') + '?' + date.getTime();
++        var url = $(this).attr('href').replace(/^\/+/, '/') + '?' + date.getTime();
          // Adding loader.
          $('.captcha').append('<div class="image_captcha_refresh_loader"></div>');
          $.get(

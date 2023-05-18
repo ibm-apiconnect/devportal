@@ -1004,27 +1004,20 @@ class Product {
           }
 
           // also grab any products we're subscribed to in order to include deprecated products
-          $query = \Drupal::entityQuery('apic_app_application_subs');
-          $query->condition('consumerorg_url', $myorg['url']);
-          $entityIds = $query->execute();
-          if (isset($entityIds) && !empty($entityIds)) {
-            $additional = [[]];
-            foreach ($entityIds as $entityId) {
-              $sub = \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->load($entityId);
-              if ($sub !== NULL) {
-                $query = \Drupal::entityQuery('node');
-                $query->condition('type', 'product');
-                $query->condition('apic_url.value', $sub->product_url());
-                $results = $query->execute();
-                if ($results !== NULL && !empty($results)) {
-                  $nids = array_values($results);
-                  $additional[] = $nids;
-                }
-              }
-            }
-            $additional = array_merge(...$additional);
-            $returnNids = array_merge($returnNids, $additional);
+          $options = ['target' => 'default'];
+          $query = Database::getConnection($options['target'])
+          ->query("SELECT entity_id
+          FROM `node__apic_url` apic_url
+          INNER JOIN `apic_app_application_subs` sub ON apic_url.apic_url_value = sub.product_url
+          WHERE consumerorg_url = '" . $myorg['url'] . "'", [], $options);
+          $doResults = $query->fetchAll();
+
+          $additional = [];
+          foreach ($doResults as $do) {
+            $additional[] = $do->entity_id;
           }
+          $additional = array_unique($additional);
+          $returnNids = array_merge($returnNids, $additional);
         }
       }
     }

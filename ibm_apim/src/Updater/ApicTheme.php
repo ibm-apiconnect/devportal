@@ -23,11 +23,6 @@ use Drupal\Core\Url;
 class ApicTheme extends Theme {
 
   /**
-   * @var string|null
-   */
-  public ?string $title = null;
-
-  /**
    * ApicTheme constructor.
    *
    * @param string $source

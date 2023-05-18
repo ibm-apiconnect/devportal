@@ -1,4 +1,6 @@
 changes:
+  8.x-2.13.0:
+  - update version 8.x-2.12.1 -> 8.x-2.13.0
   8.x-2.12.0:
   - update version 8.x-2.11.2 -> 8.x-2.12.0
   8.x-2.11.1: null
@@ -91,7 +93,4 @@ changes:
   - Updated the Jenkins file to use promotableBranch again
   8.x-1.1.31:
   - Changed promotableBranch to p.common for the test reason
-  - Logging all the changes between the two successfull build. all the commits since
-    the last saccessfull build are fetched and stored and the changes-log.yml file.
-    Commits are also filtered before logging them. commits with the text INT or bump
-    version are ommited.
+  - Logging all the changes between the two successfull build. all the commits since the last saccessfull build are fetched and stored and the changes-log.yml file. Commits are also filtered before logging them. commits with the text INT or bump version are ommited.
