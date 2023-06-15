@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2023
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -505,6 +505,12 @@ function product_update_8206() {
     'label' => t('Modification time'),
   ]);
   $fieldConfig->save();
+}
+
+function product_update_10001() {
+  $field_config = FieldConfig::loadByName('node', 'product', 'apic_attachments');
+  $field_config->setSetting('file_extensions', 'txt doc pdf xls ppt pptx docx xlsx rtf odt ods odp md json yaml yml tgz tar zip');
+  $field_config->save();
 }
 
 /**

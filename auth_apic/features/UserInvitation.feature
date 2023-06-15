@@ -187,7 +187,7 @@ Feature: User Invitation Controller
     When I press the "Sign up" button
     # Password policy is an error :(
     # Then there are no errors
-    Then I should see "Invitation process complete."
+    Then I should see "Your registration request has been received. You may now sign in if your request has been successful."
     And there are no warnings
     And there are no errors
 
@@ -218,7 +218,7 @@ Feature: User Invitation Controller
     And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Sign up" button
     # Password policy is an error :(
-    Then I should see "Invitation process complete."
+    Then I should see "Your registration request has been received. You may now sign in if your request has been successful."
     And there are no warnings
     And there are no errors
 

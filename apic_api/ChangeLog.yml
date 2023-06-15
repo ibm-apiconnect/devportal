@@ -1,6 +1,14 @@
 changes:
-  8.x-5.3.5:
-  - Use non-dep way to load includes (#179)
+  6.0.4:
+  - apimesh/depvortal#8356 Limit acces check to known product (if known) (#185) (#186)
+  6.0.3:
+  - Cli content v10.0 (#184)
+  6.0.2:
+  - Fix WSOD
+  - Add redirect service (#180) (#181)
+  6.0.1:
+  - fix ci channel
+  - Use non-dep way to load includes
   8.x-5.3.4:
   - Mass merge for Drupal 10 Changes (#177)
   8.x-5.3.3:

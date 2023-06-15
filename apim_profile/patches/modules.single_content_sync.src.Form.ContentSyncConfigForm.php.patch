@@ -1,0 +1,53 @@
+--- modules/single_content_sync/src/Form/ContentSyncConfigForm.php	2023-04-21 14:50:36
++++ modules/single_content_sync/src/Form/ContentSyncConfigForm.php	2023-04-21 14:50:21
+@@ -80,12 +80,12 @@
+   public function buildForm(array $form, FormStateInterface $form_state) {
+     $config = $this->config('single_content_sync.settings');
+
+-    $form['site_uuid_check'] = [
+-      '#type' => 'checkbox',
+-      '#title' => $this->t('Site UUID check'),
+-      '#description' => $this->t('Enables checking for source/destination Site UUID value during the export. If imported content has been retrieved from another instance of the site, that does not match UUID value of the current site, it will not be imported.'),
+-      '#default_value' => $config->get('site_uuid_check'),
+-    ];
++    // $form['site_uuid_check'] = [
++    //   '#type' => 'checkbox',
++    //   '#title' => $this->t('Site UUID check'),
++    //   '#description' => $this->t('Enables checking for source/destination Site UUID value during the export. If imported content has been retrieved from another instance of the site, that does not match UUID value of the current site, it will not be imported.'),
++    //   '#default_value' => $config->get('site_uuid_check'),
++    // ];
+
+     $entity_types = $this->entityTypeManager->getDefinitions();
+     $allowed_types = ['#tree' => TRUE];
+@@ -108,7 +108,9 @@
+       if ($bundles) {
+         $bundles_as_options = [];
+         foreach ($bundles as $bundle_id => $bundle_info) {
+-          $bundles_as_options[$bundle_id] = $bundle_info['label'] ?? $bundle_id;
++          if (!$this->isBlocked($bundle_id)) {
++            $bundles_as_options[$bundle_id] = $bundle_info['label'] ?? $bundle_id;
++          }
+         }
+         $allowed_types[$entity_type_id]['bundles'] = [
+           '#type' => 'checkboxes',
+@@ -132,6 +134,11 @@
+     return parent::buildForm($form, $form_state);
+   }
+
++  public function isBlocked(string $bundle) {
++    $apicTypes = [ "user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs", "apic_app_application_creds" ];
++    return in_array($bundle, $apicTypes);
++  }
++
+   /**
+    * {@inheritdoc}
+    */
+@@ -147,7 +154,7 @@
+
+     $this->configFactory->getEditable('single_content_sync.settings')
+       ->set('allowed_entity_types', $allowed_types)
+-      ->set('site_uuid_check', $form_state->getValue('site_uuid_check'))
++      //->set('site_uuid_check', $form_state->getValue('site_uuid_check'))
+       ->save();
+
+     parent::submitForm($form, $form_state);

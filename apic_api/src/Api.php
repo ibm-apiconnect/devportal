@@ -766,23 +766,33 @@ class Api {
   public static function checkAccess($node): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
     $userUtils = \Drupal::service('ibm_apim.user_utils');
+    $found = FALSE;
+
     // allow those with permission to bypass check
     if ($userUtils->explicitUserAccess('edit any api content')) {
-      return TRUE;
-    }
-    $productNids = Product::listProducts();
-    $found = FALSE;
-    foreach (array_chunk($productNids, 50) as $chunk) {
-      $productNodes = Node::loadMultiple($chunk);
-      foreach ($productNodes as $productNode) {
-        foreach ($productNode->product_apis->getValue() as $arrayValue) {
-          $api = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-          if (isset($api['name']) && $api['name'] === $node->apic_ref->value) {
-            $found = TRUE;
+      $found = TRUE;
+    // If we are being accessed via a product then we
+    // only need to check the product identified in the path
+    } else if (\Drupal::routeMatch()->getRouteName() == 'product.api') {
+      $productNode = \Drupal::routeMatch()->getParameter('prodNode');
+      $found = Product::containsAPIRef($productNode, $node->apic_ref->value);
+    // Otherwise we have to check all products the user can see
+    } else {
+      $productNids = Product::listProducts();
+
+      foreach (array_chunk($productNids, 50) as $chunk) {
+        $productNodes = Node::loadMultiple($chunk);
+        foreach ($productNodes as $productNode) {
+          $found = Product::containsAPIRef($productNode, $node->apic_ref->value);
+
+          // Exit as soon as we have found it, for speed!
+          if ($found) {
+            break 2;
           }
         }
       }
     }
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $found);
     return $found;
   }

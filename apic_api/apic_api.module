@@ -29,6 +29,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\product\Product;
@@ -494,7 +495,7 @@ function apic_api_preprocess_node(&$variables): void {
       }
 
       $currentRoute = \Drupal::routeMatch()->getRouteName();
-      if ($currentRoute !== NULL && $currentRoute === 'entity.node.canonical') {
+      if ($currentRoute !== NULL && ($currentRoute === 'entity.node.canonical' || $currentRoute === 'apic_api.view')) {
         $apiNid = $variables['node']->id();
         $prodNids = Product::getProductsContainingAPI($apiNid);
         if ($prodNids !== NULL && count($prodNids) === 1) {
@@ -507,7 +508,7 @@ function apic_api_preprocess_node(&$variables): void {
           $path = Url::fromRoute('product.select', ['apiNode' => $apiNid])->setAbsolute()->toString();
         }
         $response = new RedirectResponse($path);
-        $response->send();
+        \Drupal::service('http_middleware.ibm_apim_redirect')->setRedirectResponse($response);
         return;
       }
 
@@ -994,4 +995,32 @@ function apic_api_tokens($type, $tokens, array $data = [], array $options = []):
     }
   }
   return $replacements;
+}
+
+// This hook is called automatically via Drupal's hook_node_delete
+function apic_api_node_delete(NodeInterface $node) {
+  $nodeType = $node->getType();
+  if (isset($nodeType) && $nodeType === "api") {
+    // delete the api's icon
+    if (isset($node->apic_image->entity)) {
+      $fid = $node->apic_image->getValue();
+      $iconFile = \Drupal::entityTypeManager()->getStorage('file')->load($fid[0]['target_id']);
+      if (isset($iconFile)) {
+        \Drupal::logger('api')->notice('deleting api icon ' . $iconFile->getFileUri());
+        $iconFile->delete();
+      }
+    }
+
+    // delete the api's attachments
+    $attachments = $node->apic_attachments->getValue();
+    if ($attachments !== NULL) {
+      foreach ($attachments as $key => $existingAttachment) {
+        $file = \Drupal::entityTypeManager()->getStorage('file')->load($existingAttachment['target_id']);
+        if (isset($file)) {
+          \Drupal::logger('api')->notice('deleting api attachment ' . $file->getFileUri());
+          $file->delete();
+        }
+      }
+    }
+  }
 }

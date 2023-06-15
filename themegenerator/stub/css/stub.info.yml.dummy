@@ -5,7 +5,7 @@ base theme: connect_theme
 name: 'stub'
 project: 'stub'
 description: 'Sub-theme of connect_theme.'
-version: 1.0
+version: 1.0.1
 package: 'Bootstrap'
 
 regions:

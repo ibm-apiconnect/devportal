@@ -135,7 +135,7 @@ class MyOrgController extends ControllerBase {
         $response = new RedirectResponse(Url::fromRoute('ibm_apim.noperms')->toString());
       }
       if (isset($response)) {
-        $response->send();
+        \Drupal::service('http_middleware.ibm_apim_redirect')->setRedirectResponse($response);
       }
     }
     $nodeArray = ['id' => $nid];
@@ -190,7 +190,7 @@ class MyOrgController extends ControllerBase {
         $response = new RedirectResponse(Url::fromRoute('ibm_apim.noperms')->toString());
       }
       if (isset($response)) {
-        $response->send();
+        \Drupal::service('http_middleware.ibm_apim_redirect')->setRedirectResponse($response);
       }
     }
     $config = \Drupal::config('ibm_apim.settings');
@@ -315,7 +315,7 @@ class MyOrgController extends ControllerBase {
         $response = new RedirectResponse(Url::fromRoute('ibm_apim.noperms')->toString());
       }
       if (isset($response)) {
-        $response->send();
+        \Drupal::service('http_middleware.ibm_apim_redirect')->setRedirectResponse($response);
       }
     }
     $nodeArray = ['id' => $nid];
@@ -326,6 +326,7 @@ class MyOrgController extends ControllerBase {
 
     $current_user = \Drupal::currentUser();
     $portalAnalyticsService = \Drupal::service('ibm_apim.analytics')->getDefaultService();
+    $analyticsClientUrl = NULL;
     if ($portalAnalyticsService !== NULL) {
       $analyticsClientUrl = $portalAnalyticsService->getClientEndpoint();
     }

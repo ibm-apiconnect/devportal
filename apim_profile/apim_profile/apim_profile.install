@@ -96,7 +96,6 @@ function apim_profile_install() {
     'acl',
     'admin_toolbar',
     'admin_toolbar_tools',
-    'adminimal_admin_toolbar',
     'bootstrap_layouts',
     'blazy',
     'blazy_ui',
@@ -205,6 +204,7 @@ function apim_profile_install() {
     'unlimited_number',
     'restrict_by_ip',
     'addtoany',
+    'single_content_sync',
   ];
 
   $our_modules = [
@@ -2888,31 +2888,66 @@ function apim_profile_update_10002() {
 }
 
 /**
-* Create a block for get help block content if it does not exist
+* Create a block for get help block content if it does not exist. This allows the get help block to be translated
 */
 function apim_profile_update_10003() {
   $gethelp_block = Block::load('get_help');
   if ($gethelp_block == NULL) {
     $ghBlockContent = \Drupal::entityTypeManager()->getStorage('block_content')->loadByProperties(['info' => 'Get Help [en]']);
-    $ghBlockContent = array_shift($ghBlockContent);
-    $gethelp_values = [
-      'id' => 'get_help',
-      'plugin' => 'block_content:' . $ghBlockContent->uuid(),
-      'provider' => NULL,
-      'region' => 'disabled',
-      'settings' => [
-        'id' => 'block_content:' . $ghBlockContent->uuid(),
-        'label' => 'Get Help',
-        'provider' => 'block_content',
-        'label_display' => FALSE,
-      ],
-      'theme' => 'connect_theme',
-      'visibility' => [],
-      'weight' => 520,
-    ];
-    $gethelp_block = Block::create($gethelp_values);
-    $gethelp_block->save();
+
+    // We should only create this block if we were able to grab it using the property above. Otherwise the customer has modified it
+    // and so we should leave it alone
+    if (!empty($ghBlockContent) && count($ghBlockContent) === 1) {
+      $ghBlockContent = array_shift($ghBlockContent);
+      $gethelp_values = [
+        'id' => 'get_help',
+        'plugin' => 'block_content:' . $ghBlockContent->uuid(),
+        'provider' => NULL,
+        'region' => 'disabled',
+        'settings' => [
+          'id' => 'block_content:' . $ghBlockContent->uuid(),
+          'label' => 'Get Help',
+          'provider' => 'block_content',
+          'label_display' => FALSE,
+        ],
+        'theme' => 'connect_theme',
+        'visibility' => [],
+        'weight' => 520,
+      ];
+      $gethelp_block = Block::create($gethelp_values);
+      $gethelp_block->save();
+    }
   }
+}
+
+/**
+ * remove adminimal_admin_toolbar module
+ */
+function apim_profile_update_10004() {
+  module_uninstall(['adminimal_admin_toolbar']);
+}
+
+/**
+ * enable single_content_sync module
+ */
+function apim_profile_update_10005() {
+  delete_config(['single_content_sync.settings']);
+  module_install(['single_content_sync']);
+  user_role_grant_permissions('administrator', [
+    'export single content',
+    'import single content',
+  ]);
+}
+
+/**
+ * Add revoke_invalid_permissions and remove_missing_extensions config to ibm_apim.settings
+ */
+function apim_profile_update_10006() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('revoke_invalid_permissions', TRUE)
+    ->set('remove_missing_extensions', TRUE)
+    ->save();
 }
 
 function delete_config(array $configs) {
@@ -2995,8 +3030,8 @@ function theme_uninstall(array $themes) {
     } catch (Throwable $e) {
         // if deleting the theme fails (and it might since we've deleted the files), itll just be purged from the db next
     }
-    \Drupal::logger('apim_profile')->info('Deleting module database key: @module', [
-      '@module' => $module,
+    \Drupal::logger('apim_profile')->info('Deleting theme database key: @theme', [
+      '@theme' => $theme,
     ]);
     \Drupal::database()->delete('key_value')
           ->condition('collection', 'system.schema')

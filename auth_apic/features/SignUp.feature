@@ -51,7 +51,7 @@ Feature: Sign-up
     And there are no warnings
     And there are messages
     And I should not see the text "There was an error creating your account"
-    And I should see the text "Your account was created successfully"
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
 
   Scenario: Unable to sign up as admin
     Given I am not logged in
@@ -65,10 +65,11 @@ Feature: Sign-up
     And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Sign up" button
-    Then there are errors
-    And I should see the text "A problem occurred while attempting to create your account. If you already have an account then please use that to Sign in."
+    Then there are no errors
     And there are no warnings
-    And there are no messages
+    And there are messages
+    And I should not see the text "There was an error creating your account"
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
 
   Scenario: Unable to sign up as anonymous
     Given I am not logged in
@@ -82,10 +83,11 @@ Feature: Sign-up
     And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Sign up" button
-    Then there are errors
-    And I should see the text "A problem occurred while attempting to create your account. If you already have an account then please use that to Sign in."
+    Then there are no errors
     And there are no warnings
-    And there are no messages
+    And there are messages
+    And I should not see the text "There was an error creating your account"
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
 
   Scenario: Trying to sign up with the same email address twice
     Given I am not logged in
@@ -105,7 +107,7 @@ Feature: Sign-up
     Then there are no errors
     And there are messages
     And I should not see the text "There was an error creating your account"
-    And I should see the text "Your account was created successfully"
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
     Given I start a new session
     And I am not logged in
     And I am at "/user/register"
@@ -119,10 +121,11 @@ Feature: Sign-up
     And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     When I press the "Sign up" button
-    Then there are errors
-    And there are no messages
-    And I should not see the text "Your account was created successfully"
-    And I should see the text "A problem occurred while attempting to create your account. If you already have an account then please use that to Sign in."
+    Then there are no errors
+    And there are no warnings
+    And there are messages
+    And I should not see the text "There was an error creating your account"
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
 
   Scenario: View the sign up form with multiple registries
     Given I am not logged in
@@ -263,7 +266,7 @@ Feature: Sign-up
     And there are no warnings
     And I should see the text "1 error has been found:"
     And I should see the text "What code is in the image?"
-    And I should not see the text "Your account was created successfully"
+    And I should not see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
 
 
   Scenario: Self signup form password policy failure - length
@@ -282,7 +285,7 @@ Feature: Sign-up
     And there are errors
     And there are no warnings
     And I should see the text "The password does not satisfy the password policies."
-    And I should not see the text "Your account was created successfully"
+    And I should not see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
 
   Scenario: Self signup form password policy failure - consecutive characters
     Given I am not logged in
@@ -300,7 +303,7 @@ Feature: Sign-up
     And there are errors
     And there are no warnings
     And I should see the text "The password does not satisfy the password policies."
-    And I should not see the text "Your account was created successfully"
+    And I should not see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
 
   @api
   Scenario: register second user (unique username and email address - success)
@@ -324,7 +327,7 @@ Feature: Sign-up
     And I press the "Sign up" button
     Then there are no errors
     And there are messages
-    And I should see the text "Your account was created successfully. You will receive an email with activation instructions."
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
     And there are no warnings
 
   @api
@@ -347,9 +350,9 @@ Feature: Sign-up
     And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Sign up" button
-    Then there are errors
-    And I should see the text "A problem occurred while attempting to create your account. If you already have an account then please use that to Sign in."
-    And there are no messages
+    Then there are no errors
+    And there are messages
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
     And there are no warnings
 
   @api
@@ -372,9 +375,9 @@ Feature: Sign-up
     And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Sign up" button
-    Then there are errors
-    And I should see the text "A problem occurred while attempting to create your account. If you already have an account then please use that to Sign in."
-    And there are no messages
+    Then there are no errors
+    And there are messages
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
     And there are no warnings
 
   @api
@@ -397,9 +400,9 @@ Feature: Sign-up
     And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
     And if the field "captcha_response" is present, enter the value "@captcha"
     And I press the "Sign up" button
-    Then there are errors
-    And I should see the text "A problem occurred while attempting to create your account. If you already have an account then please use that to Sign in."
-    And there are no messages
+    Then there are no errors
+    And there are messages
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
     And there are no warnings
 
   @api
@@ -424,7 +427,7 @@ Feature: Sign-up
     And I press the "Sign up" button
     Then there are no errors
     And there are messages
-    And I should see the text "Your account was created successfully. You will receive an email with activation instructions."
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
     And there are no warnings
 
 
@@ -471,7 +474,7 @@ Feature: Sign-up
     And there are no warnings
     And there are messages
     And I should not see the text "There was an error creating your account"
-    And I should see the text "Your account was created successfully"
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
 
   Scenario: Sign up with text type custom fields
     Given I am not logged in
@@ -496,5 +499,5 @@ Feature: Sign-up
     And there are no warnings
     And there are messages
     And I should not see the text "There was an error creating your account"
-    And I should see the text "Your account was created successfully"
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
     Then I delete the text type custom fields for user entities

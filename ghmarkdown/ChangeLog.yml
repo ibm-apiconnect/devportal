@@ -1,6 +1,6 @@
 changes:
-  8.x-5.3.1:
-  - Mass merge for Drupal 10 Changes (#27)
+  6.0.1:
+  - fix ci channel
   8.x-5.3.0:
   - update version 8.x-5.2.1 -> 8.x-5.3.0
   8.x-5.2.0:

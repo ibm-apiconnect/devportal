@@ -39,10 +39,10 @@ class DrushAdminCommands extends DrushCommands {
     if ($theme_name !== NULL) {
       $themes = \Drupal::service('theme_handler')->listInfo();
       $customThemeDirectories = \Drupal::service('ibm_apim.utils')->getCustomThemeDirectories();
-      $theme_path = \Drupal::service('extension.list.theme')->getPath($theme_name);
-      $theme_directory = @array_pop(explode('/', $theme_path));
       $inputThemes = explode(',', $theme_name);
       foreach ($inputThemes as $inputTheme) {
+        $theme_path = \Drupal::service('extension.list.theme')->getPath($inputTheme);
+        $theme_directory = @array_pop(explode('/', $theme_path));
         // Check if the specified theme is disabled and is a custom theme
         if (!array_key_exists($inputTheme, $themes) && in_array($theme_directory, $customThemeDirectories, TRUE)) {
           $item_path = \Drupal::service('extension.list.theme')->getPath($inputTheme);

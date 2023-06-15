@@ -476,6 +476,8 @@ class SiteConfig {
 
       if (isset($config_data['analytics'])) {
         $this->analyticsService->updateAll($config_data['analytics']);
+      } else {
+         $this->analyticsService->deleteAll();
       }
 
       if (isset($config_data['tls_client_profiles'])) {

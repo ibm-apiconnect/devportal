@@ -1,0 +1,18 @@
+--- modules/single_content_sync/src/ContentSyncHelperInterface.php      2023-05-03 12:09:49
++++ modules/single_content_sync/src/ContentSyncHelperInterface.php 2023-05-03 12:10:03
+@@ -135,4 +135,15 @@
+    */
+   public function getSiteUuid(): string;
+
++  /**
++   * Returns TRUE if the provided entities contain disallowed entities.
++   *
++   *  @return bool
++   *  Returns TRUE  if the provided entities contain disallowed entities,
++   *  else returns FALSE.
++   */
++  public function containsDisallowedEntities(array $entities): bool;
++
++  public function isBlocked(string $entity): bool;
++
+ }

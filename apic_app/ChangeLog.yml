@@ -1,6 +1,6 @@
 changes:
-  8.x-5.3.9:
-  - only decrypt if set (#357) (#358)
+  6.0.1:
+  - fix ci channel
   8.x-5.3.8: null
   8.x-5.3.7:
   - Fix show password eye (#356)

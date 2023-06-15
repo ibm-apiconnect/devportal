@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2023
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -16,6 +16,7 @@ use Drupal\apic_api\Api;
 use Drupal\Core\Session\UserSession;
 use Drupal\node\Entity\Node;
 use Drush\Commands\DrushCommands;
+use Drupal\ibm_apim\Controller\IbmApimContentController;
 
 /**
  * Class ApicApiCommands.
@@ -288,4 +289,54 @@ class ApicApiCommands extends DrushCommands {
     ibm_apim_exit_trace(__FUNCTION__, NULL);
   }
 
+   /**
+    * Sets the icon image and alt text for the api from the provided image path
+    *
+    * @param string $apiRef The name:version or id of the api
+    * @param string $iconPath The path to the icon image file
+    * @param string $iconAltText The alternative text for the icon
+    * @command api-set-icon
+    * @usage drush api-set-icon my-api:1.0.0 /tmp/myicon.png "icon of a cat"
+    *   Sets the icon for the my-api:1.0.0 api to be the one located at /tmp/myicon.png with some alt text.
+    *
+    * @aliases siapi
+    */
+    public function drush_api_set_icon($apiRef, $iconPath, $iconAltText): ?string {
+      return IbmApimContentController::setApiIcon($apiRef, $iconPath, $iconAltText);
+    }
+
+     /**
+      * Add a category for the given api
+      *
+      * @param string $apiRef The name:version or id of the api
+      * @param string $category The category name e.g. top_level_element/next_level_element
+      * @command api-add-tag
+      * @usage drush api-add-tag my-api:1.0.0 top_level_element/next_level_element
+      *   Adds the tag for the my-api:1.0.0 api to be top_level_element/next_level_element
+      *
+      * @aliases stapi
+      */
+      public function drush_api_set_tag($apiRef, $category): ?string {
+        return IbmApimContentController::addApiCategory($apiRef, $category);
+      }
+
+
+    /**
+    * Add an attachment for the given api
+    *
+    * @param string $apiRef The name:version or id of the api
+    * @param string $attachmentPath The path to the attachment file e.g. /tmp/content-doc.pdf
+    * @command api-add-attachment
+    * @usage drush api-add-attachment my-api:1.0.0 /tmp/content-doc.pdf
+    *   Add the attachment for the my-api:1.0.0 api to be the file located at /tmp/content-doc.pdf
+    * @option string $description
+    *   A description of the attachment
+    *   Default:
+    *
+    * @aliases saaapi
+    */
+    public function drush_api_add_attachment($apiRef, $attachmentPath, array $options = [ 'description' => self::REQ ]): ?string {
+      $description = $options['description'];
+      return IbmApimContentController::addApiAttachment($apiRef, $attachmentPath, $description);
+    }
 }

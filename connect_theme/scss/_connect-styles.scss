@@ -134,20 +134,21 @@ a {
   width: 100%;
 }
 
-.adminimal-admin-toolbar .apicStickyHeader {
+.toolbar-fixed .apicStickyHeader {
   top: 39px;
 }
-
-.adminimal-admin-toolbar.toolbar-tray-open .apicStickyHeader {
+.toolbar-tray-open .apicStickyHeader {
   top: 79px;
 }
-
-.adminimal-admin-toolbar.toolbar-tray-open.toolbar-vertical .apicStickyHeader {
+.toolbar-tray-open.toolbar-vertical .apicStickyHeader {
   top: auto;
 }
-
-.adminimal-admin-toolbar .toolbar #toolbar-item-shortcuts-tray.toolbar-tray-horizontal {
+.toolbar #toolbar-item-shortcuts-tray.toolbar-tray-horizontal {
   height: 39px;
+}
+
+.toolbar-tray-horizontal .toolbar-menu .toolbar-icon.toolbar-handle {
+  padding: 0.75rem 0 0 0;
 }
 
 .apicMainContent {
@@ -175,10 +176,6 @@ a {
   margin-left: 0;
   margin-right: 0;
   width: 100%;
-}
-
-.apicMainContent.container {
-
 }
 
 // title and content wrappers for applications need to honor the media page widths
@@ -625,6 +622,10 @@ header h1 {
   border: unset;
 }
 
+.apicMainContent .url-textfield.form-group.js-form-wrapper.form-wrapper {
+  display: none;
+}
+
 .views-element-container .view.view-faqs .ui-state-default,
 .views-element-container .view.view-faqs .ui-widget-content .ui-state-default,
 .views-element-container .view.view-faqs .ui-widget-header .ui-state-default {
@@ -764,12 +765,6 @@ section.block-go-ahead {
 
 .ibmapimGetStarted header h2 {
   color: $default-header;
-}
-
-
-.ibmapimGetStarted .getStartedContentWrapper .exploreDiv ,
-.ibmapimGetStarted .getStartedContentWrapper .createAppDiv {
-
 }
 
 @media (max-width:$screen-sm-min) {

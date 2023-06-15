@@ -1,11 +1,9 @@
 changes:
-  8.x-5.3.5:
-  - mock environment correctly for invites (#258) (#259)
-  8.x-5.3.4:
-  - Update behat.yml.template (#257)
-  8.x-5.3.3:
-  - Mass merge for Drupal 10 Changes (#256)
-  - Remove hardcoded portal-taas label
+  6.0.3:
+  - use env.APIC_RT_RO (#263)
+  6.0.2:
+  - mock environment correctly for invites (#258) (#260)
+  6.0.1: null
   8.x-5.3.2:
   - Mend exclude behat v10.0.5 (#251)
   8.x-5.3.1:

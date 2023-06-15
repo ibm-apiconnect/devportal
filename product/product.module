@@ -1022,3 +1022,31 @@ function product_tokens($type, $tokens, array $data = [], array $options = []): 
 
   return $replacements;
 }
+
+// This hook is called automatically via Drupal's hook_node_delete
+function product_node_delete(NodeInterface $node) {
+  $nodeType = $node->getType();
+  if (isset($nodeType) && $nodeType === "product") {
+    // delete the product's icon
+    if (isset($node->apic_image->entity)) {
+      $fid = $node->apic_image->getValue();
+      $iconFile = \Drupal::entityTypeManager()->getStorage('file')->load($fid[0]['target_id']);
+      if (isset($iconFile)) {
+        \Drupal::logger('product')->notice('deleting product icon ' . $iconFile->getFileUri());
+        $iconFile->delete();
+      }
+    }
+
+    // delete the product's attachments
+    $attachments = $node->apic_attachments->getValue();
+    if ($attachments !== NULL) {
+      foreach ($attachments as $key => $existingAttachment) {
+        $file = \Drupal::entityTypeManager()->getStorage('file')->load($existingAttachment['target_id']);
+        if (isset($file)) {
+          \Drupal::logger('product')->notice('deleting product attachment ' . $file->getFileUri());
+          $file->delete();
+        }
+      }
+    }
+  }
+}

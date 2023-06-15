@@ -1,8 +1,15 @@
 changes:
-  8.x-5.3.5:
-  - mock environment correctly for invites (#749) (#750)
-  8.x-5.3.4:
-  - Mass merge for Drupal 10 Changes (#748)
+  6.0.5:
+  - Fixed behat tests (#762)
+  - Show sign up success when username/email is taken (#759)
+  6.0.4:
+  - Make admin failed login error the same as non-admin (#755)
+  6.0.3:
+  - Rename twig templates (#753)
+  6.0.2:
+  - mock environment correctly for invites (#749) (#751)
+  6.0.1:
+  - fix ci channel
   8.x-5.3.3:
   - Save codesnippet language to apim (#746)
   8.x-5.3.2:

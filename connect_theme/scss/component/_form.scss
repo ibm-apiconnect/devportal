@@ -789,6 +789,15 @@ input[type="checkbox"].bx--checkbox {
 
 }
 
+.bx--global-light-ui .views-exposed-form .form-item-keys .input-group-addon > .glyphicon-refresh:nth-of-type(2) {
+  display: none;
+}
+
+.bx--global-light-ui .views-exposed-form .form-item-keys .input-group-addon > .input-group-addon {
+  background-color: unset;
+  padding:0;
+}
+
 .bx--global-light-ui .view-filters.form-group input.form-text {
   width: 20rem;
   height: 2rem;

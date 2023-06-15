@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2023
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -16,6 +16,7 @@ namespace Drupal\product\Commands;
 use Drupal\apic_api\Api;
 use Drupal\Core\Cache\Cache;
 use Drupal\apic_api\Commands\ApicApiCommands;
+use Drupal\ibm_apim\Controller\IbmApimContentController;
 use Drupal\Core\Session\UserSession;
 use Drupal\node\Entity\Node;
 use Drupal\product\Product;
@@ -178,8 +179,8 @@ class ProductCommands extends DrushCommands {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
-   * @command product-update
-   * @usage drush product-update [product] [event]
+   * @command product-delete
+   * @usage drush product-delete [product] [event]
    *   Deletes a product
    * @aliases dprod
    */
@@ -582,4 +583,54 @@ class ProductCommands extends DrushCommands {
     ibm_apim_exit_trace(__FUNCTION__, NULL);
   }
 
+   /**
+    * Sets the icon image and alt text for the product from the provided image path
+    *
+    * @param string $productRef The name:version or id of the product
+    * @param string $iconPath The path to the icon image file
+    * @param string $iconAltText The alternative text for the icon
+    * @command product-set-icon
+    * @usage drush product-set-icon my-product:1.0.0 /tmp/myicon.png "icon of a cat"
+    *   Sets the icon for the my-product:1.0.0 product to be the one located at /tmp/myicon.png with some alt text.
+    *
+    * @aliases siprod
+    */
+  public function drush_product_set_icon($productRef, $iconPath, $iconAltText): ?string {
+    return IbmApimContentController::setProductIcon($productRef, $iconPath, $iconAltText);
+  }
+
+   /**
+    * Add a category for the given product
+    *
+    * @param string $productRef The name:version or id of the product
+    * @param string $category The category name e.g. top_level_element/next_level_element
+    * @command product-add-tag
+    * @usage drush product-add-tag my-product:1.0.0 top_level_element/next_level_element
+    *   Adds the tag for the my-product:1.0.0 product to be top_level_element/next_level_element
+    *
+    * @aliases atprod
+    */
+    public function drush_product_add_tag($productRef, $category): ?string {
+      return IbmApimContentController::addProductCategory($productRef, $category);
+    }
+
+
+   /**
+    * Ann an attachment for the given product
+    *
+    * @param string $productRef The name:version or id of the product
+    * @param string $attachmentPath The path to the attachment file e.g. /tmp/content-doc.pdf
+    * @command product-add-attachment
+    * @usage drush product-add-attachment my-product:1.0.0 /tmp/content-doc.pdf
+    *   Add the attachment file located at /tmp/content-doc.pdf to the product my-product:1.0.0
+    * @option string $description
+    *   A description of the attachment
+    *   Default:
+    *
+    * @aliases aaprod
+    */
+    public function drush_product_add_attachment($productRef, $attachmentPath, array $options = [ 'description' => self::REQ ]): ?string {
+      $description = $options['description'];
+      return IbmApimContentController::addProductAttachment($productRef, $attachmentPath, $description);
+    }
 }

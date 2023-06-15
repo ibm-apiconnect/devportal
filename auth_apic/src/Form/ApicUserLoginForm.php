@@ -597,6 +597,9 @@ class ApicUserLoginForm extends UserLoginForm {
         else {
           $this->logger->debug('admin login, using core validation for login');
           $this->validateAuthentication($form, $form_state);
+          if (!$form_state->get('uid')) {
+            $this->messenger->addError(t('Unauthorized'));
+          }
           $returnValue = TRUE;
         }
       }

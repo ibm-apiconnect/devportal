@@ -49,22 +49,6 @@
     {
       "type": "package",
       "package": {
-        "name": "portal/adminimal_admin_toolbar",
-        "version": "1.11.0",
-        "source": {
-          "type": "git",
-          "url": "https://git.drupalcode.org/project/adminimal_admin_toolbar.git",
-          "reference": "8.x-1.x"
-        },
-        "require": {
-          "drupal/core": "^9 || ^10"
-        },
-        "type": "drupal-module"
-      }
-    },
-    {
-      "type": "package",
-      "package": {
         "name": "portal/check_dns",
         "version": "1.0.0",
         "source": {
@@ -434,7 +418,6 @@
     "drupal/account_field_split": "^2.0",
     "drupal/acl": "^1.x-dev@dev",
     "drupal/addtoany": "^2.0",
-    "portal/adminimal_admin_toolbar": "^1.5",
     "drupal/advagg": "^6.0@alpha",
     "drupal/avatars": "^1.0",
     "drupal/better_exposed_filters": "^6.0",
@@ -465,6 +448,7 @@
     "portal/securitytxt": "^1.1",
     "drupal/select_translation": "^2.0@alpha",
     "drupal/session_limit": "^2.0@beta",
+    "drupal/single_content_sync": "^1.0",
     "portal/superfish": "^1.2",
     "drupal/taxonomy_manager": "^2.0",
     "drupal/term_csv_export_import": "^3.0",

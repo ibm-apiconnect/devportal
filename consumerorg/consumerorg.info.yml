@@ -3,7 +3,7 @@ type: module
 description: Adds the content type representing consumer organizations in the IBM API Manager
 package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9 || ^10
-version: 8.x-5.3.13
+version: 6.0.3
 project: consumerorg
 dependencies:
 - path

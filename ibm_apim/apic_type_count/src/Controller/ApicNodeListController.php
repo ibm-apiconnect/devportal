@@ -1,5 +1,16 @@
 <?php
 
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2020, 2023
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 /**
  * @file
  * Contains \Drupal\apic_type_count\Controller\ApicNodeListController.
@@ -15,6 +26,86 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 
 class ApicNodeListController extends ControllerBase {
+
+
+  /**
+   * Get the entity from the provided entity name:version or id
+   *
+   * @param string $entityRef - the reference to the entity e.g. name:version or id
+   * @param string $type - the type of entity ( product or api )
+   *
+   * @return \Drupal\Core\Entity\EntityInterface
+   * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
+   */
+  public static function getEntityofType(string $entityRef, string $type): \Drupal\Core\Entity\EntityInterface {
+    $node = NULL;
+
+    if ($type !== 'api' && $type !== 'product') {
+      \Drupal::logger('entity')->error('getEntityofType: provided type argument must be either api or product', []);
+        throw new AccessDeniedHttpException();
+    }
+
+    // Check the format of the entity provided in the request. We accept either
+    // name and version number (e.g. mathserverservice:1.0.0), or the actual
+    // id (e.g. 53c1e135-fe44-413d-aa10-1f92cdc8a21b)
+    if (strpos($entityRef, ':') !== FALSE) {
+
+      // We have a entity name and version number
+      $entityData = explode(':', $entityRef);
+      [$entityName, $entityVer] = $entityData;
+      // Check the format of the name ([A-Za-z0-9]+) and version ([A-Za-z0-9\.\-\_]+)
+      // Do this before trying to load the node, to prevent attacks directed at drupal
+      if (!preg_match('/^([A-Za-z0-9\.\-\_]+)$/', $entityName)) {
+        \Drupal::logger('apic_type_count')->error('getEntityofType: invalid NAME in request', []);
+        throw new AccessDeniedHttpException();
+      }
+      if (!preg_match('/^([A-Za-z0-9\.\-\_]+)$/', $entityVer)) {
+        \Drupal::logger('apic_type_count')->error('getEntityofType: invalid VERSION in request', []);
+        throw new AccessDeniedHttpException();
+      }
+
+       // Load the Node as an ACL check that we have access to this Entity
+       $query = \Drupal::entityQuery('node');
+       $query->condition('type', $type);
+       $query->condition('apic_ref.value', $entityName . ':' . $entityVer);
+       $nids = $query->accessCheck()->execute();
+
+       if ($nids !== NULL && !empty($nids)) {
+         $nid = array_shift($nids);
+         $node = Node::load($nid);
+       }
+       else {
+        \Drupal::logger('apic_type_count')->error('getEntityofType: Cannot find ' . $type . ' named ' . $entityRef, []);
+         throw new AccessDeniedHttpException();
+       }
+    } elseif (preg_match('/^([A-Za-z0-9\-])+$/', $entityRef)) {
+      // We have an ID, use it raw
+      // Validate the format of the ID ([A-Za-z0-9\-]+)
+
+      // Load the Node as an ACL check that we have access to this node
+      $query = \Drupal::entityQuery('node');
+      $query->condition('type', $type);
+      $query->condition($type . '_id.value', $entityRef);
+      $nids = $query->accessCheck()->execute();
+
+      if ($nids !== NULL && !empty($nids)) {
+        $nid = array_shift($nids);
+        $node = Node::load($nid);
+      }
+      else {
+        \Drupal::logger('apic_type_count')->error('getEntityofType: Caller denied access to load ' . $type, []);
+        throw new AccessDeniedHttpException();
+      }
+    }
+    else {
+      \Drupal::logger('apic_type_count')->error('getEntityofType: invalid ID in request', []);
+      throw new AccessDeniedHttpException();
+    }
+
+    return $node;
+  }
+
+
 
   /**
    * @param $nodeType
@@ -88,74 +179,14 @@ class ApicNodeListController extends ControllerBase {
    * @return array|string|null
    */
   public static function getAPI($input, string $outputType = NULL) {
+    $node = self::getEntityofType($input, 'api');
     $url = NULL;
     $json = NULL;
 
-    // Check the format of the API provided in the request.  We accept either
-    // name and version number (e.g. mathserverservice:1.0.0), or the actual
-    // id (e.g. 53c1e135-fe44-413d-aa10-1f92cdc8a21b)
-    if (strpos($input, ':') !== FALSE) {
-      // We have an API name and version number
-      $apidata = explode(':', $input);
-      [$apiname, $apiver] = $apidata;
-      // Check the format of the name ([A-Za-z0-9]+) and version ([A-Za-z0-9\.\-\_]+)
-      // Do this before trying to load the node, to prevent attacks directed at drupal
-      if (!preg_match('/^([A-Za-z0-9\.\-\_]+)$/', $apiname)) {
-        \Drupal::logger('apic_type_count')->error('getAPI: invalid NAME in request', []);
-        throw new AccessDeniedHttpException();
-      }
-      if (!preg_match('/^([A-Za-z0-9\.\-\_]+)$/', $apiver)) {
-        \Drupal::logger('apic_type_count')->error('getAPI: invalid VERSION in request', []);
-        throw new AccessDeniedHttpException();
-      }
-
-      // Load the Node as an ACL check that we have access to this API
-      $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'api');
-      $query->condition('apic_ref.value', $apiname . ':' . $apiver);
-      $nids = $query->accessCheck()->execute();
-
-      if ($nids !== NULL && !empty($nids)) {
-        $nid = array_shift($nids);
-        $node = Node::load($nid);
-        if ($node !== NULL) {
-          $url = $node->apic_url->value;
-        }
-        else {
-          \Drupal::logger('apic_type_count')->error('getAPI: Caller denied access to load API', []);
-          throw new AccessDeniedHttpException();
-        }
-      }
-      else {
-        throw new AccessDeniedHttpException();
-      }
+    if ($node !== NULL) {
+      $url = $node->apic_url->value;
     }
-    elseif (preg_match('/^([A-Za-z0-9\-])+$/', $input)) {
-      // We have an API ID, use it raw
-      // Validate the format of the ID ([A-Za-z0-9\-]+)
 
-      // Load the Node as an ACL check that we have access to this API
-      $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'api');
-      $query->condition('api_id.value', $input);
-      $nids = $query->accessCheck()->execute();
-
-      if ($nids !== NULL && !empty($nids)) {
-        $nid = array_shift($nids);
-        $node = Node::load($nid);
-        if ($node !== NULL) {
-          $url = $node->apic_url->value;
-        }
-      }
-      else {
-        \Drupal::logger('apic_type_count')->error('getAPI: Caller denied access to load API', []);
-        throw new AccessDeniedHttpException();
-      }
-    }
-    else {
-      \Drupal::logger('apic_type_count')->error('getAPI: invalid ID in request', []);
-      throw new AccessDeniedHttpException();
-    }
     if ($url !== NULL) {
       if ($outputType === 'document') {
         $json = Api::getApiDocumentForDrush($url);
@@ -173,74 +204,13 @@ class ApicNodeListController extends ControllerBase {
    * @return array|null
    */
   public static function getProduct($input, string $outputType = NULL): ?array {
-    $url = NULL;
+    $node = self::getEntityofType($input, 'product');
     $json = NULL;
 
-    // Check the format of the product provided in the request.  We accept either
-    // name and version number (e.g. mathserverservice:1.0.0), or the actual
-    // id (e.g. 53c1e135-fe44-413d-aa10-1f92cdc8a21b)
-    if (strpos($input, ':') !== FALSE) {
-      // We have a product name and version number
-      $productdata = explode(':', $input);
-      [$productname, $productver] = $productdata;
-      // Check the format of the name ([A-Za-z0-9]+) and version ([A-Za-z0-9\.\-\_]+)
-      // Do this before trying to load the node, to prevent attacks directed at drupal
-      if (!preg_match('/^([A-Za-z0-9\.\-\_]+)$/', $productname)) {
-        \Drupal::logger('apic_type_count')->error('getProduct: invalid NAME in request', []);
-        throw new AccessDeniedHttpException();
-      }
-      if (!preg_match('/^([A-Za-z0-9\.\-\_]+)$/', $productver)) {
-        \Drupal::logger('apic_type_count')->error('getProduct: invalid VERSION in request', []);
-        throw new AccessDeniedHttpException();
-      }
-
-      // Load the Node as an ACL check that we have access to this Product
-      $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'product');
-      $query->condition('apic_ref.value', $productname . ':' . $productver);
-      $nids = $query->accessCheck()->execute();
-
-      if ($nids !== NULL && !empty($nids)) {
-        $nid = array_shift($nids);
-        $node = Node::load($nid);
-        if ($node !== NULL) {
-          $url = $node->apic_url->value;
-        }
-        else {
-          \Drupal::logger('apic_type_count')->error('getProduct: Caller denied access to load Product', []);
-          throw new AccessDeniedHttpException();
-        }
-      }
-      else {
-        throw new AccessDeniedHttpException();
-      }
+    if ($node !== NULL) {
+      $url = $node->apic_url->value;
     }
-    elseif (preg_match('/^([A-Za-z0-9\-])+$/', $input)) {
-      // We have an ID, use it raw
-      // Validate the format of the ID ([A-Za-z0-9\-]+)
 
-      // Load the Node as an ACL check that we have access to this node
-      $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'product');
-      $query->condition('product_id.value', $input);
-      $nids = $query->accessCheck()->execute();
-
-      if ($nids !== NULL && !empty($nids)) {
-        $nid = array_shift($nids);
-        $node = Node::load($nid);
-        if ($node !== NULL) {
-          $url = $node->apic_url->value;
-        }
-      }
-      else {
-        \Drupal::logger('apic_type_count')->error('getProduct: Caller denied access to load product', []);
-        throw new AccessDeniedHttpException();
-      }
-    }
-    else {
-      \Drupal::logger('apic_type_count')->error('getProduct: invalid ID in request', []);
-      throw new AccessDeniedHttpException();
-    }
     if ($url !== NULL) {
       if ($outputType === 'document') {
         $json = Product::getProductDocumentForDrush($url);

@@ -28,4 +28,4 @@ Feature: Self Sign-up LDAP
     And there are no warnings
     And there are messages
     And I should not see the text "There was an error creating your account"
-    And I should see the text "Your account was created successfully. Please login to continue."
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful.. Please login to continue."

@@ -278,7 +278,7 @@ class ProductController extends ControllerBase {
             ->setAbsolute()
             ->toString();
           $response = new RedirectResponse($path);
-          $response->send();
+          \Drupal::service('http_middleware.ibm_apim_redirect')->setRedirectResponse($response);
           ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
           return $response;
         }

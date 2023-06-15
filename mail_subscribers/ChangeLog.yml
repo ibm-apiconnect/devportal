@@ -1,8 +1,6 @@
 changes:
-  8.x-5.3.4:
-  - allow dblog (#67)
-  8.x-5.3.3:
-  - event comes first now (#65) (#66)
+  6.0.1:
+  - fix ci channel
   8.x-5.3.2:
   - Use non-dep way to load includes (#64)
   8.x-5.3.1:

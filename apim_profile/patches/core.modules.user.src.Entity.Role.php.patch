@@ -1,0 +1,18 @@
+--- core/modules/user/src/Entity/Role.php       2023-05-31 11:38:21
++++ core/modules/user/src/Entity/Role.php  2023-05-31 11:38:08
+@@ -204,6 +204,15 @@
+     $valid_permissions = array_intersect($this->permissions, array_keys($permission_definitions));
+     $invalid_permissions = array_diff($this->permissions, $valid_permissions);
+     if (!empty($invalid_permissions)) {
++      $config = \Drupal::config('ibm_apim.settings');
++      $revoke_invalid_permissions = $config->get('revoke_invalid_permissions') === NULL ? TRUE : $config->get('revoke_invalid_permissions');
++      if ($revoke_invalid_permissions === TRUE) {
++        \Drupal::logger('role')->info('revoke_invalid_permissions is set to TRUE in ibm_apim.settings. Removing invalid permissions from roles.');
++        foreach ($invalid_permissions as $invalid_permission) {
++          \Drupal::logger('role')->info('Revoking - @invalid_permission from @role', ['@invalid_permission' => $invalid_permission, '@role' => $this->id]);
++          $this->revokePermission($invalid_permission);
++        }
++      }
+       throw new \RuntimeException('Adding non-existent permissions to a role is not allowed. The incorrect permissions are "' . implode('", "', $invalid_permissions) . '".');
+     }
+     foreach ($valid_permissions as $permission) {

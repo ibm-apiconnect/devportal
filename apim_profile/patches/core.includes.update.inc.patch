@@ -1,0 +1,37 @@
+--- core/includes/update.inc    2023-05-31 11:35:25
++++ core/includes/update.inc       2023-05-31 11:35:16
+@@ -315,8 +315,32 @@
+         '%name' => $module,
+         ':url' => 'https://www.drupal.org/node/3137656',
+       ];
+-      \Drupal::messenger()->addWarning(t('Module %name has an entry in the system.schema key/value storage, but is missing from your site. <a href=":url">More information about this error</a>.', $args));
+-      \Drupal::logger('system')->notice('Module %name has an entry in the system.schema key/value storage, but is missing from your site. <a href=":url">More information about this error</a>.', $args);
++      $config = \Drupal::config('ibm_apim.settings');
++      $remove_missing_extensions = $config->get('remove_missing_extensions') === NULL ? TRUE : $config->get('remove_missing_extensions');
++      if ($remove_missing_extensions == TRUE) {
++        $module_installer = \Drupal::service('module_installer');
++        try {
++          \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
++          $module_installer->uninstall([$module]);
++          \Drupal::logger('system')->info('Uninstalled module: @module', [
++          '@module' => $module,
++          ]);
++          \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
++        } catch (Throwable $e) {
++            // if deleting the module fails (and it might since we've deleted the files), itll just be purged from the db next
++        }
++        \Drupal::logger('system')->info('Deleting module database key: @module', [
++          '@module' => $module,
++        ]);
++        \Drupal::database()->delete('key_value')
++              ->condition('collection', 'system.schema')
++              ->condition('name', $module, 'IN')
++              ->execute();
++        \Drupal::configFactory()->getEditable('core.extension')->clear("module.$module")->save(TRUE);
++      } else {
++        \Drupal::messenger()->addWarning(t('Module %name has an entry in the system.schema key/value storage, but is missing from your site. <a href=":url">More information about this error</a>.', $args));
++        \Drupal::logger('system')->notice('Module %name has an entry in the system.schema key/value storage, but is missing from your site. <a href=":url">More information about this error</a>.', $args);
++      }
+       continue;
+     }
+     // There might be orphaned entries for modules that are in the filesystem

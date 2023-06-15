@@ -42,6 +42,8 @@ class TranslationPreparation {
     'product',
     'socialblock',
     'themegenerator',
+    'socialblock',
+    'instana_eum',
   ];
 
   /**

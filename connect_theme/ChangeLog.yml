@@ -1,10 +1,11 @@
 changes:
-  8.x-5.3.5:
-  - Fix double refresh icon on search page (#236)
-  8.x-5.3.4:
-  - force shortcuts toolbar to be full height
-  8.x-5.3.3:
-  - use non-dep method (#235)
+  6.0.4:
+  - add honeypot form field
+  6.0.3:
+  - no longer using adminimal
+  6.0.2:
+  - Actual fix for double refresh icon (#238)
+  6.0.1: null
   8.x-5.3.2:
   - Mass merge for Drupal 10 Changes (#234)
   8.x-5.3.1:
