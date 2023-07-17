@@ -19,18 +19,6 @@
        if (empty($res)) {
          unset($sandbox['todo'][$entity_type][$field_name]);
 
---- modules/metatag/metatag_routes/src/Form/MetatagCustomCreateForm.php 2023-01-10 15:14:14
-+++ modules/metatag/metatag_routes/src/Form/MetatagCustomCreateForm.php    2023-01-10 15:14:16
-@@ -144,7 +144,7 @@
-       }
-
-       // Validate that the route doesn't have metatags created already.
--      $ids = $this->entityTypeManager->getStorage('metatag_defaults')->getQuery()->condition('id', $route_name)->execute();
-+      $ids = $this->entityTypeManager->getStorage('metatag_defaults')->getQuery()->condition('id', $route_name)->accessCheck()->execute();
-       if ($ids) {
-         $form_state->setErrorByName('metatag_url',
-           $this->t('There are already metatags created for this route.'));
-
 --- modules/metatag/src/MetatagDefaultsListBuilder.php  2023-01-10 15:15:14
 +++ modules/metatag/src/MetatagDefaultsListBuilder.php     2023-01-10 15:15:08
 @@ -25,7 +25,7 @@

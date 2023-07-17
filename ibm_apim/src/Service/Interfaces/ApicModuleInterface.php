@@ -16,13 +16,13 @@ namespace Drupal\ibm_apim\Service\Interfaces;
 interface ApicModuleInterface {
 
   /**
-   * Delete list of modules from <site_dir>/modules directory.
+   * Delete list of extensions from <site_dir>/(themes/modules) directory.
    *
-   * @param array $modules
+   * @param array $extensions
    *
-   * @return bool TRUE if all modules deleted successfully, FALSE there were problems, see logs for more details.
+   * @return bool TRUE if all extensions deleted successfully, FALSE there were problems, see logs for more details.
    */
-  public function deleteModulesOnFileSystem(array $modules): bool;
+  public function deleteExtensionOnFileSystem(string $extensionType, array $extensions): bool;
 
 
   /**

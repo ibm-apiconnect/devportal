@@ -3,7 +3,7 @@ type: module
 description: Allows content to be submitted using Markdown, a simple plain-text syntax that is transformed into valid HTML.
 package: Input filters
 core_version_requirement: ^8 || ^9 || ^10
-version: 8.x-5.3.2
+version: 8.x-5.4.1
 dependencies:
 - noopener_filter
 project: ghmarkdown

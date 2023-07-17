@@ -378,3 +378,23 @@ section.block-go-ahead {
 .block-social-media-links-block .fa-2x {
   color: #161616;
 }
+
+/* image captcha */
+#edit-captcha-image-wrapper img {
+  padding: 0px;
+  border: none;
+}
+
+#edit-captcha-image-wrapper a.reload-captcha {
+  font-size: initial;
+  background: none;
+  width: initial;
+  height: initial;
+  opacity: 1;
+  animation: none;
+}
+
+.captcha__element>div {
+  width: 100%;
+  flex: initial
+}

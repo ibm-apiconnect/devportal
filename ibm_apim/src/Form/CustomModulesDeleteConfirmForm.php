@@ -133,7 +133,7 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
 
     // Retrieve the list of modules from the key value store.
     $account = $this->currentUser()->id();
-    $this->modules = $this->keyValueExpirable->get($account);
+    $this->modules = $this->keyValueExpirable->get($account) ?? [];
 
     // Prevent this page from showing when the module list is empty.
     if (empty($this->modules)) {
@@ -172,7 +172,7 @@ class CustomModulesDeleteConfirmForm extends ConfirmFormBase {
     $this->keyValueExpirable->delete($account);
 
     // Uninstall the modules.
-    $result = $this->moduleService->deleteModulesOnFileSystem($this->modules);
+    $result = $this->moduleService->deleteExtensionOnFileSystem('module', $this->modules);
     if ($result) {
       $this->messenger->addMessage($this->t('The selected modules have been deleted.'));
       $this->logger->notice('CustomModuleDeleteConfirmForm: modules deleted successfully');

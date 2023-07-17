@@ -38,7 +38,7 @@ class ApiController extends ControllerBase {
     }
     else {
       \Drupal::logger('apic_api')->error('apiView: not a valid api.', []);
-      $this->messenger->addWarning(t('The specified arguments were not correct.'));
+      $this->messenger()->addWarning(t('The specified arguments were not correct.'));
       $url = Url::fromRoute('<front>')->toString();
       $returnValue = new RedirectResponse($url);
     }
@@ -56,7 +56,7 @@ class ApiController extends ControllerBase {
     }
     else {
       \Drupal::logger('apic_api')->error('apiView: not a valid api.', []);
-      $this->messenger->addWarning(t('The specified arguments were not correct.'));
+      $this->messenger()->addWarning(t('The specified arguments were not correct.'));
       $returnValue = 'ERROR';
     }
     return $returnValue;

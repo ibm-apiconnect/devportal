@@ -26,6 +26,8 @@ use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\TempStore\PrivateTempStore;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 
 /**
  * Form to reset an application client ID.
@@ -67,6 +69,11 @@ class ResetClientIDForm extends ConfirmFormBase {
   protected CredentialsService $credsService;
 
   /**
+   * @var \Drupal\Core\TempStore\PrivateTempStore
+   */
+  protected PrivateTempStore $apicAppStore;
+
+  /**
    * ResetClientIDForm constructor.
    *
    * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
@@ -74,11 +81,13 @@ class ResetClientIDForm extends ConfirmFormBase {
    * @param \Drupal\Core\Messenger\Messenger $messenger
    * @param \Drupal\apic_app\Service\CredentialsService $credsService
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger, CredentialsService $credsService) {
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger, CredentialsService $credsService, PrivateTempStoreFactory $temp_store_factory) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->messenger = $messenger;
     $this->credsService = $credsService;
+    $this->apicAppStore = $temp_store_factory->get('apic_app');
+
   }
 
   /**
@@ -89,7 +98,8 @@ class ResetClientIDForm extends ConfirmFormBase {
     return new static($container->get('apic_app.rest_service'),
       $container->get('ibm_apim.user_utils'),
       $container->get('messenger'),
-      $container->get('apic_app.credentials'));
+      $container->get('apic_app.credentials'),
+      $container->get('tempstore.private'));
   }
 
   /**
@@ -235,7 +245,8 @@ class ResetClientIDForm extends ConfirmFormBase {
       } else {
         $credsString = base64_encode($credsJson);
       }
-      $displayCredsUrl = Url::fromRoute('apic_app.display_creds', ['appId' => $appId, 'credentials' => $credsString]);
+      $displayCredsUrl = Url::fromRoute('apic_app.display_creds', ['appId' => $appId]);
+      $this->apicAppStore->set('credentials', $credsString);
     }
     else {
       $displayCredsUrl = $this->getCancelUrl();

@@ -46,6 +46,15 @@ class ApicModule extends Module {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function postInstallTasks() {
+    # https://github.ibm.com/apimesh/devportal/issues/8448 - Rebuild module list ourselves after install
+    \Drupal::service('extension.list.module')->reset();
+    return parent::postInstallTasks();
+  }
+
+  /**
    * Returns the project name from a Drupal info file.
    *
    * @param string $directory

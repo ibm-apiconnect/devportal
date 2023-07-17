@@ -134,8 +134,8 @@
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
             <div class="planDetail--header">
-              <a onclick="Drupal.settings.plans.closeTwisties({{ loop.index }})" href="javascript:" data-toggle="modal"
-                 data-target="#planModal{{ loop.index }}" class="planDetail--modalClose" title={{ 'Close'|t }}>{{ close_svg|raw }}</a>
+              <a href="javascript:" data-toggle="modal" data-target="#planModal{{ loop.index }}" class="planDetail--modalClose" 
+              title={{ 'Close'|t }}>{{ close_svg|raw }}</a>
               <h2 class="productive-heading-04">{{ plan.data.title }}</h2>
               <div class="body-short-01">
                 {{ plan.data.description|markdown }}
@@ -188,7 +188,7 @@
               <table class="plansTable">
                 <thead>
                 <tr>
-                  <th><span class="apicTwistieIcon" onclick="Drupal.settings.plans.toggleAllTwisties()" title={{ '"Expand / Collapse All API Details"'|t }}><i
+                  <th><span id="twistieHeader" class="apicTwistieIcon" title={{ '"Expand / Collapse All API Details"'|t }}><i
                             class="fa fa-angle-down" data-twistieheaderid="twistie_header"></i></span></th>
                   <th>{{ 'Title'|t }}</th>
                   <th>{{ 'Version'|t }}</th>
@@ -200,7 +200,7 @@
                 {% for api in plan.nodes %}
                   {% set rowIndex = loop.index %}
                   <tr class="tableRow">
-                    <td><span class="apicTwistieIcon" onclick="Drupal.settings.plans.toggleTwistie({{ rowIndex }})" title={{ '"Expand / Collapse API Details"'|t }}><i
+                    <td><span class="apicTwistieIcon rowTwistie" title={{ '"Expand / Collapse API Details"'|t }} data-rowid={{ rowIndex }} ><i
                             class="fa fa-angle-down" data-twistieid="twistie_{{ rowIndex }}"></i></span></td>
                     <td>{{ api.title }}</td>
                     <td>{{ api.version[0].value }}</td>

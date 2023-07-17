@@ -70,7 +70,7 @@ function apim_profile_update_terms_page() {
 
   $tandcsMenu = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/tsandcs']);
   $tandcsMenu = reset($tandcsMenu);
-  if ($tandcsMenu !== NULL) {
+  if (!empty($tandcsMenu)) {
     add_terms_menu_translations($tandcsMenu);
   }
 }
@@ -82,13 +82,13 @@ function apim_profile_update_privacy_page() {
   $privacyNodeId = substr($privacyPath, strrpos($privacyPath, '/' )+1);
 
   $node = Node::load($privacyNodeId);
-  if ($node !== NULL) {
+  if (!empty($node)) {
     add_privacy_node_translations($node);
   }
 
   $privacyMenu = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/privacy']);
   $privacyMenu = reset($privacyMenu);
-  if ($privacyMenu !== NULL) {
+  if (!empty($privacyMenu)) {
     add_privacy_menu_translations($privacyMenu);
   }
 }

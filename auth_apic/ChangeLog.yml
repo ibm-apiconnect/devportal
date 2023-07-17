@@ -1,4 +1,14 @@
 changes:
+  8.x-5.4.4:
+  - Headers allowed isnt in function
+  8.x-5.4.3:
+  - Show sign up success when username/email is taken (#760)
+  8.x-5.4.2:
+  - Make admin failed login error the same as non-admin (#757)
+  8.x-5.4.1:
+  - Rename twig templates (#752)
+  8.x-5.4.0:
+  - update version 8.x-5.3.6 -> 8.x-5.4.0
   8.x-5.3.5:
   - mock environment correctly for invites (#749) (#750)
   8.x-5.3.4:

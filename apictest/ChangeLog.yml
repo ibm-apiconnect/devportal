@@ -1,4 +1,10 @@
 changes:
+  8.x-5.4.2:
+  - add lastUpdated to key
+  8.x-5.4.1:
+  - use env.APIC_RT_RO (#262)
+  8.x-5.4.0:
+  - update version 8.x-5.3.6 -> 8.x-5.4.0
   8.x-5.3.5:
   - mock environment correctly for invites (#258) (#259)
   8.x-5.3.4:

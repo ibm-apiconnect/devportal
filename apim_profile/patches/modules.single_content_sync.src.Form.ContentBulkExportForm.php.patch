@@ -1,0 +1,60 @@
+--- modules/single_content_sync/src/Form/ContentBulkExportForm.php    2023-05-04 16:45:07
++++ modules/single_content_sync/src/Form/ContentBulkExportForm.php    2023-05-04 16:48:09
+@@ -10,6 +10,7 @@
+ use Drupal\Core\TempStore\PrivateTempStoreFactory;
+ use Drupal\Core\Url;
+ use Drupal\single_content_sync\ContentFileGeneratorInterface;
++use Drupal\single_content_sync\ContentSyncHelperInterface;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+
+ /**
+@@ -34,6 +35,14 @@
+   protected ContentFileGeneratorInterface $fileGenerator;
+
+   /**
++   * The content sync helper.
++   *
++   * @var \Drupal\single_content_sync\ContentSyncHelperInterface
++   */
++  protected $contentSyncHelper;
++
++
++  /**
+    * Construct of ContentBulkExportForm.
+    *
+    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
+@@ -41,9 +50,10 @@
+    * @param \Drupal\single_content_sync\ContentFileGeneratorInterface $file_generator
+    *   The custom file generator to export content.
+    */
+-  public function __construct(PrivateTempStoreFactory $temp_store_factory, ContentFileGeneratorInterface $file_generator) {
++  public function __construct(PrivateTempStoreFactory $temp_store_factory, ContentFileGeneratorInterface $file_generator, ContentSyncHelperInterface $content_sync_helper) {
+     $this->privateTempStore = $temp_store_factory->get('single_content_sync');
+     $this->fileGenerator = $file_generator;
++    $this->contentSyncHelper = $content_sync_helper;
+   }
+
+   /**
+@@ -52,7 +62,8 @@
+   public static function create(ContainerInterface $container) {
+     return new static(
+       $container->get('tempstore.private'),
+-      $container->get('single_content_sync.file_generator')
++      $container->get('single_content_sync.file_generator'),
++      $container->get('single_content_sync.helper')
+     );
+   }
+
+@@ -139,6 +150,12 @@
+     $this->privateTempStore->delete($this->currentUser()->id());
+
+     if ($form_state->getValue('confirm')) {
++      $disallowed = $this->contentSyncHelper->containsDisallowedEntities($entities);
++      if ($disallowed) {
++        $this->messenger()->addError($this->t("The export couldn't be completed since it contains disallowed content. Please check the configuration of the Single Content Sync module, or select only allowed content."));
++        $form_state->setRedirect('system.admin_content');
++        return;
++      }
+       $extract_translations = $form_state->getValue('translation', FALSE);
+       $extract_assets = $form_state->getValue('assets', FALSE);
+       $file = $this->fileGenerator->generateBulkZipFile($entities, $extract_translations, $extract_assets);

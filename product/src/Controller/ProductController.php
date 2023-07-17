@@ -176,7 +176,7 @@ class ProductController extends ControllerBase {
         $enforced = TRUE;
         if (isset($apiNode->api_swagger->value)) {
           $swagger = unserialize($apiNode->api_swagger->value, ['allowed_classes' => FALSE]);
-          if (!isset($swagger['x-ibm-configuration']) || $swagger['x-ibm-configuration']['enforced'] === FALSE) {
+          if (!isset($swagger['x-ibm-configuration']) || !is_array($swagger['x-ibm-configuration']) || empty($swagger['x-ibm-configuration']) || $swagger['x-ibm-configuration']['enforced'] === FALSE) {
             $enforced = FALSE;
           }
         }
@@ -278,7 +278,7 @@ class ProductController extends ControllerBase {
             ->setAbsolute()
             ->toString();
           $response = new RedirectResponse($path);
-          $response->send();
+          \Drupal::service('http_middleware.ibm_apim_redirect')->setRedirectResponse($response);
           ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
           return $response;
         }

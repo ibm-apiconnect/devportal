@@ -3,7 +3,7 @@ type: module
 description: Products from IBM API Developer Portal
 package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9 || ^10
-version: 8.x-5.3.10
+version: 8.x-5.4.6
 project: product
 dependencies:
 - path

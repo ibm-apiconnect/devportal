@@ -1,4 +1,6 @@
 changes:
+  8.x-5.4.0:
+  - update version 8.x-5.3.2 -> 8.x-5.4.0
   8.x-5.3.1:
   - Mass merge for Drupal 10 Changes (#50)
   8.x-5.3.0:

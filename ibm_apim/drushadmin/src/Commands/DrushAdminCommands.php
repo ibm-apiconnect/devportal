@@ -15,6 +15,10 @@ namespace Drupal\drushadmin\Commands;
 use Drush\Commands\DrushCommands;
 use Drupal\Core\Database\Database;
 use Throwable;
+use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
+use Consolidation\OutputFormatters\StructuredData\ListDataFromKeys;
+use Drush\Utils\StringUtils;
+use Drupal\Core\Entity\Query\QueryInterface;
 
 /**
  * Class DrushAdminCommands.
@@ -37,24 +41,13 @@ class DrushAdminCommands extends DrushCommands {
    */
   public function drush_drushadmin_theme_delete($theme_name): void {
     if ($theme_name !== NULL) {
-      $themes = \Drupal::service('theme_handler')->listInfo();
-      $customThemeDirectories = \Drupal::service('ibm_apim.utils')->getCustomThemeDirectories();
-      $theme_path = \Drupal::service('extension.list.theme')->getPath($theme_name);
-      $theme_directory = @array_pop(explode('/', $theme_path));
+      $theme = \Drupal::service('ibm_apim.utils')->getDisabledCustomExtensions('theme');
       $inputThemes = explode(',', $theme_name);
       foreach ($inputThemes as $inputTheme) {
-        // Check if the specified theme is disabled and is a custom theme
-        if (!array_key_exists($inputTheme, $themes) && in_array($theme_directory, $customThemeDirectories, TRUE)) {
-          $item_path = \Drupal::service('extension.list.theme')->getPath($inputTheme);
-          if (isset($item_path) && !empty($item_path)) {
-            \Drupal::service('ibm_apim.utils')->file_delete_recursive($item_path);
-            // clear all caches otherwise reinstalling the same theme will fail
-            try {
-              drupal_flush_all_caches();
-            } catch (Throwable $e) {
-            }
-            \Drupal::logger("drushadmin")->notice("@theme_name deleted.", ['@theme_name' => $inputTheme]);
-          }
+        // Check if the specified module is a disabled custom module
+        if (array_key_exists($inputTheme, $theme)) {
+          \Drupal::service('ibm_apim.module')->deleteExtensionOnFileSystem('theme', [$inputTheme], FALSE);
+          \Drupal::logger("drushadmin")->notice("@theme_name deleted.", ['@theme_name' => $inputTheme]);
         }
         else {
           \Drupal::logger("drushadmin")
@@ -78,12 +71,12 @@ class DrushAdminCommands extends DrushCommands {
    */
   public function drush_drushadmin_module_delete($module_name): void {
     if ($module_name !== NULL) {
-      $modules = \Drupal::service('ibm_apim.utils')->getDisabledCustomModules();
+      $modules = \Drupal::service('ibm_apim.utils')->getDisabledCustomExtensions('module');
       $inputModules = explode(',', $module_name);
       foreach ($inputModules as $inputModule) {
         // Check if the specified module is a disabled custom module
         if (array_key_exists($inputModule, $modules)) {
-          \Drupal::service('ibm_apim.module')->deleteModulesOnFileSystem([$inputModule], FALSE);
+          \Drupal::service('ibm_apim.module')->deleteExtensionOnFileSystem('module', [$inputModule], FALSE);
           // clear all caches otherwise reinstalling the same module will fail
           try {
             drupal_flush_all_caches();
@@ -215,4 +208,105 @@ class DrushAdminCommands extends DrushCommands {
     }
   }
 
+  /**
+   * List content entity types.
+   *
+   * @param array $options
+   *
+   * @usage drush content:list-types
+   *   List all content entity types.
+   *
+   * @command content:list-types
+   * @aliases content-types
+   */
+  public function contentListTypes(array $options = ['format' => 'table']) {
+    $entityTypeManager = \Drupal::service('entity_type.manager');
+    $blockedEntities = ["user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs", "apic_app_application_creds"];
+
+    $entityTypes = $entityTypeManager->getDefinitions();
+    $result = [];
+    foreach ($entityTypes as $entityType => $entityTypeObj) {
+      if (!$entityTypeObj->hasLinkTemplate('single-content:export') || in_array($entityType, $blockedEntities)) {
+        continue;
+      }
+      $bundles = array_values(array_diff(array_keys(\Drupal::service('entity_type.bundle.info')->getBundleInfo($entityType)), $blockedEntities));
+      if (count($bundles) === 1 && $entityType === $bundles[0]) {
+          $bundles = [];
+      }
+      $result[$entityType] = $bundles;
+    }
+
+    if ($options['format'] === 'table') {
+      $table = [];
+      foreach ($result as $type => $bundles) {
+          $row = [
+            'Entity Type' => $type,
+            'Bundles' => implode(', ', $bundles),
+          ];
+          $table[] = $row;
+      }
+      $result = $table;
+    }
+    return new ListDataFromKeys($result);
+  }
+
+  /**
+   * List content entities.
+   *
+   * @param string $content_type A content entity type machine name.
+   * @param array $options
+   *
+   * @option bundle Restrict list to the specified bundle.
+   * @usage drush content:list node
+   *   List all node entities.
+   * @usage drush content:list node --bundle=article
+   *   List all article entities.
+   *
+   * @command content:list
+   * @aliases content-list
+   */
+  public function contentList(string $content_type, array $options = ['bundle' => self::REQ, 'format' => 'table']): ?RowsOfFields {
+    $entityTypeManager = \Drupal::service('entity_type.manager');
+    $blockedEntities = ["user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs", "apic_app_application_creds"];
+
+    if (empty($content_type) || in_array($content_type, $blockedEntities)) {
+      return null;
+    }
+
+    $entityTable = [];
+    $entityNids = $this->getQuery($content_type, null, $options)->execute();
+    foreach (array_chunk($entityNids, 50) as $chunk) {
+      $entities = $entityTypeManager->getStorage($content_type)->loadMultiple($chunk);
+      foreach ($entities as $entity) {
+        if (!in_array($entity->bundle(), $blockedEntities)) {
+          $row = [
+            'Title' => $entity->label(),
+            'Langcode' => $entity->get('langcode')->value,
+            'Entity ID' => $entity->id(),
+            'Bundle' => $entity->bundle(),
+            'UUID' => $entity->get('uuid')->value,
+          ];
+          $entityTable[] = $row;
+        }
+      }
+    }
+    return new RowsOfFields($entityTable);
+  }
+
+  protected function getQuery(string $entity_type, ?string $ids, array $options): QueryInterface {
+    $entityTypeManager = \Drupal::service('entity_type.manager');
+
+    $storage = $entityTypeManager->getStorage($entity_type);
+    $query = $storage->getQuery()->accessCheck(false);
+    if ($ids = StringUtils::csvToArray((string) $ids)) {
+      $idKey = $entityTypeManager->getDefinition($entity_type)->getKey('id');
+      $query = $query->condition($idKey, $ids, 'IN');
+    } elseif ($options['bundle']) {
+      if ($bundle = $options['bundle']) {
+        $bundleKey = $entityTypeManager->getDefinition($entity_type)->getKey('bundle');
+        $query = $query->condition($bundleKey, $bundle);
+      }
+    }
+    return $query;
+  }
 }

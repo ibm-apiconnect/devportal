@@ -41,6 +41,7 @@ use Drupal\Core\Extension\ModuleHandler;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Drupal\auth_apic\Service\Interfaces\TokenParserInterface;
 use Drupal\ibm_apim\Service\Utils;
+use Drupal\ibm_apim\Service\SiteConfig;
 
 /**
  * Self sign up / create new user form.
@@ -119,6 +120,11 @@ class ApicUserRegisterForm extends RegisterForm {
    */
   protected $messenger;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\SiteConfig
+   */
+  protected SiteConfig $siteConfig;
+
   protected $chosen_registry;
 
   /**
@@ -148,7 +154,8 @@ class ApicUserRegisterForm extends RegisterForm {
                               Messenger $messenger,
                               ModuleHandler $module_handler,
                               TokenParserInterface $token_parser,
-                              Utils $utils
+                              Utils $utils,
+                              SiteConfig $site_config,
                               ) {
     parent::__construct($entity_repository, $language_manager, $entity_type_bundle_info, $time);
     $this->logger = $logger;
@@ -167,6 +174,7 @@ class ApicUserRegisterForm extends RegisterForm {
     $this->moduleHandler = $module_handler;
     $this->jwtParser = $token_parser;
     $this->utils = $utils;
+    $this->siteConfig = $site_config;
   }
 
   /**
@@ -196,7 +204,8 @@ class ApicUserRegisterForm extends RegisterForm {
       $container->get('messenger'),
       $container->get('module_handler'),
       $container->get('auth_apic.jwtparser'),
-      $container->get('ibm_apim.utils')
+      $container->get('ibm_apim.utils'),
+      $container->get('ibm_apim.site_config'),
     );
   }
 
@@ -613,9 +622,7 @@ class ApicUserRegisterForm extends RegisterForm {
     }
 
 
-    if ($registry !== NULL) {
-      $this->validateUniqueUser($form_state, $registry);
-    } else {
+    if ($registry === NULL) {
       $form_state->setErrorByName('', t('The specified user registry could not be found.'));
     }
 
@@ -647,7 +654,13 @@ class ApicUserRegisterForm extends RegisterForm {
       $registry = $this->userRegistryService->get($registry_url);
 
       if ($registry !== NULL) {
-        $this->submitToApim($form_state, $registry);
+        if ($this->validateUniqueUser($form_state, $registry)) {
+          $this->submitToApim($form_state, $registry);
+        } else {
+          // Hide whether the username/email is taken
+          $this->messenger->addStatus($this->getSuccessMessage($registry));
+          $form_state->setRedirect('<front>');
+        }
       }
       // Clear the JWT from the session as we're done with it now
       $this->authApicSessionStore->delete('invitation_object');
@@ -676,11 +689,11 @@ class ApicUserRegisterForm extends RegisterForm {
       $username_in_same_registry = $this->userStorage->load($testUser);
 
       if ($this->isBannedName($username) || $user_with_same_email !== NULL || $username_in_same_registry !== NULL) {
-        $signInLink = Url::fromRoute('user.login')->toString();
-        $form_state->setErrorByName('',
-          t('A problem occurred while attempting to create your account. If you already have an account then please use that to <a href="@link">Sign in</a>.',
-            ['@link' => $signInLink])
-        );
+        if ($user_with_same_email !== NULL) {
+          $this->logger->warning('registration failed: Email %email is already in use', ['%email' => $emailAddress]);
+        } else if ($username_in_same_registry !== NULL) {
+          $this->logger->warning('registration failed: Username %name already exists in user registry', ['%name' => $emailAddress]);
+        }
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, FALSE);
         return FALSE;
       }
@@ -731,7 +744,6 @@ class ApicUserRegisterForm extends RegisterForm {
     else {
       $response = $this->nonUserManagedSignUp->signUp($new_user);
     }
-
     if ($response === NULL) {
       $form_state->setRedirect('user.register');
     }
@@ -746,8 +758,13 @@ class ApicUserRegisterForm extends RegisterForm {
         $this->utils->saveCustomFields($loaded_user, $customFields, $customFieldValues, FALSE);
       }
 
-      $this->messenger->addStatus($response->getMessage());
+      $this->messenger->addStatus($this->getSuccessMessage($registry));
       $form_state->setRedirect($response->getRedirect());
+    }
+    elseif (strpos($response->getMessage(), 'is already registered.') === false) {
+      $this->messenger->addStatus($this->getSuccessMessage($registry));
+      $this->logger->warning($response->getMessage());
+      $form_state->setRedirect('<front>');
     }
     elseif (strpos($response->getMessage(), 'Passwords must')) {
       // strip out the generic prefix for registration errors as we are going to place something useful next to the field.
@@ -760,4 +777,15 @@ class ApicUserRegisterForm extends RegisterForm {
     }
   }
 
+  private function getSuccessMessage($registry) {
+    if ($this->authApicSessionStore->get('invitation_object') !== NULL) {
+      return t('Your registration request has been received. You may now sign in if your request has been successful.');
+    } else if ($this->siteConfig->isAccountapprovalsEnabled()) {
+      return t('Your registration request is pending approval. You will receive an email with further instructions if your request has been successful.');
+    } else if ($registry->isUserManaged()){
+      return t('Your registration request has been received. You will receive an email with activation instructions if your request has been successful.');
+    } else {
+      return t('Your registration request has been received. You may now sign in if your request has been successful.');
+    }
+  }
 }

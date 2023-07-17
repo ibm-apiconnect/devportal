@@ -2,7 +2,7 @@ name: Instana EUM
 description: Configures Instana End User Monitoring (EUM) beacon module.
 package: Monitoring
 type: module
-version: 8.x-5.3.2
+version: 8.x-5.4.1
 libraries:
 - instana_eum/instana_eum_config
 core_version_requirement: ^8 || ^9 || ^10

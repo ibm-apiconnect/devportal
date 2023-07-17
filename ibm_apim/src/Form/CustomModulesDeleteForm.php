@@ -103,9 +103,10 @@ class CustomModulesDeleteForm extends FormBase {
     ];
     $header = [
       'module' => $this->t('Module'),
+      'machine_name' => $this->t('Machine Name'),
       'info' => $this->t('Information'),
     ];
-    $options = $this->utils->getDisabledCustomModules();
+    $options = $this->utils->getDisabledCustomExtensions('module');
     $form['table'] = [
       '#type' => 'tableselect',
       '#header' => $header,

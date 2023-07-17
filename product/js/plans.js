@@ -92,7 +92,10 @@
     twisties.each(function() {
       closeTwistieArrow($(this));
     });
-  }
+
+    const twistieHeader = $('[data-twistieheaderid="twistie_header"]');
+    closeTwistieArrow(twistieHeader);
+    }
 
   let api = {
     togglePlanDetails,
@@ -104,6 +107,26 @@
     Drupal.settings = {};
   }
   Drupal.settings.plans = api;
+  
+  Drupal.behaviors.plansTable = {
+    attach: function(context, settings) {
+        if(!Drupal.behaviors.plansTable.click_set){
+          $('#twistieHeader', context).on("click", function() {
+            toggleAllTwisties();
+          });
 
+          $('.planDetail--modalClose').on("click", function() {
+            closeTwisties();
+          });
+
+          $('.rowTwistie').on("click", function() {
+            var index = $(this).data('rowid');
+            toggleTwistie(index);
+          });
+
+          Drupal.behaviors.plansTable.click_set = true;
+        }
+    }
+  };
 })(jQuery, Drupal);
                                                     

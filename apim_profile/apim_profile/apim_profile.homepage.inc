@@ -919,25 +919,25 @@ function apim_profile_update_menu_links() {
 function apim_profile_update_main_menu_links() {
   $home_link = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/']);
   $home_link = reset($home_link);
-  if ($home_link !== NULL) {
+  if (!empty($home_link)) {
     add_home_link_translations($home_link);
   }
 
   $apis_link = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/product']);
   $apis_link = reset($apis_link);
-  if ($apis_link !== NULL) {
+  if (!empty($apis_link)) {
     add_apis_link_translations($apis_link);
   }
 
   $apps_link = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/application']);
   $apps_link = reset($apps_link);
-  if ($apps_link !== NULL) {
+  if (!empty($apps_link)) {
     add_apps_link_translations($apps_link);
   }
 
   $forum_link = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/forum']);
   $forum_link = reset($forum_link);
-  if ($forum_link !== NULL) {
+  if (!empty($forum_link)) {
     add_forum_link_translations($forum_link);
   }
 }
@@ -948,13 +948,13 @@ function apim_profile_update_main_menu_links() {
 function apim_profile_update_login_menu_links() {
   $login_link = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/user/login']);
   $login_link = reset($login_link);
-  if ($login_link !== NULL) {
+  if (!empty($login_link)) {
     add_sign_in_link_translations($login_link);
   }
 
   $register_link = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/user/register']);
   $register_link = reset($register_link);
-  if ($register_link !== NULL) {
+  if (!empty($register_link)) {
     add_create_account_link_translations($register_link);
   }
 }

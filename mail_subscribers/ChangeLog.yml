@@ -1,4 +1,6 @@
 changes:
+  8.x-5.4.0:
+  - update version 8.x-5.3.5 -> 8.x-5.4.0
   8.x-5.3.4:
   - allow dblog (#67)
   8.x-5.3.3:

@@ -1,0 +1,49 @@
+--- modules/single_content_sync/src/ContentExporter.php 2023-05-04 16:08:51
++++ modules/single_content_sync/src/ContentExporter.php    2023-05-04 16:08:42
+@@ -220,17 +220,6 @@
+       'custom_fields' => $this->exportCustomValues($entity),
+     ];
+
+-    // Alter value by using hook_content_export_entity_alter().
+-    $this->moduleHandler->alter('content_export_entity', $output['base_fields'], $entity);
+-
+-    // Display a message when we don't support base fields export for specific
+-    // entity type.
+-    if (!$output['base_fields']) {
+-      $this->messenger->addWarning($this->t('Base fields of "@entity_type" is not exportable out-of-the-box. Check README for a workaround.', [
+-        '@entity_type' => $output['entity_type'],
+-      ]));
+-    }
+-
+     // Extract translations.
+     if ($this->extractTranslationsMode && $entity->isTranslatable()) {
+       $translations = $entity->getTranslationLanguages();
+@@ -352,11 +341,6 @@
+           'created' => $entity->getCreatedTime(),
+         ];
+         break;
+-
+-      default:
+-        // This entity type is not supported out of the box. Return an empty
+-        // array to check later if there is a custom implementation.
+-        return [];
+     }
+
+     // Support moderation state for multiple entity types.
+@@ -364,6 +348,17 @@
+       $base_fields['moderation_state'] = $entity->get('moderation_state')->value;
+     }
+
++    // Alter value by using hook_content_export_entity_alter().
++    $this->moduleHandler->alter('content_export_entity', $base_fields, $entity);
++
++    // Display a message when we don't support base fields export for specific
++    // entity type.
++    if (!$base_fields) {
++      $this->messenger->addWarning($this->t('Base fields of "@entity_type" is not exportable out-of-the-box. Check README for a workaround.', [
++        '@entity_type' => $entity->getEntityTypeId(),
++      ]));
++    }
++
+     return $base_fields;
+   }

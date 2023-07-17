@@ -1,0 +1,71 @@
+--- modules/single_content_sync/single_content_sync.links.menu.yml	2023-04-21 12:25:08
++++ modules/single_content_sync/single_content_sync.links.menu.yml	2023-04-21 14:58:30
+@@ -1,8 +1,8 @@
+-single_content_sync.import:
+-  title: 'Import content'
+-  description: 'Import content from other environment.'
+-  parent: system.admin_content
+-  route_name: single_content_sync.import
++# single_content_sync.import:
++#   title: 'Import content'
++#   description: 'Import content from other environment.'
++#   parent: system.admin_content
++#   route_name: single_content_sync.import
+
+ single_content_sync.config_settings:
+   title: 'Single Content Sync'
+
+--- modules/single_content_sync/single_content_sync.links.action.yml    2023-04-21 12:25:08
++++ modules/single_content_sync/single_content_sync.links.action.yml       2023-04-21 14:58:17
+@@ -1,5 +1,5 @@
+-single_content_sync.import_content:
+-  route_name: single_content_sync.import
+-  title: 'Import content'
+-  appears_on:
+-    - system.admin_content
++# single_content_sync.import_content:
++#   route_name: single_content_sync.import
++#   title: 'Import content'
++#   appears_on:
++#     - system.admin_content
+
+--- modules/single_content_sync/single_content_sync.routing.yml 2023-04-21 12:25:08
++++ modules/single_content_sync/single_content_sync.routing.yml    2023-04-21 14:59:22
+@@ -8,13 +8,13 @@
+   requirements:
+     _permission: 'export single content'
+
+-single_content_sync.import:
+-  path: '/admin/content/import'
+-  defaults:
+-    _form: '\Drupal\single_content_sync\Form\ContentImportForm'
+-    _title: 'Import content'
+-  requirements:
+-    _permission: 'import single content'
++# single_content_sync.import:
++#   path: '/admin/content/import'
++#   defaults:
++#     _form: '\Drupal\single_content_sync\Form\ContentImportForm'
++#     _title: 'Import content'
++#   requirements:
++#     _permission: 'import single content'
+
+ single_content_sync.bulk_export:
+   path: '/admin/content/bulk-export'
+
+--- modules/single_content_sync/single_content_sync.links.task.yml 2023-05-02 12:27:53
++++ modules/single_content_sync/single_content_sync.links.task.yml 2023-05-09 14:12:50
+@@ -1,8 +1,8 @@
+ single_content_sync.export:
+   deriver: \Drupal\single_content_sync\Plugin\Derivative\ContentExportLocalTasks
+
+-single_content_sync.import:
+-  route_name: single_content_sync.import
+-  base_route: system.admin_content
+-  title: 'Import'
+-  weight: 10
++# single_content_sync.import:
++#   route_name: single_content_sync.import
++#   base_route: system.admin_content
++#   title: 'Import'
++#   weight: 10

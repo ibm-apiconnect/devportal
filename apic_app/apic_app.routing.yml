@@ -243,7 +243,7 @@ apic_app.migrate_subscription:
         type: 'apic_app.subid'
 
 apic_app.display_creds:
-  path: '/application/credentials/{appId}/{credentials}'
+  path: '/application/credentials/{appId}'
   defaults:
     _form: '\Drupal\apic_app\Form\DisplayCredsForm'
     _title: 'New application credentials'

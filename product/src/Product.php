@@ -928,8 +928,26 @@ class Product {
   }
 
   /**
-   * Returns a list of product node ids the current user can access
+   * Check if the product contains the named API
    *
+   * @param $productNode the product to check
+   * @param $apiRef the api ref to search for (i.e. myapi:1.2)
+   *
+   * @return bool
+   */
+  public static function containsAPIRef($productNode, $apiRef): bool {
+    foreach ($productNode->product_apis->getValue() as $arrayValue) {
+      $api = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+      if (isset($api['name']) && $api['name'] === $apiRef) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Returns a list of product node ids the current user can access
    * @return array
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException

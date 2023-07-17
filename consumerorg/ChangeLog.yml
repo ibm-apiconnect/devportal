@@ -1,4 +1,8 @@
 changes:
+  8.x-5.4.1:
+  - Fix consumer org change event (#320) (#321)
+  8.x-5.4.0:
+  - update version 8.x-5.3.13 -> 8.x-5.4.0
   8.x-5.3.12:
   - only decrypt if set (#318) (#319)
   8.x-5.3.11:

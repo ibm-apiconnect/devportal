@@ -1,0 +1,7 @@
+allowed_entity_types:
+  block_content: {  }
+  media: {  }
+  menu_link_content: {  }
+  node: {  }
+  taxonomy_term: {  }
+site_uuid_check: false

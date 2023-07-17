@@ -1,4 +1,16 @@
 changes:
+  8.x-5.4.5:
+  - deal with empty x-ibm-configuration (#189)
+  8.x-5.4.4:
+  - Cli content v10.0 (#184) (#188)
+  8.x-5.4.3:
+  - apimesh/depvortal#8356 Limit acces check to known product (if known) (#185) (#187)
+  8.x-5.4.2:
+  - Fix WSOD
+  8.x-5.4.1:
+  - Add redirect service (#180) (#181) (#182)
+  8.x-5.4.0:
+  - update version 8.x-5.3.6 -> 8.x-5.4.0
   8.x-5.3.5:
   - Use non-dep way to load includes (#179)
   8.x-5.3.4:

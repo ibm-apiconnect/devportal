@@ -23,6 +23,8 @@ use Drupal\node\NodeInterface;
 use JsonException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\apic_api\Service\ApiUtils;
+use Drupal\Core\TempStore\PrivateTempStore;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 
 /**
  * Form to display the credentials of an application.
@@ -50,6 +52,8 @@ class DisplayCredsForm extends FormBase {
 
   protected $creds;
 
+  protected $app_store;
+
   /**
    * DisplayCredsForm constructor.
    *
@@ -57,10 +61,11 @@ class DisplayCredsForm extends FormBase {
    * @param \Drupal\Core\Extension\ModuleHandler $module_handler
    * @param \Drupal\Core\Extension\ModuleHandler $api_utils
    */
-  public function __construct(Messenger $messenger, ModuleHandler $module_handler, ApiUtils $api_utils) {
+  public function __construct(Messenger $messenger, ModuleHandler $module_handler, ApiUtils $api_utils, PrivateTempStoreFactory $temp_store_factory) {
     $this->messenger = $messenger;
     $this->module_handler = $module_handler;
     $this->api_utils = $api_utils;
+    $this->app_store = $temp_store_factory->get('apic_app');
   }
 
   /**
@@ -71,7 +76,8 @@ class DisplayCredsForm extends FormBase {
     return new static(
       $container->get('messenger'),
       $container->get('module_handler'),
-      $container->get('apic_api.utils')
+      $container->get('apic_api.utils'),
+      $container->get('tempstore.private'),
     );
   }
 
@@ -82,13 +88,28 @@ class DisplayCredsForm extends FormBase {
     return 'display_app_credentials_form';
   }
 
+
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credentials = NULL): array {
+  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
     if ($appId !== NULL) {
       $this->node = $appId;
     }
+    $credentials = $this->app_store->get('credentials');
+    if (!isset($credentials)) {
+      $form = [];
+      $form['description'] = ['#markup' => '<p>' . t('This credential cannot be viewed again. You can reset it on the application page.') . '</p>'];
+
+      $form['cancel'] = [
+        '#type' => 'link',
+        '#title' => t('Cancel'),
+        '#url' => $this->getCancelUrl(),
+        '#attributes' => ['class' => ['button']],
+      ];
+      return $form;
+    }
+    $this->app_store->delete('credentials');
     try {
       $moduleHandler = \Drupal::service('module_handler');
       if ($moduleHandler->moduleExists('encrypt') && isset($credentials) ) {

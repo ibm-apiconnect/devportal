@@ -1,4 +1,8 @@
 services:
+  http_middleware.ibm_apim_redirect:
+    class: Drupal\ibm_apim\Middleware\Redirect
+    tags:
+      - { name: http_middleware }
   ibm_apim.route_subscriber:
     class: Drupal\ibm_apim\Routing\IbmApimRouteSubscriber
     tags:

@@ -448,7 +448,7 @@ class UserUtils {
         // the user has no permissions at all. send them away.
         $this->logger->debug('user has no permissions set - redirecting to no perms page');
         $response = new RedirectResponse(Url::fromRoute('ibm_apim.noperms')->toString());
-        $response->send();
+        \Drupal::service('http_middleware.ibm_apim_redirect')->setRedirectResponse($response);
       }
     }
     if (function_exists('ibm_apim_entry_trace')) {

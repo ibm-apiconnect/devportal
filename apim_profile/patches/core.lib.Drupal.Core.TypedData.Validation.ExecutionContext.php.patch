@@ -1,0 +1,54 @@
+--- core/lib/Drupal/Core/TypedData/Validation/ExecutionContext.php      2023-05-03 10:53:20
++++ core/lib/Drupal/Core/TypedData/Validation/ExecutionContext.php 2023-06-23 16:03:14
+@@ -133,7 +133,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function setNode($value, $object, MetadataInterface $metadata = NULL, $propertyPath) {
++  public function setNode($value, $object, MetadataInterface $metadata = NULL, $propertyPath): void {
+     $this->value = $value;
+     $this->data = $object;
+     $this->metadata = $metadata;
+@@ -143,14 +143,14 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function setGroup($group) {
++  public function setGroup(?string $group): void {
+     $this->group = $group;
+   }
+
+   /**
+    * {@inheritdoc}
+    */
+-  public function setConstraint(Constraint $constraint) {
++  public function setConstraint(Constraint $constraint): void {
+     $this->constraint = $constraint;
+   }
+
+@@ -262,7 +262,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function markConstraintAsValidated($cache_key, $constraint_hash) {
++  public function markConstraintAsValidated($cache_key, $constraint_hash): void {
+     $this->validatedConstraints[$cache_key . ':' . $constraint_hash] = TRUE;
+   }
+
+@@ -283,7 +283,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function markGroupAsValidated($cache_key, $group_hash) {
++  public function markGroupAsValidated($cache_key, $group_hash): void {
+     $this->validatedObjects[$cache_key][$group_hash] = TRUE;
+   }
+
+@@ -297,7 +297,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function markObjectAsInitialized($cache_key) {
++  public function markObjectAsInitialized($cache_key): void {
+     throw new \LogicException('\Symfony\Component\Validator\Context\ExecutionContextInterface::markObjectAsInitialized is unsupported.');
+   }

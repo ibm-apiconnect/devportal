@@ -68,22 +68,35 @@ class ApicModuleService implements ApicModuleInterface {
   /**
    * @inheritDoc
    */
-  public function deleteModulesOnFileSystem(array $modules, bool $fail_on_no_deletion = TRUE): bool {
+  public function deleteExtensionOnFileSystem(string $extensionType, array $extensions, bool $fail_on_no_deletion = TRUE): bool {
     if (function_exists('ibm_apim_entry_trace')) {
-      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $modules);
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $extensions);
     }
 
     $paths = [];
     $error_found = FALSE;
-    foreach ($modules as $module) {
-      $path = \DRUPAL_ROOT . '/' . $this->sitePath . '/modules/' . $module;
-      $this->logger->debug('%function: Checking existence of %path', ['%function' => __FUNCTION__, '%path' => $path]);
-      if (is_dir($path)) {
-        $this->logger->debug('%function: %path found and will be deleted.', ['%function' => __FUNCTION__, '%path' => $path]);
-        $paths[] = $path;
+    foreach ($extensions as $extension) {
+      if (empty($extension) || $extension === NULL) {
+        $this->logger->error('%function: the module extension to check is null or empty.', ['%function' => __FUNCTION__]);
+        $error_found = TRUE;
+        continue;
+      }
+
+      $directory_path = \Drupal::service('extension.path.resolver')->getPath($extensionType, $extension);
+      if (empty($directory_path) || $directory_path === NULL) {
+        $this->logger->error('%function: The extensions directory path could not be found.', ['%function' => __FUNCTION__, '%path' => $directory_path]);
+        $error_found = TRUE;
+        continue;
+      }
+
+      $extension_path = DRUPAL_ROOT . DIRECTORY_SEPARATOR . $directory_path;
+      $this->logger->debug('%function: Checking existence of %path', ['%function' => __FUNCTION__, '%path' => $extension_path]);
+      if (is_dir($extension_path)) {
+        $this->logger->debug('%function: %path found and will be deleted.', ['%function' => __FUNCTION__, '%path' => $extension_path]);
+        $paths[] = $extension_path;
       }
       elseif ($fail_on_no_deletion) {
-        $this->logger->error('%function: %path is not found.', ['%function' => __FUNCTION__, '%path' => $path]);
+        $this->logger->error('%function: %path is not found.', ['%function' => __FUNCTION__, '%path' => $extension_path]);
         $error_found = TRUE;
       }
     }
@@ -97,6 +110,9 @@ class ApicModuleService implements ApicModuleInterface {
         $this->logger->debug('%function: Recursively deleting %path', ['%function' => __FUNCTION__, '%path' => $path]);
         $this->utils->file_delete_recursive($path);
       }
+      $this->utils->clear_empty_extension_folders($extensionType);
+      // Rebuild module list after removing the files to remove its also removed from the list
+      $extensionType == 'module' ? \Drupal::service('extension.list.module')->reset() : \Drupal::service('extension.list.theme')->reset();
       $return = TRUE;
     }
     else { // nothing found to delete
@@ -152,7 +168,7 @@ class ApicModuleService implements ApicModuleInterface {
     }
 
     // regardless of whether we have attempted to uninstall any modules, try to delete all blocklisted modules
-    $delete_success = $this->deleteModulesOnFileSystem($block_list, FALSE);
+    $delete_success = $this->deleteExtensionOnFileSystem('module', $block_list, FALSE);
 
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $uninstall_success && $delete_success);

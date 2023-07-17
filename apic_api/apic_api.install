@@ -1254,3 +1254,9 @@ function apic_api_update_8303() {
     $fieldConfig->save();
   }
 }
+
+function apic_api_update_10001() {
+  $field_config = FieldConfig::loadByName('node', 'api', 'apic_attachments');
+  $field_config->setSetting('file_extensions', 'txt doc pdf xls ppt pptx docx xlsx rtf odt ods odp md json yaml yml tgz tar zip');
+  $field_config->save();
+}
