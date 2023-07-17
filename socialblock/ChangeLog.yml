@@ -1,5 +1,8 @@
 changes:
-  6.0.2: null
+  8.x-5.4.0:
+  - update version 8.x-5.3.2 -> 8.x-5.4.0
+  8.x-5.3.1:
+  - Mass merge for Drupal 10 Changes (#57)
   8.x-5.3.0:
   - update version 8.x-5.2.1 -> 8.x-5.3.0
   8.x-5.2.0:

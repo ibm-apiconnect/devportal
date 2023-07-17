@@ -527,3 +527,17 @@
      $grandparent_path = $_SERVER['PWD'];
      if ($output_path) {
          $relative_dir = rtrim(ltrim($output_path, './'), '/');
+
+--- modules/single_content_sync/src/Commands/ContentSyncCommands.php    2023-06-08 14:20:00
++++ modules/single_content_sync/src/Commands/ContentSyncCommands.php       2023-06-08 14:19:57
+@@ -148,9 +148,7 @@
+       return;
+     }
+
+-    $file = sizeof($entities) === 1 && !$include_assets
+-      ? $this->fileGenerator->generateYamlFile($entities[0], $include_translations)
+-      : $this->fileGenerator->generateBulkZipFile($entities, $include_translations, $include_assets);
++    $file = $this->fileGenerator->generateBulkZipFile($entities, $include_translations, $include_assets);
+     $file_target = isset($_SERVER['PWD'])
+       ? $this->moveFile($file, $output_dir, explode('://', $file->getFileUri(), 2)[1])
+       : explode('://', $file->getFileUri(), 2)[1];

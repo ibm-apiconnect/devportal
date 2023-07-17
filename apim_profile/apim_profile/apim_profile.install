@@ -746,17 +746,41 @@ function apim_profile_place_blocks() {
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apim_profile_captcha_config() {
+  $challengeType = 'image_captcha/Image';
+
   \Drupal::service('config.factory')
     ->getEditable('captcha.settings')
-    ->set('default_challenge', 'image_captcha/Image')
+    ->set('default_challenge', $challengeType)
     ->set('persistence', 2)
     ->set('add_captcha_description', FALSE)
     ->save();
 
   _apim_profile_enable_captcha_on_form('user_pass');
   _apim_profile_enable_captcha_on_form('user_register_form');
-  _apim_profile_enable_captcha_on_form('contact_message_feedback_form');
   _apim_profile_enable_captcha_on_form('contact_message_personal_form');
+
+  _apim_profile_set_captcha_challenge_point($challengeType);
+}
+
+
+/**
+ * Set all the captcha challenge point to a type.
+ *
+ * @param $form_id
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function _apim_profile_set_captcha_challenge_point($type) {
+  $query = \Drupal::entityQuery('captcha_point');
+  $ids = $query->accessCheck()->execute();
+
+  foreach ($ids as $id) {
+    $cp = CaptchaPoint::load($id);
+    if ($cp !== NULL) {
+      $cp->setCaptchaType($type);
+      $cp->save();
+    }
+  }
 }
 
 /**
@@ -777,7 +801,7 @@ function _apim_profile_enable_captcha_on_form($form_id) {
   // Load the only captcha_point we have.
   $cp = CaptchaPoint::load(reset($ids));
   if ($cp !== NULL) {
-    $cp->set('status', TRUE);
+    $cp->enable();
     $cp->save();
   }
 }
@@ -2720,6 +2744,22 @@ function apim_profile_update_8303() {
 }
 
 /**
+ * Add site default and english to search filter criteria
+ */
+function apim_profile_update_8501() {
+  $view = Views::getView('search_content');
+  if ($view !== NULL) {
+    $filters = $view->getDisplay()->getOption('filters');
+    if (isset($filters['search_api_language'], $filters['search_api_language']['value'])) {
+      $filters['search_api_language']['value']['***LANGUAGE_site_default***'] = '***LANGUAGE_site_default***';
+      $filters['search_api_language']['value']['en'] = 'en';
+      $view->getDisplay()->setOption('filters', $filters);
+      $view->save();
+    }
+  }
+}
+
+/**
  * Drupal 10 Upgrade
  */
 function apim_profile_update_10001() {
@@ -2950,6 +2990,22 @@ function apim_profile_update_10006() {
     ->save();
 }
 
+/**
+ * Update default captcha challenge points to be image_captcha/Image
+ */
+function apim_profile_update_10007() {
+  $query = \Drupal::entityQuery('captcha_point');
+  $ids = $query->accessCheck()->execute();
+
+  foreach ($ids as $id) {
+    $cp = CaptchaPoint::load($id);
+    if ($cp !== NULL && $cp->getCaptchaType() == 'default') {
+      $cp->setCaptchaType('image_captcha/Image');
+      $cp->save();
+    }
+  }
+}
+
 function delete_config(array $configs) {
   foreach ($configs as $config) {
     try {
@@ -3038,22 +3094,6 @@ function theme_uninstall(array $themes) {
           ->condition('name', $theme, 'IN')
           ->execute();
     \Drupal::configFactory()->getEditable('core.extension')->clear("theme.$theme")->save(TRUE);
-  }
-}
-
-/**
- * Add site default and english to search filter criteria
- */
-function apim_profile_update_8501() {
-  $view = Views::getView('search_content');
-  if ($view !== NULL) {
-    $filters = $view->getDisplay()->getOption('filters');
-    if (isset($filters['search_api_language'], $filters['search_api_language']['value'])) {
-      $filters['search_api_language']['value']['***LANGUAGE_site_default***'] = '***LANGUAGE_site_default***';
-      $filters['search_api_language']['value']['en'] = 'en';
-      $view->getDisplay()->setOption('filters', $filters);
-      $view->save();
-    }
   }
 }
 

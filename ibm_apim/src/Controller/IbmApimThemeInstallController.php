@@ -244,36 +244,23 @@ class IbmApimThemeInstallController extends ThemeController {
    *   the token is invalid.
    */
   public function delete(Request $request): RedirectResponse {
-    $theme = $request->query->get('theme');
+    $inputTheme = $request->query->get('theme');
 
-    if (isset($theme) && !empty($theme)) {
-      // Get current list of themes.
-      $themes = \Drupal::service('theme_handler')->listInfo();
-      $customThemeDirectories = \Drupal::service('ibm_apim.utils')->getCustomThemeDirectories();
-      $theme_path = \Drupal::service('extension.list.theme')->getPath($theme);
-      $theme_directory = @array_pop(explode('/', $theme_path));
-      if (in_array($theme_directory, $customThemeDirectories, TRUE)) {
-        // Check if the specified theme is disabled
-        if (!array_key_exists($theme, $themes)) {
-          if (isset($theme_path) && !empty($theme_path)) {
-            $this->utils->file_delete_recursive($theme_path);
-            // clear all caches otherwise reinstalling the same theme will fail
-            drupal_flush_all_caches();
-
-            $this->messenger->addMessage($this->t('The %theme theme has been uninstalled.', ['%theme' => $theme]));
-          }
-        }
+    if (isset($inputTheme) && !empty($inputTheme)) {
+      $themes = \Drupal::service('ibm_apim.utils')->getDisabledCustomExtensions('theme');
+      // Check if the specified module is a disabled custom module
+      if (array_key_exists($inputTheme, $themes)) {
+        \Drupal::service('ibm_apim.module')->deleteExtensionOnFileSystem('theme', [$inputTheme], FALSE);
+        $this->messenger->addMessage($this->t('The %theme theme has been uninstalled.', ['%theme' => $inputTheme]));
       }
       else {
-        $this->messenger->addError($this->t('Only custom themes can be uninstalled. %theme is not a custom theme.', ['%theme' => $theme]));
+        $this->messenger->addError($this->t('Only custom themes can be uninstalled. %theme is not a custom theme. If it is a Custom theme then it may still be active', ['%theme' => $inputTheme]));
       }
-
-    }
-    else {
+    } else {
       $this->messenger->addError($this->t('There was an error deleting the theme. Please contact your system administrator.'));
     }
-    return $this->redirect('system.themes_page');
 
+    return $this->redirect('system.themes_page');
   }
 
   /**

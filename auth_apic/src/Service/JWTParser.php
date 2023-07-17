@@ -166,9 +166,7 @@ class JWTParser implements TokenParserInterface {
         $keys = ['keys' => $keys];
         $keys = JWK::parseKeySet($keys);
         try {
-          $elements = explode('.', $token);
-          $header = json_decode($this->utils->base64_url_decode($elements[0]), TRUE, 512, JSON_THROW_ON_ERROR);
-          JWT::decode($token, $keys, [$header['alg']]);
+          JWT::decode($token, $keys);
           break;
         } catch (Throwable $e) {
           if ($tries <= $MAX_UPDATES) {

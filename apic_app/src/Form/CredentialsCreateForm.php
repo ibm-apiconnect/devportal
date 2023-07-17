@@ -24,6 +24,8 @@ use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\TempStore\PrivateTempStore;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 
 /**
  * Form to create new application credentials.
@@ -58,6 +60,11 @@ class CredentialsCreateForm extends FormBase {
   protected CredentialsService $credsService;
 
   /**
+   * @var \Drupal\Core\TempStore\PrivateTempStore
+   */
+  protected PrivateTempStore $apicAppStore;
+
+  /**
    * CredentialsCreateForm constructor.
    *
    * @param \Drupal\apic_app\Service\ApplicationRestInterface $restService
@@ -65,11 +72,12 @@ class CredentialsCreateForm extends FormBase {
    * @param \Drupal\Core\Messenger\Messenger $messenger
    * @param \Drupal\apic_app\Service\CredentialsService $credsService
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger, CredentialsService $credsService) {
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, Messenger $messenger, CredentialsService $credsService, PrivateTempStoreFactory $temp_store_factory) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->messenger = $messenger;
     $this->credsService = $credsService;
+    $this->apicAppStore = $temp_store_factory->get('apic_app');
   }
 
   /**
@@ -80,7 +88,8 @@ class CredentialsCreateForm extends FormBase {
     return new static($container->get('apic_app.rest_service'),
       $container->get('ibm_apim.user_utils'),
       $container->get('messenger'),
-      $container->get('apic_app.credentials'));
+      $container->get('apic_app.credentials'),
+      $container->get('tempstore.private'));
   }
 
   /**
@@ -257,9 +266,9 @@ class CredentialsCreateForm extends FormBase {
         $credsString = base64_encode($credsJson);
       }
       $displayCredsUrl = Url::fromRoute('apic_app.display_creds', [
-        'appId' => $this->node->application_id->value,
-        'credentials' => $credsString,
+        'appId' => $this->node->application_id->value
       ]);
+      $this->apicAppStore->set('credentials', $credsString);
       \Drupal::service('apic_app.application')->invalidateCaches();
     }
     else {

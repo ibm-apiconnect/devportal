@@ -205,8 +205,10 @@ class ApplicationCreateForm extends FormBase {
         } else {
           $credsString = base64_encode($credsJson);
         }
-        $displayCredsUrl = Url::fromRoute('apic_app.display_creds', ['appId' => $result->data['id'], 'credentials' => $credsString], $options);
+        $displayCredsUrl = Url::fromRoute('apic_app.display_creds', ['appId' => $result->data['id']], $options);
         $form_state->setRedirectUrl($displayCredsUrl);
+        $apicAppStore = \Drupal::service('tempstore.private')->get('apic_app');
+        $apicAppStore->set('credentials', $credsString);
       }
       else {
         \Drupal::logger('apic_app')->notice('Application ID missing in response to application create request for @appName by @username', [

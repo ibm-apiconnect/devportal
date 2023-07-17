@@ -525,7 +525,7 @@ function product_preprocess_node(&$variables) {
           $swagger = NULL;
           if (isset($api->api_swagger->value)) {
             $swagger = unserialize($api->api_swagger->value, ['allowed_classes' => FALSE]);
-            if (isset($swagger['x-ibm-configuration']) && $swagger['x-ibm-configuration']['enforced'] === TRUE) {
+            if (isset($swagger['x-ibm-configuration']) && is_array($swagger['x-ibm-configuration']) && !empty($swagger['x-ibm-configuration']) && $swagger['x-ibm-configuration']['enforced'] === TRUE) {
               $enforcedCount++;
             }
           }

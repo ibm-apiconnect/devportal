@@ -448,7 +448,7 @@ function apic_api_preprocess_node(&$variables): void {
 
     $swagger = unserialize($variables['node']->api_swagger->value, ['allowed_classes' => FALSE]);
     $enforced = TRUE;
-    if (isset($swagger['x-ibm-configuration']) && array_key_exists('enforced', $swagger['x-ibm-configuration'])) {
+    if (isset($swagger['x-ibm-configuration']) && is_array($swagger['x-ibm-configuration']) && !empty($swagger['x-ibm-configuration']) && array_key_exists('enforced', $swagger['x-ibm-configuration'])) {
       $enforced = $swagger['x-ibm-configuration']['enforced'];
     }
     if ($enforced !== TRUE && $enforced !== FALSE) {

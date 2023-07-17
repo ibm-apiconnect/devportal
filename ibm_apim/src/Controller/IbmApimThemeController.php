@@ -64,7 +64,8 @@ class IbmApimThemeController extends SystemController {
               if (mb_strpos($theme_group->getPath(), $themeInstallDir) === 0) {
 
                 $themeInfo = $build[$buildKey]['#theme_groups']['uninstalled'][$installedKey]->info;
-                $query['theme'] = $themeInfo['project'];
+                $themeMachineName = $build[$buildKey]['#theme_groups']['uninstalled'][$installedKey]->getName();
+                $query['theme'] = $themeMachineName;
                 $build[$buildKey]['#theme_groups']['uninstalled'][$installedKey]->operations[] = [
                   'title' => $this->t('Delete'),
                   'url' => Url::fromRoute('ibm_apim.theme_delete'),

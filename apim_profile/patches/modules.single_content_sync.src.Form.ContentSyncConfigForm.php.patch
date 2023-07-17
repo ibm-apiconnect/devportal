@@ -1,6 +1,6 @@
 --- modules/single_content_sync/src/Form/ContentSyncConfigForm.php	2023-04-21 14:50:36
 +++ modules/single_content_sync/src/Form/ContentSyncConfigForm.php	2023-04-21 14:50:21
-@@ -80,12 +80,12 @@
+@@ -80,21 +80,22 @@
    public function buildForm(array $form, FormStateInterface $form_state) {
      $config = $this->config('single_content_sync.settings');
 
@@ -19,7 +19,19 @@
 
      $entity_types = $this->entityTypeManager->getDefinitions();
      $allowed_types = ['#tree' => TRUE];
-@@ -108,7 +108,9 @@
+     foreach ($entity_types as $entity_type) {
+-      if (!$entity_type->hasLinkTemplate('single-content:export')) {
++      $entity_type_id = $entity_type->id();
++
++      if ($this->isBlocked($entity_type_id) || !$entity_type->hasLinkTemplate('single-content:export')) {
+         continue;
+       }
+
+-      $entity_type_id = $entity_type->id();
+       $allowed_types[$entity_type_id] = [
+         '#type' => 'fieldset',
+       ];
+@@ -108,7 +109,9 @@
        if ($bundles) {
          $bundles_as_options = [];
          foreach ($bundles as $bundle_id => $bundle_info) {
@@ -30,7 +42,7 @@
          }
          $allowed_types[$entity_type_id]['bundles'] = [
            '#type' => 'checkboxes',
-@@ -132,6 +134,11 @@
+@@ -132,6 +135,11 @@
      return parent::buildForm($form, $form_state);
    }
 
@@ -42,7 +54,7 @@
    /**
     * {@inheritdoc}
     */
-@@ -147,7 +154,7 @@
+@@ -147,7 +155,7 @@
 
      $this->configFactory->getEditable('single_content_sync.settings')
        ->set('allowed_entity_types', $allowed_types)

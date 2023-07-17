@@ -1,26 +1,47 @@
 changes:
-  6.0.11:
-  - update doc links (#984)
-  6.0.10:
-  - Disable analytics when there is no analytics service (#982)
-  6.0.9:
-  - Cli content v10.0 (#979)
-  6.0.8:
+  8.x-5.4.18:
+  - Fix module install (#1002) (#1003)
+  8.x-5.4.17:
+  - Fix drush theme delete command
+  8.x-5.4.16:
+  - CSS to fix captcha (#999)
+  8.x-5.4.15: null
+  8.x-5.4.14:
+  - Unneeded cache flush
+  - Revert "Fix messages"
+  - Don't delete whole directory if extension directory cant be found (#994) (#996)
+  8.x-5.4.13:
+  - Fix deleting non empty folders and update extension lists (#991) (#992)
+  8.x-5.4.12:
+  - add missing brackets
+  8.x-5.4.11:
+  - Better delete for modules and themes (#988) (#990)
+  8.x-5.4.10:
+  - Added entity list + list-type drush commands (#985) (#986)
+  8.x-5.4.9:
+  - Disable analytics when there is no analytics service (#981)
+  8.x-5.4.8:
+  - Cli content v10.0 (#979) (#980)
+  8.x-5.4.7:
   - Add hooks for content modules
-  6.0.7:
-  - Add hooks for content modules (#975) (#976)
-  6.0.6:
-  - Fix error when all disolayed (#971) (#973)
-  6.0.5:
+  8.x-5.4.6:
+  - Add hooks for content modules (#975) (#977)
+  8.x-5.4.5:
+  - Fix error when all disolayed (#971) (#972)
+  8.x-5.4.4:
+  - fix Billing Form deprecated use of getImplementations (#950)
+  8.x-5.4.3:
   - fix billing form
-  6.0.4:
+  8.x-5.4.2: null
+  8.x-5.4.1:
+  - fix themes delete (#965) (#967)
+  - Add redirect service (#962) (#963) (#964)
+  8.x-5.4.0:
+  - update version 8.x-5.3.27 -> 8.x-5.4.0
+  8.x-5.3.26:
   - add two missing ibm modules
-  6.0.3:
-  - fix themes delete (#965) (#966)
-  6.0.2:
-  - Add redirect service (#962) (#963)
-  6.0.1:
-  - fix ci channel
+  8.x-5.3.25:
+  - Rebuild custom blocks command (#959) (#961)
   8.x-5.3.24: null
   8.x-5.3.23:
   - only decrypt keys if set (#951) (#952)

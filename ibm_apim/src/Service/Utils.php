@@ -352,41 +352,87 @@ class Utils {
   }
 
   /**
-   * List the directories under <site path>/themes
+   * Delete any empty leftover folders
    *
-   * @return array directory names (= custom theme names)
+   * @param $extensionType
    */
-  public function getCustomThemeDirectories(): array {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $custom_modules = [];
+  public function clear_empty_extension_folders(string $extensionType = 'module'): void {
     $sitePath = \Drupal::getContainer()->getParameter('site.path');
-    $dir = new DirectoryIterator($sitePath . '/themes');
-    foreach ($dir as $fileinfo) {
-      if ($fileinfo->isDir() && !$fileinfo->isDot()) {
-        $custom_modules[] = $fileinfo->getFilename();
+    if (empty($sitePath) || $sitePath === NULL) {
+      \Drupal::logger('ibm_apim')->error('Could not detect site path. Not checking for empty folders');
+      return;
+    }
+
+    $path = DRUPAL_ROOT . DIRECTORY_SEPARATOR . $sitePath . DIRECTORY_SEPARATOR . $extensionType . 's';
+    if (is_dir($path)) { // Path is directory
+      foreach(glob($path . '/*', GLOB_ONLYDIR) as $dir) {
+        if ($this->is_dir_empty($dir)) {
+          \Drupal::logger('ibm_apim')
+          ->info('Detected empty directory in @extension. Deleting @path', ['@extension' => $extensionType, '@path' => $dir]);
+          rmdir($dir);
+        }
       }
     }
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $custom_modules);
-    return $custom_modules;
   }
 
   /**
-   * List the directories under <site path>/modules
+   * Check if directory is empty. Its checks two as scandir returns . and ..
    *
-   * @return array directory names (= custom module names)
+   * @param $extensionType
    */
-  public function getCustomModuleDirectories(): array {
+  function is_dir_empty($dir) {
+    return (count(scandir($dir)) == 2);
+  }
+
+  /**
+   * List the directories under <site path>/(themes/modules)
+   *
+   * @param string the extension type you want to get directories of. theme or module
+   *
+   * @return array directories of custom extension
+   */
+  public function getCustomExtensionDirectories(string $extensionType): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $custom_modules = [];
-    $sitePath = \Drupal::getContainer()->getParameter('site.path');
-    $dir = new DirectoryIterator($sitePath . '/modules');
-    foreach ($dir as $fileinfo) {
-      if ($fileinfo->isDir() && !$fileinfo->isDot()) {
-        $custom_modules[] = $fileinfo->getFilename();
-      }
+    $sitePath = DRUPAL_ROOT . DIRECTORY_SEPARATOR . \Drupal::getContainer()->getParameter('site.path') . DIRECTORY_SEPARATOR . $extensionType . 's';
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($sitePath, \FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST);
+
+    $cexs = [];
+    foreach($iterator as $fileinfo) {
+        if($fileinfo->isDir() && count(glob($fileinfo->getRealpath() . DIRECTORY_SEPARATOR . '*\.info\.yml')) === 1) {
+          $cexs[] = $fileinfo->getRealPath();
+        }
     }
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $custom_modules);
-    return $custom_modules;
+
+    $cexs = array_filter($cexs, function($value) use ($cexs) {
+        foreach($cexs as $cex) {
+          if ($cex !== $value && str_contains($value, $cex)) {
+            return false;
+          }
+        }
+        return true;
+    });
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $cexs);
+    return $cexs;
+  }
+
+  /**
+   * Gets the machine based off the start of the info yml file name
+   *
+   * @param string directory of the extension you want to get the machine name of
+   *
+   * @return string machine name of module directory
+   */
+  public function getCustomExtensionMachineName (string $cexDirectory): string {
+    $cex_machine_name = '';
+    $info_yml = $cexDirectory . DIRECTORY_SEPARATOR . '*.info.yml';
+    $info_yml = @array_pop(glob($info_yml));
+    if (!$this->isHidden($info_yml)) {
+      $info_yml = \basename($info_yml);
+      $cex_machine_name = \substr($info_yml, 0, -\strlen('.info.yml'));
+    }
+
+    return $cex_machine_name;
   }
 
   /**
@@ -400,61 +446,68 @@ class Utils {
    *
    * @return array options to pass into tableselect
    */
-  public function getDisabledCustomModules(): array {
+  public function getDisabledCustomExtensions(string $extensionType): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $custom_module_dirs = $this->getCustomModuleDirectories();
+
+    if ($extensionType !== 'module' && $extensionType !== 'theme') {
+      throw new \Exception('extensionType must be of type of "module" or "theme". Got: ' . $extensionType);
+    }
+
+    $custom_extension_dirs = $this->getCustomExtensionDirectories($extensionType);
 
     $uninstall_list = [];
-    $sitePath = \Drupal::getContainer()->getParameter('site.path');
-    $moduleHandler = \Drupal::service('module_handler');
+    $extensionHandler = $extensionType === 'module' ? \Drupal::service('module_handler') : \Drupal::service('theme_handler');
 
-    foreach ($custom_module_dirs as $cm) {
-      if ($moduleHandler->moduleExists($cm)) {
-        \Drupal::logger('ibm_apim')->debug('getDisabledCustomModules: %cm is enabled so not listed.', ['%cm' => $cm]);
+    foreach ($custom_extension_dirs as $cex) {
+      $extension_name = $this->getCustomExtensionMachineName($cex);
+      $exists = $extensionType === 'module' ? $extensionHandler->moduleExists($extension_name) : $extensionHandler->themeExists($extension_name);
+      if ($exists) {
+        \Drupal::logger('ibm_apim')->debug('getDisabledCustomExtensions: %cex is enabled so not listed.', ['%cex' => $cex]);
       }
       else {
 
-        $info_yml = DRUPAL_ROOT . '/' . $sitePath . '/modules' . '/' . $cm . '/*.info.yml';
+        $info_yml = $cex . '/*.info.yml';
         $info_yml = @array_pop(glob($info_yml));
 
         if (file_exists($info_yml) && !$this->isHidden($info_yml)) {
 
-          $submodules = $this->getSubModules($cm);
+          $subExtensions = $this->getSubExtensions($cex, $extensionType);
           $enabled_submodule = FALSE;
 
-          foreach ($submodules as $sm) {
-            if ($moduleHandler->moduleExists($sm)) {
+          foreach ($subExtensions as $sm) {
+            $exists = $extensionType === 'module' ? $extensionHandler->moduleExists($sm) : $extensionHandler->themeExists($sm);
+            if ($exists) {
               \Drupal::logger('ibm_apim')
-                ->info('getDisabledCustomModules: not listing %cm as sub-module %sm is still enabled', ['%cm' => $cm, '%sm' => $sm]);
+                ->info('getDisabledCustomExtensions: not listing %cm as sub-module %sm is still enabled', ['%cm' => $extension_name, '%sm' => $sm]);
               $enabled_submodule = TRUE;
             }
           }
 
           if (!$enabled_submodule) {
-            if (empty($submodules)) {
+            if (empty($subExtensions)) {
               $info_msg = t('No sub-modules found.');
             }
             else {
-              $info_msg = t('The following sub-modules will also be deleted: %modules', ['%modules' => \implode(', ', $submodules)]);
+              $info_msg = t('The following sub-modules will also be deleted: %modules', ['%modules' => \implode(', ', $subExtensions)]);
             }
 
             $module = [
               'module' => \yaml_parse_file($info_yml)['name'],
+              'machine_name' => $extension_name,
               'info' => $info_msg,
             ];
-            $uninstall_list[$cm] = $module;
+            $uninstall_list[$extension_name] = $module;
           }
         }
         else {
           \Drupal::logger('ibm_apim')
-            ->debug('getDisabledCustomModules: info.yml not found or module marked as hidden for %cm.', ['%cm' => $cm]);
+            ->debug('getDisabledCustomModules: info.yml not found or module marked as hidden for %cm.', ['%cm' => $extension_name]);
         }
 
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $uninstall_list;
-
   }
 
   /**
@@ -479,36 +532,35 @@ class Utils {
   }
 
   /**
-   * Search for info.yml files in sub directories under a custom module.
-   * Exclude hidden modules from the returned list.
+   * Search for info.yml files in sub directories under a custom extension (theme/module).
+   * Exclude hidden extensions from the returned list.
    *
    * @param string $parent custom module name.
+   * @param string $extensionType custom extension type (theme/module)
    *
    * @return array
    */
-  public function getSubModules(string $parent): array {
+  public function getSubExtensions(string $parent, string $extensionType): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $parent);
     $subs = [];
-    $sitePath = \Drupal::getContainer()->getParameter('site.path');
-    $dir = new RecursiveDirectoryIterator($sitePath . '/modules/' . $parent);
+    $dir = new RecursiveDirectoryIterator($parent);
     $ite = new RecursiveIteratorIterator($dir);
     $files = new RegexIterator($ite, '/^.+\.info.yml$/i', RegexIterator::GET_MATCH);
 
     foreach ($files as $file) {
-      $info_yml_full_path = DRUPAL_ROOT . '/' . \array_shift($file);
+      $info_yml_full_path = array_shift($file);
 
       if (!$this->isHidden($info_yml_full_path)) {
         $info_yml = \basename($info_yml_full_path);
-        $module_name = \substr($info_yml, 0, -\strlen('.info.yml'));
-        if ($module_name !== $parent) {
-          $subs[] = $module_name;
+        $extension_name = \substr($info_yml, 0, -\strlen('.info.yml'));
+        if ($extension_name !== $parent) {
+          $subs[] = $extension_name;
         }
       }
 
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $subs);
     return $subs;
-
   }
 
 

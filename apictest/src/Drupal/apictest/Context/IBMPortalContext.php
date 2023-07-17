@@ -1804,7 +1804,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    * @Given I have apim public keys stored
    */
   public function storeApimKeys(): void {
-    $publicKeyJWK = ['keys' => [unserialize(base64_decode(getenv('JWK_B64_KEY')))]];
+    $publicKeyJWK = ['keys' => [unserialize(base64_decode(getenv('JWK_B64_KEY')))], 'lastUpdate' => time()];
     \Drupal::state()->set('ibm_apim.apim_keys', $publicKeyJWK);
   }
 

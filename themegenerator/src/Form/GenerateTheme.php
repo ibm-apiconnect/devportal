@@ -59,7 +59,7 @@ class GenerateTheme extends FormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $intro_text = '<p>' . t('The first step in customizing the branding of your Developer Portal is to create a custom sub-theme. ') . '</br>';
-    $intro_text .= t('The sub-theme inherits all of the resources of the parent theme, and you can then override specific resources in the overrides.css file to configure your customizations. For more information, see:') . ' <a href="https://www.ibm.com/docs/en/SSMNED_v10cd?topic=tutorials-tutorial-creating-custom-theme-developer-portal" target="_new">' . t('Knowledge Center') . '</a></p>';
+    $intro_text .= t('The sub-theme inherits all of the resources of the parent theme, and you can then override specific resources in the overrides.css file to configure your customizations. For more information, see:') . ' <a href="https://www.ibm.com/docs/en/api-connect/10.0.5.x_lts?topic=tutorials-tutorial-creating-custom-theme-developer-portal" target="_new">' . t('Knowledge Center') . '</a></p>';
     $intro_text .= '<p>' . t('Complete the form below and you will be presented with a custom sub-theme to download.') . '</p>';
 
     $form['intro'] = [

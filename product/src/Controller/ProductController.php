@@ -176,7 +176,7 @@ class ProductController extends ControllerBase {
         $enforced = TRUE;
         if (isset($apiNode->api_swagger->value)) {
           $swagger = unserialize($apiNode->api_swagger->value, ['allowed_classes' => FALSE]);
-          if (!isset($swagger['x-ibm-configuration']) || $swagger['x-ibm-configuration']['enforced'] === FALSE) {
+          if (!isset($swagger['x-ibm-configuration']) || !is_array($swagger['x-ibm-configuration']) || empty($swagger['x-ibm-configuration']) || $swagger['x-ibm-configuration']['enforced'] === FALSE) {
             $enforced = FALSE;
           }
         }

@@ -1,13 +1,16 @@
 changes:
-  6.0.4:
-  - apimesh/depvortal#8356 add util function to find api by name (#272) (#273)
-  6.0.3:
-  - add product content commands (#270) (#271)
-  6.0.2:
-  - Add redirect service (#267) (#268)
-  6.0.1:
-  - Update module version (#266)
-  - fix ci channel
+  8.x-5.4.5:
+  - deal with empty x-ibm-configuration (#277)
+  8.x-5.4.4:
+  - remove inline onclick on plans table (#276)
+  8.x-5.4.3:
+  - add product content commands (#270) (#275)
+  8.x-5.4.2:
+  - apimesh/depvortal#8356 add util function to find api by name (#272) (#274)
+  8.x-5.4.1:
+  - Add redirect service (#267) (#268) (#269)
+  8.x-5.4.0:
+  - update version 8.x-5.3.10 -> 8.x-5.4.0
   8.x-5.3.9:
   - add exception for x-ibm-languages (#264)
   8.x-5.3.8: null

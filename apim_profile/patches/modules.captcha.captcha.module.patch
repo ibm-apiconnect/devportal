@@ -4,7 +4,7 @@
      $solution = \Drupal::database()
        ->select('captcha_sessions', 'cs')
        ->fields('cs', ['solution'])
-+      ->condition('status', CAPTCHA_STATUS_UNSOLVED)
++      ->condition('status', CaptchaConstants::CAPTCHA_STATUS_UNSOLVED)
        ->condition('csid', $csid)
        ->execute()
        ->fetchField();
