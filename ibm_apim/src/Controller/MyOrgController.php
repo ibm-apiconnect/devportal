@@ -326,6 +326,7 @@ class MyOrgController extends ControllerBase {
 
     $current_user = \Drupal::currentUser();
     $portalAnalyticsService = \Drupal::service('ibm_apim.analytics')->getDefaultService();
+    $analyticsClientUrl = NULL;
     if ($portalAnalyticsService !== NULL) {
       $analyticsClientUrl = $portalAnalyticsService->getClientEndpoint();
     }

@@ -51,7 +51,7 @@ Feature: Create consumer organization
     And there are no errors
 
 
-#This test is half done - cannot check display of org name until cache issue fixed: apimesh/devportal#4657
+#This test is half done - cannot check display of org name until cache issue fixed: velox/devportal#4657
   @api
   Scenario: As Andre I can create a new consumer organization with ,&-! in the title
     Given I am not logged in

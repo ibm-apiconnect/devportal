@@ -85,7 +85,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $oidc_registry->setRegistryType('oidc');
     $oidc_registry->setProviderType('google');
     // TODO: need to add identity provider to get realm
-    // see https://github.ibm.com/apimesh/devportal/issues/3726
+    // see https://github.ibm.com/velox/devportal/issues/3726
     // $oidc_registry->setIdentityProviders(array(array('name'=>'idp1')));
 
     $this->state->get('ibm_apim.site_client_id')->willReturn('iamaclientid');

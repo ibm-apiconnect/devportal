@@ -1,4 +1,15 @@
 changes:
+  8.x-2.13.4:
+  - Remove failing tests (#1027)
+  - apimesh -> velox
+  8.x-2.13.3:
+  - Update module_blocklist.json
+  8.x-2.13.2: null
+  8.x-2.13.1:
+  - Fix error when all disolayed (#971) (#974)
+  - fix billing form (#970)
+  8.x-2.13.0:
+  - update version 8.x-2.12.2 -> 8.x-2.13.0
   8.x-2.12.1:
   - dont redefine title (#968)
   8.x-2.12.0:

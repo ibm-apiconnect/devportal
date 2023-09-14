@@ -278,15 +278,18 @@ class ChangeOrgOwnerForm extends FormBase {
             $eventEntity->setUserUrl($current_user->get('apic_url')->value);
           }
         }
-        $members = $this->consumerOrgService->getMembers($this->currentOrg->apic_url->value);
-        $owner = $members[$new_owner];
-        if ($owner === NULL) {
-          $owner = $new_owner;
+        $members = $this->consumerOrgService->getMembers($this->currentOrg->getUrl());
+        $owner = $new_owner;
+        foreach ($members as $member) {
+          if ($member->getUrl() == $new_owner) {
+            $owner = $member->getUser()->getUsername();
+            break;
+          }
         }
         $eventEntity->setTimestamp(time());
         $eventEntity->setEvent('change_owner');
-        $eventEntity->setArtifactUrl($this->currentOrg->apic_url->value);
-        $eventEntity->setConsumerOrgUrl($this->currentOrg->apic_url->value);
+        $eventEntity->setArtifactUrl($this->currentOrg->getUrl());
+        $eventEntity->setConsumerOrgUrl($this->currentOrg->getUrl());
         $eventEntity->setData(['owner' => $owner, 'orgName' => $this->currentOrg->getTitle()]);
         $eventLogService = \Drupal::service('ibm_apim.event_log');
         $eventLogService->createIfNotExist($eventEntity);

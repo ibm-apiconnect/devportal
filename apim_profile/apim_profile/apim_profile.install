@@ -96,7 +96,6 @@ function apim_profile_install() {
     'acl',
     'admin_toolbar',
     'admin_toolbar_tools',
-    'adminimal_admin_toolbar',
     'bootstrap_layouts',
     'blazy',
     'blazy_ui',
@@ -986,17 +985,41 @@ function apim_profile_place_blocks() {
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
 function apim_profile_captcha_config() {
+  $challengeType = 'image_captcha/Image';
+
   \Drupal::service('config.factory')
     ->getEditable('captcha.settings')
-    ->set('default_challenge', 'image_captcha/Image')
+    ->set('default_challenge', $challengeType)
     ->set('persistence', 2)
     ->set('add_captcha_description', FALSE)
     ->save();
 
   _apim_profile_enable_captcha_on_form('user_pass');
   _apim_profile_enable_captcha_on_form('user_register_form');
-  _apim_profile_enable_captcha_on_form('contact_message_feedback_form');
   _apim_profile_enable_captcha_on_form('contact_message_personal_form');
+
+  _apim_profile_set_captcha_challenge_point($challengeType);
+}
+
+
+/**
+ * Set all the captcha challenge point to a type.
+ *
+ * @param $form_id
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function _apim_profile_set_captcha_challenge_point($type) {
+  $query = \Drupal::entityQuery('captcha_point');
+  $ids = $query->accessCheck()->execute();
+
+  foreach ($ids as $id) {
+    $cp = CaptchaPoint::load($id);
+    if ($cp !== NULL) {
+      $cp->setCaptchaType($type);
+      $cp->save();
+    }
+  }
 }
 
 /**
@@ -1017,7 +1040,7 @@ function _apim_profile_enable_captcha_on_form($form_id) {
   // Load the only captcha_point we have.
   $cp = CaptchaPoint::load(reset($ids));
   if ($cp !== NULL) {
-    $cp->set('status', TRUE);
+    $cp->enable();
     $cp->save();
   }
 }
@@ -2813,7 +2836,7 @@ function apim_profile_update_8214() {
 
 /**
  * ensure that the essential config is actually set
- * this is due to an earlier upgrade bug in 10.0.4 apimesh/devportal#7591
+ * this is due to an earlier upgrade bug in 10.0.4 velox/devportal#7591
  */
 function apim_profile_update_8215() {
   // if we're missing config then just reset to the defaults
@@ -2967,6 +2990,48 @@ function apim_profile_update_8501() {
       $filters['search_api_language']['value']['en'] = 'en';
       $view->getDisplay()->setOption('filters', $filters);
       $view->save();
+    }
+  }
+}
+
+/**
+ * Remove adminimal_admin_toolbar
+ */
+function apim_profile_update_8502() {
+  $module = 'adminimal_admin_toolbar';
+  $module_installer = \Drupal::service('module_installer');
+  try {
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+    $module_installer->uninstall([$module]);
+    \Drupal::logger('apim_profile')->info('Uninstalled module: @module', [
+    '@module' => $module,
+    ]);
+    \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+  } catch (Throwable $e) {
+      // if deleting the module fails (and it might since we've deleted the files), itll just be purged from the db next
+  }
+  \Drupal::logger('apim_profile')->info('Deleting module database key: @module', [
+    '@module' => $module,
+  ]);
+  \Drupal::database()->delete('key_value')
+        ->condition('collection', 'system.schema')
+        ->condition('name', $module, 'IN')
+        ->execute();
+  \Drupal::configFactory()->getEditable('core.extension')->clear("module.$module")->save(TRUE);
+}
+
+/**
+ * Update default captcha challenge points to be image_captcha/Image
+ */
+function apim_profile_update_8503() {
+  $query = \Drupal::entityQuery('captcha_point');
+  $ids = $query->accessCheck()->execute();
+
+  foreach ($ids as $id) {
+    $cp = CaptchaPoint::load($id);
+    if ($cp !== NULL && $cp->getCaptchaType() == 'default') {
+      $cp->setCaptchaType('image_captcha/Image');
+      $cp->save();
     }
   }
 }

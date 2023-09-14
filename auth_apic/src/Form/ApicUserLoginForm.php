@@ -652,6 +652,7 @@ class ApicUserLoginForm extends UserLoginForm {
 
     if (!$returnValue) {
       $this->logger->error('Login attempt for %user which failed in validateApicAuthentication.', ['%user' => $form_state->getValue('name')]);
+      $this->messenger->addError(t('Unauthorized'));
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     return $returnValue;

@@ -55,7 +55,7 @@ Feature: CredentialsCRUD
 #    When I click "Subscriptions"
 #    Then dump the current html
 
-  # Broken - see https://github.ibm.com/apimesh/devportal/issues/3016 - now fixed
+  # Broken - see https://github.ibm.com/velox/devportal/issues/3016 - now fixed
 #    When I click on element "li a.subscriptionsApplication"
 #    Then there are no errors
 #    When I click on element ".credentialsActionsAdd a.addCredential"

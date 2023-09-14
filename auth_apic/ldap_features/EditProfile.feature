@@ -11,7 +11,7 @@ Scenario: Viewing the edit profile form as a non admin user
     | title                     | name                     | id                     | owner             |
     | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
   When I am logged in as "@data(andre.name)"
-  # to help narrow down: https://github.ibm.com/apimesh/devportal-apictest/issues/57
+  # to help narrow down: https://github.ibm.com/velox/devportal-apictest/issues/57
   Then dump the current html
   And I am at "/user/@uid/edit"
   Then I should see the text "First Name"

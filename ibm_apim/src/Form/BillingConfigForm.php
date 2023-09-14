@@ -58,7 +58,8 @@ class BillingConfigForm extends ConfigFormBase {
       '#collapsed' => FALSE,
     ];
     $billingProviders = \Drupal::service('ibm_apim.billing')->getAll();
-    $existingMapping = unserialize($config->get('billing_providers'), ['allowed_classes' => FALSE]);
+    $configBillingProviders = $config->get('billing_providers') ?? "";
+    $existingMapping = unserialize($configBillingProviders, ['allowed_classes' => FALSE]);
     // get a list of modules implementing our hook so we can give the customer a choice of which module to use
     $moduleData = \Drupal::service('extension.list.module')->reset()->getList();
     $hook_modules = \Drupal::moduleHandler()->getImplementations('consumerorg_payment_method_create_alter');
