@@ -14,7 +14,7 @@ namespace Drupal\apic_app\Form;
 
 use Drupal\apic_app\Service\ApplicationService;
 use Drupal\apic_app\Service\ApplicationRestInterface;
-use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Extension\ThemeHandler;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -61,9 +61,9 @@ class ApplicationDeleteForm extends ConfirmFormBase {
   protected ThemeHandler $themeHandler;
 
   /**
-   * @var \Drupal\Core\Extension\ModuleHandler
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected ModuleHandler $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * @var \Drupal\Core\Messenger\Messenger
@@ -82,11 +82,11 @@ class ApplicationDeleteForm extends ConfirmFormBase {
    * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    * @param \Drupal\Core\Extension\ThemeHandler $themeHandler
-   * @param \Drupal\Core\Extension\ModuleHandler $moduleHandler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    * @param \Drupal\Core\Messenger\Messenger $messenger
    * @param \Drupal\apic_app\Service\ApplicationService $applicationService
    */
-  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, AccountProxyInterface $current_user, ThemeHandler $themeHandler, ModuleHandler $moduleHandler, Messenger $messenger, ApplicationService $applicationService) {
+  public function __construct(ApplicationRestInterface $restService, UserUtils $userUtils, AccountProxyInterface $current_user, ThemeHandler $themeHandler, ModuleHandlerInterface $moduleHandler, Messenger $messenger, ApplicationService $applicationService) {
     $this->restService = $restService;
     $this->userUtils = $userUtils;
     $this->currentUser = $current_user;

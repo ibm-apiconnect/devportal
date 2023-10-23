@@ -16,6 +16,7 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\views\Views;
+use Drupal\node\Entity\Node;
 
 /**
  * Ensure content type is translation enabled
@@ -371,7 +372,6 @@ function apic_api_update_8116() {
           ],
         ],
         'hidden' => [
-          'addtoany' => TRUE,
           'api_ibmconfiguration' => TRUE,
           'api_id' => TRUE,
           'api_soapversion' => TRUE,
@@ -1224,6 +1224,75 @@ function apic_api_update_8302() {
 }
 
 /**
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_api_update_8303() {
+  // Set the api_swaggertags field to unlimited cardinality
+  $fieldConfig = FieldConfig::loadByName('node', 'api', 'api_swaggertags');
+  if ($fieldConfig != NULL) {
+    $fieldConfig->set('cardinality', -1);
+    $fieldConfig->save();
+  }
+}
+
+function apic_api_update_10001() {
+  $field_config = FieldConfig::loadByName('node', 'api', 'apic_attachments');
+  $field_config->setSetting('file_extensions', 'txt doc pdf xls ppt pptx docx xlsx rtf odt ods odp md json yaml yml tgz tar zip');
+  $field_config->save();
+}
+
+function apic_api_update_10002() {
+  $query = \Drupal::entityQuery('node');
+  $query->condition('type', 'api');
+  $access_control_handler = \Drupal::entityTypeManager()
+    ->getAccessControlHandler('node');
+  $nids = $query->accessCheck(FALSE)->execute();
+  foreach (array_chunk($nids, 50) as $chunk) {
+    $nodes = Node::loadMultiple($chunk);
+    if ($nodes !== NULL) {
+      foreach ($nodes as $node) {
+        $grants = $access_control_handler
+          ->acquireGrants($node);
+        \Drupal::service('node.grant_storage')
+          ->write($node, $grants);
+      }
+    }
+  }
+}
+
+/**
+* Remove AddToAny Config
+*/
+function apic_api_update_10003() {
+  $ids = [ 'embedded', 'card', 'default', 'teaser' ];
+  foreach ($ids as $id) {
+    $view = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.api.' . $id);
+    if ($view !== NULL) {
+      $view->removeComponent('addtoany');
+      $view_hidden = $view->get('hidden');
+      unset($view_hidden['addtoany']);
+      $view->set('hidden', $view_hidden);
+      $view->save();
+    }
+  }
+}
+
+/**
+ * update the gutter width unit for latest masonry views
+ */
+function apic_api_update_10004() {
+  $view = Views::getView('apis');
+  if ($view !== NULL) {
+    $style = $view->getDisplay()->getOption('style');
+    if (!str_ends_with($style['options']['gutterWidth'], 'px')) {
+      $style['options']['gutterWidth'].="px";
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
+  }
+}
+
+/**
  * Implements hook_update_dependencies().
  */
 function apic_api_update_dependencies(): array {
@@ -1241,22 +1310,4 @@ function apic_api_update_dependencies(): array {
       ],
     ],
   ];
-}
-
-/**
- * @throws \Drupal\Core\Entity\EntityStorageException
- */
-function apic_api_update_8303() {
-  // Set the api_swaggertags field to unlimited cardinality
-  $fieldConfig = FieldConfig::loadByName('node', 'api', 'api_swaggertags');
-  if ($fieldConfig != NULL) {
-    $fieldConfig->set('cardinality', -1);
-    $fieldConfig->save();
-  }
-}
-
-function apic_api_update_10001() {
-  $field_config = FieldConfig::loadByName('node', 'api', 'apic_attachments');
-  $field_config->setSetting('file_extensions', 'txt doc pdf xls ppt pptx docx xlsx rtf odt ods odp md json yaml yml tgz tar zip');
-  $field_config->save();
 }

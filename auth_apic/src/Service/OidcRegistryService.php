@@ -14,15 +14,18 @@ namespace Drupal\auth_apic\Service;
 
 use Drupal\auth_apic\JWTToken;
 use Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface;
-use Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface;
-use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\Utils;
 use Psr\Log\LoggerInterface;
-
+use Drupal\Core\TempStore\PrivateTempStore;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\encrypt\EncryptServiceInterface;
+use Drupal\encrypt\EncryptionProfileManagerInterface;
+use Drupal\Component\Datetime\Time;
 
 /**
  * Provide consistent information about the provider type of oidc registries
@@ -54,28 +57,52 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
   protected ApimUtils $apimUtils;
 
   /**
-   * @var \Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected OidcStateServiceInterface $oidcStateService;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
-   * @var \Drupal\Core\Extension\ModuleHandler
+   * @var \Drupal\Core\TempStore\PrivateTempStore
    */
-  protected ModuleHandler $moduleHandler;
+  protected PrivateTempStore $authApicSessionStore;
+
+  /**
+   * @var \Drupal\Component\Datetime\Time
+   */
+  protected Time $time;
+
+  /**
+   * @var Drupal\encrypt\EncryptServiceInterface
+   */
+  protected EncryptServiceInterface $encryption;
+
+  /**
+   * @var \Drupal\encrypt\EncryptionProfileManagerInterfacee
+   */
+  protected EncryptionProfileManagerInterface $profileManager;
+
 
 
   public function __construct(StateInterface $state,
                               LoggerInterface $logger,
                               Utils $utils,
                               ApimUtils $apim_utils,
-                              OidcStateServiceInterface $oidc_state_service,
-                              ModuleHandler $module_handler) {
+                              ModuleHandlerInterface $module_handler,
+                              PrivateTempStoreFactory $sessionStoreFactory,
+                              Time $time,
+                              EncryptServiceInterface $encryption,
+                              EncryptionProfileManagerInterface $profileManager,
+                              ) {
+    $this->state = $state;
     $this->state = $state;
     $this->logger = $logger;
     $this->utils = $utils;
     $this->apimUtils = $apim_utils;
-    $this->oidcStateService = $oidc_state_service;
     $this->moduleHandler = $module_handler;
+    $this->authApicSessionStore = $sessionStoreFactory->get('auth_apic_storage');
+    $this->time = $time;
+    $this->encryption = $encryption;
+    $this->profileManager = $profileManager;
   }
 
   /**
@@ -138,8 +165,12 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
       $state_obj['invitation_object'] = serialize($invitation_object);
       $state_obj['created'] = time();
     }
-    // store the state object and send a key as the parameter
-    $state_param = $this->utils->base64_url_encode(serialize($this->oidcStateService->store($state_obj)));
+    $key = $this->time->getCurrentTime() . ':' . $state_obj['registry_url'];
+    $encrypted_key = $this->encryption->encrypt($key, $this->profileManager->getEncryptionProfile('socialblock'));
+    $encrypted_data = $this->encryption->encrypt(serialize($state_obj), $this->profileManager->getEncryptionProfile('socialblock'));
+
+    $this->authApicSessionStore->set($key, $encrypted_data);
+    $state_param = $this->utils->base64_url_encode(serialize($encrypted_key));
 
     $host = $this->apimUtils->getHostUrl();
 

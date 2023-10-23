@@ -1,0 +1,36 @@
+.chart_screenshot {
+  display: block;
+  width: 100%;
+  object-fit: contain;
+}
+
+#edit-dashboard {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 30px;
+}
+
+#edit-dashboard > .js-form-type-checkbox {
+  min-width: 250px;
+  max-width: 400px;
+  padding: 20px;
+  margin-left: 0;
+
+}
+
+#edit-dashboard > .js-form-type-checkbox.selected {
+  border: 2px solid #0074bd;
+  padding: 18px;
+}
+
+#edit-dashboard > .js-form-type-checkbox input {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+.chart-wrapper {
+  width: 400px;
+  height: 300px;
+  display: flex;
+}

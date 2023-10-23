@@ -209,25 +209,3 @@ function auth_apic_preprocess(&$variables, $hook, &$info) {
   }
 
 }
-
-
-/**
- * Implements hook_cron().
- */
-function auth_apic_cron() {
-  if (function_exists('ibm_apim_entry_trace')) {
-    ibm_apim_entry_trace(__FUNCTION__, NULL);
-  }
-
-  $oidc_state_service = \Drupal::service('auth_apic.oidc_state');
-  if ($oidc_state_service !== NULL) {
-    $oidc_state_service->prune();
-  }
-
-  if (function_exists('ibm_apim_entry_trace')) {
-    ibm_apim_exit_trace(__FUNCTION__, NULL);
-  }
-}
-
-
-

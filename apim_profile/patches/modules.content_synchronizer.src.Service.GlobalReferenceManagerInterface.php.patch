@@ -1,0 +1,10 @@
+--- modules/content_synchronizer/src/Service/GlobalReferenceManagerInterface.php        2023-07-03 16:41:58
++++ modules/content_synchronizer/src/Service/GlobalReferenceManagerInterface.php   2023-10-16 16:47:02
+@@ -91,6 +91,6 @@
+   /**
+    * Return the entity by gid and uuid.
+    */
+-  public function getExistingEntityByGidAndUuid($gid, $uuid);
++  public function getExistingEntityByGidAndUuid($gid, $uuid, $bundle);
+
+ }

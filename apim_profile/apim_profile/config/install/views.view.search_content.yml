@@ -95,7 +95,7 @@ display:
           uses_fields: false
           layoutColumnWidth: ''
           layoutColumnWidthUnit: px
-          gutterWidth: '2'
+          gutterWidth: '2px'
           stampSelector: ''
           isLayoutResizable: 1
           isLayoutAnimated: 1

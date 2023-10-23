@@ -1,4 +1,20 @@
 changes:
+  8.x-5.5.7:
+  - Add unauthorized message to more failed login cases (#782)
+  8.x-5.5.6:
+  - adopted using ModuleHandlerInterface instead of class ModuleHandler
+  8.x-5.5.5:
+  - Made failed login errors more consistent (#774)
+  8.x-5.5.4:
+  - velox/devportal#8193 - add SonarQube integration
+  8.x-5.5.3:
+  - apimesh -> velox
+  8.x-5.5.2:
+  - Send custom fields to apim on first login (#768)
+  8.x-5.5.1:
+  - OIDC dos v10.0.5 (#766)
+  8.x-5.5.0:
+  - update version [8.x, 5.4.5] -> 8.x-5.5.0
   8.x-5.4.4:
   - Headers allowed isnt in function
   8.x-5.4.3:

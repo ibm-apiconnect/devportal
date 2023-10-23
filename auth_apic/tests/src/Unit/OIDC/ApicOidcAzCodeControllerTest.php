@@ -63,11 +63,6 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
    */
   protected $loginService;
 
-  /**
-   * @var \Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface|\Prophecy\Prophecy\ObjectProphecy
-   */
-  protected $oidcStateService;
-
   protected $authApicSessionStore;
 
   /**
@@ -110,6 +105,16 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
    */
   protected $request;
 
+  /**
+   * @var Drupal\encrypt\EncryptServiceInterface
+   */
+  protected $encryption;
+
+  /**
+   * @var \Drupal\encrypt\EncryptionProfileManagerInterface
+   */
+  protected $profileManager;
+  protected $encryptionProfile;
 
   protected function setup(): void {
     $this->prophet = new Prophet();
@@ -119,7 +124,6 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->utils = $this->prophet->prophesize('Drupal\ibm_apim\Service\Utils');
     $this->userRegistryService = $this->prophet->prophesize('Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface');
     $this->loginService = $this->prophet->prophesize('Drupal\auth_apic\UserManagement\ApicLoginServiceInterface');
-    $this->oidcStateService = $this->prophet->prophesize('Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface');
     $this->storeFactory = $this->prophet->prophesize('Drupal\Core\TempStore\PrivateTempStoreFactory');
     $this->store = $this->prophet->prophesize('Drupal\Core\TempStore\PrivateTempStore');
     $this->requestStack = $this->prophet->prophesize('Symfony\Component\HttpFoundation\RequestStack');
@@ -127,6 +131,9 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query = $this->prophet->prophesize('Symfony\Component\HttpFoundation\ParameterBag');
     $this->mgmtServer = $this->prophet->prophesize('Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface');
     $this->messenger = $this->prophet->prophesize('Drupal\Core\Messenger\Messenger');
+    $this->encryption = $this->prophet->prophesize('\Drupal\encrypt\EncryptServiceInterface');
+    $this->profileManager = $this->prophet->prophesize('\Drupal\encrypt\EncryptionProfileManagerInterface');
+    $this->encryptionProfile = $this->prophet->prophesize('\Drupal\encrypt\EncryptionProfileInterface');
     $translator = $this->prophet->prophesize('\Drupal\Core\StringTranslation\TranslationInterface');
     $this->storeFactory->get('auth_apic_storage')->willReturn($this->store);
     $route = $this->prophet->prophesize('Drupal\Core\Routing\UrlGenerator;');
@@ -139,7 +146,6 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->controller = new ApicOidcAzCodeController(
       $this->utils->reveal(),
       $this->loginService->reveal(),
-      $this->oidcStateService->reveal(),
       $this->userRegistryService->reveal(),
       $this->apimUtils->reveal(),
       $this->siteConfig->reveal(),
@@ -147,7 +153,9 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
       $this->storeFactory->reveal(),
       $this->requestStack->reveal(),
       $this->mgmtServer->reveal(),
-      $this->messenger->reveal()
+      $this->messenger->reveal(),
+      $this->encryption->reveal(),
+      $this->profileManager->reveal()
     );
     $this->controller->setStringTranslation($translator->reveal());
     $this->request->reveal();
@@ -166,11 +174,15 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
-    $this->oidcStateService->delete('key')->willReturn(TRUE);
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
     $this->store->get('redirect_to')->willReturn();
     $this->store->delete(Argument::any())->willReturn();
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
+
     $this->loginService->loginViaAzCode('601e0142-55c2-406e-98e3-10ba1fa3f2e8', 'registryUrl')
       ->willReturn("https://correctRedirectLocation.com");
 
@@ -223,10 +235,17 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn();
 
-    $this->logger->error(Argument::any())->shouldNotBeCalled();
+    $this->encryption->decrypt('key', Argument::any())->willReturn();
+
+    $this->encryption->decrypt('data', Argument::any())->willReturn(serialize(array("registry_url" => 'as')));
+
+
+
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
+
+    $this->logger->error(Argument::containingString('Could not get state'), Argument::any())->shouldBeCalled();
     self::assertEquals("<front>", $this->controller->validateOidcRedirect());
   }
 
@@ -238,11 +257,15 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('error')->willReturn();
     $this->query->get('code')->willReturn('601e0142-55c2-406e-98e3-10ba1fa3f2e8');
     $this->query->get('state')->willReturn('czozOiJrZXkiOw==');
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
-    $this->oidcStateService->delete('key')->willReturn(TRUE);
     $this->store->delete(Argument::any())->willReturn();
     $this->store->get('redirect_to')->willReturn();
+
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
+
     $this->loginService->loginViaAzCode('601e0142-55c2-406e-98e3-10ba1fa3f2e8', 'registryUrl')->willReturn("ERROR");
 
     $this->logger->error(Argument::any())->shouldNotBeCalled();
@@ -260,8 +283,12 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
       'state' => 'czozOiJrZXkiOw==_apimstate',
       'code' => '601e0142-55c2-406e-98e3-10ba1fa3f2e8',
     ]);
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
+
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
 
     $arg = '/consumer-api/oauth2/redirect?state=apimstate' .
       '&code=601e0142-55c2-406e-98e3-10ba1fa3f2e8';
@@ -288,8 +315,11 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
       'scope' => 'Looking glass',
       'xtoken' => 'e0142',
     ]);
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
 
     $arg = '/consumer-api/oauth2/redirect?state=apimstate' .
       '&code=601e0142-55c2-406e-98e3-10ba1fa3f2e8' .
@@ -350,8 +380,9 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('state')->willReturn('badState_apimstate');
 
     $this->utils->base64_url_decode('badState')->willReturn('s:6:"badKey";');
-    $this->oidcStateService->get('badKey')->willReturn();
 
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->encryption->decrypt('badKey', Argument::any())->willReturn();
 
     $this->logger->error("validateApimOidcRedirect error: Invalid state parameter: @state", ["@state" => "badState"])->shouldBeCalled();
     self::assertEquals("<front>", $this->controller->validateApimOidcRedirect());
@@ -367,8 +398,11 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
       'state' => 'czozOiJrZXkiOw==_apimstate',
       'code' => '601e0142-55c2-406e-98e3-10ba1fa3f2e8',
     ]);
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
 
     $arg = '/consumer-api/oauth2/redirect?state=apimstate' .
       '&code=601e0142-55c2-406e-98e3-10ba1fa3f2e8';
@@ -393,8 +427,12 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
       'state' => 'czozOiJrZXkiOw==_apimstate',
       'code' => '601e0142-55c2-406e-98e3-10ba1fa3f2e8',
     ]);
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
+
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
 
     $arg = '/consumer-api/oauth2/redirect?state=apimstate' .
       '&code=601e0142-55c2-406e-98e3-10ba1fa3f2e8';
@@ -423,8 +461,15 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
+
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
+
+    $this->store->get('action')->willReturn();
+    $this->store->get('invitation_object')->willReturn();
     $this->userRegistryService->get('registryUrl')->willReturn($userRegistry);
     $userRegistry->getRealm()->willReturn('trueRealm');
 
@@ -456,10 +501,19 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('response_type')->willReturn('code');
     $this->query->get('invitation_scope')->willReturn();
     $this->query->get('title')->willReturn();
+
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
+
+    $this->store->get('action')->willReturn();
+    $this->store->get('invitation_object')->willReturn();
+
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
     $this->userRegistryService->get('registryUrl')->willReturn($userRegistry);
     $userRegistry->getRealm()->willReturn('trueRealm');
 
@@ -579,8 +633,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'wrongRegistryUrl']);
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
     $this->userRegistryService->get('wrongRegistryUrl')->willReturn();
 
     $arg = '/consumer-api/oauth2/authorize?client_id=clientId' .
@@ -589,6 +642,14 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
       '&realm=trueRealm' .
       '&response_type=code';
     $url = 'https://oidcServer.com/path?redirect_uri=https://correctRedirectLocation.com/incorrectRoute';
+
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'wrongRegistryUrl')));
+
+    $this->store->get('action')->willReturn();
+    $this->store->get('invitation_object')->willReturn();
 
     $result = new RestResponse();
     $result->setHeaders(['Location' => $url]);
@@ -614,10 +675,18 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
     $this->userRegistryService->get('registryUrl')->willReturn($userRegistry);
     $userRegistry->getRealm()->willReturn('trueRealm');
+
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
+
+    $this->store->get('action')->willReturn();
+    $this->store->get('invitation_object')->willReturn();
+
 
     $this->logger->error("validateApimOidcAz error: Invalid realm parameter: @realm does not match @getrealm", [
       "@realm" => "wrongRealm",
@@ -639,10 +708,17 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('wrongClientId');
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
     $this->userRegistryService->get('registryUrl')->willReturn($userRegistry);
     $userRegistry->getRealm()->willReturn('trueRealm');
+
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
+
+    $this->store->get('action')->willReturn();
+    $this->store->get('invitation_object')->willReturn();
 
     $this->logger->error("validateApimOidcAz error: Invalid client_id parameter: @clientId does not match @getclientId", [
       "@clientId" => "clientId",
@@ -664,10 +740,17 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
     $this->userRegistryService->get('registryUrl')->willReturn($userRegistry);
     $userRegistry->getRealm()->willReturn('trueRealm');
+
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
+
+    $this->store->get('action')->willReturn();
+    $this->store->get('invitation_object')->willReturn();
 
     $this->logger->error("validateApimOidcAz error: Invalid redirect_uri parameter: @redirectUri does not match @expectedRedirectUri",
       [
@@ -690,10 +773,17 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
     $this->userRegistryService->get('registryUrl')->willReturn($userRegistry);
     $userRegistry->getRealm()->willReturn('trueRealm');
+
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
+
+    $this->store->get('action')->willReturn();
+    $this->store->get('invitation_object')->willReturn();
 
     $arg = '/consumer-api/oauth2/authorize?client_id=clientId' .
       '&state=czozOiJrZXkiOw==' .
@@ -725,10 +815,17 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
     $this->userRegistryService->get('registryUrl')->willReturn($userRegistry);
     $userRegistry->getRealm()->willReturn('trueRealm');
+
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
+
+    $this->store->get('action')->willReturn();
+    $this->store->get('invitation_object')->willReturn();
 
     $arg = '/consumer-api/oauth2/authorize?client_id=clientId' .
       '&state=czozOiJrZXkiOw==' .
@@ -760,10 +857,17 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->query->get('title')->willReturn();
     $this->apimUtils->getHostUrl()->willReturn('https://correctRedirectLocation.com');
     $this->siteConfig->getClientId()->willReturn('clientId');
-    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:3:"key";');
-    $this->oidcStateService->get('key')->willReturn(['registry_url' => 'registryUrl']);
+    $this->utils->base64_url_decode('czozOiJrZXkiOw==')->willReturn('s:12:"encryptedKey";');
     $this->userRegistryService->get('registryUrl')->willReturn($userRegistry);
     $userRegistry->getRealm()->willReturn('trueRealm');
+
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
+    $this->encryption->decrypt('encryptedKey', Argument::any())->willReturn('key');
+    $this->store->get('key')->willReturn('encryptedData');
+    $this->encryption->decrypt('encryptedData', Argument::any())->willReturn(serialize(array("registry_url" => 'registryUrl')));
+
+    $this->store->get('action')->willReturn();
+    $this->store->get('invitation_object')->willReturn();
 
     $arg = '/consumer-api/oauth2/authorize?client_id=clientId' .
       '&state=czozOiJrZXkiOw==' .

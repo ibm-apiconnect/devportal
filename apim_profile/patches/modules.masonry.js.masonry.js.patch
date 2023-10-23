@@ -1,0 +1,29 @@
+--- modules/masonry/js/masonry.js       2023-07-21 11:23:49
++++ modules/masonry/js/masonry.js  2023-10-05 10:25:01
+@@ -21,11 +21,11 @@
+         if (!masonryExists) {
+           $container.addClass('masonry').addClass('masonry-layout').masonry(options);
+           $(window).resize(function () {
+-            $container.masonry('bindResize');
++            $container.masonry().masonry('bindResize');
+           });
+         } else {
+           // ...otherwise, simply rebuild the layout.
+-          $container.masonry('reloadItems').masonry('layout');
++          $container.masonry().masonry('reloadItems').masonry('layout');
+         }
+
+         // Hack to support lazysizes lazy loading.
+@@ -42,10 +42,10 @@
+                   if (currentClassState) {
+                     if (options.imagesFirst) {
+                       $container.imagesLoaded(function () {
+-                        $container.masonry('reloadItems').masonry('layout');
++                        $container.masonry().masonry('reloadItems').masonry('layout');
+                       });
+                     } else {
+-                      $container.masonry('reloadItems').masonry('layout');
++                      $container.masonry().masonry('reloadItems').masonry('layout');
+                     }
+                   }
+                 }

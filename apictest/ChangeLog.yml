@@ -1,4 +1,12 @@
 changes:
+  8.x-5.5.3:
+  - velox/devportal#8483 Fix dirs for portal-web hardening (#268)
+  8.x-5.5.2:
+  - apimesh -> velox
+  8.x-5.5.1:
+  - Store oidc State (#265)
+  8.x-5.5.0:
+  - update version [8.x, 5.4.3] -> 8.x-5.5.0
   8.x-5.4.2:
   - add lastUpdated to key
   8.x-5.4.1:

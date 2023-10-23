@@ -1,0 +1,44 @@
+--- modules/content_synchronizer/src/Service/ContentSynchronizerManagerInterface.php    2023-07-03 16:41:58
++++ modules/content_synchronizer/src/Service/ContentSynchronizerManagerInterface.php       2023-07-17 16:10:59
+@@ -67,6 +67,32 @@
+   public function exportEntity(string $entityTypeId, int $id, string $destination = '');
+
+   /**
++   * Add content entities to an export entity
++   *
++   * @param string $exportId
++   *   The id of the export entity.
++   * @param string $entityTypeId
++   *   The entity type id.
++   * @param array $ids
++   *   Array of entity ids.
++   *
++   */
++  public function addEntitiesToExport($exportId, $entityTypeId, $ids): void;
++
++  /**
++   * Remove content entities to an export entity
++   *
++   * @param string $exportId
++   *   The id of the export entity.
++   * @param string $entityTypeId
++   *   The entity type id.
++   * @param array $ids
++   *   Array of entity ids.
++   *
++   */
++  public function removeEntitiesFromExport($exportId, $entityTypeId, $ids): void;
++
++  /**
+    * Create a tar.gz file.
+    *
+    * @param array $entitiesToExport
+@@ -79,7 +105,7 @@
+    * @return array
+    *   The data of the export.
+    */
+-  public function createExportFile(array $entitiesToExport = [], $label = FALSE, string $destination = '');
++  public function createExportFile(array &$entitiesToExport = [], $label = FALSE, string $destination = '');
+
+   /**
+    * Launch import from import id.

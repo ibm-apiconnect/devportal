@@ -1,0 +1,440 @@
+--- modules/content_synchronizer/src/Service/ContentSynchronizerManager.php     2023-07-11 14:44:06
++++ modules/content_synchronizer/src/Service/ContentSynchronizerManager.php        2023-07-11 14:43:57
+@@ -14,7 +14,6 @@
+ use Drupal\Core\File\FileSystemInterface;
+ use Drupal\Core\StringTranslation\StringTranslationTrait;
+ use Drupal\file\Entity\File;
+-use Drupal\file\FileInterface;
+
+ /**
+  * Content Synchronizer manager service.
+@@ -62,6 +61,13 @@
+   protected string $appRoot;
+
+   /**
++   * The APIs Taxonomy ID.
++   *
++   * @var string
++   */
++  protected string $apisTaxonomyID;
++
++  /**
+    * Constructs a ContentSynchronizerManager object.
+    *
+    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+@@ -78,6 +84,7 @@
+     $this->fileSystem = $file_system;
+     $this->entityTypeManager = $entityTypeManager;
+     $this->appRoot = $appRoot;
++    $this->apisTaxonomyID = '';
+   }
+
+   /**
+@@ -94,13 +101,15 @@
+   public function createImportFromTarGzFilePath(string $tarGzFilePath): ?ImportEntityInterface {
+     $importEntity = NULL;
+     if (file_exists($tarGzFilePath)) {
+-      $extensionData = explode('.', $tarGzFilePath);
+-      if (end($extensionData) == 'gz') {
++      $extensionMIMEtype = mime_content_type($tarGzFilePath);
++      if ((str_ends_with($extensionMIMEtype, 'gzip') || str_ends_with($extensionMIMEtype, 'tar.gz') || str_ends_with($extensionMIMEtype, 'tgz') || str_ends_with($extensionMIMEtype, 'tar'))) {
++        $privateDir = ImportEntity::ARCHIVE_DESTINATION;
++        $this->fileSystem->prepareDirectory($privateDir, FileSystemInterface::CREATE_DIRECTORY);
+         $uri = $this->fileSystem->saveData(file_get_contents($tarGzFilePath), ImportEntity::ARCHIVE_DESTINATION . '/' . basename($tarGzFilePath));
+         $this->fileSystem->chmod($uri, 775);
+         $file = File::create([
+           'uri' => $uri,
+-          'status' => FileInterface::STATUS_PERMANENT,
++          'status' => 0,
+         ]);
+
+         if ($file) {
+@@ -117,7 +126,7 @@
+         }
+       }
+       else {
+-        throw new \Error('The file is not a .tar.gz archive');
++        throw new \Error('The file is not a .tar.gz or .tgz archive');
+       }
+     }
+     else {
+@@ -171,31 +180,282 @@
+    *
+    * @param string $entityTypeId
+    *   The entity type id.
+-   * @param int $id
+-   *   The entity id.
++   * @param array $ids
++   *   Array of entity ids.
+    * @param string $destination
+    *   The entity id.
+    *
+    * @return array
+    *   The destination data.
+    */
+-  public function exportEntity($entityTypeId, $id, $destination = '') {
++  public function exportEntity($entityTypeId, $ids, $destination = '') {
+     /** @var \Drupal\Core\Entity\EntityStorageInterface $entityTypeManager */
+     $entityTypeManager = $this->entityTypeManager->getStorage($entityTypeId);
+     if (!$entityTypeManager) {
+       throw new \Exception('No entity type "' . $entityTypeId . '" found');
+     }
+
+-    /** @var \Drupal\Core\Entity\EntityInterface $entity */
+-    $entity = $entityTypeManager->load($id);
+-    if (!$entity) {
+-      throw new \Exception('No entity found [type:' . $entityTypeId . ', id:' . $id . ']');
++    $entities = [];
++    foreach ($ids as $id) {
++      if($entityTypeId == 'taxonomy_term' && $this->isBlockedTaxonomyTerm($id)) {
++        throw new \Exception('This taxonomy term has been blocked from being exported.');
++      }
++      /** @var \Drupal\Core\Entity\EntityInterface $entity */
++      $entity = $entityTypeManager->load($id);
++      if (!$entity) {
++        throw new \Exception('No entity found [type:' . $entityTypeId . ', id:' . $id . ']');
++      }
++      if($entityTypeId == 'node' && $entity->bundle() == 'forum' && $this->isBlockedTaxonomyTerm($entity->get('taxonomy_forums')->getString())) {
++        throw new \Exception('This forum has been blocked from being exported.');
++      }
++      if($this->isBlocked($entity->getEntityTypeId()) || $this->isBlocked($entity->bundle())) {
++        $blockedType = $entity->bundle() ?? $entity->getEntityTypeId();
++        throw new \Exception('This Entity type has been blocked. ' . $blockedType);
++      }
++
++      $entities[] = $entity;
+     }
+
+-    return $this->createExportFile([$entity], NULL, $destination);
++    return $this->createExportFile($entities, NULL, $destination);
++  }
++
++  /**
++   * Add content entities to an export entity
++   *
++   * @param string $exportId
++   *   The id of the export entity.
++   * @param string $entityTypeId
++   *   The entity type id.
++   * @param array $ids
++   *   Array of entity ids.
++   *
++   */
++  public function addEntitiesToExport($exportId, $entityTypeId, $ids): void {
++    $exportEntity = ExportEntity::load($exportId);
++    if (!$exportEntity) {
++      throw new \Exception('No export entity "' . $exportId . '" found');
++    }
++
++    /** @var \Drupal\Core\Entity\EntityStorageInterface $entityTypeManager */
++    $entityTypeManager = $this->entityTypeManager->getStorage($entityTypeId);
++    if (!$entityTypeManager) {
++      throw new \Exception('No entity type "' . $entityTypeId . '" found');
++    }
++
++    foreach ($ids as $id) {
++      /** @var \Drupal\Core\Entity\EntityInterface $entity */
++      if($entityTypeId == 'taxonomy_term' && $this->isBlockedTaxonomyTerm($id)) {
++        throw new \Exception('This taxonomy term has been blocked from being exported.');
++      }
++      $entity = $entityTypeManager->load($id);
++      if (!$entity) {
++        throw new \Exception('No entity found [type:' . $entityTypeId . ', id:' . $id . ']');
++      }
++      if($entityTypeId == 'node' && $entity->bundle() == 'forum' && $this->isBlockedTaxonomyTerm($entity->get('taxonomy_forums')->getString())) {
++        throw new \Exception('This forum has been blocked from being exported.');
++      }
++      if($this->isBlocked($entity->getEntityTypeId()) || $this->isBlocked($entity->bundle())) {
++        $blockedType = $entity->bundle() ?? $entity->getEntityTypeId();
++        throw new \Exception('This Entity type has been blocked. ' . $blockedType . ' - ' . $id);
++      }
++      if (!$exportEntity->hasEntity($entity)) {
++        $exportEntity->addEntity($entity);
++      }
++    }
++
++    $exportEntity->save();
+   }
+
+   /**
++   * Remove content entities to an export entity
++   *
++   * @param string $exportId
++   *   The id of the export entity.
++   * @param string $entityTypeId
++   *   The entity type id.
++   * @param array $ids
++   *   Array of entity ids.
++   *
++   */
++  public function removeEntitiesFromExport($exportId, $entityTypeId, $ids): void {
++    $exportEntity = ExportEntity::load($exportId);
++    if (!$exportEntity) {
++      throw new \Exception('No export entity "' . $exportId . '" found');
++    }
++
++    /** @var \Drupal\Core\Entity\EntityStorageInterface $entityTypeManager */
++    $entityTypeManager = $this->entityTypeManager->getStorage($entityTypeId);
++    if (!$entityTypeManager) {
++      throw new \Exception('No entity type "' . $entityTypeId . '" found');
++    }
++
++    foreach ($ids as $id) {
++      /** @var \Drupal\Core\Entity\EntityInterface $entity */
++      $entity = $entityTypeManager->load($id);
++      if (!$entity) {
++        throw new \Exception('No entity found [type:' . $entityTypeId . ', id:' . $id . ']');
++      }
++      if ($exportEntity->hasEntity($entity)) {
++        $exportEntity->removeEntity($entity);
++      }
++    }
++
++    $exportEntity->save();
++  }
++
++  /**
++   * Export a single entity.
++   *
++   * @param string $destination
++   *   The entity id.
++   *
++   * @return array
++   *   The destination data.
++   */
++  public function exportAll($destination = '') {
++    $contentTypes = \Drupal::service('entity_type.repository')->getEntityTypeLabels(TRUE)['Content'];
++    $contentTypes = array_filter($contentTypes, function($x) { return !$this->isBlocked($x); });
++    $blockedTypes = [ "user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs",
++                  "apic_app_application_creds", "avatars_preview", "comment", "contact_message", "search_api_task", "vote", "vote_result" ];
++
++    $allExports = [];
++    $count = 0;
++
++    foreach($contentTypes as $key => $contentType) {
++      if($this->isBlocked($key)) {
++        continue;
++      }
++      $entityTypeManager = $this->entityTypeManager->getStorage($key);
++      if (!$entityTypeManager) {
++        continue;
++      }
++      $bundleKey = $entityTypeManager->getEntityType()->getKey('bundle');
++      if ($bundleKey) {
++        $allExportIds = $entityTypeManager->getQuery()->accessCheck()->condition($bundleKey, $blockedTypes, 'NOT IN');
++
++        // Dont export APIs taxonomy or any of its children and these are generated from APIs and should not be imported/exported
++        if ($key == 'taxonomy_term' || $key == 'node' ) {
++          if (empty($this->apisTaxonomyID)) {
++            $result = \Drupal::entityQuery('taxonomy_term')
++            ->condition('name', 'APIs')
++            ->condition('parent', 'forums')
++            ->accessCheck()
++            ->execute();
++            $this->apisTaxonomyID = !empty($result) ? array_shift($result) : '';
++          }
++          if (!empty($this->apisTaxonomyID)) {
++            if ($key == 'node') {
++              $apiTaxonomy = \Drupal::entityQuery('taxonomy_term')
++              ->condition('parent', $this->apisTaxonomyID)
++              ->accessCheck()
++              ->execute();
++
++              $orGroup = \Drupal::entityQuery('node')->orConditionGroup()
++              ->condition('taxonomy_forums', $apiTaxonomy, 'NOT IN')
++              ->notExists('taxonomy_forums');
++
++              $allExportIds->condition($orGroup);
++            }
++            if ($key == 'taxonomy_term') {
++              $allExportIds->condition('parent', $this->apisTaxonomyID, 'NOT IN');
++              $allExportIds->condition('tid', $this->apisTaxonomyID, 'NOT IN');
++            }
++          }
++        }
++
++        $allExportIds = $allExportIds->execute();
++        $allExports[$key] = $allExportIds;
++        $count += count($allExportIds);
++      }
++    }
++
++    $processor = $this->createProcessor(NULL);
++    $exportKey = 0;
++    foreach($allExports as $key => $exportIds) {
++      foreach(array_chunk($exportIds, 50) as $ids) {
++        $this->batchExportEntities($ids, $key, $count, $exportKey, $processor, $data);
++        $exportKey += count($ids);
++      }
++    }
++
++    $this->finishBatchExport($processor, $destination, $data);
++
++    return $data;
++  }
++
++  public function isBlocked(string $entity): bool {
++    $blockedTypes = [ "crop", "user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs",
++                  "apic_app_application_creds", "avatars_preview", "comment", "contact_message", "search_api_task", "vote", "vote_result" ];
++    return in_array($entity, $blockedTypes);
++  }
++
++  public function isBlockedTaxonomyTerm(string $taxonomyID): bool {
++    if (empty($this->apisTaxonomyID)) {
++      $result = \Drupal::entityQuery('taxonomy_term')
++            ->condition('name', 'APIs')
++            ->condition('parent', 'forums')
++            ->accessCheck()
++            ->execute();
++      $this->apisTaxonomyID = !empty($result) ? array_shift($result) : '';
++    }
++
++    if (!empty($this->apisTaxonomyID)) {
++      return empty(\Drupal::entityQuery('taxonomy_term')
++      ->condition('tid', $this->apisTaxonomyID, 'NOT IN')
++      ->condition('tid', $taxonomyID)
++      ->condition('parent', $this->apisTaxonomyID, 'NOT IN')
++      ->accessCheck()
++      ->execute());
++    }
++
++    return false;
++  }
++
++  public function createProcessor($label = NULL) {
++    $writer = new ExportEntityWriter();
++    $writer->initFromId(($label ?: time()));
++    return new ExportProcessor($writer);
++  }
++
++  public function batchExportEntities($entitiesToExport, $entityType, $count, $exportKey, &$processor, &$data = ['destination' => '', 'entities' => []] ) {
++    // Loop for log.
++    foreach($entitiesToExport as $exportId) {
++      $entityTypeManager = $this->entityTypeManager->getStorage($entityType);
++      $loadedEntity = $entityTypeManager->load($exportId);
++      try {
++        $processor->exportEntity($loadedEntity);
++        $status = $this->t('Exported');
++      }
++      catch (\Exception $error) {
++        $status = $this->t('Error');
++      }
++
++      $label = ExportEntityWriter::getEntityLabel($loadedEntity);
++      $type = $loadedEntity->getEntityTypeId();
++      if (empty($label) && ($type == 'file' || $type == 'crop')) {
++        $label = $loadedEntity->uri->value ? basename($loadedEntity->uri->value) : "";
++      }
++
++      $type = $loadedEntity->bundle() != $type ? $type . '.' . $loadedEntity->bundle() : $type;
++      $data['entities'][] = [
++        '@key' => $exportKey + 1,
++        '@count' => $count,
++        '@id' =>  $loadedEntity->id(),
++        '@label' => $label,
++        '@type' => $type,
++        '@status' => $status,
++      ];
++      $exportKey++;
++    }
++  }
++
++  public function finishBatchExport(&$processor, $destination, &$data) {
++    $tempArchive = $this->fileSystem->realpath($processor->closeProcess());
++    // Deplace archive.
++    $data['destination'] = $this->setDestination($destination, $tempArchive);
++  }
++
++  /**
+    * Create a tar.gz file.
+    *
+    * @param array $entitiesToExport
+@@ -208,7 +468,7 @@
+    * @return array
+    *   The data of the export.
+    */
+-  public function createExportFile(array $entitiesToExport = [], $label = FALSE, string $destination = '') {
++  public function createExportFile(array &$entitiesToExport = [], $label = FALSE, string $destination = '') {
+     $writer = new ExportEntityWriter();
+     $writer->initFromId(($label ?: time()));
+     $processor = new ExportProcessor($writer);
+@@ -228,10 +488,19 @@
+         $status = $this->t('Error');
+       }
+
++      $label = ExportEntityWriter::getEntityLabel($entity);
++      $type = $entity->getEntityTypeId();
++      if (empty($label) && ($type == 'file' || $type == 'crop')) {
++        $label = $entity->uri->value ? basename($entity->uri->value) : "";
++      }
++
++      $type = $entity->bundle() != $type ? $type . '.' . $entity->bundle() : $type;
+       $data['entities'][] = [
+         '@key' => $key + 1,
+         '@count' => $count,
+-        '@label' => ExportEntityWriter::getEntityLabel($entity),
++        '@id' =>  $entity->id(),
++        '@label' => $label,
++        '@type' => $type,
+         '@status' => $status,
+       ];
+     }
+@@ -279,19 +548,39 @@
+     foreach ($rootEntities as $key => $rootEntityData) {
+       try {
+         $entity = $importProcessor->importEntityFromRootData($rootEntityData);
+-        $status = array_key_exists('edit_url', $rootEntityData) ? $this->t('Updated') : $this->t('Created');
++        $status = '';
++        switch($rootEntityData['status']) {
++          case 'overwrite':
++            $status = 'Overridden';
++            break;
++          case 'update':
++            $status = 'Updated';
++            break;
++          case 'create':
++            $status = 'Created';
++            break;
++        }
+       }
+       catch (\Exception $error) {
+         $errorMessage = $error->getMessage();
+         $status = $this->t('Error');
+       }
+
++      $label = $rootEntityData['label'];
++      $type = $entity->getEntityTypeId();
++      if (empty($label) && ($type == 'file' || $type == 'crop')) {
++        $label = $entity->uri->value ? basename($entity->uri->value) : "";
++      }
++      $type = $entity->bundle() != $type ? $type . '.' . $entity->bundle() : $type;
++
+       $importData['entities'][] = [
+         '@key' => $key + 1,
+         '@count' => $count,
+         '@status' => $status,
+-        '@label' => $rootEntityData['label'],
+-        '@url' => isset($entity) ? $entity->toUrl()
++        '@id' =>  $entity->id(),
++        '@label' => $label,
++        '@type' => $type,
++        '@url' => (isset($entity) && $entity->hasLinkTemplate('canonical')) ? $entity->toUrl()
+           ->setAbsolute(TRUE)
+           ->toString() : '',
+         '@errorMessage' => $errorMessage ?? '',
+@@ -342,11 +631,11 @@
+       }
+
+       if ($absolutePath) {
+-        if (!is_dir($absolutePath)) {
+-          $this->fileSystem->prepareDirectory($absolutePath, FileSystemInterface::CREATE_DIRECTORY);
++        if (is_dir($absolutePath)) {
++          $resultDestination = $absolutePath . '/' . $baseName;
++        } else {
++          $resultDestination = $absolutePath;
+         }
+-
+-        $resultDestination = $absolutePath . '/' . $baseName;
+       }
+     }
+     // Try destination.

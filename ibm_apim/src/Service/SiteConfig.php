@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2023
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -771,15 +771,6 @@ class SiteConfig {
           $socialBlockSettings = unserialize($encryptionService->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
         }
 
-        // decrypt OIDC state service data
-        $oidcStateService = \Drupal::service('auth_apic.oidc_state');
-        $all_state = $oidcStateService->getAllOidcState();
-        $decryptedState = [];
-        foreach ($all_state as $key => $encrypted_value) {
-          $value = $encryptionService->decrypt($encrypted_value, $encryptionProfile);
-          $decryptedState[$key] = $value;
-        }
-
         // decrypt payment methods
         $decryptedPayments = [];
         if ($moduleHandler->moduleExists('consumerorg')) {
@@ -813,14 +804,6 @@ class SiteConfig {
           $encryptedSocialBlockSettings = $encryptionService->encrypt(serialize($socialBlockSettings), $encryptionProfile);
           $this->configFactory->getEditable('socialblock.settings')->set('credentials', $encryptedSocialBlockSettings)->save();
         }
-
-        // re-encrypt OIDC state service data
-        $encryptedState = [];
-        foreach ($decryptedState as $key => $decrypted_value) {
-          $encrypted_value = $encryptionService->encrypt($decrypted_value, $encryptionProfile);
-          $encryptedState[$key] = $encrypted_value;
-        }
-        $oidcStateService->saveAllOidcState($encryptedState);
 
         // re-encrypt payment methods
         if (!empty($decryptedPayments) && $moduleHandler->moduleExists('consumerorg') && \Drupal::database()
@@ -895,15 +878,49 @@ class SiteConfig {
   public function getBlockList(): array {
     $fileName = \Drupal::service('extension.list.module')->getPath('ibm_apim') . '/module_blocklist.json';
     if (file_exists($fileName)) {
-      $contents = file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/module_blocklist.json');
+      $contents = file_get_contents($fileName);
       $json = json_decode($contents, TRUE);
       return $json["modules"];
     }
     return [];
   }
 
+  /**
+   * Return an array of shipped modules for this platform
+   *
+   * @return array
+   */
+  public function getShippedModules(): array {
+    $fileName = DRUPAL_ROOT . '/original_modules';
+    if (file_exists($fileName)) {
+      $shippedModules = file($fileName);
+      $shippedModules = array_map('trim', $shippedModules);
+      return $shippedModules;
+    }
+    return [];
+  }
+
+
   public function getInvitationTTL() {
     return $this->state->get('ibm_apim.site_config')["invitation_ttl"];
+  }
+
+
+  /**
+   * Returns an array of modules that are shipped and also installed as a custom module
+   *
+   * @return array
+  */
+  public function getModulesBothShippedAndCustomInstalled(): array {
+    $doubleInstalledModules = [];
+    $shippedModules = $this->getShippedModules();
+    $machineNameMap = \Drupal::service('ibm_apim.utils')->mapCustomDirectoriesToMachineName('module');
+    foreach ($machineNameMap as $moduleDir => $machineName) {
+      if (in_array($machineName, $shippedModules)) {
+        array_push($doubleInstalledModules, $machineName);
+      }
+    }
+    return $doubleInstalledModules;
   }
 
 }

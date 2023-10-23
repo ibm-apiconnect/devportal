@@ -204,7 +204,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
         $account = $this->accountService->createOrUpdateLocalAccount($meUser);
         if ($account) {
           $localUser = $this->userService->parseDrupalAccount($account);
-          $customFieldValues = $meUser->getCustomFields();
+          $customFieldValues = $localUser->getCustomFields();
           if (isset($customFieldValues['timezone'])) {
             unset($customFieldValues['timezone']);
           }

@@ -1,4 +1,15 @@
 changes:
+  8.x-5.5.5:
+  - Remove addtoany (#242) (#244)
+  8.x-5.5.4:
+  - allow subtheme take precedence
+  8.x-5.5.3:
+  - apimesh/devportal#8193 - add SonarQube integration
+  8.x-5.5.2: null
+  8.x-5.5.1:
+  - apimesh -> velox
+  8.x-5.5.0:
+  - update version [8.x, 5.4.5] -> 8.x-5.5.0
   8.x-5.4.4:
   - description width in card
   8.x-5.4.3:

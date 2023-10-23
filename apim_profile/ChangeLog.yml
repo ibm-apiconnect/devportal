@@ -1,4 +1,438 @@
 changes:
+  8.x-20231005-1021:
+    commits:
+    - Intsall on fresh install (#980)
+    - Add fontawesome (#974) (#976)
+    - Fix masonry views
+    modules:
+      product:
+        8.x-5.5.6:
+        - Remove apic_ on upgrade function (#287)
+  8.x-20231004-1621:
+    commits:
+    - Use correct css for Item (#971) (#972)
+    modules:
+      ibm_apim:
+        8.x-5.5.18:
+        - Use correct css for Item (#1053) (#1054)
+  8.x-20230929-1621:
+    commits: null
+    modules:
+      product:
+        8.x-5.5.5:
+        - Update product.install
+  8.x-20230927-1621:
+    commits:
+    - add unit to width (#965) (#967)
+    - Add back autoload
+    modules:
+      product:
+        8.x-5.5.4:
+        - add unit to width (#283) (#285)
+      apic_api:
+        8.x-5.5.7:
+        - Fix masonry (#197) (#199)
+      apic_app:
+        8.x-5.5.8:
+        - add unit to width (#378) (#380)
+  8.x-20230927-1241:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-5.5.17:
+        - Invalidate application tags on analytics form save (#1050)
+  8.x-20230922-1529:
+    commits:
+    - acl and masonary update
+    modules:
+      ibm_apim:
+        8.x-5.5.16:
+        - Invalidate cache after consumer analytics change (#1049)
+  8.x-20230922-1050:
+    commits:
+    - Fix translation refresh
+    - Fix translation refresh (#962) (#964)
+    modules:
+      apic_api:
+        8.x-5.5.6:
+        - Remove addtoany
+  8.x-20230921-2221:
+    commits:
+    - disable blogs view rss feed (#961)
+    modules:
+      apic_api:
+        8.x-5.5.5:
+        - Remove addtoany (#194) (#195)
+      apic_app:
+        8.x-5.5.7:
+        - Remove addtoany (#375) (#376)
+      ibm_apim:
+        8.x-5.5.15:
+        - Remove addtoany (#1044) (#1046)
+      consumerorg:
+        8.x-5.5.9:
+        - Remove addtoany (#340) (#342)
+  8.x-20230921-1621:
+    commits: null
+    modules:
+      product:
+        8.x-5.5.3:
+        - Remove addtoany (#280) (#282)
+        - velox/devportal#8193 - add SonarQube integration
+  8.x-20230920-1621:
+    commits:
+    - velox/devportal#8483 Fix dirs for portal-web hardening (#947)
+    - Remove addtoany (#958) (#959)
+    - Drupal 10.1.4 Update (#954) (#955)
+    modules:
+      apictest:
+        8.x-5.5.3:
+        - velox/devportal#8483 Fix dirs for portal-web hardening (#268)
+      connect_theme:
+        8.x-5.5.5:
+        - Remove addtoany (#242) (#244)
+  8.x-20230918-1159:
+    commits:
+    - Pull correct analytics (#951)
+    - Added secure and httponly flags to big pipe cookie (#948) (#950)
+    modules:
+      auth_apic:
+        8.x-5.5.7:
+        - Add unauthorized message to more failed login cases (#782)
+  8.x-20230913-2221:
+    commits:
+    - Rename parameters
+    modules:
+      ibm_apim:
+        8.x-5.5.14:
+        - Rename parameters (#1041) (#1043)
+  8.x-20230912-1021:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-5.5.6:
+        - adopted using ModuleHandlerInterface instead of class ModuleHandler
+      apic_app:
+        8.x-5.5.6:
+        - adopted using ModuleHandlerInterface instead of class ModuleHandler
+        - Show only configured analytics charts (#371)
+      ibm_apim:
+        8.x-5.5.13:
+        - adopted using ModuleHandlerInterface instead of class ModuleHandler
+        - block statistics module (#1038)
+  8.x-20230907-1615:
+    commits:
+    - Block forums related too blocked taxonomy terms (#943) (#945)
+    - Get latest v1 analytics (#942)
+    - Fix fatal php error for autologout (#939) (#940)
+    - Dont export blocked reference entities (#936) (#938)
+    modules:
+      ibm_apim:
+        8.x-5.5.12:
+        - Block forums related too blocked taxonomy terms (#1035) (#1037)
+  8.x-20230907-1021:
+    commits:
+    - Drupal 10.1.3
+    modules:
+      connect_theme:
+        8.x-5.5.4:
+        - allow subtheme take precedence
+  8.x-20230905-1621:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-5.5.11:
+        - redact out analytics data (#1028) (#1032)
+  8.x-20230904-2221:
+    commits:
+    - Block APIs and children taxonomy terms (#933) (#935)
+    modules:
+      ibm_apim:
+        8.x-5.5.10:
+        - Filter out blocked taxonomy terms (#1029) (#1031)
+  8.x-20230831-1621:
+    commits:
+    - Support embeded images in text fields (#930) (#931)
+    - Check if role exists first (#927) (#929)
+    modules:
+      consumerorg:
+        8.x-5.5.8:
+        - Always return a consumerorg (#337) (#339)
+  8.x-20230831-1426:
+    commits:
+    - Fix importing with a revision id that already exists (#916) (#917)
+    - Fix embedded files not exporting (#924) (#925)
+    modules:
+      auth_apic:
+        8.x-5.5.5:
+        - Made failed login errors more consistent (#774)
+  8.x-20230824-1621:
+    commits:
+    - Fix inconsistent login errors (#920)
+    - Password expire entries disabled because password expire not supported
+    - Remove stray underscore (#911) (#913)
+    modules:
+      apic_app:
+        8.x-5.5.5:
+        - Add form captcha points (#366)
+      consumerorg:
+        8.x-5.5.7:
+        - Add form captcha points (#335)
+  8.x-20230824-1415:
+    commits: null
+    modules:
+      ibm_apim:
+        8.x-5.5.9:
+        - Content Bug fixes (#1024) (#1026)
+  8.x-20230824-1021:
+    commits:
+    - Content Bug fixes (#907) (#908)
+    modules:
+      apic_app:
+        8.x-5.5.4:
+        - Add custom fields to CLI applicationget (#363)
+  8.x-20230823-1021:
+    commits:
+    - Fix Import Bugs (#904) (#906)
+    modules:
+      consumerorg:
+        8.x-5.5.6:
+        - Add custom fields to getByNid (#332)
+  8.x-20230822-1621:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-5.5.5:
+        - Use image captcha on feedback form (#329)
+  8.x-20230822-1409:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-5.5.4:
+        - velox/devportal#8193 - add SonarQube integration
+      apic_app:
+        8.x-5.5.3:
+        - velox/devportal#8193 - add SonarQube integration
+      ibm_apim:
+        8.x-5.5.8:
+        - Block advagg until its been fixed for D10.1 (#1023)
+  8.x-20230822-1024:
+    commits:
+    - Remove advagg until its been updated for Drupal 10.1 (#895) (#899)
+    - override content if entity id exists but no reference (#894) (#897)
+    modules:
+      socialblock:
+        8.x-5.5.2:
+        - velox/devportal#8193 - add Sonarqube Integration
+      themegenerator:
+        8.x-5.5.4:
+        - velox/devportal#8193 - add SonarQube integration
+  8.x-20230821-1621:
+    commits: null
+    modules:
+      ghmarkdown:
+        8.x-5.5.3:
+        - apimesh/devportal#8193 - add SonarQube integration
+      mail_subscribers:
+        8.x-5.5.3:
+        - apimesh/devportal#8193 - add SonarQube integration
+      featuredcontent:
+        8.x-5.5.3:
+        - apimesh/devportal#8193 - add SonarQube integration
+      ibm_apim:
+        8.x-5.5.7:
+        - add SonarQube integration (#1020)
+  8.x-20230818-1621:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-5.5.4:
+        - apimesh/devportal#8193 - add SonarQube integration
+      connect_theme:
+        8.x-5.5.3:
+        - apimesh/devportal#8193 - add SonarQube integration
+  8.x-20230816-1621:
+    commits: null
+    modules:
+      apic_api:
+        8.x-5.5.4:
+        - apimesh/devportal#8193 - add SonarQube integration
+  8.x-20230815-1106:
+    commits:
+    - Just make an array not map
+    modules:
+      ibm_apim:
+        8.x-5.5.6:
+        - Added analytics config form (#1015) (#1016)
+  8.x-20230803-1622:
+    commits:
+    - Fix weird errors with EOF from docker execing a tar (#892)
+    - upgrade hierarchical_taxonomy_menu (#891)
+    - support content import within drush (#887)
+    modules:
+      ibm_apim:
+        8.x-5.5.5:
+        - fix password policy
+  8.x-20230803-1043:
+    commits: null
+    modules:
+      socialblock:
+        8.x-5.5.1:
+        - apimesh -> velox
+      product:
+        8.x-5.5.2: null
+        8.x-5.5.1:
+        - apimesh -> velox
+      ghmarkdown:
+        8.x-5.5.2: null
+        8.x-5.5.1:
+        - apimesh -> velox
+      auth_apic:
+        8.x-5.5.3:
+        - apimesh -> velox
+      mail_subscribers:
+        8.x-5.5.2: null
+        8.x-5.5.1:
+        - apimesh -> velox
+      themegenerator:
+        8.x-5.5.3: null
+        8.x-5.5.2:
+        - apimesh -> velox
+      featuredcontent:
+        8.x-5.5.2: null
+        8.x-5.5.1:
+        - apimesh -> velox
+      apic_api:
+        8.x-5.5.3: null
+        8.x-5.5.2:
+        - apimesh -> velox
+      apic_app:
+        8.x-5.5.2: null
+        8.x-5.5.1:
+        - apimesh -> velox
+      ibm_apim:
+        8.x-5.5.4:
+        - apimesh -> velox
+      consumerorg:
+        8.x-5.5.3: null
+        8.x-5.5.2:
+        - apimesh -> velox
+      instana_eum:
+        8.x-5.5.2: null
+        8.x-5.5.1:
+        - apimesh -> velox
+      connect_theme:
+        8.x-5.5.2: null
+        8.x-5.5.1:
+        - apimesh -> velox
+  8.x-20230728-1021:
+    commits:
+    - apimesh -> velox
+    - Fix module patch (#890)
+    - Drupal 10.1.2
+    - Drupal 10.1.2
+    - Catch error in ExtensionList
+    modules:
+      apictest:
+        8.x-5.5.2:
+        - apimesh -> velox
+  8.x-20230725-1621:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-5.5.2:
+        - Send custom fields to apim on first login (#768)
+  8.x-20230724-1318:
+    commits:
+    - Fix patch for Drupal 10.1
+    - Fix patch for Drupal 10.1
+    - Dont allow blocked content to be added to export entities
+    modules:
+      auth_apic:
+        8.x-5.5.1:
+        - OIDC dos v10.0.5 (#766)
+      ibm_apim:
+        8.x-5.5.3:
+        - Remove references to oidc state service (#1014)
+      apictest:
+        8.x-5.5.1:
+        - Store oidc State (#265)
+  8.x-20230720-1229:
+    commits:
+    - Update modules.content_synchronizer.src.Commands.ContentSynchronizerCommands.php.patch
+    - Dont log file is gone
+    - Dont log file is gone and delete more at a time
+    - lower php memory usage for export all (#884) (#886)
+    modules:
+      ibm_apim:
+        8.x-5.5.2:
+        - Fix content list commands (#1012)
+  8.x-20230718-1021:
+    commits:
+    - Fix drupal10 patch
+    - remove single_content_sync update function (#881) (#882)
+    - Add content type to asset request (#878) (#880)
+    modules:
+      themegenerator:
+        8.x-5.5.1:
+        - Use semver versions (#50)
+      consumerorg:
+        8.x-5.5.1:
+        - remove html escape because data already encoded
+  8.x-20230717-1535:
+    commits: null
+    modules:
+      apic_api:
+        8.x-5.5.1: null
+  8.x-20230627-1621:
+    commits:
+    - Export entity drush commands (#875) (#877)
+    - Content sync module and Drupal 10.1.0 (#873) (#874)
+    - Update version for 10.0.5.5
+    modules:
+      socialblock:
+        8.x-5.5.0:
+        - update version [8.x, 5.4.1] -> 8.x-5.5.0
+      product:
+        8.x-5.5.0:
+        - update version [8.x, 5.4.6] -> 8.x-5.5.0
+      ghmarkdown:
+        8.x-5.5.0:
+        - update version [8.x, 5.4.1] -> 8.x-5.5.0
+      auth_apic:
+        8.x-5.5.0:
+        - update version [8.x, 5.4.5] -> 8.x-5.5.0
+      mail_subscribers:
+        8.x-5.5.0:
+        - update version [8.x, 5.4.1] -> 8.x-5.5.0
+      themegenerator:
+        8.x-5.5.0:
+        - update version [8.x, 5.4.1] -> 8.x-5.5.0
+      featuredcontent:
+        8.x-5.5.0:
+        - update version [8.x, 5.4.1] -> 8.x-5.5.0
+      apic_api:
+        8.x-5.5.0:
+        - update version [8.x, 5.4.6] -> 8.x-5.5.0
+      apic_app:
+        8.x-5.5.0:
+        - update version [8.x, 5.4.2] -> 8.x-5.5.0
+      ibm_apim:
+        8.x-5.5.1:
+        - Block double install (#995) (#1008)
+        - remove hooks (#1005) (#1007)
+      consumerorg:
+        8.x-5.5.0:
+        - update version [8.x, 5.4.2] -> 8.x-5.5.0
+      apictest:
+        8.x-5.5.0:
+        - update version [8.x, 5.4.3] -> 8.x-5.5.0
+      instana_eum:
+        8.x-5.5.0:
+        - update version [8.x, 5.4.1] -> 8.x-5.5.0
+      connect_theme:
+        8.x-5.5.0:
+        - update version [8.x, 5.4.5] -> 8.x-5.5.0
   8.x-20230624-2323:
     commits:
     - always generate zip files on export (#869)
@@ -9072,4 +9506,4 @@ changes:
         - try to make it more tolerant of yum issues
         8.x-1.3.132:
         - try to make it more tolerant of yum issues
-  8.x-20230627-1621:
+  8.x-20231012-1326:

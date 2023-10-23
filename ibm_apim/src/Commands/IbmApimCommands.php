@@ -807,7 +807,7 @@ class IbmApimCommands extends DrushCommands {
 
 
   /**
-   * This function is used to wipe the OIDC state service and platform API token
+   * This function is used to wipe the platform API token
    * This is used when doing backup / restore operations since the content won't be valid for the new site
    *
    * @command ibm_apim-delete_tokens
@@ -818,10 +818,6 @@ class IbmApimCommands extends DrushCommands {
   public function drush_ibm_apim_delete_tokens(): void {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
     \Drupal::logger('ibm_apim')->info('Drush drush_ibm_apim_delete_tokens delete saved OIDC tokens');
-
-    // set to empty array
-    $oidcStateService = \Drupal::service('auth_apic.oidc_state');
-    $oidcStateService->saveAllOidcState([]);
 
     // delete the Mail Platform API token
     \Drupal::state()->delete('ibm_apic_mail.token');

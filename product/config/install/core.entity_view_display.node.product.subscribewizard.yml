@@ -52,11 +52,6 @@ targetEntityType: node
 bundle: product
 mode: subscribewizard
 content:
-  addtoany:
-    weight: 31
-    region: content
-    settings: {  }
-    third_party_settings: {  }
   apic_catalog_id:
     weight: 1
     label: above

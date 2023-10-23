@@ -56,7 +56,6 @@ content:
     type: list_default
     region: content
 hidden:
-  addtoany: true
   apic_catalog_id: true
   apic_hostname: true
   apic_provider_id: true

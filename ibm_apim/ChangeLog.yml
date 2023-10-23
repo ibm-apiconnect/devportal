@@ -1,4 +1,44 @@
 changes:
+  8.x-5.5.18:
+  - Use correct css for Item (#1053) (#1054)
+  8.x-5.5.17:
+  - Invalidate application tags on analytics form save (#1050)
+  8.x-5.5.16:
+  - Invalidate cache after consumer analytics change (#1049)
+  8.x-5.5.15:
+  - Remove addtoany (#1044) (#1046)
+  8.x-5.5.14:
+  - Rename parameters (#1041) (#1043)
+  8.x-5.5.13:
+  - adopted using ModuleHandlerInterface instead of class ModuleHandler
+  - block statistics module (#1038)
+  8.x-5.5.12:
+  - Block forums related too blocked taxonomy terms (#1035) (#1037)
+  8.x-5.5.11:
+  - redact out analytics data (#1028) (#1032)
+  8.x-5.5.10:
+  - Filter out blocked taxonomy terms (#1029) (#1031)
+  8.x-5.5.9:
+  - Content Bug fixes (#1024) (#1026)
+  8.x-5.5.8:
+  - Block advagg until its been fixed for D10.1 (#1023)
+  8.x-5.5.7:
+  - add SonarQube integration (#1020)
+  8.x-5.5.6:
+  - Added analytics config form (#1015) (#1016)
+  8.x-5.5.5:
+  - fix password policy
+  8.x-5.5.4:
+  - apimesh -> velox
+  8.x-5.5.3:
+  - Remove references to oidc state service (#1014)
+  8.x-5.5.2:
+  - Fix content list commands (#1012)
+  8.x-5.5.1:
+  - Block double install (#995) (#1008)
+  - remove hooks (#1005) (#1007)
+  8.x-5.5.0:
+  - update version [8.x, 5.4.19] -> 8.x-5.5.0
   8.x-5.4.18:
   - Fix module install (#1002) (#1003)
   8.x-5.4.17:

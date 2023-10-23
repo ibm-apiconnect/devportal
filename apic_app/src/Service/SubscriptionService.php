@@ -22,7 +22,7 @@ use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\user\Entity\User;
-use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Throwable;
 
 /**
@@ -42,9 +42,9 @@ class SubscriptionService {
   protected ApimUtils $apimUtils;
 
     /**
-   * @var \Drupal\Core\Extension\ModuleHandler
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected ModuleHandler $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * CredentialsService constructor.
@@ -54,7 +54,7 @@ class SubscriptionService {
    */
   public function __construct(UserUtils $userUtils,
                               ApimUtils $apimUtils,
-                              ModuleHandler $moduleHandler) {
+                              ModuleHandlerInterface $moduleHandler) {
     $this->userUtils = $userUtils;
     $this->apimUtils = $apimUtils;
     $this->moduleHandler = $moduleHandler;

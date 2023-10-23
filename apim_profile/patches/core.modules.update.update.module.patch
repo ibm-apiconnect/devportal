@@ -1,19 +1,15 @@
---- core/modules/update/update.module	2022-06-15 17:34:03.000000000 +0100
-+++ core/modules/update/update.module	2022-06-27 12:09:01.000000000 +0100
-@@ -51,10 +51,10 @@
+--- core/modules/update/update.module   2023-08-02 11:10:11
++++ core/modules/update/update.module   2023-08-02 15:30:32
+@@ -50,7 +50,7 @@
+       return '<p>' . t('Here you can find information about available updates for your installed modules and themes. Note that each module or theme is part of a "project", which may or may not have the same name, and might include multiple modules or themes within it.') . '</p>';
 
      case 'system.modules_list':
-       if (_update_manager_access()) {
--        $output = '<p>' . t('Regularly review and install <a href=":updates">available updates</a> to maintain a secure and current site. Always run the <a href=":update-php">update script</a> each time a module is updated.', [':update-php' => Url::fromRoute('system.db_update')->toString(), ':updates' => Url::fromRoute('update.status')->toString()]) . '</p>';
-+        $output = '<p>' . t('Regularly review and install <a href=":updates">available updates</a> to maintain a secure and current site.', [':updates' => Url::fromRoute('update.status')->toString()]) . '</p>';
-       }
-       else {
--        $output = '<p>' . t('Regularly review <a href=":updates">available updates</a> to maintain a secure and current site. Always run the <a href=":update-php">update script</a> each time a module is updated.', [':update-php' => Url::fromRoute('system.db_update')->toString(), ':updates' => Url::fromRoute('update.status')->toString()]) . '</p>';
-+        $output = '<p>' . t('Regularly review and install <a href=":updates">available updates</a> to maintain a secure and current site.', [':updates' => Url::fromRoute('update.status')->toString()]) . '</p>';
-       }
-       return $output;
+-      return '<p>' . t('Regularly review <a href=":updates">available updates</a> and update as required to maintain a secure and current site. Always run the <a href=":update-php">update script</a> each time you update software.', [':update-php' => Url::fromRoute('system.db_update')->toString(), ':updates' => Url::fromRoute('update.status')->toString()]) . '</p>';
++      return '<p>' . t('Regularly review and install <a href=":updates">available updates</a> to maintain a secure and current site.', [':updates' => Url::fromRoute('update.status')->toString()]) . '</p>';
+
    }
-@@ -194,7 +194,9 @@
+ }
+@@ -190,7 +190,9 @@
      // If configured time between notifications elapsed, send email about
      // updates possibly available.
      \Drupal::moduleHandler()->loadInclude('update', 'inc', 'update.fetch');
@@ -24,3 +20,25 @@
    }
 
    // Clear garbage from disk.
+@@ -658,18 +660,12 @@
+  * Clears the temporary files and directories based on file age from disk.
+  */
+ function update_clear_update_disk_cache() {
+-  // List of update module cache directories. Do not create the directories if
+-  // they do not exist.
+-  $directories = [
+-    _update_manager_cache_directory(FALSE),
+-    _update_manager_extract_directory(FALSE),
+-  ];
++  // Temporary directory for the site
++  $directory = "temporary://";
+
+   // Search for files and directories in base folder only without recursion.
+-  foreach ($directories as $directory) {
+-    if (is_dir($directory)) {
+-      \Drupal::service('file_system')->scanDirectory($directory, '/.*/', ['callback' => 'update_delete_file_if_stale', 'recurse' => FALSE]);
+-    }
++  if (is_dir($directory)) {
++    \Drupal::service('file_system')->scanDirectory($directory, '/.*/', ['callback' => 'update_delete_file_if_stale', 'recurse' => FALSE]);
+   }
+ }

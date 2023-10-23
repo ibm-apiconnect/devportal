@@ -1,0 +1,11 @@
+--- core/lib/Drupal/Core/Entity/ContentEntityBase.php   2023-07-05 10:11:29
++++ core/lib/Drupal/Core/Entity/ContentEntityBase.php      2023-07-13 16:34:09
+@@ -208,7 +208,7 @@
+         if (is_array($this->values[$field_name])) {
+           // We store untranslatable fields into an entity key without using a
+           // langcode key.
+-          if (!$this->getFieldDefinition($field_name)->isTranslatable()) {
++          if ($this->getFieldDefinition($field_name) !== NULL && !$this->getFieldDefinition($field_name)->isTranslatable()) {
+             if (isset($this->values[$field_name][LanguageInterface::LANGCODE_DEFAULT])) {
+               if (is_array($this->values[$field_name][LanguageInterface::LANGCODE_DEFAULT])) {
+                 if (isset($this->values[$field_name][LanguageInterface::LANGCODE_DEFAULT][0]['value'])) {

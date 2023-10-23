@@ -1,0 +1,6 @@
+langcode: en
+status: true
+dependencies: {  }
+formId: contact_message_feedback_form
+captchaType: image_captcha/Image
+label: contact_message_feedback_form

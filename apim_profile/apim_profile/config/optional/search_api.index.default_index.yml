@@ -284,6 +284,7 @@ processor_settings:
       - product_data
       - api_swagger
     spaces: ''
+    ignored: ''
     overlap_cjk: 1
     minimum_word_size: '3'
     weights:

@@ -1,4 +1,23 @@
 changes:
+  8.x-5.5.9:
+  - Remove addtoany (#340) (#342)
+  8.x-5.5.8:
+  - Always return a consumerorg (#337) (#339)
+  8.x-5.5.7:
+  - Add form captcha points (#335)
+  8.x-5.5.6:
+  - Add custom fields to getByNid (#332)
+  8.x-5.5.5:
+  - Use image captcha on feedback form (#329)
+  8.x-5.5.4:
+  - apimesh/devportal#8193 - add SonarQube integration
+  8.x-5.5.3: null
+  8.x-5.5.2:
+  - apimesh -> velox
+  8.x-5.5.1:
+  - remove html escape because data already encoded
+  8.x-5.5.0:
+  - update version [8.x, 5.4.2] -> 8.x-5.5.0
   8.x-5.4.1:
   - Fix consumer org change event (#320) (#321)
   8.x-5.4.0:

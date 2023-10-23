@@ -15,7 +15,6 @@ namespace Drupal\Tests\ibm_apim\Unit;
 
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Config\ImmutableConfig;
-use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\ibm_apim\Rest\Payload\TokenResponseReader;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -103,7 +102,7 @@ class TokenResponseReaderTest extends UnitTestCase {
     $response->data = $data;
 
     $this->config = $this->prophet->prophesize(ConfigFactory::class);
-    $this->moduleHandler = $this->prophet->prophesize(ModuleHandler::class);
+    $this->moduleHandler = $this->prophet->prophesize(ModuleHandlerInterface::class);
     $this->messenger = $this->prophet->prophesize(Messenger::class);
 
     $this->config->willImplement(ConfigFactoryInterface::class);

@@ -25,22 +25,18 @@ services:
                 '@ibm_apim.mgmtserver',
                 '@state'
                 ]
-  auth_apic.oidc_state:
-    class: Drupal\auth_apic\Service\OidcStateService
-    arguments: ['@state',
-                '@encryption',
-                '@encrypt.encryption_profile.manager',
-                '@logger.channel.auth_apic',
-                '@session',
-                '@datetime.time']
   auth_apic.oidc:
     class: Drupal\auth_apic\Service\OidcRegistryService
     arguments: ['@state',
                 '@logger.channel.ibm_apim',
                 '@ibm_apim.utils',
                 '@ibm_apim.apim_utils',
-                '@auth_apic.oidc_state',
-                '@module_handler']
+                '@module_handler',
+                '@tempstore.private',
+                '@datetime.time',
+                '@encryption',
+                '@encrypt.encryption_profile.manager'
+                ]
   auth_apic.usermanaged_signup:
     class: Drupal\auth_apic\UserManagement\UserManagedSignUp
     arguments: ['@ibm_apim.mgmtserver',

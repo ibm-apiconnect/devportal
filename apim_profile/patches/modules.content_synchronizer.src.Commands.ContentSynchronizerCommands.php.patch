@@ -1,0 +1,416 @@
+--- modules/content_synchronizer/src/Commands/ContentSynchronizerCommands.php   2023-07-03 16:41:58
++++ modules/content_synchronizer/src/Commands/ContentSynchronizerCommands.php      2023-07-12 13:35:03
+@@ -7,6 +7,11 @@
+ use Drupal\content_synchronizer\Service\ContentSynchronizerManagerInterface;
+ use Drupal\Core\StringTranslation\StringTranslationTrait;
+ use Drush\Commands\DrushCommands;
++use Drush\Utils\StringUtils;
++use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
++use Drupal\content_synchronizer\Entity\ExportEntity;
++use Drupal\content_synchronizer\Entity\ImportEntity;
++use Exception;
+
+ /**
+  * A Drush commandfile.
+@@ -45,10 +50,240 @@
+     $deletedFiles = $this->contentSynchronizerManager->cleanTemporaryFiles();
+     foreach ($deletedFiles as $file) {
+       $this->logger->notice($this->t('@file has been deleted', ['@file' => $file]));
++    }
++  }
++
++  /**
++   * Create an export entity with the following name
++   *
++   * @param string $name
++   *  Name of the export entity
++   *
++   * @command content:synchronizer-create-export-entity
++   * @aliases cscee
++   * @usage content:synchronizer-create-export-entity NAME
++   *   Create an export entity with the following name
++   *
++   */
++  public function createExportEntity($name = NULL): void {
++    // Init user choice.
++    $name = $name ?: $this->io()->ask(
++      $this->t('Export Entity Name ?'),
++      'My Export Entity',
++      NULL
++    );
++
++    $exportEntity = ExportEntity::create([
++      'name' => $name
++    ]);
++    $exportEntity->save();
++
++    $this->logger->notice($this->t('Created new export entity @name, id @id', [ '@id' => $exportEntity->id(), '@name' => $exportEntity->getName()]));
++  }
++
++  /**
++   * Add content entities to an export entity
++   *
++   * @param string $exportId
++   *  id of export to add content entities to
++   * @param string $entityTypeId
++   *   The entity type id.
++   * @param array $ids
++   *   Array of entity ids.
++   *
++   * @command content:synchronizer-add-entities-to-export
++   * @aliases csaete
++   * @usage content:synchronizer-add-entities-to-export EXPORT_ID ENTITY_TYPE IDS
++   *   Add content entities to an export entity
++   *
++   */
++  public function addEntitiestoExport($exportId = NULL, $entityTypeId = NULL, $ids = NULL): void {
++    $exportId = $exportId ?: $this->io()->ask(
++      $this->t('Export Id ?'),
++      'node',
++      [$this->contentSynchronizerManager, 'entityExportExists']
++    );
++    $entityTypeId = $entityTypeId ?: $this->io()->ask(
++      $this->t('Entity type Id ?'),
++      'node',
++      [$this->contentSynchronizerManager, 'entityTypeExists']
++    );
++    $ids = $ids !== NULL ? StringUtils::csvToArray($ids) : StringUtils::csvToArray($this->io()->ask(
++      $this->t('Entity Id(s) ?'),
++      ""
++    ));
++
++    $this->contentSynchronizerManager->addEntitiesToExport($exportId, $entityTypeId, $ids);
++
++    $this->logger->notice($this->t('Successfully added entity type @type - "@ids" to export entity @exportId', [ '@type' => $entityTypeId, '@ids' => implode(", ", $ids), '@exportId' => $exportId]));
++  }
++
++  /**
++   * Remove content entities from an export entity
++   *
++   * @param string $exportId
++   *  id of export to remove content entities from
++   * @param string $entityTypeId
++   *   The entity type id.
++   * @param array $ids
++   *   Array of entity ids.
++   *
++   * @command content:synchronizer-remove-entities-from-export
++   * @aliases csrefe
++   * @usage content:synchronizer-remove-entities-from-export EXPORT_ID ENTITY_TYPE IDS
++   *   Remove content entities from an export entity
++   *
++   */
++  public function removeEntitiesfromExport($exportId = NULL, $entityTypeId = NULL, $ids = NULL): void {
++    $exportId = $exportId ?: $this->io()->ask(
++      $this->t('Export Id ?'),
++      'node',
++      [$this->contentSynchronizerManager, 'entityExportExists']
++    );
++    $entityTypeId = $entityTypeId ?: $this->io()->ask(
++      $this->t('Entity type Id ?'),
++      'node',
++      [$this->contentSynchronizerManager, 'entityTypeExists']
++    );
++    $ids = $ids !== NULL ? StringUtils::csvToArray($ids) : StringUtils::csvToArray($this->io()->ask(
++      $this->t('Entity Id(s) ?'),
++      ""
++    ));
++
++    $this->contentSynchronizerManager->removeEntitiesfromExport($exportId, $entityTypeId, $ids);
++
++    $this->logger->notice($this->t('Successfully removed entity type @type - "@ids" from export entity @exportId', [ '@type' => $entityTypeId, '@ids' => implode(", ", $ids), '@exportId' => $exportId]));
++  }
++
++  /**
++   * Delete an export entity
++   *
++   * @param string $exportId
++   *  id of export entity to delete
++   *
++   * @command content:synchronizer-delete-export-entity
++   * @aliases csdee
++   * @usage content:synchronizer-delete-export-entity EXPORT_ID
++   *   Delete an export entity
++   *
++   */
++  public function deleteExportEntity($exportId = NULL): void {
++    $exportId = $exportId ?: $this->io()->ask(
++      $this->t('Export Id ?'),
++      'node',
++      [$this->contentSynchronizerManager, 'entityExportExists']
++    );
++
++    $exportEntity = ExportEntity::load($exportId);
++    if (!$exportEntity) {
++      throw new \Exception("Export entity does not exist.");
++    }
++    $exportEntity->delete();
++
++    $this->logger->notice($this->t('Successfully deleted Export entity @exportId', [ '@exportId' => $exportId]));
++  }
++
++
++  /**
++   * Get the entities within a export entity
++   *
++   * @param string $exportEntityId
++   *  The export entity id.
++   *
++   * @command content:synchronizer-get-export-entity
++   * @aliases csgee
++   * @usage content:synchronizer-get-export-entity EXPORT_ENTITY_ID
++   *   Obtains the entities under the given export entity
++   *
++   * @field-labels
++   *   title: Title
++   *   type: Type
++   *   id: Id
++   *   bundle: Bundle
++   * @default-fields title,type,id,bundle
++   *
++   * @return RowsOfFields
++   *  The entities within an export entity
++   *
++   * @throws \Drupal\Core\Entity\EntityStorageException
++   */
++  public function getExportEntity($exportEntityId): RowsOfFields {
++    $rows = [];
++    /** @var \Drupal\Core\Entity\EntityStorageInterface $entityTypeManager */
++    $entityTypeManager = \Drupal::entityTypeManager()->getStorage('export_entity');
++    if (!$entityTypeManager) {
++      throw new \Exception("entity type 'export_entity' not found");
++    }
++
++    /** @var \Drupal\Core\Entity\EntityInterface $entity */
++    $entity = $entityTypeManager->load($exportEntityId);
++    if (!$entity) {
++      throw new \Exception('No export_entity found [id:' . $exportEntityId . ']');
+     }
++
++    $entityList = $entity->getEntitiesList();
++
++    foreach ($entityList as $entity) {
++      $title = '';
++      switch(true) {
++        case method_exists($entity, 'getTitle'):
++            $title = $entity->getTitle();
++            break;
++        case !empty($entity->get('info')->value):
++            $title = $entity->get('info')->value;
++            break;
++      }
++
++      $entityId = $entity->id();
++      $row = [
++        'title' => $title,
++        'type' => $entity->getEntityTypeId(),
++        'id' => $entityId,
++        'bundle' => $entity->bundle()
++      ];
++      $rows[] = $row;
++    }
++
++    return new RowsOfFields($rows);
+   }
+
+   /**
++   * List Export Entities
++   *
++   * @usage content:synchronizer-list-export-entities
++   *   List all export entities
++   *
++   * @command content:synchronizer-list-export-entities
++   * @aliases cslee
++   * @field-labels
++   *   id: Id
++   *   name: Name
++   *   created_time: Created
++   * @default-fields id,name,created_time
++   *
++   * @return RowsOfFields
++   *   A list of export entities.
++   *
++   * @throws \Drupal\Core\Entity\EntityStorageException
++   */
++  public function listExportEntities(): RowsOfFields {
++    $rows = [];
++    $exportEntities = \Drupal::entityTypeManager()->getStorage('export_entity')->loadMultiple();
++
++    foreach ($exportEntities as $exportEntity) {
++      $exportEntityId = $exportEntity->id();
++      $row = [
++        'id' => $exportEntityId,
++        'name' => $exportEntity->getName(),
++        'created_time' => date('Y-m-d H:i:s', $exportEntity->getCreatedTime())
++      ];
++      $rows[] = $row;
++    }
++
++    return new RowsOfFields($rows);
++  }
++
++  /**
+    * Launch the export of the passed ID.
+    *
+    * @param int|bool $exportId
+@@ -79,22 +314,22 @@
+    *
+    * @param string $entityTypeId
+    *   The entity type id.
+-   * @param int $id
+-   *   The id of the entity.
++   * @param array $ids
++   *   Array of entity ids.
+    * @param string $destination
+    *   The destination.
+    *
+    * @command content:synchronizer-export-entity
+    * @aliases cseex
+    */
+-  public function exportEntity($entityTypeId = NULL, $id = NULL, $destination = '') {
++  public function exportEntity($entityTypeId = NULL, $ids = NULL, $destination = '') {
+     // Init user choice.
+     $entityTypeId = $entityTypeId ?: $this->io()->ask(
+       $this->t('Entity type Id ?'),
+       'node',
+       [$this->contentSynchronizerManager, 'entityTypeExists']
+     );
+-    $id = $id ?: $this->io()->ask(
++    $ids = StringUtils::csvToArray($ids) ?: $this->io()->ask(
+       $this->t('Entity Id ?'),
+       NULL,
+       function ($value) use ($entityTypeId) {
+@@ -107,7 +342,27 @@
+       [$this, 'canBeNull']);
+
+     $this->logExportData(
+-      $this->contentSynchronizerManager->exportEntity($entityTypeId, $id, $destination)
++      $this->contentSynchronizerManager->exportEntity($entityTypeId, $ids, $destination)
++    );
++  }
++
++  /**
++   * Export an entity into a tar.gz.
++   *
++   * @param string $destination
++   *   The destination.
++   *
++   * @command content:synchronizer-export-all-entities
++   * @aliases cseex-all
++   */
++  public function exportAllEntities($destination = '') {
++    $destination = $destination ?: $this->io()->ask(
++      $this->t('Generated tar.gz path'),
++      '',
++      [$this, 'canBeNull']);
++
++    $this->logExportData(
++      $this->contentSynchronizerManager->exportAll($destination)
+     );
+   }
+
+@@ -119,13 +374,50 @@
+    */
+   protected function logExportData(array $exportData) {
+     foreach ($exportData['entities'] as $exportedEntity) {
+-      $this->logger->notice($this->t('[@key/@count] - "@label" - @status', $exportedEntity));
++      $this->logger->notice($this->t('[@key/@count] - [@type:@id] "@label" - @status', $exportedEntity));
+     }
+
+     $this->logger->notice($this->t('@destination has been created', ['@destination' => $exportData['destination']]));
+   }
+
++
+   /**
++   * List Import Entities
++   *
++   * @usage content:synchronizer-list-import-entities
++   *   List all import entities
++   *
++   * @command content:synchronizer-list-import-entities
++   * @aliases cslie
++   * @field-labels
++   *   id: Id
++   *   name: Name
++   *   created_time: Created
++   * @default-fields id,name,created_time
++   *
++   * @return RowsOfFields
++   *   A list of import entities.
++   *
++   * @throws \Drupal\Core\Entity\EntityStorageException
++   */
++  public function listImportEntities(): RowsOfFields {
++    $rows = [];
++    $importEntities = \Drupal::entityTypeManager()->getStorage('import_entity')->loadMultiple();
++
++    foreach ($importEntities as $importEntity) {
++      $importEntityId = $importEntity->id();
++      $row = [
++        'id' => $importEntityId,
++        'name' => $importEntity->getName(),
++        'created_time' => date('Y-m-d H:i:s', $importEntity->getCreatedTime())
++      ];
++      $rows[] = $row;
++    }
++
++    return new RowsOfFields($rows);
++  }
++
++  /**
+    * Create an Import Entity from the tar.gz file absolute path.
+    *
+    * @param string $absolutePath
+@@ -226,6 +518,41 @@
+   }
+
+   /**
++   * Delete an import entity, along with the tgz that was bound to it
++   *
++   * @param string $importId
++   *  id of import entity to delete
++   *
++   * @command content:synchronizer-delete-import-entity
++   * @aliases csdie
++   * @usage content:synchronizer-delete-import-entity IMPORT_ID
++   *   Delete an import entity
++   *
++   */
++  public function deleteImportEntity($importId = NULL): void {
++    $importId = $importId ?: $this->io()->ask(
++      $this->t('Import Id ?'),
++      'node',
++      [$this->contentSynchronizerManager, 'entityImportExists']
++    );
++
++    $importEntity = ImportEntity::load($importId);
++    if (!$importEntity) {
++      throw new \Exception("Import entity does not exist.");
++    }
++
++    // Delete file archive
++    $file = $importEntity->getArchive();
++    if (isset($file)) {
++      $file->delete();
++    }
++
++    $importEntity->delete();
++
++    $this->logger->notice($this->t('Successfully deleted Import entity @importId', [ '@importId' => $importId]));
++  }
++
++  /**
+    * Log import data.
+    *
+    * @param array $importData
+@@ -233,7 +560,10 @@
+    */
+   protected function logImportData(array $importData) {
+     foreach ($importData['entities'] as $datum) {
+-      $this->logger->notice($this->t('[@key/@count] - "@label" - @status (@url)', $datum));
++      if($datum['@url'] !== '') {
++        $datum['@url'] = '(' . $datum['@url'] . ')';
++      }
++      $this->logger->notice($this->t('[@key/@count] - [@type:@id] "@label" - @status @url', $datum));
+     }
+   }

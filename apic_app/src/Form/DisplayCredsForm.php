@@ -13,7 +13,7 @@
 
 namespace Drupal\apic_app\Form;
 
-use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
@@ -37,9 +37,9 @@ class DisplayCredsForm extends FormBase {
   protected $messenger;
 
   /**
-   * @var \Drupal\Core\Extension\ModuleHandler
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected ModuleHandler $module_handler;
+  protected ModuleHandlerInterface $module_handler;
 
   /**
    * The node representing the application.
@@ -58,10 +58,10 @@ class DisplayCredsForm extends FormBase {
    * DisplayCredsForm constructor.
    *
    * @param \Drupal\Core\Messenger\Messenger $messenger
-   * @param \Drupal\Core\Extension\ModuleHandler $module_handler
-   * @param \Drupal\Core\Extension\ModuleHandler $api_utils
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $api_utils
    */
-  public function __construct(Messenger $messenger, ModuleHandler $module_handler, ApiUtils $api_utils, PrivateTempStoreFactory $temp_store_factory) {
+  public function __construct(Messenger $messenger, ModuleHandlerInterface $module_handler, ApiUtils $api_utils, PrivateTempStoreFactory $temp_store_factory) {
     $this->messenger = $messenger;
     $this->module_handler = $module_handler;
     $this->api_utils = $api_utils;

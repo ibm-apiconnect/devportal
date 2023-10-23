@@ -37,7 +37,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
-use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Drupal\auth_apic\Service\Interfaces\TokenParserInterface;
 use Drupal\ibm_apim\Service\Utils;
@@ -152,7 +152,7 @@ class ApicUserRegisterForm extends RegisterForm {
                               ApicUserStorageInterface $user_storage,
                               CacheBackendInterface $cache_backend,
                               Messenger $messenger,
-                              ModuleHandler $module_handler,
+                              ModuleHandlerInterface $module_handler,
                               TokenParserInterface $token_parser,
                               Utils $utils,
                               SiteConfig $site_config,

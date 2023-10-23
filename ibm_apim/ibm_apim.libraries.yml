@@ -23,6 +23,14 @@ analytics:
   dependencies:
     - core/drupalSettings
 
+analytics_config:
+  version: 1.x
+  js:
+    js/analytics_config.js: {}
+  css:
+    component:
+      css/analytics_config.css: {}
+
 single_click:
   version: 1.x
   js:

@@ -287,6 +287,23 @@ function ibm_apim_update_8501() {
   }
 }
 
+/**
+* Remove AddToAny Config
+*/
+function ibm_apim_update_10001() {
+  $ids = [ 'node.faq.default', 'node.faq.teaser' ];
+  foreach ($ids as $id) {
+    $view = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load($id);
+    if ($view !== NULL) {
+      $view->removeComponent('addtoany');
+      $view_hidden = $view->get('hidden');
+      unset($view_hidden['addtoany']);
+      $view->set('hidden', $view_hidden);
+      $view->save();
+    }
+  }
+}
+
 function ibm_apim_removeConfigDependency($config, $dep) {
   try {
     $key = 'dependencies.config';

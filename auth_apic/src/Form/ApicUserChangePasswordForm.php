@@ -15,7 +15,7 @@ namespace Drupal\auth_apic\Form;
 use Drupal\auth_apic\UserManagement\ApicPasswordInterface;
 use Drupal\change_pwd_page\Form\ChangePasswordForm;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Password\PasswordInterface;
@@ -32,7 +32,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   use StringTranslationTrait;
 
   /**
-   * @var \Drupal\Core\Extension\ModuleHandler
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
   protected $moduleHandler;
 
@@ -71,7 +71,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
    *
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The account.
-   * @param \Drupal\Core\Extension\ModuleHandler $module_handler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   Module handler.
    * @param \Psr\Log\LoggerInterface $logger
    *   Logger.
@@ -84,7 +84,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    */
   public function __construct(AccountInterface $account,
-                              ModuleHandler $module_handler,
+                              ModuleHandlerInterface $module_handler,
                               LoggerInterface $logger,
                               TranslationInterface $string_translation,
                               PasswordInterface $password_hasher,

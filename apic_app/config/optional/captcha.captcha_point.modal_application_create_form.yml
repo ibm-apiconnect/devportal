@@ -1,0 +1,6 @@
+langcode: en
+status: false
+dependencies: {  }
+formId: modal_application_create_form
+captchaType: image_captcha/Image
+label: modal_application_create_form

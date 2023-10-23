@@ -31,11 +31,6 @@ targetEntityType: node
 bundle: application
 mode: default
 content:
-  addtoany:
-    weight: 0
-    settings: {  }
-    third_party_settings: {  }
-    region: content
   apic_catalog_id:
     weight: 101
     label: above

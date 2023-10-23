@@ -1,4 +1,22 @@
 changes:
+  8.x-5.5.8:
+  - add unit to width (#378) (#380)
+  8.x-5.5.7:
+  - Remove addtoany (#375) (#376)
+  8.x-5.5.6:
+  - adopted using ModuleHandlerInterface instead of class ModuleHandler
+  - Show only configured analytics charts (#371)
+  8.x-5.5.5:
+  - Add form captcha points (#366)
+  8.x-5.5.4:
+  - Add custom fields to CLI applicationget (#363)
+  8.x-5.5.3:
+  - velox/devportal#8193 - add SonarQube integration
+  8.x-5.5.2: null
+  8.x-5.5.1:
+  - apimesh -> velox
+  8.x-5.5.0:
+  - update version [8.x, 5.4.2] -> 8.x-5.5.0
   8.x-5.4.1:
   - Only allow credentials to be viewed once (#360)
   8.x-5.4.0:

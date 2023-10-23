@@ -1,4 +1,10 @@
 changes:
+  8.x-5.5.2:
+  - velox/devportal#8193 - add Sonarqube Integration
+  8.x-5.5.1:
+  - apimesh -> velox
+  8.x-5.5.0:
+  - update version [8.x, 5.4.1] -> 8.x-5.5.0
   8.x-5.4.0:
   - update version 8.x-5.3.2 -> 8.x-5.4.0
   8.x-5.3.1:

@@ -1,0 +1,112 @@
+--- modules/content_synchronizer/src/Processors/Entity/EntityProcessorBase.php  2023-07-12 16:00:08
++++ modules/content_synchronizer/src/Processors/Entity/EntityProcessorBase.php     2023-07-12 16:00:35
+@@ -39,7 +39,7 @@
+     'revision_log',
+     'revision_translation_affected',
+     // 'created',
+-    // 'uuid',.
++    // 'uuid',
+     'id',
+   ];
+
+@@ -238,6 +238,7 @@
+   final public function import(array $dataToImport) {
+     $gid = $dataToImport[ExportEntityWriter::FIELD_GID];
+     $uuid = $dataToImport[ExportEntityWriter::FIELD_UUID];
++    $bundle = $dataToImport[ExportEntityWriter::FIELD_BUNDLE];
+
+     // If the entity has already been imported, we don't have to do it again.
+     $import = ImportProcessor::getCurrentImportProcessor()->getImport();
+@@ -250,10 +251,10 @@
+       ->getImport()
+       ->tagHasImporting($gid);
+
++    $existingEntity = $this->getGlobalReferenceManager()->getExistingEntityByGidAndUuid($gid, $uuid, $bundle);
+     // Get the previous entity by gid.
+-    if ($existingEntity = $this->getGlobalReferenceManager()
+-      ->getExistingEntityByGidAndUuid($gid, $uuid)
+-    ) {
++    if(!empty($existingEntity) && $existingEntity[0]) {
++      $existingEntity = $existingEntity[0];
+       if ($existingEntity) {
+         $backup = clone($existingEntity);
+       }
+@@ -469,25 +470,30 @@
+       $backup = clone($entityToImport);
+     }
+
++    $typeId = $this->getGlobalReferenceManager()
++    ->getEntityTypeFromGid($data[ExportEntityWriter::FIELD_GID]);
++    $typeManager = \Drupal::entityTypeManager()->getDefinition($typeId);
++    $idKey = $typeManager->getKey('id');
++
+     // Create Entity.
+     if (is_null($entityToImport)) {
+       try {
+-        $typeId = $this->getGlobalReferenceManager()
+-          ->getEntityTypeFromGid($data[ExportEntityWriter::FIELD_GID]);
+         $defaultData = $this->getDefaultLanguageData($data);
+
+         // Get type manager.
+         /** @var \Drupal\Core\Entity\ContentEntityType $typeManager */
+-        $typeManager = \Drupal::entityTypeManager()->getDefinition($typeId);
+         $bundleKey = $typeManager->getKey('bundle');
+
+         /** @var \Drupal\Core\Entity\EntityFieldManager $entityFieldManager */
+         $entityFieldManager = \Drupal::service('entity_field.manager');
+-        $baseDefinitions = $entityFieldManager->getFieldDefinitions($typeId, $data[$bundleKey]);
++        $bundle = $data[$bundleKey] ?? $defaultData[$bundleKey];
++        $baseDefinitions = $entityFieldManager->getFieldDefinitions($typeId, $bundle);
+         $createData = array_intersect_key($defaultData, $baseDefinitions);
+
+-        unset($createData[$typeManager->getKey('id')]);
++        unset($createData[$idKey]);
+         unset($createData['uuid']);
++        unset($createData['vid']);
++        unset($createData['nid']);
+
+         $entityToImport = \Drupal::entityTypeManager()
+           ->getStorage($typeId)
+@@ -496,13 +502,17 @@
+       catch (\Exception $e) {
+         \Drupal::messenger()
+           ->addError('Import Process : ' . $e->getMessage() . ' in "' . __METHOD__ . '()"');
+-
+         return NULL;
+       }
+     }
+
+     // Properties not to import.
+     $propertyIdsNotToImport = $this->getPropertiesIdsNotToExportList();
++    $removeProperties[] = "uuid";
++    $removeProperties[] = "nid";
++    $removeProperties[] = "vid";
++    $removeProperties[] = $idKey;
++    $propertyIdsNotToImport = array_merge($propertyIdsNotToImport, $removeProperties);
+
+     // Get the existing translations.
+     $alreadyExistingEntityTranslations = $this->getEntityTranslations($entityToImport);
+@@ -525,7 +535,6 @@
+         ->getProperties() as $propertyId => $propertyData) {
+         // Check properties to import :
+         if (!in_array($propertyId, $propertyIdsNotToImport)) {
+-
+           /** @var \Drupal\content_synchronizer\Processors\Type\TypeProcessorBase $plugin */
+           if ($plugin = $this->getTypeProcessorManager()
+             ->getInstanceByFieldType(get_class($propertyData))
+@@ -534,7 +543,6 @@
+           }
+         }
+       }
+-
+       // Save translation.
+       if ($entityToImport->language()->getId() != $entityToUpdate->language()->getId()) {
+         $this->setChangedTime($entityToImport, $translationData);
+@@ -611,7 +619,7 @@
+    *   The entity processor manager service.
+    */
+   protected function getEntityProcessorManager() {
+-    if (!$this->entityProcessorManager) {
++    if (!isset($this->entityProcessorManager)) {
+       $this->entityProcessorManager = \Drupal::service(EntityProcessorPluginManager::SERVICE_NAME);
+     }

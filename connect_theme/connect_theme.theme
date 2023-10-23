@@ -37,7 +37,6 @@ function connect_theme_page_attachments_alter(array &$attachments) {
   // These libraries are declared in your themeName.libraries.yml and we only
   // load if the module is installed.
   $module_libraries = [
-    'addtoany',
     'ds',
     'social_media_links',
     'superfish',

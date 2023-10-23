@@ -146,7 +146,6 @@ content:
     third_party_settings: {  }
     region: content
 hidden:
-  addtoany: true
   apic_attachments: true
   apic_catalog_id: true
   apic_hostname: true

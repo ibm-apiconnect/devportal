@@ -1,7 +1,7 @@
 framework:
   css:
     theme:
-      css/style.css: { }
+      css/style.css: { weight: -1 }
       css/custom.css: { }
   js:
     bootstrap/assets/javascripts/bootstrap/affix.js: { }
@@ -18,12 +18,6 @@ framework:
     bootstrap/assets/javascripts/bootstrap/transition.js: { }
 
 # 3rd party module libraries.
-addtoany:
-  version: 8.x-2.0
-  css:
-    theme:
-      css/components/add-to-any.css: { }
-
 ds:
   version: 8.x-2.0
   css:

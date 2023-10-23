@@ -573,7 +573,7 @@ ul.analyticsAppSelector li.selected {
   margin-top: 1.5rem;
 }
 
-.views-exposed-form .form-inline #edit-items-per-page.form-control {
+.views-exposed-form .form-inline .form-control[data-drupal-selector="edit-items-per-page"] {
   width: 100%;
 }
 

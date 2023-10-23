@@ -1,0 +1,9 @@
+--- core/modules/locale/src/Form/TranslateEditForm.php  2023-09-19 18:57:50
++++ core/modules/locale/src/Form/TranslateEditForm.php     2023-09-22 16:10:03
+@@ -236,6 +236,7 @@
+       // Clear cache and force refresh of JavaScript translations.
+       _locale_refresh_translations([$langcode], $updated);
+       _locale_refresh_configuration([$langcode], $updated);
++      refreshAPICBlocks();
+     }
+   }

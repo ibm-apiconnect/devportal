@@ -1,0 +1,18 @@
+--- modules/content_synchronizer/src/Plugin/content_synchronizer/type_processor/FieldItemListProcessor.php      2023-07-10 14:59:03
++++ modules/content_synchronizer/src/Plugin/content_synchronizer/type_processor/FieldItemListProcessor.php 2023-07-10 14:59:00
+@@ -223,13 +223,13 @@
+    * @param string $path_list
+    *   The list of path.
+    *
+-   * @return \Drupal\Core\Entity\EntityInterface|null
++   * @return array|null
+    *   The file if exists.
+    *
+    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+    */
+-  protected function getEntitiesFromSrc(array $path_list): ?EntityInterface {
++  protected function getEntitiesFromSrc(array $path_list): array {
+     $entities = [];
+     /** @var \Drupal\file\FileStorageInterface $fileStorage */
+     $fileStorage = $this->entityTypeManager->getStorage('file');

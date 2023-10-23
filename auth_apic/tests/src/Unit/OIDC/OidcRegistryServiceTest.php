@@ -52,15 +52,32 @@ class OidcRegistryServiceTest extends UnitTestCase {
    */
   protected $apimUtils;
 
-  /**
-   * @var \Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface|\Prophecy\Prophecy\ObjectProphecy
-   */
-  protected $oidcStateService;
 
   /**
-   * @var \Drupal\Core\Extension\ModuleHandler|\Prophecy\Prophecy\ObjectProphecy
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface|\Prophecy\Prophecy\ObjectProphecy
    */
   protected $moduleHandler;
+
+  /**
+   * @var Drupal\encrypt\EncryptServiceInterface
+   */
+  protected $encryption;
+
+  /**
+   * @var \Drupal\encrypt\EncryptionProfileManagerInterface
+   */
+  protected $profileManager;
+  protected $encryptionProfile;
+  /**
+   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $storeFactory;
+  protected $time;
+
+  /**
+   * @var \Drupal\Core\TempStore\PrivateTempStore|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $store;
 
   protected function setup(): void {
     $this->prophet = new Prophet();
@@ -68,8 +85,14 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->logger = $this->prophet->prophesize('Psr\Log\LoggerInterface');
     $this->utils = $this->prophet->prophesize('Drupal\ibm_apim\Service\Utils');
     $this->apimUtils = $this->prophet->prophesize('Drupal\ibm_apim\Service\ApimUtils');
-    $this->oidcStateService = $this->prophet->prophesize('Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface');
-    $this->moduleHandler = $this->prophet->prophesize('Drupal\Core\Extension\ModuleHandler');
+    $this->moduleHandler = $this->prophet->prophesize('Drupal\Core\Extension\ModuleHandlerInterface');
+    $this->time = $this->prophet->prophesize('\Drupal\Component\Datetime\Time');
+    $this->encryption = $this->prophet->prophesize('\Drupal\encrypt\EncryptServiceInterface');
+    $this->profileManager = $this->prophet->prophesize('\Drupal\encrypt\EncryptionProfileManagerInterface');
+    $this->encryptionProfile = $this->prophet->prophesize('\Drupal\encrypt\EncryptionProfileInterface');
+    $this->storeFactory = $this->prophet->prophesize('Drupal\Core\TempStore\PrivateTempStoreFactory');
+    $this->store = $this->prophet->prophesize('Drupal\Core\TempStore\PrivateTempStore');
+    $this->storeFactory->get('auth_apic_storage')->willReturn($this->store);
   }
 
   protected function tearDown(): void {
@@ -85,7 +108,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $oidc_registry->setRegistryType('oidc');
     $oidc_registry->setProviderType('google');
     // TODO: need to add identity provider to get realm
-    // see https://github.ibm.com/apimesh/devportal/issues/3726
+    // see https://github.ibm.com/velox/devportal/issues/3726
     // $oidc_registry->setIdentityProviders(array(array('name'=>'idp1')));
 
     $this->state->get('ibm_apim.site_client_id')->willReturn('iamaclientid');
@@ -95,11 +118,12 @@ class OidcRegistryServiceTest extends UnitTestCase {
       ->willReturn('https://mgmt.example.com/consumer-api/oauth2/authorize');
 
     $service = $this->getServiceUnderTest();
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
     $response = $service->getOidcMetadata($oidc_registry);
+
 
     $this->logger->warning(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
-    $this->oidcStateService->store(Argument::any())->shouldBeCalled();
 
     self::assertNotNull($response, 'unexpected NULL response when gathering oidc metadata.');
     self::assertNotNull($response['az_url'], 'unexpected NULL az_url when gathering oidc metadata.');
@@ -130,6 +154,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
 
     $invitation_object = new JWTToken();
     $invitation_object->setDecodedJwt('blahdeblah');
+    $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
 
     $this->state->get('ibm_apim.site_client_id')->willReturn('iamaclientid');
     $this->utils->base64_url_encode(Argument::any())->willReturn('base64encodedstate');
@@ -142,7 +167,6 @@ class OidcRegistryServiceTest extends UnitTestCase {
 
     $this->logger->warning(Argument::any())->shouldNotBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
-    $this->oidcStateService->store(Argument::any())->shouldBeCalled();
 
     self::assertNotNull($response, 'unexpected NULL response when gathering oidc metadata.');
     self::assertNotNull($response['az_url'], 'unexpected NULL az_url when gathering oidc metadata.');
@@ -197,8 +221,12 @@ class OidcRegistryServiceTest extends UnitTestCase {
       $this->logger->reveal(),
       $this->utils->reveal(),
       $this->apimUtils->reveal(),
-      $this->oidcStateService->reveal(),
-      $this->moduleHandler->reveal());
+      $this->moduleHandler->reveal(),
+      $this->storeFactory->reveal(),
+      $this->time->reveal(),
+      $this->encryption->reveal(),
+      $this->profileManager->reveal()
+    );
   }
 
 }

@@ -17,7 +17,7 @@
 (function($, Drupal, drupalSettings, once) {
   Drupal.behaviors.ibmApimValidatePassword = {
     attach: function attach(context, drupalSettings) {
-      var $passwordInput = $(once('ibmApimValidatePassword', context)).find('input.js-password-field');
+      var $passwordInput = $(once('ibmApimValidatePassword', 'input.js-password-field', context));
 
       if ($passwordInput.length) {
 

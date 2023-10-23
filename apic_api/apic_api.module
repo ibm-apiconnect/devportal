@@ -29,7 +29,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\product\Product;
@@ -110,7 +109,7 @@ function apic_api_node_access_records($node): array {
       // product_apis_value will be the same string
       $options = ['target' => 'default'];
       $query = Database::getConnection($options['target'])
-        ->query("SELECT entity_id FROM {node__product_apis} WHERE product_apis_value LIKE '%" . $apiRef . "%'", [], $options);
+        ->query("SELECT node__apic_url.entity_id, node__apic_url.apic_url_value FROM node__product_apis INNER JOIN node__apic_url ON node__product_apis.entity_id = node__apic_url.entity_id WHERE product_apis_value LIKE  '%" . $apiRef . "%'", [], $options);
       $prods = $query->fetchAll();
 
 
@@ -199,9 +198,10 @@ WHERE  (pub.entity_id = ' . $prod->entity_id . ')', [], $options);
               ];
             }
             // Create a grant for subscription based on product reference
-            if (isset($row->apic_ref_value)) {
+            if (isset($prod->apic_url_value)) {
+              $url = str_replace('/', '_', $prod->apic_url_value);
               $grants[] = [
-                'realm' => 'product_ref_' . $row->apic_ref_value,
+                'realm' => 'product_ref_' . $url,
                 'gid' => SUBSCRIBED_TO_PRODUCT_GRANT,
                 'grant_view' => 1,
                 'grant_update' => 0,
@@ -436,7 +436,6 @@ function apic_api_preprocess_node(&$variables): void {
         'revision_log',
         'created',
         'links',
-        'addtoany',
         'uid',
         'comment',
       ];
@@ -629,7 +628,6 @@ function apic_api_preprocess_node(&$variables): void {
                  'apic_attachments',
                  'apic_tags',
                  'links',
-                 'addtoany',
                ] as $fieldName) {
         $apicComponent = $entityView->getComponent($fieldName);
         if (isset($variables['node']->{$fieldName}) && $field = $variables['node']->{$fieldName}) {

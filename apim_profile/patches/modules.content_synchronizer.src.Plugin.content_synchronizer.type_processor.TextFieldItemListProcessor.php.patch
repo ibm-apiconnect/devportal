@@ -1,0 +1,376 @@
+--- /dev/null   2023-08-31 17:00:43
++++ modules/content_synchronizer/src/Plugin/content_synchronizer/type_processor/TextFieldItemListProcessor.php  2023-08-31 17:00:28
+@@ -0,0 +1,373 @@
++<?php
++
++namespace Drupal\content_synchronizer\Plugin\content_synchronizer\type_processor;
++
++use Drupal\Component\Utility\Html;
++use Drupal\content_synchronizer\Processors\ImportProcessor;
++use Drupal\Core\Entity\EntityInterface;
++use Drupal\Core\Entity\EntityRepositoryInterface;
++use Drupal\Core\Entity\EntityTypeManagerInterface;
++use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
++use Drupal\Core\TypedData\TypedData;
++use Drupal\content_synchronizer\Processors\Type\TypeProcessorBase;
++use Psr\Container\ContainerInterface;
++
++/**
++ * Plugin implementation For the type processor .
++ *
++ * @TypeProcessor(
++ *   id = "content_synchronzer_text_field_item_list_type_processor",
++ *   fieldType = "Drupal\text\Plugin\Field\FieldType\TextFieldItemList"
++ * )
++ */
++class TextFieldItemListProcessor extends TypeProcessorBase implements ContainerFactoryPluginInterface {
++
++  /**
++   * Entity Type manager.
++   *
++   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
++   */
++  protected EntityTypeManagerInterface $entityTypeManager;
++
++  /**
++   * Entity repository.
++   *
++   * @var \Drupal\Core\Entity\EntityRepositoryInterface
++   */
++  protected EntityRepositoryInterface $entityRepository;
++
++  /**
++   * {@inheritdoc}
++   */
++  public function __construct(
++    array $configuration,
++    $plugin_id,
++    $plugin_definition,
++    EntityTypeManagerInterface $entity_type_manager,
++    EntityRepositoryInterface $entity_repository,
++  ) {
++    parent::__construct($configuration, $plugin_id, $plugin_definition);
++    $this->entityTypeManager = $entity_type_manager;
++    $this->entityRepository = $entity_repository;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
++    return new static(
++      $configuration,
++      $plugin_id,
++      $plugin_definition,
++      $container->get('entity_type.manager'),
++      $container->get('entity.repository'),
++    );
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getExportedData(TypedData $propertyData) {
++    $data = [];
++    $embed_entities = [];
++
++    foreach ($propertyData as $value) {
++      $content = $value->getValue();
++      $this->initEmbedEntitiesExport($content, $embed_entities);
++      $data[] = $content;
++    }
++
++    if (!empty($embed_entities)) {
++      $data['embed_entities'] = $embed_entities;
++    }
++
++    return $data;
++  }
++
++  /**
++   * Update the src element to a reference to the gid plus src
++   *
++   * Replace local src in the value with the gid + '.src'.
++   *
++   * @param array $fileKeys
++   *   The keys for the file in embeded entity array.
++   * @param string $content
++   *   The content.
++   */
++  protected function updateFileSrc(array $fileKeys, string $content) {
++    $dom = Html::load($content);
++    $xpath = new \DOMXPath($dom);
++    /** @var \DOMElement $node */
++    foreach ($xpath->query('//*[@data-entity-uuid and @src]') as $node) {
++      $uuid = $node->getAttribute('data-entity-uuid');
++      if (in_array($uuid, $fileKeys)) {
++        $node->setAttribute('src', $uuid . '.src');
++      }
++    }
++
++    return Html::serialize($dom);
++  }
++
++  /**
++   * Export embed entities and return embed entities gid map.
++   *
++   * Replace local uuid in the value with the gid.
++   *
++   * @param array $content
++   *   The content.
++   * @param array $embed_entities
++   *   The embed entities.
++   */
++  protected function initEmbedEntitiesExport(array &$content, array &$embed_entities): void {
++    foreach ($content as $property_id => $value) {
++      if (!empty($value) && is_string($value)) {
++        $embed_entities = array_merge($embed_entities, $this->exportTextEmbedEntities($value));
++        if (!empty($embed_entities)) {
++          $content[$property_id] = $this->getGlobalReferencedEntitiesContent($embed_entities, $value);
++        }
++      }
++    }
++  }
++
++  /**
++   * Parse text and export embed entities.
++   *
++   * @param string $value
++   *   The value.
++   *
++   * @return array
++   *   The array of gid => uuid.
++   *
++   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
++   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
++   */
++  protected function exportTextEmbedEntities(string $value): array {
++    /** @var \Drupal\Core\Entity\EntityInterface[] $entities */
++    $entities = array_filter(
++      array_merge(
++        [],
++        $this->getEmbedImages($value),
++        $this->getEmbedEntities($value),
++      )
++    );
++
++    $embed_entities = [];
++    foreach ($entities as $entity) {
++      $plugin = $this->pluginManager->getInstanceByEntityType($entity->getEntityTypeId());
++      if (isset($plugin)) {
++        try {
++          $gid = $plugin->export($entity);
++          if ($gid) {
++            $embed_entities[$gid] = $entity->uuid();
++          }
++        }
++        catch (\Exception $e) {
++          // Mute exception...
++        }
++      }
++    }
++
++    return $embed_entities;
++  }
++
++  /**
++   * Return attribute values.
++   *
++   * @param string $value
++   *   The value.
++   * @param string $attribute
++   *   The attribute.
++   *
++   * @return array
++   *   The attribute values.
++   */
++  protected function getAttributeValues(string $value, string $attribute): array {
++    $match = [];
++    preg_match_all('@' . $attribute . '="([^"]+)"@', $value, $match);
++
++    return array_filter(array_pop($match));
++  }
++
++  /**
++   * Export src files.
++   *
++   * @param string $value
++   *   The value.
++   *
++   * @return \Drupal\Core\Entity\EntityInterface[]
++   *   The list of entities.
++   *
++   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
++   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
++   */
++  protected function getEmbedImages(string $value): array {
++    $src = $this->getAttributeValues($value, 'src');
++    return empty($src) ? [] : $this->getEntitiesFromSrc($src);
++  }
++
++  /**
++   * Export embed entity.
++   *
++   * @param string $value
++   *   The value.
++   */
++  protected function getEmbedEntities(string $value) {
++    // First check reg ex if content has data-entity-uuid attributes.
++    $uuids = $this->getAttributeValues($value, 'data-entity-uuid');
++    return empty($uuids) ? [] : $this->getHTMLEmbedEntities($value);
++  }
++
++  /**
++   * Return the list of embed entities in html.
++   *
++   * @param string $html
++   *   The html/.
++   *
++   * @return \Drupal\Core\Entity\EntityInterface[]
++   *   The list of embed entities.
++   *
++   * @throws \Drupal\Core\Entity\EntityStorageException
++   */
++  protected function getHTMLEmbedEntities(string $html): array {
++    $dom = Html::load($html);
++    $xpath = new \DOMXPath($dom);
++    $entities = [];
++    /** @var \DOMElement $node */
++    foreach ($xpath->query('//*[@data-entity-type and @data-entity-uuid]') as $node) {
++      $type = $node->getAttribute('data-entity-type');
++      $uuid = $node->getAttribute('data-entity-uuid');
++      $entities[] = $this->entityRepository->loadEntityByUuid($type, $uuid);
++    }
++    return $entities;
++  }
++
++  /**
++   * Return file from src path.
++   *
++   * @param string $path_list
++   *   The list of path.
++   *
++   * @return array|null
++   *   The file if exists.
++   *
++   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
++   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
++   */
++  protected function getEntitiesFromSrc(array $path_list): array {
++    $entities = [];
++    /** @var \Drupal\file\FileStorageInterface $fileStorage */
++    $fileStorage = $this->entityTypeManager->getStorage('file');
++
++    foreach ($path_list as $path) {
++      $fileNameData = explode('/files/', urldecode($path));
++      $fileName = end($fileNameData);
++
++      /** @var \Drupal\file\Entity\File $file */
++      $files = $fileStorage
++        ->getQuery()
++        ->condition('uri', '%://' . $fileName, 'LIKE')
++        ->accessCheck(TRUE)
++        ->execute();
++
++      $file = $fileStorage->load(reset($files));
++      if ($file) {
++        $entities[] = $file;
++      }
++    }
++
++    return $entities;
++  }
++
++  /**
++   * Replace local uuid and src by gid in content.
++   *
++   * @param array $embed_entities_map
++   *   The embed entities map.
++   * @param string $content
++   *   The content.
++   *
++   * @return string
++   *   The content.
++   */
++  protected function getGlobalReferencedEntitiesContent(array $embed_entities_map, string $content) {
++    $arrayKeys = array_keys($embed_entities_map);
++    $value = str_replace($embed_entities_map, $arrayKeys, $content);
++    $value = $this->updateFileSrc($arrayKeys, $value);
++
++    return $value;
++  }
++
++  /**
++   * Replace gid with local uuid and src in content.
++   *
++   * @param array $embed_entities_map
++   *   The embed entities map.
++   * @param string $content
++   *   The content.
++   *
++   * @return string
++   *   The content.
++   */
++  protected function getLocalReferencedEntitiesContent(array $embed_entities_map, string $content) {
++    $uuidKeys = array_filter($embed_entities_map, function($k) {
++      return !str_contains($k, '.src');
++    }, ARRAY_FILTER_USE_KEY);
++    $srcKeys = array_filter($embed_entities_map, function($k) {
++      return str_contains($k, '.src');
++    }, ARRAY_FILTER_USE_KEY);
++
++    $content = str_replace(array_keys($srcKeys), $srcKeys, $content);
++    $content = str_replace(array_keys($uuidKeys), $uuidKeys, $content);
++
++    return $content;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function initImportedEntity(EntityInterface $entity_to_import, $property_id, array $data) {
++    if (isset($data[$property_id])) {
++      $content = $data[$property_id];
++
++      if (isset($content['embed_entities'])) {
++        $embed_entities = $content['embed_entities'];
++        $this->importEmbedEntities($embed_entities);
++        unset($content['embed_entities']);
++
++        foreach ($content as &$item) {
++          foreach ($item as &$value) {
++            $value = $this->getLocalReferencedEntitiesContent($embed_entities, $value);
++          }
++        }
++      }
++
++      $entity_to_import->set($property_id, $content);
++    }
++  }
++
++  /**
++   * Import embed entities.
++   *
++   * @param array $embed_entities
++   *   The embed entities map.
++   *
++   * @throws \Drupal\Core\TypedData\Exception\MissingDataException
++   */
++  protected function importEmbedEntities(array &$embed_entities) {
++    $import = ImportProcessor::getCurrentImportProcessor()
++      ->getImport();
++
++    foreach ($embed_entities as $gid => $uuid) {
++      $entity_data = $import->getEntityDataFromGid($gid);
++      if ($entity_data) {
++        $plugin = $this->pluginManager->getInstanceByEntityType($this->referenceManager->getEntityTypeFromGid($gid));
++        $entity = $plugin->import($entity_data);
++        if ($entity) {
++          $embed_entities[$gid] = $entity->uuid();
++          $embed_entities[$gid.'.src'] = $entity->createFileUrl(FALSE);
++        }
++      }
++    }
++  }
++
++}

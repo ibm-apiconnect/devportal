@@ -2,16 +2,16 @@
 @@ with a small patch of our own (the change to UpdateManagerInstall) to allow modules and themes
 @@ to be installed in the Drupal 8 portal.
 --- core/core.services.yml      2022-12-09 13:01:05
-+++ core/core.services copy.yml 2022-12-09 16:50:46
-@@ -894,7 +894,7 @@
-     arguments: ['@request_stack', '@url_generator']
++++ core/core.services.yml 2022-12-09 16:50:46
+@@ -1016,7 +1016,7 @@
+   Drupal\Core\Routing\RedirectDestinationInterface: '@redirect.destination'
    unrouted_url_assembler:
      class: Drupal\Core\Utility\UnroutedUrlAssembler
 -    arguments: ['@request_stack', '@path_processor_manager', '%filter_protocols%']
 +    arguments: ['@request_stack', '@router.request_context', '@path_processor_manager', '%filter_protocols%']
+   Drupal\Core\Utility\UnroutedUrlAssemblerInterface: '@unrouted_url_assembler'
    link_generator:
      class: Drupal\Core\Utility\LinkGenerator
-     arguments: ['@url_generator', '@module_handler', '@renderer']
 
 --- core/lib/Drupal/Core/Routing/RequestContext.php
 +++ core/lib/Drupal/Core/Routing/RequestContext.php

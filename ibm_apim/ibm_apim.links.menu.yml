@@ -3,6 +3,13 @@ ibm_apim.settings:
   route_name: ibm_apim.settings
   parent: system.admin_config_system
   description: 'IBM API Developer Portal configuration.'
+  weight: -26
+
+ibm_apim.analytics_settings:
+  title: 'IBM API Developer Portal Consumer Analytics'
+  route_name: ibm_apim.analytics_settings
+  parent: system.admin_config_system
+  description: 'IBM API Developer Portal Consumer Analytics settings'
   weight: -25
 
 ibm_apim.billing_settings:

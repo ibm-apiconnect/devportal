@@ -9,7 +9,7 @@
 +      $query = isset($user_input['name']) ? ['name' => $user_input['name']] : [];
 +      //$form_state->setErrorByName('name', $this->t('The username %name has not been activated or is blocked.', ['%name' => $form_state->getValue('name')]));
 +      $this->logger('user')->notice('Login attempt for %user which has not been activated or is blocked.', ['%user' => $form_state->getValue('name')]);
-+      $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
++      $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
 +      $form_state->setErrorByName('usernameorpassword2', $this->t('<a href=":password">Forgot your password? Click here to reset it.</a>', [':password' => Url::fromRoute('user.pass', [], ['query' => $query])->toString()]));
      }
    }
@@ -24,7 +24,7 @@
 -          $message = $this->formatPlural($flood_config->get('user_limit'), 'There has been more than one failed login attempt for this account. It is temporarily blocked. Try again later or <a href=":url">request a new password</a>.', 'There have been more than @count failed login attempts for this account. It is temporarily blocked. Try again later or <a href=":url">request a new password</a>.', [':url' => Url::fromRoute('user.pass')->toString()]);
 +          //$message = $this->formatPlural($flood_config->get('user_limit'), 'There has been more than one failed login attempt for this account. It is temporarily blocked. Try again later or <a href=":url">request a new password</a>.', 'There have been more than @count failed login attempts for this account. It is temporarily blocked. Try again later or <a href=":url">request a new password</a>.', [':url' => Url::fromRoute('user.pass')->toString()]);
 +          $this->logger('user')->notice('Login attempt blocked for %user.', ['%user' => $form_state->getValue('name')]);
-+          $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
++          $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
 +          $form_state->setErrorByName('usernameorpassword2', $this->t('<a href=":password">Forgot your password? Click here to reset it.</a>', [':password' => Url::fromRoute('user.pass', [], ['query' => $query])->toString()]));
          }
          else {
@@ -36,7 +36,7 @@
 -        $form_state->setResponse($response);
 +          //$message = $this->t('Too many failed login attempts from your IP address. This IP address is temporarily blocked. Try again later or <a href=":url">request a new password</a>.', [':url' => Url::fromRoute('user.pass')->toString()]);
 +          $this->logger('user')->notice('Login attempt blocked from %ip.', ['%ip' => $this->getRequest()->getClientIp()]);
-+          $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
++          $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
 +          $form_state->setErrorByName('usernameorpassword2', $this->t('<a href=":password">Forgot your password? Click here to reset it.</a>', [':password' => Url::fromRoute('user.pass', [], ['query' => $query])->toString()]));
 +        }
 +        // $response = $this->bareHtmlPageRenderer->renderBarePage(['#markup' => $message], $this->t('Login failed'), 'maintenance_page');
@@ -51,7 +51,7 @@
          $query = isset($user_input['name']) ? ['name' => $user_input['name']] : [];
 -        $form_state->setErrorByName('name', $this->t('Unrecognized username or password. <a href=":password">Forgot your password?</a>', [':password' => Url::fromRoute('user.pass', [], ['query' => $query])->toString()]));
 -        $accounts = $this->userStorage->loadByProperties(['name' => $form_state->getValue('name')]);
-+        $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
++        $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
 +        $form_state->setErrorByName('usernameorpassword2', $this->t('<a href=":password">Forgot your password? Click here to reset it.</a>', [':password' => Url::fromRoute('user.pass', [], ['query' => $query])->toString()]));        $accounts = $this->userStorage->loadByProperties(['name' => $form_state->getValue('name')]);
          if (!empty($accounts)) {
            $this->logger('user')->notice('Login attempt failed for %user.', ['%user' => $form_state->getValue('name')]);

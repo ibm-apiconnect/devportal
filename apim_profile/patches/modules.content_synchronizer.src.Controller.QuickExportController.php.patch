@@ -1,0 +1,65 @@
+--- modules/content_synchronizer/src/Controller/QuickExportController.php       2023-08-31 12:39:28
++++ modules/content_synchronizer/src/Controller/QuickExportController.php  2023-09-05 10:06:49
+@@ -26,6 +26,13 @@
+   protected $url = '/admin/content';
+
+   /**
++   * The APIs Taxonomy ID.
++   *
++   * @var string
++   */
++  protected string $apisTaxonomyID;
++
++  /**
+    * Launch quick export batch.
+    *
+    * @param \Symfony\Component\HttpFoundation\Request $request
+@@ -46,6 +53,15 @@
+         ->getStorage($request->query->get('entityTypeId'))
+         ->load($request->query->get('entityId'));
+
++      if($this->isBlocked($entity->getEntityTypeId()) || $this->isBlocked($entity->bundle())) {
++        \Drupal::messenger()->addWarning(t('You have selected an entity that been blocked. Please try again. Blocked entities @entity', [ '@entity' => $entity->bundle() ?? $entity->getEntityTypeId() ]));
++        return new RedirectResponse($this->url);
++      }
++      if(($entity->getEntityTypeId() == 'taxonomy_term' && $this->isBlockedTaxonomyTerm($entity->id())) || ($entity->getEntityTypeId() == 'node' && $entity->bundle() == 'forum' && $this->isBlockedTaxonomyTerm($entity->get('taxonomy_forums')->getString()))) {
++        \Drupal::messenger()->addWarning(t('You have selected an entity that been blocked. Please try again. Blocked entities @entity', [ '@entity' => $entity->bundle() ?? $entity->getEntityTypeId() ]));
++        return new RedirectResponse($this->url);
++      }
++
+       $writer = new ExportEntityWriter();
+       $writer->initFromId($entity->getEntityTypeId() . '.' . $entity->id());
+
+@@ -78,4 +94,32 @@
+       ->redirectWithArchivePath($this->url, $archiveUri);
+   }
+
++  public function isBlocked(string $entity): bool {
++    $blockedTypes = [ "crop", "user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs",
++                  "apic_app_application_creds", "avatars_preview", "comment", "contact_message", "search_api_task", "vote", "vote_result" ];
++    return in_array($entity, $blockedTypes);
++  }
++
++  public function isBlockedTaxonomyTerm(string $taxonomyID): bool {
++    if (empty($this->apisTaxonomyID)) {
++      $result = \Drupal::entityQuery('taxonomy_term')
++            ->condition('name', 'APIs')
++            ->condition('parent', 'forums')
++            ->accessCheck()
++            ->execute();
++      $this->apisTaxonomyID = !empty($result) ? array_shift($result) : '';
++    }
++
++    if (!empty($this->apisTaxonomyID)) {
++      return empty(\Drupal::entityQuery('taxonomy_term')
++      ->condition('tid', $this->apisTaxonomyID, 'NOT IN')
++      ->condition('tid', $taxonomyID)
++      ->condition('parent', $this->apisTaxonomyID, 'NOT IN')
++      ->accessCheck()
++      ->execute());
++    }
++
++    return false;
++  }
++
+ }

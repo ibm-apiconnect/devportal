@@ -132,7 +132,8 @@ install:
   - restrict_by_ip
   - ckeditor5
   - media
-  - single_content_sync
+  - content_synchronizer
+  - fontawesome
 
 themes:
   - olivero

@@ -2,5 +2,5 @@ langcode: en
 status: true
 dependencies: {  }
 formId: consumerorg_resend_invitation_form
-captchaType: default
+captchaType: image_captcha/Image
 label: consumerorg_resend_invitation_form
