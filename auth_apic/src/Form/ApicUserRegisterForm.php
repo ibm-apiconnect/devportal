@@ -37,7 +37,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
-use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Drupal\auth_apic\Service\Interfaces\TokenParserInterface;
 use Drupal\ibm_apim\Service\Utils;
@@ -152,7 +152,7 @@ class ApicUserRegisterForm extends RegisterForm {
                               ApicUserStorageInterface $user_storage,
                               CacheBackendInterface $cache_backend,
                               Messenger $messenger,
-                              ModuleHandler $module_handler,
+                              ModuleHandlerInterface $module_handler,
                               TokenParserInterface $token_parser,
                               Utils $utils,
                               SiteConfig $site_config,
@@ -611,12 +611,15 @@ class ApicUserRegisterForm extends RegisterForm {
       $form_state->getValue('last_name'),
       $form_state->getValue('consumerorg')
     ];
+
+    $pattern = '/(https?|ftp|ftps|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]|www\.[A-Z0-9.-]+\.[A-Z]{2,4}/i';
+
     foreach($valuesToValidate as $val) {
       while (is_array($val) && !empty($val)) {
         $val = array_shift($val);
       }
       $val = ($val === null) ? '' : $val;
-      if (strlen($val) > 255 || strpos($val, 'http://') !== false || strpos($val, 'https://') !== false) {
+      if (strlen($val) > 255 || preg_match($pattern, $val)) {
         $form_state->setErrorByName('', t('A problem occurred while attempting to create your account. Inputs cannot exceed max length or include URLs'));
       }
     }

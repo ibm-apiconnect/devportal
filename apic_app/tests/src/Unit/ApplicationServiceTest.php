@@ -38,7 +38,7 @@ class ApplicationServiceTest extends UnitTestCase {
     $this->mockApimUtils = $this->createStub(\Drupal\ibm_apim\Service\ApimUtils::class);
     $this->mockUtils = $this->createStub(\Drupal\ibm_apim\Service\Utils::class);
     $this->mockEventLogService = $this->createStub(\Drupal\ibm_apim\Service\EventLogService::class);
-    $this->mockModuleHandler = $this->createStub(\Drupal\Core\Extension\ModuleHandler::class);
+    $this->mockModuleHandler = $this->createStub(\Drupal\Core\Extension\ModuleHandlerInterface::class);
     $this->mockCredentialsService = $this->createStub(\Drupal\apic_app\Service\CredentialsService::class);
     $this->mockSerializer = $this->createStub(\Symfony\Component\Serializer\Serializer::class);
     $this->mockSiteConfig = $this->createStub(\Drupal\ibm_apim\Service\SiteConfig::class);

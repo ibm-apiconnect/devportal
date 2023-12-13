@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2023
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -49,88 +49,6 @@ function ibm_apim_init() {
     if ($ibm_apim_last_access !== $timestamp) {
       \Drupal::state()->set('ibm_apim.last_access', $timestamp);
     }
-  }
-}
-
-/**
- * Hook for single_content_sync to be able to export custom fields on entities
- *
- * @param string $value
- * @param FieldItemListInterface $field
- */
-function ibm_apim_content_export_field_value_alter(&$value, FieldItemListInterface $field) {
-    $field_definition = $field->getFieldDefinition();
-    $field_type = $field_definition->getType();
-
-    switch ($field_type) {
-      case 'faqfield':
-        $value = $field->getValue();
-        break;
-    }
-}
-
-/**
- * Hook for single_content_sync to be able to export custom entities
- *
- * @param array $base_fields
- * @param FieldableEntityInterface $field
- */
-function ibm_apim_content_export_entity_alter(array &$base_fields, FieldableEntityInterface $entity) {
-  $entity_type = $entity->getEntityTypeId();
-
-  switch ($entity_type) {
-    case 'menu_link_content':
-      if ($entity instanceof MenuLinkContentInterface) {
-        $base_fields = [
-          'title' => $entity->getTitle(),
-          'langcode' => $entity->language()->getId(),
-          'description' => $entity->getDescription(),
-          'uri' =>  $entity->get('link')->uri,
-          'menu_name' => $entity->getMenuName(),
-          'weight' => $entity->getWeight(),
-          'enabled' => $entity->isEnabled(),
-        ];
-      }
-      break;
-  }
-}
-
-/**
- * Hook for single_content_sync to be able to import fields on entities
- *
- * @param FieldableEntityInterface $entity
- * @param $field_name
- * @param $field_value
- */
-function ibm_apim_content_import_field_value_alter(FieldableEntityInterface $entity, $field_name, $field_value) {
-  $field_definition = $entity->getFieldDefinition($field_name);
-  switch ($field_definition->getType()) {
-    case 'faqfield':
-      $entity->set($field_name, $field_value);
-      break;
-  }
-}
-
-/**
- * Hook for single_content_sync to be able to import custom entities
- *
- * @param string $entity_type_id
- * @param array $entity
- * @param array $values
- */
-function ibm_apim_content_entity_map_values_alter(string $entity_type_id, array &$entity, array $values) {
-  switch ($entity_type_id) {
-    case 'menu_link_content':
-      $entity = [
-        'title' => $values['title'],
-        'langcode' => $values['langcode'],
-        'description' => $values['description'],
-        'link' =>  ['uri' => $values['uri']],
-        'menu_name' => $values['menu_name'],
-        'weight' => $values['weight'],
-        'enabled' => $values['enabled'],
-      ];
-      break;
   }
 }
 
@@ -683,6 +601,10 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     case 'system_modules' :
       // The 'Extend' module list page
 
+      // hide the memcache module
+      if (isset($form['modules']['Performance and scalability']['memcache'])) {
+        unset($form['modules']['Performance and scalability']['memcache']);
+      }
       // hide the password policy history module
       if (isset($form['modules']['Security']['password_policy_history'])) {
         unset($form['modules']['Security']['password_policy_history']);
@@ -746,8 +668,11 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
           unset($form['modules']['IBM API Developer Portal']['ibm_stripe_payment_method']);
         }
       }
+      $siteConfig = \Drupal::service('ibm_apim.site_config');
       // blocklist some modules
-      $moduleBlocklist = \Drupal::service('ibm_apim.site_config')->getBlockList();
+      $moduleBlocklist = $siteConfig->getBlockList();
+      $doubleInstalledModules = $siteConfig->getModulesBothShippedAndCustomInstalled();
+      $moduleHandler = \Drupal::service('module_handler');
       if (isset($moduleBlocklist) && !empty($moduleBlocklist)) {
         foreach ($form['modules'] as $modulePackage => $modules) {
           if (!is_array($modules)) {
@@ -755,20 +680,26 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
           }
 
           foreach ($modules as $moduleName => $module_info) {
-            // Checks whether the module is blocklisted.
-            if (!in_array($moduleName, $moduleBlocklist, FALSE)) {
-              continue;
-            }
+            $blockModule = false;
+            $blockedMessage = '';
 
-            // Skips modules that are already enabled, even if it is blocklisted.
-            if ($form['modules'][$modulePackage][$moduleName]['enable']['#default_value'] === TRUE) {
-              continue;
+            // Checks whether the module is blocklisted. Skips modules that are already enabled, even if it is blocklisted or double installed
+            if ($moduleHandler->moduleExists($moduleName) === false) {
+              if (in_array($moduleName, $moduleBlocklist, false)) {
+                $blockModule = true;
+                $blockedMessage = '<strong>WARNING</strong>: The installation of this module is being blocked.';
+              } elseif (in_array($moduleName, $doubleInstalledModules)) {
+                $blockModule = true;
+                $blockedMessage = '<strong>WARNING</strong>: The installation of this module is being blocked as it has been installed twice. Please delete it.';
+              }
             }
 
             // Alters the module form row, disabling the module installation.
-            $form['modules'][$modulePackage][$moduleName]['enable']['#disabled'] = TRUE;
-            $form['modules'][$modulePackage][$moduleName]['name']['#markup'] .= " (" . t('blocked') . ")";
-            $form['modules'][$modulePackage][$moduleName]['description']['#markup'] .= ' ' . t('WARNING: The installation of this module is being blocked.');
+            if ($blockModule) {
+              $form['modules'][$modulePackage][$moduleName]['enable']['#disabled'] = true;
+              $form['modules'][$modulePackage][$moduleName]['name']['#markup'] .= " (" . t('blocked') . ")";
+              $form['modules'][$modulePackage][$moduleName]['description']['#markup'] .= ' ' . t($blockedMessage);
+            }
           }
         }
       }
@@ -809,6 +740,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         'auth_apic',
         'ibm_log_stdout',
         'eventstream',
+        'memcache',
       ];
       foreach ($moduleList as $module) {
         if (isset($form['modules'][$module])) {
@@ -818,7 +750,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       break;
     case 'system_site_maintenance_mode':
 			if (isset($form['maintenance_mode']['#description'])) {
-        $form['maintenance_mode']['#description'] = t('<em>Important:</em> Maintenance mode is designed for short-term site maintenance; it is not meant for long-term usage. While a site is in maintenance mode, the database is not updated with new content from API Manager. As soon as the maintenance tasks are finished, you must take the site out of maintenance mode. Do not log out of the Developer Portal while the site is in maintenance mode, as you will not be able to log back in to the UI. In this case, maintenance mode can be turned off only by using the CLI; see: ') . ' <a href="https://www.ibm.com/docs/en/api-connect/10.0.x?topic=tasks-toggling-site-in-out-maintenance-mode" target="_new">' . t('Documentation') . '</a>' . t(' for details');
+        $form['maintenance_mode']['#description'] = t('<em>Important:</em> Maintenance mode is designed for short-term site maintenance; it is not meant for long-term usage. While a site is in maintenance mode, the database is not updated with new content from API Manager. As soon as the maintenance tasks are finished, you must take the site out of maintenance mode. Do not log out of the Developer Portal while the site is in maintenance mode, as you will not be able to log back in to the UI. In this case, maintenance mode can be turned off only by using the CLI; see: ') . ' <a href="https://www.ibm.com/docs/SSMNED_v10cd?topic=tasks-toggling-site-in-out-maintenance-mode" target="_new">' . t('Documentation') . '</a>' . t(' for details');
 			}
       break;
     case 'system_theme_settings':
@@ -1009,19 +941,34 @@ function ibm_apim_local_tasks_alter(&$local_tasks) {
  * @throws \Drupal\ibm_apim\Exception\ModuleInstallationBlocked
  */
 function ibm_apim_module_preinstall($module) {
-  $moduleBlocklist = \Drupal::service('ibm_apim.site_config')->getBlockList();
-  if (!$moduleBlocklist || !in_array($module, $moduleBlocklist, FALSE)) {
-    return;
+  $rejectModule = false;
+  $errorMsg = "";
+  $siteConfig = \Drupal::service('ibm_apim.site_config');
+  $doubleInstalledModules = $siteConfig->getModulesBothShippedAndCustomInstalled();
+
+  $moduleBlocklist = $siteConfig->getBlockList();
+  if ($moduleBlocklist && in_array($module, $moduleBlocklist, false)) {
+    $rejectModule = true;
+    $errorMsg = "Unable to install '$module' module. The installation of this module is blocked by Module Blocklist.";
+  } else {
+    # If the module is one we ship, but also exists within their custom modules folder, then they are trying
+    # to install a module that we already ship. We should not allow this.
+    if (in_array($module, $doubleInstalledModules)) {
+      $rejectModule = true;
+      $errorMsg = "Unable to install module '$module'. This module has been installed twice. It is already provided as part of this Developer Portal platform.";
+    }
   }
 
-  // Before Drupal invokes the hook hook_module_preinstall() the method
-  // install() at Drupal\Core\Extension\ModuleInstaller performs some tasks
-  // changing the configs and system files data from the module that is being
-  // installed, so, before throw the exception it is necessary performs a
-  // rollback to those changes.
-  \Drupal::service('ibm_apim.module_installer')->rollbackPreinstall($module);
+  if ($rejectModule) {
+    // Before Drupal invokes the hook hook_module_preinstall() the method
+    // install() at Drupal\Core\Extension\ModuleInstaller performs some tasks
+    // changing the configs and system files data from the module that is being
+    // installed, so, before throw the exception it is necessary performs a
+    // rollback to those changes.
+    \Drupal::service('ibm_apim.module_installer')->rollbackPreinstall($module);
 
-  throw new ModuleInstallationBlocked("Unable to install '$module' module. The installation of this module is blocked by Module Blocklist.");
+    throw new ModuleInstallationBlocked($errorMsg);
+  }
 }
 
 /**
@@ -1591,7 +1538,7 @@ function ibm_apim_user_logout($account) {
 function ibm_apim_cron() {
   $now = \Drupal::time()->getRequestTime();
   if (_ibm_apim_shouldRun($now)) {
-    \Drupal::service('ibm_apim.db_usersfielddata')->deleteExpiredPendingApprovalUsers();
+    \Drupal::service('ibm_apim.db_usersfielddata')->deleteExpiredPendingUsers();
     \Drupal::state()->set('ibm_apim.last_cron', $now);
   }
 }

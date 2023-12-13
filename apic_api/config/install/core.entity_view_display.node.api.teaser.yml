@@ -135,7 +135,6 @@ content:
     settings: {  }
     third_party_settings: {  }
 hidden:
-  addtoany: true
   api_ibmconfiguration: true
   api_id: true
   api_soapversion: true

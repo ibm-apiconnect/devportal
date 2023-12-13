@@ -306,27 +306,23 @@ class Api {
         }
 
         $apiType = 'rest';
+        $lowerType = null;
         if (isset($api['consumer_api']['x-ibm-configuration']['type'])) {
           $lowerType = mb_strtolower($api['consumer_api']['x-ibm-configuration']['type']);
           if ($lowerType === 'rest' || $lowerType === 'wsdl' || $lowerType === 'oauth' || $lowerType === 'graphql') {
             $apiType = $lowerType;
           }
-          elseif ($lowerType === 'asyncapi' || isset($api['consumer_api']['asyncapi'])) {
-            if (isset($api['consumer_api']['servers'])) {
-              $protocol = array_values($api['consumer_api']['servers'])[0]['protocol'];
-              $lowerProtocol = mb_strtolower($protocol);
-              if ($lowerProtocol === 'kafka' || $lowerProtocol === 'kafka-secure') {
-                $apiType = 'kafka';
-              }
-              elseif ($lowerProtocol === 'ibmmq' || $lowerProtocol === 'ibmmq-secure' || $lowerProtocol === 'amqp' || $lowerProtocol === 'amqps') {
-                $apiType = 'mq';
-              }
-              else {
-                $apiType = 'asyncapi';
-              }
+        }
+        if (($lowerType && $lowerType === 'asyncapi') || isset($api['consumer_api']['asyncapi'])) {
+          $apiType = 'asyncapi';
+          if (isset($api['consumer_api']['servers'])) {
+            $protocol = array_values($api['consumer_api']['servers'])[0]['protocol'];
+            $lowerProtocol = mb_strtolower($protocol);
+            if ($lowerProtocol === 'kafka' || $lowerProtocol === 'kafka-secure') {
+              $apiType = 'kafka';
             }
-            else {
-              $apiType = 'asyncapi';
+            elseif ($lowerProtocol === 'ibmmq' || $lowerProtocol === 'ibmmq-secure') {
+              $apiType = 'mq';
             }
           }
         }
@@ -665,6 +661,7 @@ class Api {
       $this->create($api, $event);
       $createdOrUpdated = TRUE;
     }
+    \Drupal::service('cache_tags.invalidator')->invalidateTags(['featuredcontent']);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $createdOrUpdated);
     return $createdOrUpdated;
   }
@@ -693,6 +690,7 @@ class Api {
 
       $node->delete();
       unset($node);
+      \Drupal::service('cache_tags.invalidator')->invalidateTags(['featuredcontent']);
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

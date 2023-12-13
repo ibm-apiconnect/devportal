@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2023
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -77,11 +77,6 @@ class DrushAdminCommands extends DrushCommands {
         // Check if the specified module is a disabled custom module
         if (array_key_exists($inputModule, $modules)) {
           \Drupal::service('ibm_apim.module')->deleteExtensionOnFileSystem('module', [$inputModule], FALSE);
-          // clear all caches otherwise reinstalling the same module will fail
-          try {
-            drupal_flush_all_caches();
-          } catch (Throwable $e) {
-          }
           \Drupal::logger("drushadmin")->notice("@module_name deleted.", ['@module_name' => $inputModule]);
         }
         else {
@@ -220,20 +215,21 @@ class DrushAdminCommands extends DrushCommands {
    * @aliases content-types
    */
   public function contentListTypes(array $options = ['format' => 'table']) {
-    $entityTypeManager = \Drupal::service('entity_type.manager');
-    $blockedEntities = ["user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs", "apic_app_application_creds"];
-
-    $entityTypes = $entityTypeManager->getDefinitions();
+    $blockedEntities = [
+      "crop", "user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs",
+      "apic_app_application_creds", "avatars_preview", "comment", "contact_message", "search_api_task", "vote", "vote_result"
+    ];
+    $contentTypes = \Drupal::service('entity_type.repository')->getEntityTypeLabels(TRUE)['Content'];
     $result = [];
-    foreach ($entityTypes as $entityType => $entityTypeObj) {
-      if (!$entityTypeObj->hasLinkTemplate('single-content:export') || in_array($entityType, $blockedEntities)) {
+    foreach ($contentTypes as $contentType => $contentTypeObj) {
+      if (in_array($contentType, $blockedEntities)) {
         continue;
       }
-      $bundles = array_values(array_diff(array_keys(\Drupal::service('entity_type.bundle.info')->getBundleInfo($entityType)), $blockedEntities));
-      if (count($bundles) === 1 && $entityType === $bundles[0]) {
+      $bundles = array_values(array_diff(array_keys(\Drupal::service('entity_type.bundle.info')->getBundleInfo($contentType)), $blockedEntities));
+      if (count($bundles) === 1 && $contentType === $bundles[0]) {
           $bundles = [];
       }
-      $result[$entityType] = $bundles;
+      $result[$contentType] = $bundles;
     }
 
     if ($options['format'] === 'table') {
@@ -253,7 +249,7 @@ class DrushAdminCommands extends DrushCommands {
   /**
    * List content entities.
    *
-   * @param string $content_type A content entity type machine name.
+   * @param string $entity_type An entity type machine name.
    * @param array $options
    *
    * @option bundle Restrict list to the specified bundle.
@@ -265,18 +261,49 @@ class DrushAdminCommands extends DrushCommands {
    * @command content:list
    * @aliases content-list
    */
-  public function contentList(string $content_type, array $options = ['bundle' => self::REQ, 'format' => 'table']): ?RowsOfFields {
+  public function contentList(string $entity_type, array $options = ['bundle' => self::REQ, 'format' => 'table']): ?RowsOfFields {
     $entityTypeManager = \Drupal::service('entity_type.manager');
-    $blockedEntities = ["user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs", "apic_app_application_creds"];
+    $contentTypes = \Drupal::service('entity_type.repository')->getEntityTypeLabels(TRUE)['Content'];
+    $blockedEntities = [
+      "crop", "user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs",
+      "apic_app_application_creds", "avatars_preview", "comment", "contact_message", "search_api_task", "vote", "vote_result"
+    ];
 
-    if (empty($content_type) || in_array($content_type, $blockedEntities)) {
+    if (empty($entity_type) || in_array($entity_type, $blockedEntities) || !in_array($entity_type, array_keys($contentTypes))) {
       return null;
     }
 
     $entityTable = [];
-    $entityNids = $this->getQuery($content_type, null, $options)->execute();
+    $entityNids = $this->getQuery($entity_type, null, $options);
+    // Filter out blocked API taxonomy terms
+    if ($entity_type == 'taxonomy_term' || $entity_type == 'node') {
+      $result = \Drupal::entityQuery('taxonomy_term')
+            ->condition('name', 'APIs')
+            ->condition('parent', 'forums')
+            ->accessCheck()
+            ->execute();
+      $apisTaxonomyID = !empty($result) ? array_shift($result) : '';
+      if (!empty($apisTaxonomyID)) {
+        if($entity_type == 'taxonomy_term') {
+          $entityNids->condition('tid', $apisTaxonomyID, 'NOT IN')->condition('parent', $apisTaxonomyID, 'NOT IN');
+        }
+        if($entity_type == 'node') {
+          $apiTaxonomy = \Drupal::entityQuery('taxonomy_term')
+          ->condition('parent', $apisTaxonomyID)
+          ->accessCheck()
+          ->execute();
+
+          $orGroup = \Drupal::entityQuery('node')->orConditionGroup()
+          ->condition('taxonomy_forums', $apiTaxonomy, 'NOT IN')
+          ->notExists('taxonomy_forums');
+
+          $entityNids->condition($orGroup);
+        }
+      }
+    }
+    $entityNids = $entityNids->execute();
     foreach (array_chunk($entityNids, 50) as $chunk) {
-      $entities = $entityTypeManager->getStorage($content_type)->loadMultiple($chunk);
+      $entities = $entityTypeManager->getStorage($entity_type)->loadMultiple($chunk);
       foreach ($entities as $entity) {
         if (!in_array($entity->bundle(), $blockedEntities)) {
           $row = [

@@ -1,0 +1,16 @@
+--- core/lib/Drupal/Core/Utility/ProjectInfo.php        2023-10-04 15:38:46
++++ core/lib/Drupal/Core/Utility/ProjectInfo.php   2023-10-04 15:38:41
+@@ -81,7 +81,12 @@
+       // which is left alone by tar and correctly set to the time the .info.yml
+       // file was unpacked.
+       if (!isset($file->info['_info_file_ctime'])) {
+-        $file->info['_info_file_ctime'] = $file->getFileInfo()->getCTime();
++        try {
++          $file->info['_info_file_ctime'] = $file->getFileInfo()->getCTime();
++        } catch (\Throwable $e){
++          // Catch error as we dont want this to blow up as there's a window on syncing info files and running drush commands
++          $file->info['_info_file_ctime'] = 0;
++        }
+       }
+
+       if (!isset($file->info['datestamp'])) {

@@ -69,7 +69,7 @@ class ApicTheme extends Theme {
     foreach ($files as $file) {
       $rc = self::checkFunctionNames($file->uri);
       if ($rc !== TRUE) {
-        throw new UpdaterException(t('The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/docs/en/api-connect/10.0.x?topic=extend-custom-module-development-background-prerequisites', ['%file' => $file->uri]));
+        throw new UpdaterException(t('The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/docs/en/SSMNED_v10cd?topic=extend-custom-module-development-background-prerequisites', ['%file' => $file->uri]));
       }
     }
 

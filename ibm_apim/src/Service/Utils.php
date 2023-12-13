@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2023
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -384,6 +384,34 @@ class Utils {
     return (count(scandir($dir)) == 2);
   }
 
+
+  /**
+   * Return a map of the custom extension directory => machine name which are found within <site path>/(themes/modules)
+   *
+   * @param string the extension type you want to get directories of. theme or module
+   *
+   * @return array
+   *
+   * @throws \InvalidArgumentException
+   */
+  public function mapCustomDirectoriesToMachineName(string $extensionType): array {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    if ($extensionType !== 'module' && $extensionType !== 'theme') {
+      throw new \InvalidArgumentException('extensionType must be of type of "module" or "theme". Got: ' . $extensionType);
+    }
+
+    $map = array();
+
+    $customExtensionDirs = $this->getCustomExtensionDirectories($extensionType);
+    foreach ($customExtensionDirs as $directory) {
+      $map[$directory] = $this->getCustomExtensionMachineName($directory);
+    }
+
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $map);
+    return $map;
+  }
+
   /**
    * List the directories under <site path>/(themes/modules)
    *
@@ -443,11 +471,13 @@ class Utils {
    *  - have a valid info.yml file
    *  - are not marked as hidden in the info.yml
    *  - don't have any enabled submodules.
+   *  - double installed modules, regardless of if they are enabled.
    *
    * @return array options to pass into tableselect
    */
   public function getDisabledCustomExtensions(string $extensionType): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $siteConfig = \Drupal::service('ibm_apim.site_config');
 
     if ($extensionType !== 'module' && $extensionType !== 'theme') {
       throw new \Exception('extensionType must be of type of "module" or "theme". Got: ' . $extensionType);
@@ -457,11 +487,14 @@ class Utils {
 
     $uninstall_list = [];
     $extensionHandler = $extensionType === 'module' ? \Drupal::service('module_handler') : \Drupal::service('theme_handler');
+    $doubleInstalledModules = $siteConfig->getModulesBothShippedAndCustomInstalled();
+    $moduleBlocklist = $siteConfig->getBlockList();
 
     foreach ($custom_extension_dirs as $cex) {
       $extension_name = $this->getCustomExtensionMachineName($cex);
       $exists = $extensionType === 'module' ? $extensionHandler->moduleExists($extension_name) : $extensionHandler->themeExists($extension_name);
-      if ($exists) {
+      $cexDoubleInstalled = in_array($extension_name, $doubleInstalledModules);
+      if ($exists && $cexDoubleInstalled === false) {
         \Drupal::logger('ibm_apim')->debug('getDisabledCustomExtensions: %cex is enabled so not listed.', ['%cex' => $cex]);
       }
       else {
@@ -478,7 +511,7 @@ class Utils {
             $exists = $extensionType === 'module' ? $extensionHandler->moduleExists($sm) : $extensionHandler->themeExists($sm);
             if ($exists) {
               \Drupal::logger('ibm_apim')
-                ->info('getDisabledCustomExtensions: not listing %cm as sub-module %sm is still enabled', ['%cm' => $extension_name, '%sm' => $sm]);
+                ->info('getDisabledCustomExtensions: not listing %cm as sub-module %sm is still enabled.', ['%cm' => $extension_name, '%sm' => $sm]);
               $enabled_submodule = TRUE;
             }
           }
@@ -491,11 +524,21 @@ class Utils {
               $info_msg = t('The following sub-modules will also be deleted: %modules', ['%modules' => \implode(', ', $subExtensions)]);
             }
 
+            if ($cexDoubleInstalled) {
+              $info_msg =  t('<strong>RECCOMMENDED</strong>: Please delete this module using the Developer Portal Toolkit CLI. It is already provided as part of this Developer Portal. ' . $info_msg);
+            } elseif ($moduleBlocklist && in_array($extension_name, $moduleBlocklist, false)) {
+              $info_msg = t('<strong>RECCOMMENDED</strong>: Please delete this module. The installation of this module will be blocked. ' . $info_msg);
+            }
+
             $module = [
               'module' => \yaml_parse_file($info_yml)['name'],
               'machine_name' => $extension_name,
               'info' => $info_msg,
             ];
+
+            if ($cexDoubleInstalled) {
+              $module['#disabled'] = true;
+            }
             $uninstall_list[$extension_name] = $module;
           }
         }
@@ -553,7 +596,7 @@ class Utils {
       if (!$this->isHidden($info_yml_full_path)) {
         $info_yml = \basename($info_yml_full_path);
         $extension_name = \substr($info_yml, 0, -\strlen('.info.yml'));
-        if ($extension_name !== $parent) {
+        if ($extension_name !== basename($parent)) {
           $subs[] = $extension_name;
         }
       }

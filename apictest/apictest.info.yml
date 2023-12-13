@@ -3,5 +3,5 @@ type: module
 description: Test framework and utilities for the API Developer Portal
 package: IBM API Developer Portal
 core_version_requirement: ^8 || ^9 || ^10
-version: 8.x-5.4.3
+version: 6.1.9
 project: apictest

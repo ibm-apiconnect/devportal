@@ -254,11 +254,14 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function deleteExpiredPendingApprovalUsers(): void {
+  public function deleteExpiredPendingUsers(): void {
     $now = $this->time->getCurrentTime();
-    $approvalInvtitationTTLs =  2 * $this->siteConfig->getInvitationTTL();
+    $approvalInvtitationTTLs =  $this->siteConfig->getSelfServiceOnboardingTTL();
     $query = \Drupal::entityQuery('user');
-    $query->condition('apic_state', 'pending_approval');
+    $group = $query->orConditionGroup()
+    ->condition('apic_state', 'pending_approval')
+    ->condition('apic_state', 'pending');
+    $query->condition($group);
     $query->condition('created', $now - $approvalInvtitationTTLs, "<=");
     $uids = $query->accessCheck()->execute();
     if (!empty($uids)) {

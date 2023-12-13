@@ -13,7 +13,6 @@
 
 namespace Drupal\auth_apic\Controller;
 
-use Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface;
 use Drupal\auth_apic\UserManagement\ApicLoginServiceInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Messenger\Messenger;
@@ -30,6 +29,8 @@ use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\encrypt\EncryptServiceInterface;
+use Drupal\encrypt\EncryptionProfileManagerInterface;
 
 class ApicOidcAzCodeController extends ControllerBase {
 
@@ -44,11 +45,6 @@ class ApicOidcAzCodeController extends ControllerBase {
    * @var \Drupal\auth_apic\UserManagement\ApicLoginServiceInterface
    */
   protected ApicLoginServiceInterface $loginService;
-
-  /**
-   * @var \Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface
-   */
-  protected OidcStateServiceInterface $oidcStateService;
 
   /**
    * @var \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface
@@ -91,11 +87,20 @@ class ApicOidcAzCodeController extends ControllerBase {
   protected ManagementServerInterface $mgmtServer;
 
   /**
+   * @var Drupal\encrypt\EncryptServiceInterface
+   */
+  protected EncryptServiceInterface $encryption;
+
+  /**
+   * @var \Drupal\encrypt\EncryptionProfileManagerInterface
+   */
+  protected EncryptionProfileManagerInterface $profileManager;
+
+  /**
    * ApicOidcAzCodeController constructor.
    *
    * @param \Drupal\ibm_apim\Service\Utils $utils
    * @param \Drupal\auth_apic\UserManagement\ApicLoginServiceInterface $login_service
-   * @param \Drupal\auth_apic\Service\Interfaces\OidcStateServiceInterface $oidc_state_service
    * @param \Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface $user_registry_service
    * @param \Drupal\ibm_apim\Service\ApimUtils $apim_utils
    * @param \Drupal\ibm_apim\Service\SiteConfig $site_config
@@ -108,7 +113,6 @@ class ApicOidcAzCodeController extends ControllerBase {
   public function __construct(
     Utils                        $utils,
     ApicLoginServiceInterface    $login_service,
-    OidcStateServiceInterface    $oidc_state_service,
     UserRegistryServiceInterface $user_registry_service,
     ApimUtils                    $apim_utils,
     SiteConfig                   $site_config,
@@ -116,7 +120,9 @@ class ApicOidcAzCodeController extends ControllerBase {
     PrivateTempStoreFactory      $sessionStoreFactory,
     RequestStack                 $request_service,
     ManagementServerInterface    $mgmtServer,
-    Messenger                    $messenger
+    Messenger                    $messenger,
+    EncryptServiceInterface $encryption,
+    EncryptionProfileManagerInterface $profileManager,
   ) {
     $this->apimUtils = $apim_utils;
     $this->siteConfig = $site_config;
@@ -124,11 +130,12 @@ class ApicOidcAzCodeController extends ControllerBase {
     $this->utils = $utils;
     $this->userRegistryService = $user_registry_service;
     $this->loginService = $login_service;
-    $this->oidcStateService = $oidc_state_service;
     $this->authApicSessionStore = $sessionStoreFactory->get('auth_apic_storage');
     $this->requestService = $request_service;
     $this->mgmtServer = $mgmtServer;
     $this->messenger = $messenger;
+    $this->encryption = $encryption;
+    $this->profileManager = $profileManager;
   }
 
   /**
@@ -141,7 +148,6 @@ class ApicOidcAzCodeController extends ControllerBase {
     return new static(
       $container->get('ibm_apim.utils'),
       $container->get('auth_apic.login'),
-      $container->get('auth_apic.oidc_state'),
       $container->get('ibm_apim.user_registry'),
       $container->get('ibm_apim.apim_utils'),
       $container->get('ibm_apim.site_config'),
@@ -149,7 +155,9 @@ class ApicOidcAzCodeController extends ControllerBase {
       $container->get('tempstore.private'),
       $container->get('request_stack'),
       $container->get('ibm_apim.mgmtserver'),
-      $container->get('messenger')
+      $container->get('messenger'),
+      $container->get('encryption'),
+      $container->get('encrypt.encryption_profile.manager')
     );
   }
 
@@ -212,10 +220,23 @@ class ApicOidcAzCodeController extends ControllerBase {
     }
 
     $stateReceived = unserialize($this->utils->base64_url_decode($state), ['allowed_classes' => FALSE]);
-    $stateObj = $this->oidcStateService->get($stateReceived);
+    try {
+      $decrypted_key = $this->encryption->decrypt($stateReceived, $this->profileManager->getEncryptionProfile('socialblock'));
+      $encrypted_data = $this->authApicSessionStore->get($decrypted_key);
+    } catch (\Exception $e) {
+      $this->logger->error('validateOidcRedirect error: Failed to decrypt state. @errordes', ['@errordes' => $stateReceived]);
+    }
     // key to retrieve what we need from state.
+    if (isset($encrypted_data)) {
+      try {
+        $stateObj = $this->encryption->decrypt($encrypted_data, $this->profileManager->getEncryptionProfile('socialblock'));
+      } catch (\Exception $e) {
+        $this->logger->error('validateOidcRedirect error: Failed to decrypt data. @errordes', ['@errordes' => $encrypted_data]);
+      }
+    }
     if (isset($stateObj)) {
-      $this->oidcStateService->delete($stateReceived);
+      $stateObj = unserialize($stateObj, ['allowed_classes' => FALSE]);
+      $this->authApicSessionStore->delete($stateReceived);
       // Clear the JWT from the session as we're done with it now
       $this->authApicSessionStore->delete('invitation_object');
       $this->authApicSessionStore->delete('action');
@@ -244,7 +265,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       }
       return $redirect_location;
     }
-
+    $this->logger->error('validateOidcRedirect error: Could not get state. @errordes', ['@errordes' => $stateReceived]);
     $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
     if (function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -338,11 +359,15 @@ class ApicOidcAzCodeController extends ControllerBase {
       return '<front>';
     }
     $stateReceived = unserialize($this->utils->base64_url_decode($state), ['allowed_classes' => FALSE]);
-    $stateObj = NULL;
     if (is_string($stateReceived)) {
-      $stateObj = $this->oidcStateService->get($stateReceived);
+      try {
+        $decrypted_key = $this->encryption->decrypt($stateReceived, $this->profileManager->getEncryptionProfile('socialblock'));
+        $encrypted_data = $this->authApicSessionStore->get($decrypted_key);
+      } catch (\Exception $e) {
+        $this->logger->error('validateApimOidcRedirect error: Failed to decrypt state. @errordes', ['@errordes' => $stateReceived]);
+      }
     }
-    if (!isset($stateObj)) {
+    if (!isset($encrypted_data)) {
       $this->messenger->addError($this->t('Error: Invalid state parameter. Contact your system administrator.'));
       $this->logger->error('validateApimOidcRedirect error: Invalid state parameter: @state', ['@state' => $state]);
 
@@ -482,11 +507,15 @@ class ApicOidcAzCodeController extends ControllerBase {
 
     //Validates the state parameter
     $stateReceived = unserialize($this->utils->base64_url_decode($state), ['allowed_classes' => FALSE]);
-    $stateObj = NULL;
     if (is_string($stateReceived)) {
-      $stateObj = $this->oidcStateService->get($stateReceived);
+      try {
+        $decrypted_key = $this->encryption->decrypt($stateReceived, $this->profileManager->getEncryptionProfile('socialblock'));
+        $encrypted_data = $this->authApicSessionStore->get($decrypted_key);
+      } catch (\Exception $e) {
+        $this->logger->error('validateApimOidcAz error: Failed to decrypt state. @errordes', ['@errordes' => $stateReceived]);
+      }
     }
-    if (!isset($stateObj)) {
+    if (!isset($encrypted_data)) {
       $this->messenger->addError($this->t('Error: Invalid state parameter. Contact your system administrator.'));
       $this->logger->error('validateApimOidcAz error: Invalid state parameter: @state', ['@state' => $state]);
 
@@ -496,8 +525,13 @@ class ApicOidcAzCodeController extends ControllerBase {
       return '<front>';
     }
 
-
-    $userRegistry = $this->userRegistryService->get($stateObj['registry_url']);
+    try {
+      $stateObj = $this->encryption->decrypt($encrypted_data, $this->profileManager->getEncryptionProfile('socialblock'));
+      $stateObj = unserialize($stateObj, ['allowed_classes' => FALSE]);
+      $userRegistry = $this->userRegistryService->get($stateObj['registry_url']);
+    } catch (\Exception $e) {
+      $this->logger->error('validateApimOidcAz error: Failed to decrypt data. @errordes', ['@errordes' => $encrypted_data]);
+    }
     if (!isset($userRegistry)) {
       $this->messenger->addError($this->t('Error while authenticating user. Please contact your system administrator.'));
       $this->logger->error('validateApimOidcAz error: Invalid user registry url: @registryUrl', ['@registryUrl' => $stateObj['registry_url']]);

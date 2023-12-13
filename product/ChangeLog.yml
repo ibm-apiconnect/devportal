@@ -1,16 +1,35 @@
 changes:
-  8.x-5.4.5:
+  6.1.10:
+  - Clear featured content tag (#289)
+  6.1.9:
+  - Remove apic_ on upgrade function
+  6.1.8:
+  - Update product.install
+  6.1.7:
+  - add unit to width (#283) (#284)
+  6.1.6:
+  - Remove addtoany (#280) (#281)
+  - velox/devportal#8193 - add SonarQube integration
+  6.1.5: null
+  6.1.4:
+  - apimesh -> velox
+  6.1.3:
   - deal with empty x-ibm-configuration (#277)
-  8.x-5.4.4:
+  6.1.2:
   - remove inline onclick on plans table (#276)
-  8.x-5.4.3:
-  - add product content commands (#270) (#275)
-  8.x-5.4.2:
-  - apimesh/depvortal#8356 add util function to find api by name (#272) (#274)
-  8.x-5.4.1:
-  - Add redirect service (#267) (#268) (#269)
-  8.x-5.4.0:
-  - update version 8.x-5.3.10 -> 8.x-5.4.0
+  6.1.1:
+  - Update product.info.yml
+  6.0.5-6.1.0:
+  - update version 6.0.5 -> 6.0.5-6.1.0
+  6.0.4:
+  - apimesh/depvortal#8356 add util function to find api by name (#272) (#273)
+  6.0.3:
+  - add product content commands (#270) (#271)
+  6.0.2:
+  - Add redirect service (#267) (#268)
+  6.0.1:
+  - Update module version (#266)
+  - fix ci channel
   8.x-5.3.9:
   - add exception for x-ibm-languages (#264)
   8.x-5.3.8: null

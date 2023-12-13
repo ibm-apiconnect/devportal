@@ -17,6 +17,7 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\Node;
 use Drupal\Core\Entity\EntityStorageException;
+use Drupal\captcha\Entity\CaptchaPoint;
 
 /**
  * Function to delete all the consumerorgs in the database
@@ -361,6 +362,43 @@ function consumerorg_update_8202() {
       if ($field_storage !== NULL) {
         $manager->updateFieldStorageDefinition($field_storage);
       }
+    }
+  }
+}
+
+function consumerorg_update_10001() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('captcha')) {
+    $form_ids = [
+      'consumerorg_create_form', 'consumerorg_edit_form',
+    ];
+    foreach ($form_ids as $form_id) {
+      $captcha_point = \Drupal::entityTypeManager()->getStorage('captcha_point')->load($form_id);
+      if (!isset($captcha_point)) {
+        $captcha_point = new CaptchaPoint([
+          'formId' => $form_id,
+          'status' => false,
+          'captchaType' => 'image_captcha/Image',
+        ], 'captcha_point');
+        $captcha_point->disable()->save();
+      }
+    }
+  }
+}
+
+/**
+* Remove AddToAny Config
+*/
+function consumerorg_update_10002() {
+  $ids = [ 'default', 'teaser' ];
+  foreach ($ids as $id) {
+    $view = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.consumerorg.' . $id);
+    if ($view !== NULL) {
+      $view->removeComponent('addtoany');
+      $view_hidden = $view->get('hidden');
+      unset($view_hidden['addtoany']);
+      $view->set('hidden', $view_hidden);
+      $view->save();
     }
   }
 }

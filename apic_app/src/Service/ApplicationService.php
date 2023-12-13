@@ -17,7 +17,7 @@ use Drupal\apic_app\Entity\ApplicationCredentials;
 use Drupal\apic_app\Entity\ApplicationSubscription;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\TempStore\TempStoreException;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
@@ -63,9 +63,9 @@ class ApplicationService {
   protected EventLogService $eventLogService;
 
   /**
-   * @var \Drupal\Core\Extension\ModuleHandler
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected ModuleHandler $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * @var \Drupal\apic_app\Service\CredentialsService
@@ -100,7 +100,7 @@ class ApplicationService {
    * @param \Drupal\ibm_apim\Service\ApimUtils $apimUtils
    * @param \Drupal\ibm_apim\Service\Utils $utils
    * @param \Drupal\ibm_apim\Service\EventLogService $eventLogService
-   * @param \Drupal\Core\Extension\ModuleHandler $moduleHandler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    * @param \Drupal\apic_app\Service\CredentialsService $credentialsService
    * @param \Symfony\Component\Serializer\Serializer $serializer
    * @param \Drupal\ibm_apim\Service\SiteConfig $siteConfig
@@ -111,7 +111,7 @@ class ApplicationService {
                               ApimUtils $apimUtils,
                               Utils $utils,
                               EventLogService $eventLogService,
-                              ModuleHandler $moduleHandler,
+                              ModuleHandlerInterface $moduleHandler,
                               CredentialsService $credentialsService,
                               Serializer $serializer,
                               SiteConfig $siteConfig,
@@ -1184,6 +1184,11 @@ class ApplicationService {
           }
         }
         $output['credentials'] = $creds;
+        $output['custom_fields'] = [];
+        $customFields = $this->getCustomFields();
+        foreach ($customFields as $customField) {
+          $output['custom_fields'][$customField] = $node->get($customField)->getValue();
+        }
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

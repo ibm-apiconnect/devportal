@@ -10,7 +10,6 @@ show_analytics: true
 soap_swagger_download: false
 optimise_oauth_ux: false
 show_mtls_header: true
-email_as_username: true
 application_image_upload: true
 hide_admin_registry: false
 render_api_schema_view: true

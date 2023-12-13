@@ -514,6 +514,38 @@ function product_update_10001() {
 }
 
 /**
+* Remove AddToAny Config
+*/
+function product_update_10002() {
+  $ids = [ 'subscribewizard', 'card', 'default', 'teaser' ];
+  foreach ($ids as $id) {
+    $view = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.product.' . $id);
+    if ($view !== NULL) {
+      $view->removeComponent('addtoany');
+      $view_hidden = $view->get('hidden');
+      unset($view_hidden['addtoany']);
+      $view->set('hidden', $view_hidden);
+      $view->save();
+    }
+  }
+}
+
+/**
+ * update the gutter width unit for latest masonry views
+ */
+function product_update_10003() {
+  $view = Views::getView('products');
+  if ($view !== NULL) {
+    $style = $view->getDisplay()->getOption('style');
+    if (!str_ends_with($style['options']['gutterWidth'], 'px')) {
+      $style['options']['gutterWidth'].="px";
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
+  }
+}
+
+/**
  * Implements hook_update_dependencies().
  */
 function product_update_dependencies(): array {

@@ -28,7 +28,7 @@
 
    // Populate variables to be used in any module message or login operation.
 -  $variables = _login_security_get_variables_by_name($name);
-+  $variables = _login_security_get_variables_by_name($name, $registry_url);_
++  $variables = _login_security_get_variables_by_name($name, $registry_url);
 
    // Detect an ongoing attack:
    // An ongoing attack counts the total failed login attempts and notifies

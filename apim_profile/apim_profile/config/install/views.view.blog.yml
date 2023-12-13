@@ -29,7 +29,7 @@ display:
           perm: 'access content'
       cache:
         type: tag
-        options: {  }
+        options: {}
       query:
         type: views_query
         options:
@@ -37,7 +37,7 @@ display:
           distinct: false
           replica: false
           query_comment: ''
-          query_tags: {  }
+          query_tags: {}
       exposed_form:
         type: basic
         options:
@@ -115,7 +115,7 @@ display:
           click_sort_column: value
           type: string
           group_column: value
-          group_columns: {  }
+          group_columns: {}
           group_rows: true
           delta_limit: 0
           delta_offset: 0
@@ -162,8 +162,8 @@ display:
             label: ''
           granularity: second
       title: 'Blog posts'
-      header: {  }
-      footer: {  }
+      header: {}
+      footer: {}
       empty:
         entity_block:
           id: entity_block
@@ -178,9 +178,9 @@ display:
           view_mode: default
           bypass_access: false
           plugin_id: entity
-      relationships: {  }
-      arguments: {  }
-      display_extenders: {  }
+      relationships: {}
+      arguments: {}
+      display_extenders: {}
     cache_metadata:
       max-age: -1
       contexts:
@@ -189,14 +189,14 @@ display:
         - url.query_args
         - 'user.node_grants:view'
         - user.permissions
-      tags: {  }
+      tags: {}
   blog_all:
     display_plugin: page
     id: blog_all
     display_title: 'All blog posts'
     position: 1
     display_options:
-      display_extenders: {  }
+      display_extenders: {}
       path: blog
       display_description: ''
       menu:
@@ -216,14 +216,14 @@ display:
         - url.query_args
         - 'user.node_grants:view'
         - user.permissions
-      tags: {  }
+      tags: {}
   blog_block:
     display_plugin: block
     id: blog_block
     display_title: Block
     position: 5
     display_options:
-      display_extenders: {  }
+      display_extenders: {}
       title: 'Recent blog posts'
       defaults:
         title: false
@@ -231,12 +231,12 @@ display:
         row: false
       style:
         type: default
-        options: {  }
+        options: {}
       row:
         type: fields
         options:
           default_field_elements: true
-          inline: {  }
+          inline: {}
           separator: ''
           hide_empty: false
     cache_metadata:
@@ -247,14 +247,14 @@ display:
         - url.query_args
         - 'user.node_grants:view'
         - user.permissions
-      tags: {  }
+      tags: {}
   blog_user_all:
     display_plugin: page
     id: blog_user_all
     display_title: 'All user blog posts'
     position: 1
     display_options:
-      display_extenders: {  }
+      display_extenders: {}
       path: blog/%
       display_description: ''
       arguments:
@@ -271,7 +271,7 @@ display:
             title_enable: false
             title: All
           title_enable: true
-          title: '{{ arguments.uid }}''s blog'
+          title: "{{ arguments.uid }}'s blog"
           default_argument_type: fixed
           default_argument_options:
             argument: ''
@@ -289,7 +289,7 @@ display:
           validate:
             type: none
             fail: 'not found'
-          validate_options: {  }
+          validate_options: {}
           break_phrase: false
           not: false
           entity_type: user
@@ -319,16 +319,17 @@ display:
         - url.query_args
         - 'user.node_grants:view'
         - user.permissions
-      tags: {  }
+      tags: {}
   feed_1:
     display_plugin: feed
     id: feed_1
     display_title: 'All blog posts feed'
     position: 2
     display_options:
-      display_extenders: {  }
+      display_extenders: {}
       row:
         type: node_rss
+      enabled: false
       pager:
         type: some
       style:
@@ -351,16 +352,17 @@ display:
         - 'languages:language_interface'
         - 'user.node_grants:view'
         - user.permissions
-      tags: {  }
+      tags: {}
   feed_2:
     display_plugin: feed
     id: feed_2
     display_title: 'All user blog posts feed'
     position: 2
     display_options:
-      display_extenders: {  }
+      display_extenders: {}
       row:
         type: node_rss
+      enabled: false
       pager:
         type: some
       style:
@@ -386,7 +388,7 @@ display:
             title_enable: false
             title: All
           title_enable: true
-          title: '{{ arguments.uid }}''s blog'
+          title: "{{ arguments.uid }}'s blog"
           default_argument_type: fixed
           default_argument_options:
             argument: ''
@@ -404,7 +406,7 @@ display:
           validate:
             type: none
             fail: 'not found'
-          validate_options: {  }
+          validate_options: {}
           break_phrase: false
           not: false
           entity_type: user
@@ -433,4 +435,4 @@ display:
         - url
         - 'user.node_grants:view'
         - user.permissions
-      tags: {  }
+      tags: {}

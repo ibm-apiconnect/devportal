@@ -1,273 +1,810 @@
 changes:
-  8.x-20230624-2323:
+  8.x-20231109-1721:
     commits:
-    - always generate zip files on export (#869)
-    - fix captchas on forums (#866) (#867)
+    - composer update (#1014)
+    modules:
+      apictest:
+        6.1.8:
+        - velox/devportal#8681 Don't use warmer in the tests (#273)
+  8.x-20231106-0712:
+    commits:
+    - use correct variable (#1010) (#1011)
+    - composer update
+    modules:
+      ibm_apim:
+        6.1.37:
+        - Delete expire pending users (#1061)
+  8.x-20231101-1543:
+    commits:
+    - Small merge error in memcache
+    - memcache (#987)
+    - fix search api index (#1007) (#1008)
+    - Drupal 10.1.6
+    modules:
+      ibm_apim:
+        6.1.36:
+        - velox/devportal#8259 prevent deinstallation of memcache (#1060)
+      apictest:
+        6.1.7:
+        - velox/devportal#825 disable memcache for the tests
+  8.x-20231025-1428:
+    commits:
+    - Tc2dev/20230912 (#1002) (#1003)
+    - Composer update
+    - Fix patch for update
+    - Fix versions (#1000)
+    - 8644 rsstax (#998)
+    modules:
+      auth_apic:
+        6.1.11:
+        - register form validation catches URLs of all formats
+  8.x-20231024-2221:
+    commits:
+    - Go down overwrite path if entity is same type and been imported under different gid timestamp before (#994) (#996)
+    modules:
+      apic_api:
+        6.1.13:
+        - Only label ibm MQ as MQ (#204)
+  8.x-20231020-1622:
+    commits:
+    - Fix saving overwrites (#991) (#992)
+    modules:
+      apic_api:
+        6.1.12:
+        - add wsdl to allowed fileext (#203)
+        6.1.11:
+        - Handle x-ibm-configuration.type not set for asyncapi (#202)
+  8.x-20231017-1621:
+    commits:
+    - captcha return 404 (#988) (#989)
+    modules:
+      ibm_apim:
+        6.1.35:
+        - remove additional icons on pwd check (#1059)
+  8.x-20231012-1035:
+    commits:
+    - Fix overriding content that shouldn't (#984) (#986)
+    - Dont ignore characters in tokenizer (#981) (#983)
+    - Intsall on fresh install
+    modules:
+      product:
+        6.1.10:
+        - Clear featured content tag (#289)
+      featuredcontent:
+        6.1.5:
+        - Added cache tag (#53)
+      apic_api:
+        6.1.10:
+        - Clear featured content tag (#201)
+  8.x-20231011-1021:
+    commits: null
+    modules:
+      product:
+        6.1.9:
+        - Remove apic_ on upgrade function
+  8.x-20231005-1021:
+    commits:
+    - Remove unused config (#977) (#978)
+    - Pasword strength is now d10
+    - Add fontawesome (#974) (#975)
+    - Fix masonry views
+    modules:
+      ibm_apim:
+        6.1.34:
+        - Remove unused config (#1056) (#1057)
+      apictest:
+        6.1.6:
+        - Remove unused config (#270) (#271)
+  8.x-20231004-1503:
+    commits:
+    - Use correct css for Item (#971) (#973)
+    modules:
+      ibm_apim:
+        6.1.33:
+        - Use correct css for Item (#1053) (#1055)
+  8.x-20230929-1621:
+    commits:
+    - Dont blow up on sync window (#968) (#969)
+    modules:
+      product:
+        6.1.8:
+        - Update product.install
+  8.x-20230927-1621:
+    commits:
+    - add unit to width (#965) (#966)
+    - Add back autoload
+    modules:
+      product:
+        6.1.7:
+        - add unit to width (#283) (#284)
+      apic_api:
+        6.1.9:
+        - Fix masonry (#197) (#198)
+      apic_app:
+        6.1.11:
+        - add unit to width (#378) (#379)
+  8.x-20230927-1240:
+    commits: null
+    modules:
+      ibm_apim:
+        6.1.32:
+        - Invalidate application tags on analytics form save (#1051)
+  8.x-20230922-1529:
+    commits:
+    - acl and masonary update
+    modules:
+      ibm_apim:
+        6.1.31:
+        - Invalidate cache after consumer analytics change (#1048)
+  8.x-20230921-2221:
+    commits:
+    - Fix translation refresh
+    - Fix translation refresh (#962) (#963)
+    - disable blogs view rss feed (#961)
+    modules:
+      apic_api:
+        6.1.8:
+        - Remove addtoany
+  8.x-20230921-1621:
+    commits: null
+    modules:
+      product:
+        6.1.6:
+        - Remove addtoany (#280) (#281)
+        - velox/devportal#8193 - add SonarQube integration
+      apic_api:
+        6.1.7:
+        - Remove addtoany (#194) (#196)
+      apic_app:
+        6.1.10:
+        - Remove addtoany (#375) (#377)
+      ibm_apim:
+        6.1.30:
+        - Remove addtoany (#1044) (#1045)
+      consumerorg:
+        6.1.10:
+        - Remove addtoany (#340) (#341)
+  8.x-20230920-1621:
+    commits:
+    - Remove addtoany (#958) (#960)
+    - Pull v7 explorer (#953)
+    - Drupal 10.1.4 Update (#954) (#956)
+    modules:
+      connect_theme:
+        6.1.6:
+        - Remove addtoany (#242) (#243)
+  8.x-20230920-0820:
+    commits: null
+    modules:
+      auth_apic:
+        6.1.10:
+        - Add unauthorized message to more failed login cases (#780)
+  8.x-20230918-1159:
+    commits:
+    - velox/devportal#8483 Fix dirs for portal-web hardening (#893)
+    modules:
+      apictest:
+        6.1.5:
+        - velox/devportal#8483 Fix dirs for portal-web hardening (#267)
+  8.x-20230913-2221:
+    commits:
+    - Rename parameters
+    modules:
+      ibm_apim:
+        6.1.29:
+        - Rename parameters (#1041) (#1042)
+  8.x-20230912-1021:
+    commits: null
+    modules:
+      auth_apic:
+        6.1.9:
+        - adopted using ModuleHandlerInterface instead of class ModuleHandler
+      apic_app:
+        6.1.9:
+        - adopted using ModuleHandlerInterface instead of class ModuleHandler
+      ibm_apim:
+        6.1.28:
+        - adopted using ModuleHandlerInterface instead of class ModuleHandler
+        - block statistics module (#1038)
+  8.x-20230907-1617:
+    commits:
+    - Block forums related too blocked taxonomy terms (#943) (#944)
+    - Fix fatal php error for autologout (#939) (#941)
+    - Dont export blocked reference entities (#936) (#937)
+    modules:
+      ibm_apim:
+        6.1.27:
+        - Block forums related too blocked taxonomy terms (#1035) (#1036)
+  8.x-20230907-1021:
+    commits:
+    - Drupal 10.1.3
+    modules:
+      connect_theme:
+        6.1.5:
+        - allow subtheme take precedence
+  8.x-20230905-1621:
+    commits: null
+    modules:
+      ibm_apim:
+        6.1.26:
+        - redact out analytics data (#1028) (#1033)
+  8.x-20230904-2221:
+    commits:
+    - Block APIs and children taxonomy terms (#933) (#934)
+    modules:
+      apic_app:
+        6.1.8:
+        - Show only configured analytics charts (#370)
+      ibm_apim:
+        6.1.25:
+        - Filter out blocked taxonomy terms (#1029) (#1030)
+  8.x-20230831-1620:
+    commits:
+    - Support embeded images in text fields (#930) (#932)
+    - Check if role exists first (#927) (#928)
+    modules:
+      consumerorg:
+        6.1.9:
+        - Always return a consumerorg (#337) (#338)
+  8.x-20230831-1426:
+    commits:
+    - Fix importing with a revision id that already exists (#916) (#918)
+    - Fix embedded files not exporting (#924) (#926)
+    modules:
+      auth_apic:
+        6.1.8:
+        - Made failed login errors more consistent (#772)
+  8.x-20230825-1021:
+    commits:
+    - Fix inconsistent login errors (#921)
+    - Password expire entries disabled because password expire not supported
+    - Remove stray underscore (#911) (#912)
+    modules:
+      apic_app:
+        6.1.7:
+        - Add form captcha points (#367)
+      consumerorg:
+        6.1.8:
+        - Add form captcha points (#334)
+  8.x-20230824-1621:
+    commits: null
+    modules:
+      apic_app:
+        6.1.6:
+        - Add custom fields to CLI applicationget (#365)
+  8.x-20230824-1021:
+    commits:
+    - Content Bug fixes (#907) (#909)
+    modules:
+      ibm_apim:
+        6.1.24:
+        - Content Bug fixes (#1024) (#1025)
+  8.x-20230823-1021:
+    commits:
+    - Fix Import Bugs (#904) (#905)
+    modules:
+      consumerorg:
+        6.1.7:
+        - Add custom fields to getByNid (#333)
+  8.x-20230822-1621:
+    commits: null
+    modules:
+      consumerorg:
+        6.1.6:
+        - Use image captcha on feedback form (#330)
+  8.x-20230822-1409:
+    commits: null
+    modules:
+      auth_apic:
+        6.1.7:
+        - velox/devportal#8193 - add SonarQube integration
+      apic_app:
+        6.1.5:
+        - velox/devportal#8193 - add SonarQube integration
+      ibm_apim:
+        6.1.23:
+        - Block advagg until its been fixed for D10.1 (#1021) (#1022)
+  8.x-20230822-1023:
+    commits:
+    - Remove advagg until its been updated for Drupal 10.1 (#895) (#898)
+    - override content if entity id exists but no reference (#894) (#896)
+    modules:
+      socialblock:
+        6.1.4:
+        - velox/devportal#8193 - add Sonarqube Integration
+      themegenerator:
+        6.1.6:
+        - velox/devportal#8193 - add SonarQube integration
+  8.x-20230821-1621:
+    commits: null
+    modules:
+      ghmarkdown:
+        6.1.4:
+        - apimesh/devportal#8193 - add SonarQube integration
+      mail_subscribers:
+        6.1.4:
+        - apimesh/devportal#8193 - add SonarQube integration
+      featuredcontent:
+        6.1.4:
+        - apimesh/devportal#8193 - add SonarQube integration
+      ibm_apim:
+        6.1.22:
+        - Use correct TTL for pending approvals (#1018)
+        6.1.21:
+        - add SonarQube integration (#1020)
+  8.x-20230818-1621:
+    commits: null
+    modules:
+      consumerorg:
+        6.1.5:
+        - apimesh/devportal#8193 - add SonarQube integration
+      connect_theme:
+        6.1.4:
+        - apimesh/devportal#8193 - add SonarQube integration
+  8.x-20230816-1621:
+    commits: null
+    modules:
+      apic_api:
+        6.1.6:
+        - apimesh/devportal#8193 - add SonarQube integration
+  8.x-20230815-0421:
+    commits:
+    - Just make an array not map
+    - Fix weird errors with EOF from docker execing a tar (#892)
+    modules:
+      ibm_apim:
+        6.1.20:
+        - Added analytics config form (#1015) (#1017)
+  8.x-20230803-1621:
+    commits:
+    - upgrade hierarchical_taxonomy_menu (#891)
+    - support content import within drush (#887)
+    modules:
+      ibm_apim:
+        6.1.19:
+        - fix password policy
+  8.x-20230803-1043:
+    commits: null
+    modules:
+      socialblock:
+        6.1.3: null
+        6.1.2:
+        - apimesh -> velox
+      product:
+        6.1.5: null
+        6.1.4:
+        - apimesh -> velox
+      ghmarkdown:
+        6.1.3: null
+        6.1.2:
+        - apimesh -> velox
+      auth_apic:
+        6.1.6: null
+        6.1.5:
+        - apimesh -> velox
+      mail_subscribers:
+        6.1.3: null
+        6.1.2:
+        - apimesh -> velox
+      themegenerator:
+        6.1.5: null
+        6.1.4:
+        - apimesh -> velox
+      featuredcontent:
+        6.1.3: null
+        6.1.2:
+        - apimesh -> velox
+      apic_api:
+        6.1.5: null
+        6.1.4:
+        - apimesh -> velox
+      apic_app:
+        6.1.4: null
+        6.1.3:
+        - apimesh -> velox
+      ibm_apim:
+        6.1.18: null
+        6.1.17:
+        - apimesh -> velox
+      consumerorg:
+        6.1.4: null
+        6.1.3:
+        - apimesh -> velox
+      instana_eum:
+        6.1.3: null
+        6.1.2:
+        - apimesh -> velox
+      connect_theme:
+        6.1.3:
+        - apimesh -> velox
+  8.x-20230728-1021:
+    commits:
+    - apimesh -> velox
+    - Fix module patch (#890)
+    - Drupal 10.1.2
+    - Drupal 10.1.2
+    - Catch error in ExtensionList
+    modules:
+      apictest:
+        6.1.4:
+        - apimesh -> velox
+  8.x-20230725-1621:
+    commits: null
+    modules:
+      auth_apic:
+        6.1.4:
+        - Send custom fields to apim on first login (#769)
+  8.x-20230724-1318:
+    commits:
+    - Fix patch for Drupal 10.1
+    - Fix patch for Drupal 10.1
+    - Dont allow blocked content to be added to export entities
+    modules:
+      auth_apic:
+        6.1.3:
+        - OIDC dos v10.0 (#767)
+      ibm_apim:
+        6.1.16:
+        - Remove references to oidc state service (#1013)
+      apictest:
+        6.1.3:
+        - Store oidc State (#266)
+  8.x-20230720-1229:
+    commits:
+    - Update modules.content_synchronizer.src.Commands.ContentSynchronizerCommands.php.patch
+    - Dont log file is gone
+    - Dont log file is gone and delete more at a time
+    - lower php memory usage for export all (#884) (#885)
+    modules:
+      ibm_apim:
+        6.1.15:
+        - Fix content list commands (#1011)
+  8.x-20230718-1021:
+    commits:
+    - Fix drupal10 patch
+    - remove single_content_sync update function (#881) (#883)
+    - Add content type to asset request (#878) (#879)
+    modules:
+      consumerorg:
+        6.1.2:
+        - remove html escape because data already encoded
+  8.x-20230717-1021:
+    commits:
+    - Export entity drush commands (#875) (#876)
+    modules:
+      apic_api:
+        6.1.3:
+        - Add grants required for API access
+  8.x-20230714-1718:
+    commits:
+    - Content sync module and Drupal 10.1.0 (#873)
+    modules:
+      ibm_apim:
+        6.1.14:
+        - remove hooks (#1005) (#1006)
+  8.x-20230629-1621:
+    commits:
+    - Fix captcha point code
+    modules:
+      ibm_apim:
+        6.1.13: null
+        6.1.12:
+        - Update module_blocklist.json
+        - Update module_blocklist.json
+  8.x-20230627-1621:
+    commits:
+    - apimesh/devportal#8403 - fix update.manager patch
+    modules:
+      themegenerator:
+        6.1.3:
+        - Add Drupal11 Compat
+        6.1.2:
+        - Use semver versions
+  8.x-20230627-1443:
+    commits: null
+    modules:
+      ibm_apim:
+        6.1.11: null
+        6.1.10:
+        - Block double install (#995) (#1001)
+        - Fix module install (#1002) (#1004)
+  8.x-20230627-1021:
+    commits:
+    - Block double install (#862) (#870)
+    modules:
+      ibm_apim:
+        6.1.9:
+        - Fix drush theme delete command
+  8.x-20230624-2324:
+    commits:
+    - fix captchas on forums (#866) (#868)
     - Block users
     modules:
       ibm_apim:
-        8.x-5.4.18:
-        - Fix module install (#1002) (#1003)
-        8.x-5.4.17:
-        - Fix drush theme delete command
-        8.x-5.4.16:
-        - CSS to fix captcha (#999)
+        6.1.8:
+        - CSS to fix captcha (#998)
   8.x-20230622-1621:
     commits:
     - Fix Captcha patch
     - Patch drupal core for newer symfony
     - Patch drupal core for newer symfony
-    - Composer updates (#863) (#864)
+    - Composer updates (#863) (#865)
     modules:
       auth_apic:
-        8.x-5.4.4:
+        6.1.2:
         - Headers allowed isnt in function
       ibm_apim:
-        8.x-5.4.15: null
-        8.x-5.4.14:
+        6.1.7: null
+        6.1.6:
         - Unneeded cache flush
         - Revert "Fix messages"
-        - Don't delete whole directory if extension directory cant be found (#994) (#996)
+        - Don't delete whole directory if extension directory cant be found (#994) (#997)
       apictest:
-        8.x-5.4.2:
+        6.1.2:
         - add lastUpdated to key
   8.x-20230620-1621:
     commits:
     - Delete test.txt
     modules:
       product:
-        8.x-5.4.5:
+        6.1.3:
         - deal with empty x-ibm-configuration (#277)
       apic_api:
-        8.x-5.4.5:
+        6.1.2:
         - deal with empty x-ibm-configuration (#189)
   8.x-20230616-1621:
     commits: null
     modules:
-      apic_app:
-        8.x-5.4.1:
-        - Only allow credentials to be viewed once (#360)
-  8.x-20230615-1021:
-    commits: null
-    modules:
-      ibm_apim:
-        8.x-5.4.13:
-        - Fix deleting non empty folders and update extension lists (#991) (#992)
-        8.x-5.4.12:
-        - add missing brackets
-  8.x-20230612-1621:
-    commits: null
-    modules:
-      ibm_apim:
-        8.x-5.4.11:
-        - Better delete for modules and themes (#988) (#990)
-  8.x-20230612-1022:
-    commits: null
-    modules:
-      connect_theme:
-        8.x-5.4.4:
-        - description width in card
-  8.x-20230607-1622:
-    commits: null
-    modules:
-      ibm_apim:
-        8.x-5.4.10:
-        - Added entity list + list-type drush commands (#985) (#986)
-  8.x-20230531-1604:
-    commits:
-    - shift array after if statement (#858) (#860)
-    - Reset empty and null get help block v10.0.5 (#853)
-    - update addtoany to get rid of cve (#855) (#857)
-    modules:
       product:
-        8.x-5.4.4:
+        6.1.2:
         - remove inline onclick on plans table (#276)
+      apic_app:
+        6.1.2:
+        - Only allow credentials to be viewed once (#361)
+      connect_theme:
+        6.1.2:
+        - description width in card
+  8.x-20230616-0946:
+    commits: null
+    modules:
+      ibm_apim:
+        6.1.5:
+        - Fix deleting non empty folders and update extension lists (#991) (#993)
+        6.1.4:
+        - add missing brackets
+        - Better delete for modules and themes (#988)
+  8.x-20230531-1531:
+    commits:
+    - Update version for 10.0.7.0
+    modules:
+      socialblock:
+        6.1.1:
+        - Update socialblock.info.yml
+      product:
+        6.1.1:
+        - Update product.info.yml
+      ghmarkdown:
+        6.1.1:
+        - Update ghmarkdown.info.yml
+      auth_apic:
+        6.1.1:
+        - Update auth_apic.info.yml
+      mail_subscribers:
+        6.1.1:
+        - Update mail_subscribers.info.yml
+      themegenerator:
+        6.1.1:
+        - Update themegenerator.info.yml
+      featuredcontent:
+        6.1.1:
+        - Update featuredcontent.info.yml
+      apic_api:
+        6.1.1:
+        - Update apic_api.info.yml
+      apic_app:
+        6.1.1:
+        - Update apic_app.info.yml
+      ibm_apim:
+        6.1.3:
+        - Update ibm_apim.info.yml
+      consumerorg:
+        6.1.1:
+        - Update consumerorg.info.yml
+      apictest:
+        6.1.1:
+        - Update apictest.info.yml
+      instana_eum:
+        6.1.1:
+        - Update instana_eum.info.yml
+      connect_theme:
+        6.1.1:
+        - Update connect_theme.info.yml
   8.x-20230525-1621:
     commits:
-    - Fix upgrade issues (#849) (#851) (#852)
+    - Fix upgrade issues (#849) (#851)
     modules:
       apictest:
-        8.x-5.4.1:
-        - use env.APIC_RT_RO (#262)
+        6.0.3:
+        - use env.APIC_RT_RO (#263)
   8.x-20230524-1621:
     commits: null
     modules:
       auth_apic:
-        8.x-5.4.3:
-        - Show sign up success when username/email is taken (#760)
+        6.0.5:
+        - Fixed behat tests (#762)
+        - Show sign up success when username/email is taken (#759)
   8.x-20230519-1621:
     commits: null
     modules:
       ibm_apim:
-        8.x-5.4.9:
-        - Disable analytics when there is no analytics service (#981)
+        6.0.10:
+        - Disable analytics when there is no analytics service (#982)
   8.x-20230517-2221:
     commits: null
     modules:
       connect_theme:
-        8.x-5.4.3:
+        6.0.4:
         - add honeypot form field
-  8.x-20230516-1621:
+  8.x-20230516-0912:
     commits:
     - allow absolute paths for single_content_sync
     - fix import content bug
     - fix export on content module (#848)
     modules:
       connect_theme:
-        8.x-5.4.2:
+        6.0.3:
         - no longer using adminimal
-  8.x-20230516-1021:
-    commits: null
-    modules:
-      product:
-        8.x-5.4.3:
-        - add product content commands (#270) (#275)
-      apic_api:
-        8.x-5.4.4:
-        - Cli content v10.0 (#184) (#188)
-      ibm_apim:
-        8.x-5.4.8:
-        - Cli content v10.0 (#979) (#980)
   8.x-20230515-1621:
-    commits: null
+    commits:
+    - Version 10.0.6.0
     modules:
       apic_api:
-        8.x-5.4.3:
-        - apimesh/depvortal#8356 Limit acces check to known product (if known) (#185) (#187)
-  8.x-20230510-1621:
+        6.0.4:
+        - apimesh/depvortal#8356 Limit acces check to known product (if known) (#185) (#186)
+  8.x-20230512-0942:
     commits:
-    - add uuid override flag (#845) (#847)
+    - add uuid override flag (#845) (#846)
     modules:
       product:
-        8.x-5.4.2:
-        - apimesh/depvortal#8356 add util function to find api by name (#272) (#274)
+        6.0.4:
+        - apimesh/depvortal#8356 add util function to find api by name (#272) (#273)
       auth_apic:
-        8.x-5.4.2:
-        - Make admin failed login error the same as non-admin (#757)
+        6.0.4:
+        - Make admin failed login error the same as non-admin (#755)
+  8.x-20230510-1621:
+    commits: null
+    modules:
+      product:
+        6.0.3:
+        - add product content commands (#270) (#271)
+      apic_api:
+        6.0.3:
+        - Cli content v10.0 (#184)
+      ibm_apim:
+        6.0.9:
+        - Cli content v10.0 (#979)
   8.x-20230509-1621:
     commits:
-    - Ability to do import/export of content (#841) (#844)
+    - Ability to do import/export of content (#841) (#843)
     - composer update
     - composer update
     - composer update
     modules:
       auth_apic:
-        8.x-5.4.1:
-        - Rename twig templates (#752)
+        6.0.3:
+        - Rename twig templates (#753)
       ibm_apim:
-        8.x-5.4.7:
+        6.0.8:
         - Add hooks for content modules
-        8.x-5.4.6:
-        - Add hooks for content modules (#975) (#977)
+        6.0.7:
+        - Add hooks for content modules (#975) (#976)
   8.x-20230505-1621:
     commits: null
     modules:
       ibm_apim:
-        8.x-5.4.5:
-        - Fix error when all disolayed (#971) (#972)
+        6.0.6:
+        - Fix error when all disolayed (#971) (#973)
       consumerorg:
-        8.x-5.4.1:
-        - Fix consumer org change event (#320) (#321)
-  8.x-20230504-1621:
+        6.0.2:
+        - Fix consumer org change event (#320) (#322)
+  8.x-20230504-1622:
     commits: null
     modules:
       apic_api:
-        8.x-5.4.2:
+        6.0.2:
         - Fix WSOD
+        - Add redirect service (#180) (#181)
       ibm_apim:
-        8.x-5.4.4:
-        - fix Billing Form deprecated use of getImplementations (#950)
-        8.x-5.4.3:
+        6.0.5:
         - fix billing form
-  8.x-20230504-1021:
-    commits: null
-    modules:
-      connect_theme:
-        8.x-5.4.1:
-        - Actual fix for double refresh icon (#239)
-  8.x-20230503-1621:
-    commits: null
-    modules:
-      product:
-        8.x-5.4.1:
-        - Add redirect service (#267) (#268) (#269)
-      apic_api:
-        8.x-5.4.1:
-        - Add redirect service (#180) (#181) (#182)
-      ibm_apim:
-        8.x-5.4.2: null
-        8.x-5.4.1:
-        - fix themes delete (#965) (#967)
-        - Add redirect service (#962) (#963) (#964)
   8.x-20230502-1121:
-    commits:
-    - Update version for 10.0.5.4
+    commits: null
     modules:
-      socialblock:
-        8.x-5.4.0:
-        - update version 8.x-5.3.2 -> 8.x-5.4.0
-      product:
-        8.x-5.4.0:
-        - update version 8.x-5.3.10 -> 8.x-5.4.0
-      ghmarkdown:
-        8.x-5.4.0:
-        - update version 8.x-5.3.2 -> 8.x-5.4.0
-      auth_apic:
-        8.x-5.4.0:
-        - update version 8.x-5.3.6 -> 8.x-5.4.0
-      mail_subscribers:
-        8.x-5.4.0:
-        - update version 8.x-5.3.5 -> 8.x-5.4.0
-      themegenerator:
-        8.x-5.4.0:
-        - update version 8.x-5.3.3 -> 8.x-5.4.0
-      featuredcontent:
-        8.x-5.4.0:
-        - update version 8.x-5.3.2 -> 8.x-5.4.0
-      apic_api:
-        8.x-5.4.0:
-        - update version 8.x-5.3.6 -> 8.x-5.4.0
-      apic_app:
-        8.x-5.4.0:
-        - update version 8.x-5.3.10 -> 8.x-5.4.0
-      ibm_apim:
-        8.x-5.4.0:
-        - update version 8.x-5.3.27 -> 8.x-5.4.0
-      consumerorg:
-        8.x-5.4.0:
-        - update version 8.x-5.3.13 -> 8.x-5.4.0
-      apictest:
-        8.x-5.4.0:
-        - update version 8.x-5.3.6 -> 8.x-5.4.0
-      instana_eum:
-        8.x-5.4.0:
-        - update version 8.x-5.3.2 -> 8.x-5.4.0
       connect_theme:
-        8.x-5.4.0:
-        - update version 8.x-5.3.6 -> 8.x-5.4.0
-  8.x-20230419-1621:
+        6.0.2:
+        - Actual fix for double refresh icon (#238)
+  8.x-20230426-1621:
     commits:
     - Remove some patches for warmer
+    - fix file names
     - Update drupal version translation
     - Delete po file from old modules
     - Tc2dev/20230414 (#840)
-    - Fix drupal 10 (#837) (#838)
-    - apimesh/devportl#8318 Remove boolean > 0 check (#836)
-    - Composer update D10.0.8 (#835)
     modules:
       ibm_apim:
-        8.x-5.3.26:
+        6.0.4:
         - add two missing ibm modules
+  8.x-20230419-1459:
+    commits:
+    - Fix drupal 10
+    - Fix drupal 10
+    - Fix drupal 10 (#837) (#839)
+    - apimesh/devportl#8318 Remove boolean > 0 check
+    - Composer update D10.0.8 apimesh/devportal#8317
+    modules:
+      ibm_apim:
+        6.0.3:
+        - fix themes delete (#965) (#966)
+  8.x-20230417-1458:
+    commits: null
+    modules:
+      product:
+        6.0.2:
+        - Add redirect service (#267) (#268)
+      auth_apic:
+        6.0.2:
+        - mock environment correctly for invites (#749) (#751)
+      ibm_apim:
+        6.0.2:
+        - Add redirect service (#962) (#963)
+      apictest:
+        6.0.2:
+        - mock environment correctly for invites (#258) (#260)
   8.x-20230414-1124:
     commits:
     - Don't need acl patch anymore
+    - bump version
     modules:
+      socialblock:
+        6.0.2: null
+      product:
+        6.0.1:
+        - Update module version (#266)
+        - fix ci channel
+      ghmarkdown:
+        6.0.1:
+        - fix ci channel
       auth_apic:
-        8.x-5.3.5:
-        - mock environment correctly for invites (#749) (#750)
+        6.0.1:
+        - fix ci channel
+      mail_subscribers:
+        6.0.1:
+        - fix ci channel
+      themegenerator:
+        6.0.2: null
+      featuredcontent:
+        6.0.1:
+        - fix ci channel
+      apic_api:
+        6.0.1:
+        - fix ci channel
+        - Use non-dep way to load includes
+      apic_app:
+        6.0.1:
+        - fix ci channel
+      ibm_apim:
+        6.0.1:
+        - fix ci channel
+      consumerorg:
+        6.0.1:
+        - fix ci channel
       apictest:
-        8.x-5.3.5:
-        - mock environment correctly for invites (#258) (#259)
+        6.0.1: null
+      instana_eum:
+        6.0.1:
+        - fix ci channel
+      connect_theme:
+        6.0.1: null
   8.x-20230414-0931:
     commits:
     - composer update
@@ -9072,4 +9609,4 @@ changes:
         - try to make it more tolerant of yum issues
         8.x-1.3.132:
         - try to make it more tolerant of yum issues
-  8.x-20230627-1621:
+  8.x-20231114-2321:

@@ -1,6 +1,6 @@
 --- modules/search_api/src/Plugin/views/filter/SearchApiFulltext.php	2022-11-07 09:39:57
 +++ modules/search_api/src/Plugin/views/filter/SearchApiFulltext.php	2023-02-23 15:46:36
-@@ -204,7 +204,7 @@
+@@ -205,7 +205,7 @@
        '#description' => $this->t('Minimum length of each word in the search keys. Leave empty to allow all words.'),
        '#type' => 'number',
        '#min' => 1,
@@ -8,17 +8,17 @@
 +      '#default_value' => $this->getMinWordLength(),
      ];
    }
- 
-@@ -348,18 +348,18 @@
+
+@@ -354,17 +354,18 @@
      }
- 
+
      // Only continue if there is a minimum word length set.
 -    if ($this->options['min_length'] < 2) {
 +    if ($this->getMinWordLength() < 2) {
        return;
      }
- 
-     $words = preg_split('/\s+/', $input);
+
+     $words = preg_split('/\s+/', $input) ?: [];
      foreach ($words as $i => $word) {
 -      if (mb_strlen($word) < $this->options['min_length']) {
 +      if (mb_strlen($word) < $this->getMinWordLength()) {
@@ -26,18 +26,15 @@
        }
      }
 -    if (!$words) {
--      $vars['@count'] = $this->options['min_length'];
 +    if (!$words && $this->validateOrigin()) {
 +      $vars['@count'] = $this->getMinWordLength();
-       $msg = $this->t('You must include at least one positive keyword with @count characters or more.', $vars);
+       $msg = $this->formatPlural($this->options['min_length'], 'You must include at least one keyword to match in the content, and punctuation is ignored.', 'You must include at least one keyword to match in the content. Keywords must be at least @count characters, and punctuation is ignored.');
        $form_state->setErrorByName($identifier, $msg);
      }
-@@ -495,6 +495,30 @@
-     }
- 
+@@ -501,4 +502,28 @@
      return $fields;
-+  }
-+
+   }
+
 +  protected function validateOrigin() {
 +    $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 +    foreach ($backtrace as $caller) {
@@ -60,6 +57,6 @@
 +      }
 +
 +      return $minL;
-   }
- 
++  }
++
  }

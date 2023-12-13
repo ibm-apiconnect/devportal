@@ -68,3 +68,10 @@ function auth_apic_upgrade_8122() {
     $storage->save();
   }
 }
+
+/**
+ * Clear OIDC state
+ */
+function auth_apic_upgrade_10001() {
+  \Drupal::state()->delete('auth_apic.oidc_state');
+}

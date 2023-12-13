@@ -651,7 +651,6 @@ function product_preprocess_node(&$variables) {
       'revision_log',
       'created',
       'links',
-      'addtoany',
       'uid',
       'comment',
     ];

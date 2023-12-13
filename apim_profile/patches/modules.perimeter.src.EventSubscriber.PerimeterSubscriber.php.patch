@@ -1,30 +1,28 @@
 --- modules/perimeter/src/EventSubscriber/PerimeterSubscriber.php	2021-06-24 12:54:23.000000000 +0100
 +++ modules/perimeter/src/EventSubscriber/PerimeterSubscriber.php	2021-06-24 12:54:23.000000000 +0100
-@@ -11,6 +11,7 @@
- use Drupal\ban\BanIpManager;
- use Drupal\Core\Config\ConfigFactoryInterface;
- use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+@@ -13,6 +13,7 @@
+ use Symfony\Component\HttpKernel\Event\ResponseEvent;
+ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+ use Symfony\Component\HttpKernel\KernelEvents;
 +use Drupal\Core\Site\Settings;
 
  /**
   * On page not found events, ban the IP if the request is suspicious.
-@@ -40,6 +41,10 @@
-    * On page not found events, ban the IP if the request is suspicious.
+@@ -99,12 +100,16 @@
+    * Ban the IP if the request is suspicious.
     */
-   public function handleBannedUrls(Event $event) {
+   protected function handleBannedUrls(Request $request) {
 +    $whitelist = Settings::get('reverse_proxy_addresses', []) ;
-+    if (in_array($event->getRequest()->getClientIp(), $whitelist)){
++    if (in_array($request->getClientIp(), $whitelist)){
 +      return;
 +    }
-     if (\Drupal::currentUser()->hasPermission('bypass perimeter defence rules')) {
+     if ($this->currentUser->hasPermission('bypass perimeter defence rules')) {
        return;
      }
-@@ -47,7 +52,7 @@
-     if ($exception instanceof NotFoundHttpException) {
-       $request_path = $event->getRequest()->getPathInfo();
-       $bannedPatterns = $this->configFactory->get('perimeter.settings')->get('not_found_exception_patterns');
--      if (!empty($bannedPatterns) && !empty($request_path)) {
-+      if (!empty($bannedPatterns) && !empty($request_path) && (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true)) {
-         foreach ($bannedPatterns as $pattern) {
-           $pattern = trim($pattern);
-           if (!empty($pattern) && preg_match($pattern, $request_path)) {
+     $request_path = $request->getPathInfo();
+     $bannedPatterns = $this->configFactory->get('perimeter.settings')->get('not_found_exception_patterns');
+-    if (!empty($bannedPatterns) && !empty($request_path)) {
++    if (!empty($bannedPatterns) && !empty($request_path) && (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true)) {
+       foreach ($bannedPatterns as $pattern) {
+         $pattern = trim($pattern);
+         if (!empty($pattern) && preg_match($pattern, $request_path)) {

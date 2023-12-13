@@ -114,17 +114,17 @@ Feature: Consumer Organization Block
     When I click "@data(andre[1].consumerorg.title)"
     When I go to "/myorg"
     Then I should see the text "@data(andre[1].consumerorg.title)"
-#   But this doesn't really verify that the conorg has changed... as you can see both conorg titles on this page (apimesh/devportal#4688)
+#   But this doesn't really verify that the conorg has changed... as you can see both conorg titles on this page (velox/devportal#4688)
     # commenting this out because its not working reliably - i assume caching issues
 #    And I should see the text "Switched consumer organization to @data(andre[1].consumerorg.title)"
-#   You only see this message here because of the caching issue with behat tests (it should be seen on the homepage apimesh/devportal#4657)
+#   You only see this message here because of the caching issue with behat tests (it should be seen on the homepage velox/devportal#4657)
     And I should see the text "Edit organization"
     And I should see the text "Delete organization"
     And I should see the text "Invite"
     And there are no errors
 
 
-#Commenting out this test - it doesn't work due to the caching issue: apimesh/devportal#4657
+#Commenting out this test - it doesn't work due to the caching issue: velox/devportal#4657
 #  @api
 #  Scenario: As a con org owner of multiple orgs, I can switch to a different org from the conorg block, and view changed org on the homepage
 #    Given users:

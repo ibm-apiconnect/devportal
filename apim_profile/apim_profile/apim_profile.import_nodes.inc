@@ -52,7 +52,7 @@ function apim_profile_update_nodes() {
 function apim_profile_update_footerlinks() {
   $contactMenu = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/contact']);
   $contactMenu = reset($contactMenu);
-  if ($contactMenu !== NULL) {
+  if (!empty($contactMenu)) {
     add_contact_menu_translations($contactMenu);
   }
 }
@@ -60,12 +60,15 @@ function apim_profile_update_footerlinks() {
 function apim_profile_update_terms_page() {
   // Get the node id from the path alias
   $tandcsPath = \Drupal::entityTypeManager()->getStorage('path_alias')->loadByProperties(['alias' => '/tsandcs']);
-  $tandcsPath = reset($tandcsPath)->getPath();
-  $tandcsNodeId = substr($tandcsPath, strrpos($tandcsPath, '/' )+1);
+  $tandcsPath = reset($tandcsPath);
+  if(!empty($tandcsPath)) {
+    $tandcsPath = $tandcsPath->getPath();
+    $tandcsNodeId = substr($tandcsPath, strrpos($tandcsPath, '/' )+1);
 
-  $node = Node::load($tandcsNodeId);
-  if ($node !== NULL) {
-    add_terms_node_translations($node);
+    $node = Node::load($tandcsNodeId);
+    if (!empty($node)) {
+      add_terms_node_translations($node);
+    }
   }
 
   $tandcsMenu = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/tsandcs']);
@@ -78,12 +81,15 @@ function apim_profile_update_terms_page() {
 function apim_profile_update_privacy_page() {
   // Get the node id from the path alias
   $privacyPath = \Drupal::entityTypeManager()->getStorage('path_alias')->loadByProperties(['alias' => '/privacy']);
-  $privacyPath = reset($privacyPath)->getPath();
-  $privacyNodeId = substr($privacyPath, strrpos($privacyPath, '/' )+1);
+  $privacyPath = reset($privacyPath);
+  if (!empty($privacyPath)) {
+    $privacyPath = $privacyPath->getPath();
+    $privacyNodeId = substr($privacyPath, strrpos($privacyPath, '/' )+1);
 
-  $node = Node::load($privacyNodeId);
-  if (!empty($node)) {
-    add_privacy_node_translations($node);
+    $node = Node::load($privacyNodeId);
+    if (!empty($node)) {
+      add_privacy_node_translations($node);
+    }
   }
 
   $privacyMenu = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/privacy']);
@@ -132,32 +138,41 @@ function apim_profile_update_faqs() {
 function apim_profile_update_asyncapi_pages() {
   // Get the node id from the path alias
   $asyncapiPath = \Drupal::entityTypeManager()->getStorage('path_alias')->loadByProperties(['alias' => '/asyncapi']);
-  $asyncapiPath = reset($asyncapiPath)->getPath();
-  $asyncapiNodeId = substr($asyncapiPath, strrpos($asyncapiPath, '/' )+1);
+  $asyncapiPath = reset($asyncapiPath);
+  if(!empty($asyncapiPath)) {
+    $asyncapiPath = $asyncapiPath->getPath();
+    $asyncapiNodeId = substr($asyncapiPath, strrpos($asyncapiPath, '/' )+1);
 
-  $node = Node::load($asyncapiNodeId);
-  if ($node !== NULL) {
-    add_asyncapi_node_translations($node);
+    $node = Node::load($asyncapiNodeId);
+    if (!empty($node)) {
+      add_asyncapi_node_translations($node);
+    }
   }
 
   // Get the node id from the path alias
   $asyncapikafkaPath = \Drupal::entityTypeManager()->getStorage('path_alias')->loadByProperties(['alias' => '/asyncapi-kafka']);
-  $asyncapikafkaPath = reset($asyncapikafkaPath)->getPath();
-  $asyncapikafkaNodeId = substr($asyncapikafkaPath, strrpos($asyncapikafkaPath, '/' )+1);
+  $asyncapikafkaPath = reset($asyncapikafkaPath);
+  if(!empty($asyncapikafkaPath)) {
+    $asyncapikafkaPath = $asyncapikafkaPath->getPath();
+    $asyncapikafkaNodeId = substr($asyncapikafkaPath, strrpos($asyncapikafkaPath, '/' )+1);
 
-  $node = Node::load($asyncapikafkaNodeId);
-  if ($node !== NULL) {
-    add_asyncapi_kafka_node_translations($node);
+    $node = Node::load($asyncapikafkaNodeId);
+    if (!empty($node)) {
+      add_asyncapi_kafka_node_translations($node);
+    }
   }
 
   // Get the node id from the path alias
   $asyncapimqPath = \Drupal::entityTypeManager()->getStorage('path_alias')->loadByProperties(['alias' => '/asyncapi-mq']);
-  $asyncapimqPath = reset($asyncapimqPath)->getPath();
-  $asyncapimqNodeId = substr($asyncapimqPath, strrpos($asyncapimqPath, '/' )+1);
+  $asyncapimqPath = reset($asyncapimqPath);
+  if(!empty($asyncapimqPath)) {
+    $asyncapimqPath = $asyncapimqPath->getPath();
+    $asyncapimqNodeId = substr($asyncapimqPath, strrpos($asyncapimqPath, '/' )+1);
 
-  $node = Node::load($asyncapimqNodeId);
-  if ($node !== NULL) {
-    add_asyncapi_mq_node_translations($node);
+    $node = Node::load($asyncapimqNodeId);
+    if (!empty($node)) {
+      add_asyncapi_mq_node_translations($node);
+    }
   }
 }
 

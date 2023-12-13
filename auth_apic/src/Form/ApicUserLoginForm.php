@@ -17,7 +17,7 @@ use Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface;
 use Drupal\auth_apic\UserManagement\ApicInvitationInterface;
 use Drupal\auth_apic\UserManagement\ApicLoginServiceInterface;
 use Drupal\Core\Config\Config;
-use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\Core\Render\RendererInterface;
@@ -116,9 +116,9 @@ class ApicUserLoginForm extends UserLoginForm {
   protected $chosen_registry;
 
   /**
-   * @var \Drupal\Core\Extension\ModuleHandler
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected ModuleHandler $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * ApicUserLoginForm constructor.
@@ -140,7 +140,7 @@ class ApicUserLoginForm extends UserLoginForm {
    * @param \Drupal\auth_apic\UserManagement\ApicLoginServiceInterface $login_service
    * @param \Drupal\auth_apic\UserManagement\ApicInvitationInterface $invitation_service
    * @param \Drupal\Core\Messenger\Messenger $messenger
-   * @param \Drupal\Core\Extension\ModuleHandler $module_handler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    */
   public function __construct($user_flood_control,
                               UserStorageInterface $user_storage,
@@ -159,7 +159,7 @@ class ApicUserLoginForm extends UserLoginForm {
                               ApicLoginServiceInterface $login_service,
                               ApicInvitationInterface $invitation_service,
                               Messenger $messenger,
-                              ModuleHandler $module_handler,
+                              ModuleHandlerInterface $module_handler,
                               TokenParserInterface $token_parser) {
     parent::__construct($user_flood_control, $user_storage, $user_auth, $renderer, $bare_html_renderer);
     $this->userFloodControl = $user_flood_control;
@@ -563,6 +563,9 @@ class ApicUserLoginForm extends UserLoginForm {
       }
 
       $this->validateFinal($form, $form_state);
+      if (!empty($form_state->getErrors())) {
+        $this->messenger->addError(t('Unauthorized'));
+      }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
@@ -655,6 +658,7 @@ class ApicUserLoginForm extends UserLoginForm {
 
     if (!$returnValue) {
       $this->logger->error('Login attempt for %user which failed in validateApicAuthentication.', ['%user' => $form_state->getValue('name')]);
+      $this->messenger->addError(t('Unauthorized'));
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
     return $returnValue;

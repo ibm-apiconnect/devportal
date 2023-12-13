@@ -1149,6 +1149,12 @@ class ConsumerOrgService {
       if ($node->consumerorg_tags) {
         $org->setTags(array_column($node->get('consumerorg_tags')->getValue(), "value"));
       }
+      $customFields = $this->getCustomFields();
+      foreach ($customFields as $customField) {
+        if (!empty($node->get($customField)->getValue())) {
+          $org->addCustomField($customField, $node->get($customField)->getValue());
+        }
+      }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $org !== NULL ? $org->getUrl() : NULL);
     return $org;
@@ -1232,16 +1238,16 @@ class ConsumerOrgService {
    * @throws \JsonException|\Drupal\Core\Entity\EntityStorageException
    */
   public function getFromApim(ConsumerOrg $org): ConsumerOrg {
-    $responseOrg = $org;
+    $cOrg = $org;
     $serverResponse = $this->apimServer->get($org->getUrl());
     if ($serverResponse->getCode() === 200) {
       $responseOrg = $this->createFromJSON($serverResponse->getData());
       if ($responseOrg !== NULL) {
-        $this->createOrUpdateNode($responseOrg, 'internal');
+        $cOrg = $responseOrg;
+        $this->createOrUpdateNode($cOrg, 'internal');
       }
-
     }
-    return $responseOrg;
+    return $cOrg;
   }
 
   /**
@@ -2132,6 +2138,11 @@ class ConsumerOrgService {
           }
         }
         $output['invites'] = $invites;
+        $output['custom_fields'] = [];
+        $customFields = $this->getCustomFields();
+        foreach ($customFields as $customField) {
+          $output['custom_fields'][$customField] = $node->get($customField)->getValue();
+        }
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

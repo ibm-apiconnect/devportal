@@ -1,47 +1,104 @@
 changes:
-  8.x-5.4.18:
-  - Fix module install (#1002) (#1003)
-  8.x-5.4.17:
+  6.1.37:
+  - Delete expire pending users (#1061)
+  6.1.36:
+  - velox/devportal#8259 prevent deinstallation of memcache (#1060)
+  6.1.35:
+  - remove additional icons on pwd check (#1059)
+  6.1.34:
+  - Remove unused config (#1056) (#1057)
+  6.1.33:
+  - Use correct css for Item (#1053) (#1055)
+  6.1.32:
+  - Invalidate application tags on analytics form save (#1051)
+  6.1.31:
+  - Invalidate cache after consumer analytics change (#1048)
+  6.1.30:
+  - Remove addtoany (#1044) (#1045)
+  6.1.29:
+  - Rename parameters (#1041) (#1042)
+  6.1.28:
+  - adopted using ModuleHandlerInterface instead of class ModuleHandler
+  - block statistics module (#1038)
+  6.1.27:
+  - Block forums related too blocked taxonomy terms (#1035) (#1036)
+  6.1.26:
+  - redact out analytics data (#1028) (#1033)
+  6.1.25:
+  - Filter out blocked taxonomy terms (#1029) (#1030)
+  6.1.24:
+  - Content Bug fixes (#1024) (#1025)
+  6.1.23:
+  - Block advagg until its been fixed for D10.1 (#1021) (#1022)
+  6.1.22:
+  - Use correct TTL for pending approvals (#1018)
+  6.1.21:
+  - add SonarQube integration (#1020)
+  6.1.20:
+  - Added analytics config form (#1015) (#1017)
+  6.1.19:
+  - fix password policy
+  6.1.18: null
+  6.1.17:
+  - apimesh -> velox
+  6.1.16:
+  - Remove references to oidc state service (#1013)
+  6.1.15:
+  - Fix content list commands (#1011)
+  6.1.14:
+  - remove hooks (#1005) (#1006)
+  6.1.13: null
+  6.1.12:
+  - Update module_blocklist.json
+  - Update module_blocklist.json
+  6.1.11: null
+  6.1.10:
+  - Block double install (#995) (#1001)
+  - Fix module install (#1002) (#1004)
+  6.1.9:
   - Fix drush theme delete command
-  8.x-5.4.16:
-  - CSS to fix captcha (#999)
-  8.x-5.4.15: null
-  8.x-5.4.14:
+  6.1.8:
+  - CSS to fix captcha (#998)
+  6.1.7: null
+  6.1.6:
   - Unneeded cache flush
   - Revert "Fix messages"
-  - Don't delete whole directory if extension directory cant be found (#994) (#996)
-  8.x-5.4.13:
-  - Fix deleting non empty folders and update extension lists (#991) (#992)
-  8.x-5.4.12:
+  - Don't delete whole directory if extension directory cant be found (#994) (#997)
+  6.1.5:
+  - Fix deleting non empty folders and update extension lists (#991) (#993)
+  6.1.4:
   - add missing brackets
-  8.x-5.4.11:
-  - Better delete for modules and themes (#988) (#990)
-  8.x-5.4.10:
-  - Added entity list + list-type drush commands (#985) (#986)
-  8.x-5.4.9:
-  - Disable analytics when there is no analytics service (#981)
-  8.x-5.4.8:
-  - Cli content v10.0 (#979) (#980)
-  8.x-5.4.7:
+  - Better delete for modules and themes (#988)
+  6.1.3:
+  - Update ibm_apim.info.yml
+  6.0.12-6.1.2: null
+  6.0.12-6.1.1:
+  - Better delete for modules and themes (#989)
+  - Added entity list + list-type drush commands (#985) (#987)
+  6.0.12-6.1.0:
+  - update version 6.0.12 -> 6.0.12-6.1.0
+  6.0.11:
+  - update doc links (#984)
+  6.0.10:
+  - Disable analytics when there is no analytics service (#982)
+  6.0.9:
+  - Cli content v10.0 (#979)
+  6.0.8:
   - Add hooks for content modules
-  8.x-5.4.6:
-  - Add hooks for content modules (#975) (#977)
-  8.x-5.4.5:
-  - Fix error when all disolayed (#971) (#972)
-  8.x-5.4.4:
-  - fix Billing Form deprecated use of getImplementations (#950)
-  8.x-5.4.3:
+  6.0.7:
+  - Add hooks for content modules (#975) (#976)
+  6.0.6:
+  - Fix error when all disolayed (#971) (#973)
+  6.0.5:
   - fix billing form
-  8.x-5.4.2: null
-  8.x-5.4.1:
-  - fix themes delete (#965) (#967)
-  - Add redirect service (#962) (#963) (#964)
-  8.x-5.4.0:
-  - update version 8.x-5.3.27 -> 8.x-5.4.0
-  8.x-5.3.26:
+  6.0.4:
   - add two missing ibm modules
-  8.x-5.3.25:
-  - Rebuild custom blocks command (#959) (#961)
+  6.0.3:
+  - fix themes delete (#965) (#966)
+  6.0.2:
+  - Add redirect service (#962) (#963)
+  6.0.1:
+  - fix ci channel
   8.x-5.3.24: null
   8.x-5.3.23:
   - only decrypt keys if set (#951) (#952)

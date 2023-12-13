@@ -1,0 +1,6 @@
+langcode: en
+status: false
+dependencies: {  }
+formId: consumerorg_edit_form
+captchaType: image_captcha/Image
+label: consumerorg_edit_form

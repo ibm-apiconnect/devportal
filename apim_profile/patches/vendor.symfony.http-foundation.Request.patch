@@ -8,7 +8,7 @@
 -            $host = $host[0];
 -        } elseif (!$host = $this->headers->get('HOST')) {
 +
-+        // apimesh/devportal#7594 - we have commented the code related to X_FORWARDED_HOST and trusted proxies here
++        // velox/devportal#7594 - we have commented the code related to X_FORWARDED_HOST and trusted proxies here
 +        // as this creates issues in OCP environments where sometimes getTrustedValues() returns values which
 +        // cause us to use the wrong hostname to search for a cookie which won't exist. This then means authorize.php
 +        // will reject calls such as UI theme upload as it can't find the cookie to authenticate the user.

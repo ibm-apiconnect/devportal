@@ -573,7 +573,7 @@ ul.analyticsAppSelector li.selected {
   margin-top: 1.5rem;
 }
 
-.views-exposed-form .form-inline #edit-items-per-page.form-control {
+.views-exposed-form .form-inline .form-control[data-drupal-selector="edit-items-per-page"] {
   width: 100%;
 }
 
@@ -612,6 +612,12 @@ ul.analyticsAppSelector li.selected {
   margin: 5rem auto auto;
   padding: 2rem;
   max-width: 50rem;
+}
+
+#ibm-apim-password-policy-status span.passed svg, 
+#ibm-apim-password-policy-status span.failed svg,
+.apic-user-form span.passed svg, .apic-user-form span.failed svg {
+  display: none;  
 }
 
 .apic-user-form .form-item input,

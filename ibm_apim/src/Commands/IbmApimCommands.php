@@ -807,7 +807,7 @@ class IbmApimCommands extends DrushCommands {
 
 
   /**
-   * This function is used to wipe the OIDC state service and platform API token
+   * This function is used to wipe the platform API token
    * This is used when doing backup / restore operations since the content won't be valid for the new site
    *
    * @command ibm_apim-delete_tokens
@@ -818,10 +818,6 @@ class IbmApimCommands extends DrushCommands {
   public function drush_ibm_apim_delete_tokens(): void {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
     \Drupal::logger('ibm_apim')->info('Drush drush_ibm_apim_delete_tokens delete saved OIDC tokens');
-
-    // set to empty array
-    $oidcStateService = \Drupal::service('auth_apic.oidc_state');
-    $oidcStateService->saveAllOidcState([]);
 
     // delete the Mail Platform API token
     \Drupal::state()->delete('ibm_apic_mail.token');
@@ -1062,7 +1058,7 @@ class IbmApimCommands extends DrushCommands {
 
     // Delete all users from db with duplicate emails
     \Drupal::service('ibm_apim.db_usersfielddata')->deleteUsersWithDuplicateEmails();
-    \Drupal::service('ibm_apim.db_usersfielddata')->deleteExpiredPendingApprovalUsers();
+    \Drupal::service('ibm_apim.db_usersfielddata')->deleteExpiredPendingUsers();
 
     // remove any users that were not in the snapshot from apim
     if (file_exists("/tmp/snapshot.$UUID/content_refresh_users.$UUID.list")) {
@@ -3140,7 +3136,7 @@ function drush_ibm_apim_activation_update($activation) {
       $last_time = $time_now;
 
       if ($pctMem > $memThreshold) {
-        fprintf(STDERR, "Processed %d objects in %f seconds (last 10 in %f seconds). Memory usage %.2f%%/%d%% (%d/%d bytes). Resetting Drupal cache.\n", $count, $elapsed_time, $elapsed_time_last_10, $pctMem, $memThreshold, $memUsageMB, $memoryLimitMB);
+        fprintf(STDERR, "Processed %d objects in %f seconds (last 10 in %f seconds). Memory usage %.2f%%/%d%% (%d/%d MB). Resetting Drupal cache.\n", $count, $elapsed_time, $elapsed_time_last_10, $pctMem, $memThreshold, $memUsageMB, $memoryLimitMB);
 
         // Only need to do one type of storage here as they all share the same memory cache instance
         \Drupal::entityTypeManager()->getStorage('node')->memoryCache->deleteAll();

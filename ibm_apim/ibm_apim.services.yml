@@ -15,6 +15,11 @@ services:
     arguments: [ '@current_user' ]
     tags:
       - { name: access_check, applies_to: _ibm_apim_loggedin_not_admin_access_check }
+  ibm_apim.analytics_admin_access_checker:
+    class: Drupal\ibm_apim\Access\AnalyticsAdminAccessCheck
+    arguments: [ '@current_user' ]
+    tags:
+      - { name: access_check, applies_to: _ibm_apim_analytics_admin_access_check }
   ibm_apim.analytics_access_checker:
     class: Drupal\ibm_apim\Access\AnalyticsAccessCheck
     arguments: [ '@current_user' ]

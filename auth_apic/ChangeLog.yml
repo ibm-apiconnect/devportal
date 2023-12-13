@@ -1,18 +1,38 @@
 changes:
-  8.x-5.4.4:
+  6.1.11:
+  - register form validation catches URLs of all formats
+  6.1.10:
+  - Add unauthorized message to more failed login cases (#780)
+  6.1.9:
+  - adopted using ModuleHandlerInterface instead of class ModuleHandler
+  6.1.8:
+  - Made failed login errors more consistent (#772)
+  6.1.7:
+  - velox/devportal#8193 - add SonarQube integration
+  6.1.6: null
+  6.1.5:
+  - apimesh -> velox
+  6.1.4:
+  - Send custom fields to apim on first login (#769)
+  6.1.3:
+  - OIDC dos v10.0 (#767)
+  6.1.2:
   - Headers allowed isnt in function
-  8.x-5.4.3:
-  - Show sign up success when username/email is taken (#760)
-  8.x-5.4.2:
-  - Make admin failed login error the same as non-admin (#757)
-  8.x-5.4.1:
-  - Rename twig templates (#752)
-  8.x-5.4.0:
-  - update version 8.x-5.3.6 -> 8.x-5.4.0
-  8.x-5.3.5:
-  - mock environment correctly for invites (#749) (#750)
-  8.x-5.3.4:
-  - Mass merge for Drupal 10 Changes (#748)
+  6.1.1:
+  - Update auth_apic.info.yml
+  6.0.6-6.1.0:
+  - update version 6.0.6 -> 6.0.6-6.1.0
+  6.0.5:
+  - Fixed behat tests (#762)
+  - Show sign up success when username/email is taken (#759)
+  6.0.4:
+  - Make admin failed login error the same as non-admin (#755)
+  6.0.3:
+  - Rename twig templates (#753)
+  6.0.2:
+  - mock environment correctly for invites (#749) (#751)
+  6.0.1:
+  - fix ci channel
   8.x-5.3.3:
   - Save codesnippet language to apim (#746)
   8.x-5.3.2:

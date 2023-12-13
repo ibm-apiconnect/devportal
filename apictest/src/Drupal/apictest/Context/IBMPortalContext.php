@@ -618,6 +618,17 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   }
 
   /**
+   * @Given I have oidc state stored
+   */
+  public function storeOidcState(): void {
+    $state = ['registryUrl' => 'url.com'];
+    $state = serialize($state);
+    $profile = \Drupal::service('encrypt.encryption_profile.manager')->getEncryptionProfile('socialblock');
+    $encrypted_data = \Drupal::service('encryption')->encrypt($state, $profile);
+    \Drupal::service('tempstore.private')->get('auth_apic_storage')->set('key', $encrypted_data);
+  }
+
+  /**
    * @Given I have a billing service
    */
   public function enableBilling(): void {
@@ -1569,7 +1580,6 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       ->set('render_api_schema_view', TRUE)
       ->set('optimise_oauth_ux', TRUE)
       ->set('show_mtls_header', TRUE)
-      ->set('email_as_username', TRUE)
       ->set('application_image_upload', TRUE)
       ->set('hide_admin_registry', FALSE)
       ->set('render_api_schema_view', TRUE)

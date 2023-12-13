@@ -1,0 +1,18 @@
+--- modules/content_synchronizer/src/Processors/ExportEntityWriter.php  2023-07-03 16:41:58
++++ modules/content_synchronizer/src/Processors/ExportEntityWriter.php     2023-10-16 16:52:21
+@@ -23,6 +23,7 @@
+   const FIELD_ENTITY_TYPE_ID = 'entity_type_id';
+   const FIELD_ENTITY_ID = 'entity_id';
+   const FIELD_LABEL = 'label';
++  const FIELD_BUNDLE = 'bundle';
+
+   /**
+    * Generator dir.
+@@ -146,6 +147,7 @@
+       self::FIELD_ENTITY_ID => $entity->id(),
+       self::FIELD_LABEL => static::getEntityLabel($entity),
+       self::FIELD_UUID => $entity->uuid(),
++      self::FIELD_BUNDLE => $entity->bundle()
+     ];
+
+     $this->writeJson($rootEntities, $rootEntitiesFilePath);

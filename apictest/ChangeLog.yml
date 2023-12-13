@@ -1,17 +1,27 @@
 changes:
-  8.x-5.4.2:
+  6.1.8:
+  - velox/devportal#8681 Don't use warmer in the tests (#273)
+  6.1.7:
+  - velox/devportal#825 disable memcache for the tests
+  6.1.6:
+  - Remove unused config (#270) (#271)
+  6.1.5:
+  - velox/devportal#8483 Fix dirs for portal-web hardening (#267)
+  6.1.4:
+  - apimesh -> velox
+  6.1.3:
+  - Store oidc State (#266)
+  6.1.2:
   - add lastUpdated to key
-  8.x-5.4.1:
-  - use env.APIC_RT_RO (#262)
-  8.x-5.4.0:
-  - update version 8.x-5.3.6 -> 8.x-5.4.0
-  8.x-5.3.5:
-  - mock environment correctly for invites (#258) (#259)
-  8.x-5.3.4:
-  - Update behat.yml.template (#257)
-  8.x-5.3.3:
-  - Mass merge for Drupal 10 Changes (#256)
-  - Remove hardcoded portal-taas label
+  6.1.1:
+  - Update apictest.info.yml
+  6.0.4-6.1.0:
+  - update version 6.0.4 -> 6.0.4-6.1.0
+  6.0.3:
+  - use env.APIC_RT_RO (#263)
+  6.0.2:
+  - mock environment correctly for invites (#258) (#260)
+  6.0.1: null
   8.x-5.3.2:
   - Mend exclude behat v10.0.5 (#251)
   8.x-5.3.1:

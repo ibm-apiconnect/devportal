@@ -156,7 +156,6 @@ content:
       link_to_entity: false
     third_party_settings: {  }
 hidden:
-  addtoany: true
   apic_attachments: true
   apic_catalog_id: true
   apic_hostname: true

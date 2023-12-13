@@ -3,7 +3,7 @@
 @@ -102,6 +102,26 @@
    }
  }
- 
+
 +.system-status-general-info__item-icon--apic:before {
 +  background-image: url(../../../../../modules/ibm_apim/images/apic.svg);
 +}
@@ -27,13 +27,13 @@
  .system-status-general-info__item-details {
    position: relative;
    display: inline-block;
-@@ -154,9 +174,6 @@
+@@ -151,9 +151,6 @@
      display: block;
      width: 32%;
    }
 -  .system-status-general-info__item:last-of-type {
--    margin-left: 2%;
+-    margin-inline-start: 2%;
 -  }
  }
- 
+
  @media screen and (max-width: 48em) {

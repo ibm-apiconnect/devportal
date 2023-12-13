@@ -157,6 +157,7 @@ function apim_profile_install() {
     'dropzonejs',
     'dropzonejs_eb_widget',
     'honeypot',
+    'memcache',
     'masonry',
     'masonry_views',
     'views_ajax_history',
@@ -186,12 +187,6 @@ function apim_profile_install() {
     'select_translation',
     'term_csv_export_import',
     'page_load_progress',
-    'advagg',
-    'advagg_css_minify',
-    'advagg_js_minify',
-    'warmer',
-    'warmer_cdn',
-    'warmer_entity',
     'svg_image_field',
     'views_taxonomy_term_name_depth',
     'extlink',
@@ -203,8 +198,8 @@ function apim_profile_install() {
     'trusted_reverse_proxy',
     'unlimited_number',
     'restrict_by_ip',
-    'addtoany',
-    'single_content_sync',
+    'content_synchronizer',
+    'fontawesome',
   ];
 
   $our_modules = [
@@ -295,7 +290,7 @@ function apim_profile_install() {
   ]);
 
   user_role_grant_permissions('administrator', ['access panels in-place editing', 'access workbench',
-  'administer CAPTCHA settings', 'skip CAPTCHA', 'administer addtoany', 'administer autologout', 'administer blazy',
+  'administer CAPTCHA settings', 'skip CAPTCHA', 'administer autologout', 'administer blazy',
   'administer mail subscribers', 'administer meta tags', 'administer recaptcha', 'administer seckit',
   'administer slick', 'administer ultimate cron', 'administer workbench', 'change own logout threshold',
   'display eu cookie compliance popup', 'mail subscribers', 'run cron jobs', 'view cron jobs', 'use search_api_autocomplete for search_content',
@@ -359,7 +354,7 @@ function apim_profile_install() {
   // use private file hosting by default
   \Drupal::configFactory()
     ->getEditable('system.file')
-    ->set('temporary_maximum_age', 2419200)
+    ->set('temporary_maximum_age', 86400)
     ->set('default_scheme', 'private')
     ->save();
 
@@ -418,7 +413,6 @@ function apim_profile_default_apic_config() {
     ->set('render_api_schema_view', TRUE)
     ->set('optimise_oauth_ux', TRUE)
     ->set('show_mtls_header', TRUE)
-    ->set('email_as_username', TRUE)
     ->set('application_image_upload', TRUE)
     ->set('hide_admin_registry', FALSE)
     ->set('render_api_schema_view', TRUE)
@@ -758,6 +752,7 @@ function apim_profile_captcha_config() {
   _apim_profile_enable_captcha_on_form('user_pass');
   _apim_profile_enable_captcha_on_form('user_register_form');
   _apim_profile_enable_captcha_on_form('contact_message_personal_form');
+  _apim_profile_enable_captcha_on_form('contact_message_feedback_form');
 
   _apim_profile_set_captcha_challenge_point($challengeType);
 }
@@ -1874,11 +1869,6 @@ function apim_profile_update_8105() {
         'region' => 'content',
         'type' => 'text_summary_or_trimmed',
       ]);
-      $newDisplay->setComponent('addtoany', [
-        'weight' => 2,
-        'label' => 'hidden',
-        'region' => 'content',
-      ]);
       $newDisplay->save();
     }
   }
@@ -1902,7 +1892,7 @@ function apim_profile_update_8105() {
         'uses_fields' => FALSE,
         'layoutColumnWidth' => '',
         'layoutColumnWidthUnit' => 'px',
-        'gutterWidth' => '2',
+        'gutterWidth' => '2px',
         'stampSelector' => '',
         'isLayoutResizable' => 1,
         'isLayoutAnimated' => 1,
@@ -2600,7 +2590,7 @@ function apim_profile_update_8214() {
 
 /**
  * ensure that the essential config is actually set
- * this is due to an earlier upgrade bug in 10.0.4 apimesh/devportal#7591
+ * this is due to an earlier upgrade bug in 10.0.4 velox/devportal#7591
  */
 function apim_profile_update_8215() {
   // if we're missing config then just reset to the defaults
@@ -2808,16 +2798,19 @@ function apim_profile_update_10001() {
     'use search_api_autocomplete for search_content'
   ]);
 
-  user_role_revoke_permissions('content_author', [
-    'access in-place editing',
-    'bypass content access control',
-    'access printer-friendly version',
-    'access browse_content_iframe entity browser pages',
-    'access browse_files entity browser pages',
-    'access browse_content entity browser pages',
-    'access browse_files_modal entity browser pages',
-    'use text format ghmarkdown'
-  ]);
+  $role = Role::load('content_author');
+  if ($role !== NULL) {
+    user_role_revoke_permissions('content_author', [
+      'access in-place editing',
+      'bypass content access control',
+      'access printer-friendly version',
+      'access browse_content_iframe entity browser pages',
+      'access browse_files entity browser pages',
+      'access browse_content entity browser pages',
+      'access browse_files_modal entity browser pages',
+      'use text format ghmarkdown'
+    ]);
+  }
 
   user_role_revoke_permissions('administrator', [
     'access flood unblock',
@@ -2885,11 +2878,10 @@ function apim_profile_update_10001() {
   // Also need to remove a config to entity_browser here
   \Drupal::configFactory()->getEditable('user.role.administrator')->clear("dependencies.module.entity_browser")->save(TRUE);
 
-  module_install(['addtoany', 'rdf', 'unlimited_number', 'ckeditor5', 'search']);
+  module_install(['rdf', 'unlimited_number', 'ckeditor5', 'search']);
 
   // Add role back after we enable the right modules
   user_role_grant_permissions('administrator', [
-    'administer addtoany',
     'search content',
     'use advanced search',
     'use search_api_autocomplete for search_content'
@@ -2907,11 +2899,6 @@ function apim_profile_update_10001() {
     'use search_api_autocomplete for search_content'
   ]);
 
-  // Don't Add the addtoany to pages
-  \Drupal::service('config.factory')
-  ->getEditable('addtoany.settings')
-  ->set('entities', ['media' => 0, 'node' => 0, 'comment' => 0])
-  ->save();
 }
 
 /**
@@ -2968,18 +2955,6 @@ function apim_profile_update_10004() {
 }
 
 /**
- * enable single_content_sync module
- */
-function apim_profile_update_10005() {
-  delete_config(['single_content_sync.settings']);
-  module_install(['single_content_sync']);
-  user_role_grant_permissions('administrator', [
-    'export single content',
-    'import single content',
-  ]);
-}
-
-/**
  * Add revoke_invalid_permissions and remove_missing_extensions config to ibm_apim.settings
  */
 function apim_profile_update_10006() {
@@ -3004,6 +2979,183 @@ function apim_profile_update_10007() {
       $cp->save();
     }
   }
+}
+
+/**
+ * Remove single_content_sync module
+ */
+function apim_profile_update_10008() {
+  delete_config(['single_content_sync.settings']);
+  module_uninstall(['single_content_sync']);
+  user_role_revoke_permissions('administrator', [
+    'export single content',
+    'import single content',
+  ]);
+}
+
+/**
+ * Install content_synchronizer module and update file max age to 1 day
+ */
+function apim_profile_update_10009() {
+  module_install(['content_synchronizer']);
+  user_role_grant_permissions('administrator', [
+    'access content synchronizer dashboard',
+    'add import entities',
+    'administer import entities',
+    'delete import entities',
+    'edit import entities',
+    'access import overview',
+    'view published import entities',
+    'view unpublished import entities',
+    'add export entity entities',
+    'administer export entity entities',
+    'delete export entity entities',
+    'edit export entity entities',
+    'access export entity overview',
+    'view published export entity entities',
+    'view unpublished export entity entities'
+  ]);
+
+  \Drupal::configFactory()
+    ->getEditable('system.file')
+    ->set('temporary_maximum_age', 86400)
+    ->save();
+}
+
+/**
+ * Uninstall advagg and its settings.
+ */
+function apim_profile_update_10010() {
+  module_uninstall(['advagg', 'advagg_css_minify', 'advagg_js_minify']);
+  delete_config(['advagg.settings', 'advagg_css_minify.settings', 'advagg_js_minify.settings']);
+}
+
+function apim_profile_update_10011() {
+
+  $moduleHandler = \Drupal::service('module_handler');
+  $form_id = 'contact_message_feedback_form';
+
+  try {
+    _apim_profile_enable_captcha_on_form($form_id);
+  } catch (Throwable $e) {
+    // just ignore it
+  }
+  if ($moduleHandler->moduleExists('captcha')) {
+    $captcha_point = \Drupal::entityTypeManager()->getStorage('captcha_point')->load($form_id);
+    if (!isset($captcha_point)) {
+      $captcha_point = new \Drupal\captcha\Entity\CaptchaPoint([
+        'formId' => $form_id,
+        'captchaType' => 'image_captcha/Image',
+      ], 'captcha_point');
+      $captcha_point->enable()->save();
+    }
+  }
+}
+
+/**
+ * Uninstall addtoany and its settings.
+ */
+function apim_profile_update_10012() {
+  $ids = [ 'node.page.default', 'node.faq.card', 'node.page.card' ];
+  foreach ($ids as $id) {
+    $view = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load($id);
+    if ($view !== NULL) {
+      $view->removeComponent('addtoany');
+      $view_hidden = $view->get('hidden');
+      unset($view_hidden['addtoany']);
+      $view->set('hidden', $view_hidden);
+      $view->save();
+    }
+  }
+
+  delete_config(['addtoany.settings']);
+  user_role_revoke_permissions('administrator', ['administer addtoany',]);
+  module_uninstall(['addtoany']);
+}
+
+/**
+ * Disable rss feeds for blogs view
+ */
+function apim_profile_update_10013() {
+  $view = Views::getView('blog');
+  if ($view !== NULL) {
+    $view->setDisplay('feed_1');
+    $displayObj = $view->getDisplay()->setOption('enabled', FALSE);
+
+    $view->setDisplay('feed_2');
+    $displayObj = $view->getDisplay()->setOption('enabled', FALSE);
+
+    $view->save();
+  }
+}
+
+/**
+ * update the gutter width unit for latest masonry views
+ */
+function apim_profile_update_10014() {
+  $view = Views::getView('search_content');
+  if ($view !== NULL) {
+    $style = $view->getDisplay()->getOption('style');
+    if (!str_ends_with($style['options']['gutterWidth'], 'px')) {
+      $style['options']['gutterWidth'].="px";
+      $view->getDisplay()->setOption('style', $style);
+      $view->save();
+    }
+  }
+}
+
+/**
+ * Install fontawesome for icon support
+ */
+function apim_profile_update_10015() {
+  module_install(['fontawesome']);
+}
+
+/**
+ * Dont ignore any characters for tokenizer
+ */
+function apim_profile_update_10016() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('search_api')) {
+    $index = Index::load('default_index');
+    if (isset($index)) {
+      $tokenizer = $index->getProcessor("tokenizer");
+      if (isset($tokenizer)) {
+        $tokenizer_config = $tokenizer->getConfiguration();
+        // remove ignored characters
+        $tokenizer_config["ignored"] = "";
+        $tokenizer->setConfiguration($tokenizer_config);
+        $index->save();
+      }
+    }
+  }
+}
+
+/**
+ * disable rss feed for taxonomy
+ */
+function apim_profile_update_10018() {
+  $view = Views::getView('taxonomy_term');
+  if ($view !== NULL) {
+    $view->setDisplay('feed_1');
+    $displayObj = $view->getDisplay()->setOption('enabled', FALSE);
+
+    $view->save();
+  }
+}
+
+/**
+ * Install memcache module
+ */
+function apim_profile_update_10019() {
+  module_install(['memcache']);
+}
+
+/**
+ * Uninstall warmer
+ */
+function apim_profile_update_10020() {
+  module_uninstall(['warmer']);
 }
 
 function delete_config(array $configs) {

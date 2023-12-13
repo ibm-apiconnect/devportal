@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2023
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -127,10 +127,15 @@ class AnalyticsController extends ControllerBase {
     $libraries = ['ibm_apim/analytics'];
 
     $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString(TRUE)->getGeneratedUrl();
+    $dashboard = \Drupal::config('ibm_apim.settings')->get('analytics_dashboard');
+    if (empty($dashboard)) {
+      $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
+    }
     $drupalSettings = [
       'analytics' => [
         'proxyURL' => \Drupal::service('ibm_apim.apim_utils')->getHostUrl() . $url,
-        'locale' => $this->utils->convert_lang_name(\Drupal::languageManager()->getCurrentLanguage()->getId())
+        'locale' => $this->utils->convert_lang_name(\Drupal::languageManager()->getCurrentLanguage()->getId()),
+        'dashboard' => $dashboard
       ],
     ];
 
@@ -154,6 +159,9 @@ class AnalyticsController extends ControllerBase {
 
     return [
       '#theme' => $theme,
+      '#cache' => [
+        'tags' => ['consumeranalytics'],
+      ],
       '#consumerorgId' => $consumerorgId,
       '#catalogId' => $catalogId,
       '#catalogName' => urlencode($catalogName),
@@ -210,7 +218,6 @@ class AnalyticsController extends ControllerBase {
       $timeframe = $this->requestStack->getCurrentRequest()->query->get('timeframe');
       if (empty($app)) {
         $url = "/consumer-analytics/orgs/${consumerOrgId}/dashboard";
-
       } else {
         $url = "/consumer-analytics/orgs/${consumerOrgId}/apps/${app}/dashboard";
       }
@@ -239,7 +246,7 @@ class AnalyticsController extends ControllerBase {
       if ($apimResponse === NULL) {
         \Drupal::logger('analytics')->error('APIM REST response not set.');
         $response = new Response('No Response from server', 500, []);
-      } else if ($apimResponse->getCode() !== 200 || empty($apimResponse->getData()))  {
+      } else if ($apimResponse->getCode() !== 200 || empty($apimResponse->getData())) {
         $errors = $apimResponse->getErrors();
         if (\is_array($errors)) {
           if (!empty($errors)) {
@@ -252,7 +259,8 @@ class AnalyticsController extends ControllerBase {
         }
         \Drupal::logger('analytics')->error('Receieved %code response. %error', [
           '%code' => $apimResponse->getCode(),
-          '%error' => $errors]);
+          '%error' => $errors
+        ]);
         if (empty($errors)) {
           $errors = "The website encountered an unexpected error.";
         }
@@ -261,9 +269,54 @@ class AnalyticsController extends ControllerBase {
         $response = new Response();
         $data = $apimResponse->getData();
         $data = array_shift($data);
+        $dashboard = \Drupal::config('ibm_apim.settings')->get('analytics_dashboard');
+        if (empty($dashboard)) {
+          $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
+        }
+        try {
+          $decoded = json_decode($data, TRUE, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+          // handle not being fed valid JSON
+          $decoded = [
+            'content' => $data,
+            'json_last_error' => $e->getCode(),
+            'json_last_error_msg' => $e->getMessage(),
+            'errors' => ['json.parse.error' => 'JSON parse error'],
+          ];
+        }
+        if (!in_array('total_calls', $dashboard)) {
+          unset($decoded['total_api_calls']);
+        }
+        if (!in_array('total_errors', $dashboard)) {
+          unset($decoded['total_errors']);
+        }
+        if (!in_array('avg_response', $dashboard)) {
+          unset($decoded['avg_response_time']);
+        }
+        if (!in_array('num_calls', $dashboard)) {
+          unset($decoded['api_calls_per_day']);
+        }
+        if (!in_array('status_codes', $dashboard)) {
+          unset($decoded['status_codes']);
+        }
+        if (!in_array('response_time', $dashboard)) {
+          unset($decoded['response_times']);
+        }
+        if (!in_array('num_throttled', $dashboard)) {
+          unset($decoded['throttled_calls']);
+        }
+        if (!in_array('num_errors', $dashboard)) {
+          unset($decoded['errors']);
+        }
+        if (!in_array('call_table', $dashboard)) {
+          unset($decoded['last_api_calls']);
+        }
+        $data = json_encode($decoded, JSON_THROW_ON_ERROR);
+        $headers = $apimResponse->getHeaders();
+        $headers['Content-Length'] = strlen($data);
         $response->setContent($data);
         $response->setStatusCode($apimResponse->getCode());
-        foreach ($apimResponse->getHeaders() as $key => $val) {
+        foreach ($headers as $key => $val) {
           $response->headers->set($key, $val);
         }
       }
@@ -272,5 +325,4 @@ class AnalyticsController extends ControllerBase {
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $response;
   }
-
 }

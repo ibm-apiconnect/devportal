@@ -1,11 +1,14 @@
 --- core/modules/locale/locale.bulk.inc	2023-04-13 10:27:20
 +++ core/modules/locale/locale.bulk.inc	2023-04-13 10:27:17
-@@ -353,6 +353,8 @@
-     $context['message'] = t('Updated default configuration.');
-     $context['finished'] = 1;
-   }
-+
-+  refreshAPICBlocks();
- }
-
- /**
+@@ -368,6 +368,11 @@
+ function locale_translate_batch_finished($success, array $results) {
+   $logger = \Drupal::logger('locale');
+   if ($success) {
++    try {
++      refreshAPICBlocks();
++    } catch(\Exception $e) {
++      \Drupal::logger('locale_err')->log('error', 'Error in refreshAPICBlocks()');
++    }
+     $additions = $updates = $deletes = $skips = 0;
+     if (isset($results['failed_files'])) {
+       if (\Drupal::moduleHandler()->moduleExists('dblog') && \Drupal::currentUser()->hasPermission('access site reports')) {

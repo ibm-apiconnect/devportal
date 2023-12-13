@@ -1,0 +1,20 @@
+--- core/modules/update/update.manager.inc	2023-06-22 13:16:20.310498069 +0000
++++ core/modules/update/update.manager.inc	2023-06-22 13:16:08.690540502 +0000
+@@ -169,6 +169,17 @@
+   // and others list an actual file (i.e., MODULE/README.TXT).
+   $project = strtok($files[0], '/\\');
+
++  // Block downloading blocklisted or shipped modules
++  $siteConfig = \Drupal::service('ibm_apim.site_config');
++  $moduleBlocklist = $siteConfig->getBlockList();
++  $shippedModules = $siteConfig->getShippedModules();
++
++  if (in_array($project, $shippedModules)) {
++    throw new Exception('You cannot download this extension, It is already provided as part of this Developer Portal.');
++  } elseif ($moduleBlocklist && in_array($project, $moduleBlocklist, false)) {
++    throw new Exception('You cannot download this extension. It has been blocked by the Developer Portal.');
++  }
++
+   $extract_location = $directory . '/' . $project;
+   if (file_exists($extract_location)) {
+     try {

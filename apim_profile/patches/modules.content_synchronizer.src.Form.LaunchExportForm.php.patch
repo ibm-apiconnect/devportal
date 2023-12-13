@@ -1,0 +1,10 @@
+--- modules/content_synchronizer/src/Form/LaunchExportForm.php  2023-08-23 16:28:26
++++ modules/content_synchronizer/src/Form/LaunchExportForm.php     2023-08-23 16:28:03
+@@ -172,7 +172,7 @@
+         "status" => $entity->bundle(),
+         "label" => ExportEntityWriter::getEntityLabel($entity),
+         'edit_url' => Url::fromRoute('entity.' . $entity->getEntityTypeId() . '.edit_form', [$entity->getEntityTypeId() => $entity->id()]),
+-        'view_url' => $entity->toUrl(),
++        'view_url' => $entity->hasLinkTemplate('canonical') ? $entity->toUrl() : '',
+       ];
+     }

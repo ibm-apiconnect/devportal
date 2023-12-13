@@ -1,0 +1,51 @@
+--- modules/content_synchronizer/src/Entity/ImportEntity.php    2023-07-13 16:25:52
++++ modules/content_synchronizer/src/Entity/ImportEntity.php       2023-07-13 16:27:21
+@@ -268,7 +268,7 @@
+       ->setLabel(t('Changed'))
+       ->setDescription(t('The time that the entity was last edited.'));
+
+-    $extension = 'gz';
++    $extension = 'gz tgz';
+     $validators = [
+       'file_validate_extensions' => [$extension],
+       'file_validate_size'       => [Environment::getUploadMaxSize()],
+@@ -322,7 +322,16 @@
+       $this->setName(basename($file->getFileUri()));
+     }
+
+-    return parent::save();
++    parent::save();
++
++    // Set file to temp so when its not in use it will be cleaned up on file_cron()
++    $file = $this->getArchive();
++    if ($file->isPermanent()) {
++      $file->setTemporary();
++      $file->save();
++    }
++
++    return;
+   }
+
+   /**
+@@ -340,13 +349,16 @@
+
+       $this->rootEntities = $this->getDataFromFile($this->getArchiveFilesPath() . '/' . ExportEntityWriter::ROOT_FILE_NAME . ExportEntityWriter::TYPE_EXTENSION);
+       foreach ($this->rootEntities as &$entity) {
+-        $existingEntity = $this->globalReferenceManager->getExistingEntityByGidAndUuid($entity[ExportEntityWriter::FIELD_GID], $entity[ExportEntityWriter::FIELD_UUID]);
+-        if ($existingEntity) {
+-          $entity['status'] = 'update';
+-          $entity['edit_url'] = Url::fromRoute('entity.' . $existingEntity->getEntityTypeId() . '.edit_form', [$existingEntity->getEntityTypeId() => $existingEntity->id()]);
+-          $entity['view_url'] = $existingEntity->toUrl();
++        $existingEntity = $this->globalReferenceManager->getExistingEntityByGidAndUuid($entity[ExportEntityWriter::FIELD_GID], $entity[ExportEntityWriter::FIELD_UUID], $entity[ExportEntityWriter::FIELD_BUNDLE]);
++        if (isset($existingEntity) && isset($existingEntity[0])) {
++          $viewURL = $existingEntity[0]->hasLinkTemplate('canonical') ? $existingEntity[0]->toUrl() : '';
++          // update or overwrite
++          $entity['status'] = $existingEntity[1];
++          $entity['edit_url'] = Url::fromRoute('entity.' . $existingEntity[0]->getEntityTypeId() . '.edit_form', [$existingEntity[0]->getEntityTypeId() => $existingEntity[0]->id()]);
++          $entity['view_url'] = $viewURL;
+         }
+         else {
++          // create
+           $entity['status'] = 'create';
+         }
+       }

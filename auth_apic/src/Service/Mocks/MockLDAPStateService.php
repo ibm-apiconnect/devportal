@@ -12,7 +12,6 @@
 
 namespace Drupal\auth_apic\Service\Mocks;
 
-
 use Drupal\Core\State\State;
 
 class MockLDAPStateService extends State {

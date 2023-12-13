@@ -348,8 +348,8 @@ class InviteUserForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $email = Html::escape($form_state->getValue('new_email'));
-    $role = Html::escape($form_state->getValue('role'));
+    $email = $form_state->getValue('new_email');
+    $role = $form_state->getValue('role');
 
     if (!empty($email)) {
       $response = $this->consumerOrgService->inviteMember($this->currentOrg, $email, $role);

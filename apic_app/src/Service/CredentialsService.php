@@ -19,7 +19,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\TempStore\TempStoreException;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\NodeInterface;
-use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 
 class CredentialsService {
 
@@ -30,9 +30,9 @@ class CredentialsService {
   protected UserUtils $userUtils;
 
   /**
-   * @var \Drupal\Core\Extension\ModuleHandler
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected ModuleHandler $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * CredentialsService constructor.
@@ -40,7 +40,7 @@ class CredentialsService {
    * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
    */
   public function __construct(UserUtils $userUtils,
-                              ModuleHandler $moduleHandler) {
+                              ModuleHandlerInterface $moduleHandler) {
     $this->moduleHandler = $moduleHandler;
     $this->userUtils = $userUtils;
   }

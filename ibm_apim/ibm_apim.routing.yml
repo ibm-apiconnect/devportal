@@ -6,6 +6,15 @@ ibm_apim.settings:
   requirements:
     _permission: 'administer_apic'
 
+ibm_apim.analytics_settings:
+  path: '/admin/config/system/analytics'
+  defaults:
+    _form: 'Drupal\ibm_apim\Form\AnalyticsConfigForm'
+    _title: 'Configure the consumer analytics for the IBM API Developer Portal'
+  requirements:
+    _permission: 'administer_apic'
+    _ibm_apim_analytics_admin_access_check: 'TRUE'
+
 ibm_apim.billing_settings:
   path: '/admin/config/system/apic_billing'
   defaults:
