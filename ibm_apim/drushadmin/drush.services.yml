@@ -1,5 +1,6 @@
 services:
   drushadmin.commands:
     class: Drupal\drushadmin\Commands\DrushAdminCommands
+    arguments: ['@date.formatter']
     tags:
-      - { name: drush.command } 
+      - { name: drush.command }

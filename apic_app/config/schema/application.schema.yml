@@ -143,9 +143,25 @@ apic_app.apic_app_application_creds.*:
       type: string
       label: 'Credentials URL'
 
-views.view.applications:
+views.view.applications.display.default.display_options.exposed_form.options:
   type: string
-  label: 'Applications'
+  sort_asc_label: 'Asc'
+
+views.view.applications.display.default.display_options.exposed_form.options:
+  type: string
+  sort_desc_label: 'Desc'
+
+views.view.applications.display.default.display_options.exposed_form.options:
+  type: string
+  exposed_sorts_label: 'Sort by'
+
+views.view.applications.display.default.display_options.exposed_form.options:
+  type: string
+  reset_button_label: 'Reset'
+
+views.view.applications.display.default.display_options.exposed_form.options:
+  type: string
+  submit_button: 'Apply'
 
 views.view.applications.display.default.display_options.exposed_form.options:
   type: string

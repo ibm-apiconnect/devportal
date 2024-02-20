@@ -213,8 +213,8 @@
     "drupal/contact_block": "^2.0",
     "drupal/contact_storage": "^1.0@beta",
     "drupal/content_synchronizer": "^4.0@RC",
-    "drupal/core": "^10.1",
-    "drupal/core-composer-scaffold": "~10.0.9",
+    "drupal/core": "10.1.*",
+    "drupal/core-composer-scaffold": "10.1.*",
     "drupal/crop": "^2.0",
     "drupal/cshs": "^4.0",
     "drupal/csp": "^1.0@alpha",
@@ -242,7 +242,7 @@
     "drupal/flood_control": "^2.3",
     "drupal/focal_point": "^2.0@alpha",
     "drupal/fontawesome": "^2.26",
-    "drupal/graphql": "^4.4",
+    "drupal/graphql": "^4.6",
     "drupal/gutenberg": "^2.6",
     "drupal/health_check": "^1.0",
     "drupal/hierarchical_taxonomy_menu": "^2.0.0-beta1",
@@ -260,6 +260,7 @@
     "drupal/masonry": "^4.0",
     "drupal/masonry_views": "^4.0",
     "drupal/media_entity_twitter": "^2.0",
+    "drupal/memcache": "^2.5",
     "drupal/menu_item_role_access": "^2.0",
     "drupal/metatag": "^1.5",
     "drupal/metatag_dc": "^1.5",
@@ -354,7 +355,7 @@
     "wikimedia/composer-merge-plugin": "^2.0"
   },
   "require-dev": {
-    "drupal/core-dev": "^10.1",
+    "drupal/core-dev": "10.1.*",
     "mglaman/drupal-check": "^1.1",
     "zaporylie/composer-drupal-optimizations": "^1.2"
   },
@@ -373,7 +374,8 @@
       "drupal/console-extend-plugin": true,
       "zaporylie/composer-drupal-optimizations": true,
       "dealerdirect/phpcodesniffer-composer-installer": true,
-      "phpstan/extension-installer": true
+      "phpstan/extension-installer": true,
+      "php-http/discovery": true
     }
   },
   "autoload": {

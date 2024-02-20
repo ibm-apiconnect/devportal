@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2023
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -14,11 +14,13 @@ namespace Drupal\drushadmin\Commands;
 
 use Drush\Commands\DrushCommands;
 use Drupal\Core\Database\Database;
-use Throwable;
 use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
 use Consolidation\OutputFormatters\StructuredData\ListDataFromKeys;
+use Consolidation\OutputFormatters\Options\FormatterOptions;
 use Drush\Utils\StringUtils;
 use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\user\Entity\User;
+use Drupal\Core\Session\UserSession;
 
 /**
  * Class DrushAdminCommands.
@@ -26,6 +28,15 @@ use Drupal\Core\Entity\Query\QueryInterface;
  * @package Drupal\drushadmin\Commands
  */
 class DrushAdminCommands extends DrushCommands {
+  /**
+   * @var DateFormatterInterface
+   */
+  protected $dateFormatter;
+
+  public function __construct($dateFormatter)
+  {
+      $this->dateFormatter = $dateFormatter;
+  }
 
   /**
    * Implementation of command <code>drush theme-delete theme_name</code>
@@ -55,6 +66,151 @@ class DrushAdminCommands extends DrushCommands {
         }
       }
     }
+  }
+
+
+
+/**
+ * Print information about the specified user(s).
+ *
+ * @command apicuser:information
+  * @param string $names A comma delimited list of user names.
+  * @option $uid A comma delimited list of user ids to lookup (an alternative to names).
+  * @option $mail A comma delimited list of emails to lookup (an alternative to names).
+  * @option $role A comma delimited list to filter the search of user information for a role or roles.
+  * @option $consumer-org A comma delimited list or consumer org urls to filter the search of user information for a consumer organization or organizations.
+  * @option $login-after Filters to apply to the search of user information for users who have logged in after a specific date. Date format is m-d-Y or m-d-Y H:i:s
+  * @option $login-before Filters to apply to the search of user information. for users who have logged in before a specific date. Date format is m-d-Y or m-d-Y H:i:s
+  * @option $status A comma delimited list to filter the search of user information for a status or statuses of a user account. 'active' or 'blocked' are the two statuses
+  * @option $apic-state A comma delimited list to filter the search of user information for an apic state or states.
+  * @option $limit Limits the amount of results returned. Defaults to 50
+  * @option $offset Offsets the where the results start from to aid pagination of results. Defaults to 0
+  * @aliases auinf,apicuser-information
+  * @usage drush apicuser:information someguy,somegal
+  *   Display information about the someguy and somegal user accounts.
+  * @usage drush apicuser:information --mail=someguy@somegal.com
+  *   Display information for a given email account.
+  * @usage drush apicuser:information --uid=5
+  *   Display information for a given user id.
+  * @usage drush auinf --role='administrator' --login-before="12/20/2023"
+  *   Display information for all administrators.
+  *
+  */
+  public function information(string $names = '', $options = ['format' => 'json', 'uid' => self::REQ, 'mail' => self::REQ, 'role' => self::REQ, 'consumer-org' => self::REQ, 'login-after' => self::REQ, 'login-before' => self::REQ, 'apic-state' => self::REQ, 'status' => self::REQ, 'limit' => self::REQ, 'offset' => self::REQ]) {
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
+    $accounts = [];
+    $limit = $options['limit'] ?? '50';
+    $offset = $options['offset'] ?? '0';
+    $query = \Drupal::entityQuery('user')->sort('uid')->condition('uid', ['0', '1'], 'NOT IN')->accessCheck(FALSE);
+
+    if ($roles = StringUtils::csvToArray($options['role'])) {
+      // Remove the authenticated role as we need to check for status not 1
+      if ($options['status'] == "blocked") {
+        $key = array_search('authenticated', $roles);
+        array_splice($roles, $key, 1);
+      }
+      if (in_array('authenticated', $roles)) {
+        $query = $query->condition('status', 1);
+        $key = array_search('authenticated', $roles);
+        array_splice($roles, $key, 1);
+      }
+      if (count($roles) > 0) {
+        $query = $query->condition('roles', $roles, 'IN');
+      }
+    }
+    if ($consumer_org = StringUtils::csvToArray($options['consumer-org'])) {
+      $query = $query->condition('consumerorg_url.value', $consumer_org, 'IN');
+    }
+    if ($loginBefore = strtotime($options['login-before'])) {
+      $query = $query->condition('login.value', $loginBefore, '<');
+    }
+    if($loginAfter = strtotime($options['login-after'])) {
+      $query = $query->condition('login.value', $loginAfter, '>');
+    }
+    if($status = $options['status']) {
+      $status = $status == 'active' ? 1 : 0;
+      $query = $query->condition('status', $status);
+    }
+    if($apicState = StringUtils::csvToArray($options['apic-state'])) {
+      $query = $query->condition('apic_state.value', $apicState, 'IN');
+    }
+    if ($mails = StringUtils::csvToArray($options['mail'])) {
+      $query = $query->condition('mail.value', $mails, 'IN');
+    }
+    if ($uids = StringUtils::csvToArray($options['uid'])) {
+      $query = $query->condition('uid.value', $uids, 'IN');
+    }
+    if ($names = StringUtils::csvToArray($names)) {
+      $query = $query->condition('name.value', $names, 'IN');
+    }
+
+    $total = count($query->execute());
+    $ids = $query->range($offset, $limit)->execute();
+    $limit = count($ids);
+    if ($loaded = User::loadMultiple($ids)) {
+      $accounts += $loaded;
+    }
+
+    if (empty($accounts)) {
+        throw new \Exception(dt('Unable to find a matching user'));
+    }
+
+    foreach ($accounts as $account) {
+        $users[] = $this->infoArray($account);
+    }
+
+    $results["total"] = $total;
+    $results["offset"] = intval($offset);
+    $results["limit"] = $limit;
+    $results["users"] = $users;
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+
+    return $results;
+  }
+
+  /**
+   * A flatter and simpler array presentation of a Drupal $user object.
+   *
+   * @param $account A user account
+   */
+  public function infoArray($account): array
+  {
+    $registryService = \Drupal::service('ibm_apim.user_registry');
+    $registryUrl = $account->get('apic_user_registry_url')->value;
+    $consumerOrgUrls = $account->get('consumerorg_url')->getValue();
+    $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
+    $refinedCOrgUrls = [];
+    foreach ($consumerOrgUrls as $index => $valueArray) {
+      if (!empty($valueArray['value'])) {
+        $consumerOrgName = $consumerOrgService->get($valueArray['value'])->getTitle();
+      }
+      if (!empty($consumerOrgName)) {
+        $refinedCOrgUrls[] = $valueArray['value'] . " (" . $consumerOrgName . ")";
+      }
+    }
+    $registryInfo = "";
+    if (!empty($registryService) && !empty($registryUrl)) {
+      $registryInfo = $registryUrl . " (" . $registryService->get($registryUrl)->getTitle() . ")";
+    }
+    return [
+        'uid' => $account->id(),
+        'name' => $account->getAccountName(),
+        'mail' => $account->getEmail(),
+        'roles' => $account->getRoles(),
+        'status' => $account->isActive() ? 'active' : 'blocked',
+        'apic_state' => $account->get('apic_state')->value ?? '',
+        'last_login' => $this->dateFormatter->format($account->getLastLoginTime(), 'custom', 'm/d/Y H:i:s'),
+        'user_registry' => $registryInfo,
+        'consumer_orgs' => $refinedCOrgUrls,
+    ];
   }
 
   /**

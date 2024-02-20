@@ -1,0 +1,16 @@
+--- core/modules/language/src/Plugin/LanguageNegotiation/LanguageNegotiationBrowser.php 2024-01-25 11:05:45
++++ core/modules/language/src/Plugin/LanguageNegotiation/LanguageNegotiationBrowser.php    2024-01-25 11:04:39
+@@ -48,6 +48,13 @@
+   public function getLangcode(Request $request = NULL) {
+     $langcode = NULL;
+
++    if (\Drupal::service('config.factory')->getEditable('ibm_apim.feature_flags')->get('cli_language_fix')) {
++      \Drupal::logger('IBM Feature Flag')->info('Executing with CLI Language Fix');
++      if (PHP_SAPI === 'cli') {
++        return NULL;
++      }
++    }
++
+     if ($this->languageManager && $request && $request->server->get('HTTP_ACCEPT_LANGUAGE')) {
+       $http_accept_language = $request->server->get('HTTP_ACCEPT_LANGUAGE');
+       $langcodes = array_keys($this->languageManager->getLanguages());

@@ -1,4 +1,8 @@
 changes:
+  8.x-5.6.0:
+  - update version [8.x, 5.5.4] -> 8.x-5.6.0
+  8.x-5.5.3:
+  - velox/devportal#8738 - Copyright 2024
   8.x-5.5.2:
   - velox/devportal#8193 - add Sonarqube Integration
   8.x-5.5.1:

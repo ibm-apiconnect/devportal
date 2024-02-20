@@ -69,6 +69,13 @@ services:
                  '@logger.channel.ibm_apim',
                  '@messenger'
     ]
+  user_check:
+    class: Drupal\ibm_apim\EventSubscriber\UserCheckSubscriber
+    tags:
+      - { name: event_subscriber }
+    arguments: [ '@logger.channel.ibm_apim',
+                 '@messenger'
+    ]
   ibm_apim.vendor_extension:
     class: Drupal\ibm_apim\Service\VendorExtension
     arguments: [ '@state', '@logger.channel.ibm_apim' ]

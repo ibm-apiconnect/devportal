@@ -1,0 +1,15 @@
+--- modules/captcha/modules/image_captcha/src/Controller/CaptchaImageGeneratorController.php    2023-10-19 14:11:07
++++ modules/captcha/modules/image_captcha/src/Controller/CaptchaImageGeneratorController.php       2023-10-19 14:10:58
+@@ -114,6 +114,12 @@
+       ->execute()
+       ->fetchField();
+
++    if ($code == FALSE || $session_id == FALSE ) {
++      return new StreamedResponse(function () {
++        $this->logger->log('error', 'Throwing 404, session_id or code are invalid. session_id: @sessionid, code: @code', ['@sessionid' => $session_id, '@code' => $code]);
++      }, 404, $response_headers);
++    }
++
+     // If there is an existing session, process the image.
+     $image = NULL;
+     if ($code !== FALSE) {

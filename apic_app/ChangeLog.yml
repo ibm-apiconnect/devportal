@@ -1,4 +1,11 @@
 changes:
+  8.x-5.6.0:
+  - update version [8.x, 5.5.11] -> 8.x-5.6.0
+  8.x-5.5.10:
+  - updated error message to match other error messages
+  - tightening form validation to not allow url inputs
+  8.x-5.5.9:
+  - Fix translations (#381) (#383)
   8.x-5.5.8:
   - add unit to width (#378) (#380)
   8.x-5.5.7:

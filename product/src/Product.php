@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -727,6 +727,7 @@ class Product {
       $this->create($product, $event);
       $createdOrUpdated = TRUE;
     }
+    \Drupal::service('cache_tags.invalidator')->invalidateTags(['featuredcontent']);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $createdOrUpdated);
     return $createdOrUpdated;
   }
@@ -768,13 +769,12 @@ class Product {
       if ($event === 'product_del' || $event === 'content_refresh') {
         self::updateBasicPageRefs($nid, NULL, FALSE);
       }
-
+      \Drupal::service('cache_tags.invalidator')->invalidateTags(['featuredcontent']);
       \Drupal::logger('product')->notice('delete product nid=@prod', ['@prod' => $nid]);
     }
     else {
       \Drupal::logger('product')->notice('No node found to delete for product nid=@prod', ['@prod' => $nid]);
     }
-
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }
 

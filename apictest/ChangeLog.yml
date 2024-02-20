@@ -1,4 +1,32 @@
 changes:
+  8.x-5.6.9:
+  - Increase timeouts
+  8.x-5.6.8:
+  - Remove flag that doesn't exist
+  8.x-5.6.7:
+  - Use the drupal ignore file
+  8.x-5.6.6:
+  - Use the drupal ignore file
+  8.x-5.6.5: null
+  8.x-5.6.4:
+  - Copy deps to tmp
+  - Copy deps to tmp
+  8.x-5.6.3:
+  - Copy deps to tmp
+  8.x-5.6.2:
+  - Copy deps to tmp
+  8.x-5.6.1:
+  - Ignore deps inline with Drupal (#274) (#275)
+  8.x-5.6.0:
+  - update version [8.x, 5.5.8] -> 8.x-5.6.0
+  8.x-5.5.7:
+  - velox/devportal#8738 - Copyright 2024
+  8.x-5.5.6:
+  - velox/devportal#8681 Don't use warmer in the tests (#273)
+  8.x-5.5.5:
+  - velox/devportal#825 disable memcache for the tests
+  8.x-5.5.4:
+  - Remove unused config (#270) (#272)
   8.x-5.5.3:
   - velox/devportal#8483 Fix dirs for portal-web hardening (#268)
   8.x-5.5.2:

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -35,7 +35,7 @@ use Prophecy\Prophet;
 class TokenResponseReaderTest extends UnitTestCase {
 
   /**
-   * @var \Prophecy\Prophet 
+   * @var \Prophecy\Prophet
    */
   private Prophet $prophet;
 
@@ -53,7 +53,7 @@ class TokenResponseReaderTest extends UnitTestCase {
    * @var \Drupal\Core\Messenger\MessengerInterface|\Prophecy\Prophecy\ObjectProphecy
    */
   private  $messenger;
-  
+
   protected function setup(): void {
     $this->prophet = new Prophet();
   }
@@ -81,7 +81,7 @@ class TokenResponseReaderTest extends UnitTestCase {
 
     $tokenResponseReader = new TokenResponseReader($this->moduleHandler->reveal(), $this->config->reveal(), $this->messenger->reveal());
     $token_response = $tokenResponseReader->read($response);
-    
+
     self::assertNotNull($token_response);
     self::assertEquals('The-bearer-Token', $token_response->getBearerToken());
     self::assertNull($token_response->getRefreshToken());

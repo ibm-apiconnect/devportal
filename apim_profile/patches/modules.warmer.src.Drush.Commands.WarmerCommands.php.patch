@@ -1,0 +1,48 @@
+--- modules/warmer/src/Drush/Commands/WarmerCommands.php        2023-11-06 15:35:07
++++ modules/warmer/src/Drush/Commands/WarmerCommands.php   2023-11-06 15:35:04
+@@ -181,4 +181,45 @@
+     return NULL;
+   }
+
++    /**
++   * Set cdn urls
++   *
++   * @param array $cdnurls
++   *   List of all the cdn urls
++   *
++   * @usage warmer-setcdn https://example.com,https://drupal.com
++   *   Add the urls to the cdn warmer config
++   *
++   * @command warmer:setcdn
++   * @aliases warmer-setcdn
++   *
++   * @throws \Exception
++   */
++  function drush_warmer_setcdn($cdnurls) {
++    $urls = array_unique(StringUtils::csvToArray($cdnurls));
++    $existingConfig = \Drupal::config('warmer.settings');
++    $headers = [];
++    $frequency = '300';
++    $batchSize = '50';
++    if ($existingConfig !== null) {
++      $cdn = $existingConfig->get('cdn');
++      if (isset($cdn['urls'])) {
++        $urls = array_merge($urls,$cdn['urls']);
++        $urls = array_unique($urls);
++      }
++      if (isset($cdn['headers'])) {
++        $headers = $cdn['headers'];
++      }
++      if (isset($cdn['frequency'])) {
++        $frequency = $cdn['frequency'];
++      }
++      if (isset($cdn['batchSize'])) {
++        $batchSize = $cdn['batchSize'];
++      }
++    }
++    \Drupal::service('config.factory')
++      ->getEditable('warmer.settings')
++      ->set('cdn', ['id' => 'cdn', 'frequency' => $frequency, 'batchSize' => $batchSize, 'urls' => $urls, 'headers' => $headers])
++      ->save();
++  }
+ }

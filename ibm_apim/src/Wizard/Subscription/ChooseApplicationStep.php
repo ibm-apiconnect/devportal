@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -62,7 +62,7 @@ class ChooseApplicationStep extends IbmWizardStepBase {
       $plan_id = \Drupal::request()->query->get('planId');
       $productName = '';
 
-      if (isset($product_id, $plan_title, $plan_id)) { 
+      if (isset($product_id, $plan_title, $plan_id)) {
         $temp_store->set('productId', $product_id);
         $temp_store->set('planName', $plan_title);
         $temp_store->set('planId', $plan_id);

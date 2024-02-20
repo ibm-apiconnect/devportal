@@ -1,4 +1,12 @@
 changes:
+  8.x-5.6.0:
+  - update version [8.x, 5.5.10] -> 8.x-5.6.0
+  8.x-5.5.9:
+  - velox/devportal#8738 - Copyright 2024
+  8.x-5.5.8:
+  - Fix translations (#291) (#293)
+  8.x-5.5.7:
+  - Clear featured content tag (#288) (#290)
   8.x-5.5.6:
   - Remove apic_ on upgrade function (#287)
   8.x-5.5.5:

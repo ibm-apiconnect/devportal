@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -611,12 +611,15 @@ class ApicUserRegisterForm extends RegisterForm {
       $form_state->getValue('last_name'),
       $form_state->getValue('consumerorg')
     ];
+
+    $pattern = '/(https?|ftp|ftps|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]|www\.[A-Z0-9.-]+\.[A-Z]{2,4}/i';
+
     foreach($valuesToValidate as $val) {
       while (is_array($val) && !empty($val)) {
         $val = array_shift($val);
       }
       $val = ($val === null) ? '' : $val;
-      if (strlen($val) > 255 || strpos($val, 'http://') !== false || strpos($val, 'https://') !== false) {
+      if (strlen($val) > 255 || preg_match($pattern, $val)) {
         $form_state->setErrorByName('', t('A problem occurred while attempting to create your account. Inputs cannot exceed max length or include URLs'));
       }
     }

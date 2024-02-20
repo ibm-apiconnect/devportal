@@ -2,7 +2,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2021, 2022
+ * (C) Copyright IBM Corporation 2021, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -107,7 +107,7 @@
     Drupal.settings = {};
   }
   Drupal.settings.plans = api;
-  
+
   Drupal.behaviors.plansTable = {
     attach: function(context, settings) {
         if(!Drupal.behaviors.plansTable.click_set){
@@ -129,4 +129,3 @@
     }
   };
 })(jQuery, Drupal);
-                                                    

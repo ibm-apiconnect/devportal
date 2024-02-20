@@ -614,6 +614,12 @@ ul.analyticsAppSelector li.selected {
   max-width: 50rem;
 }
 
+#ibm-apim-password-policy-status span.passed svg, 
+#ibm-apim-password-policy-status span.failed svg,
+.apic-user-form span.passed svg, .apic-user-form span.failed svg {
+  display: none;  
+}
+
 .apic-user-form .form-item input,
 .apic-user-form .form-item input:hover {
   width: 100%;

@@ -1,6 +1,6 @@
 --- modules/content_synchronizer/src/Service/GlobalReferenceManager.php 2023-07-03 16:41:58
 +++ modules/content_synchronizer/src/Service/GlobalReferenceManager.php    2023-08-22 12:15:02
-@@ -83,6 +83,32 @@
+@@ -83,6 +83,55 @@
    }
 
    /**
@@ -30,10 +30,33 @@
 +  }
 +
 +  /**
++   * Checks if there is already a gid with a entity type and id already linked to another entity id
++   *
++   * @param string $gid
++   *   The gid
++   *
++   * @return bool
++   *   If a reference exists.
++   */
++  public function hasEntityBeenImportedBefore($gid) {
++    $entityIdAndType = trim(substr($gid, strpos($gid, '.') + 1));
++    $query = \Drupal::database()->select(self::GID_TABLE_NAME)
++      ->fields(self::GID_TABLE_NAME, [
++        self::FIELD_ENTITY_TYPE,
++        self::FIELD_ENTITY_ID,
++      ])
++      ->condition(self::FIELD_GID, '.*'.$entityIdAndType.'$', 'REGEXP');
++
++    $result = $query->execute()->fetchAssoc();
++
++    return !empty($result);
++  }
++
++  /**
     * Return the entity type from the gid.
     *
     * @param string $gid
-@@ -97,6 +123,21 @@
+@@ -97,6 +146,21 @@
    }
 
    /**
@@ -55,7 +78,7 @@
     * Create GID from entity and gid.
     *
     * @param \Drupal\Core\Entity\EntityInterface $entity
-@@ -135,10 +176,10 @@
+@@ -135,10 +199,10 @@
    /**
     * Return the entity by gid and uuid.
     */
@@ -68,7 +91,7 @@
      }
 
      // Load by uuid :
-@@ -148,17 +189,38 @@
+@@ -148,17 +212,43 @@
 
        $result = $query->accessCheck(TRUE)->execute();
        if (!empty($result)) {
@@ -90,13 +113,18 @@
        }
 +
 +      $entityId = $this->getEntityIdFromGid($gid);
-+      if($this->doesEntityHaveAReference($entityType, $entityId)) {
-+        return [ NULL, 'newids'];
-+      }
-+
 +      $entity = \Drupal::entityTypeManager()
 +          ->getStorage($entityType)
 +          ->load($entityId);
++
++      if(($entity && $entity->bundle() == $bundle) && $this->hasEntityBeenImportedBefore($gid)) {
++        $this->createGlobalEntityByImportingEntityAndGid($entity, $gid);
++        return [ $entity, 'overwrite' ];
++      }
++
++      if($this->doesEntityHaveAReference($entityType, $entityId)) {
++        return [ NULL, 'newids'];
++      }
 +
 +      if ($entity && $entity->bundle() != $bundle) {
 +        return [ NULL, 'newids'];

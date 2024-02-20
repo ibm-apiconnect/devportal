@@ -1,0 +1,17 @@
+--- core/modules/language/src/ConfigurableLanguageManager.php   2024-01-25 11:12:11
++++ core/modules/language/src/ConfigurableLanguageManager copy.php      2024-01-25 11:12:04
+@@ -212,7 +212,13 @@
+       // Ensure we have a valid value for this language type.
+       $this->negotiatedLanguages[$type] = $this->getDefaultLanguage();
+
+-      if ($this->negotiator && $this->isMultilingual()) {
++      $check = $this->negotiator && $this->isMultilingual();
++      if (\Drupal::service('config.factory')->getEditable('ibm_apim.feature_flags')->get('cli_language_fix')) {
++        \Drupal::logger('IBM Feature Flag')->info('Executing with CLI Language Fix');
++        $check = $this->negotiator && PHP_SAPI != 'cli' && $this->isMultilingual();
++      }
++
++      if ($check) {
+         if (!isset($this->initializing[$type])) {
+           $this->initializing[$type] = TRUE;
+           $negotiation = $this->negotiator->initializeType($type);

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2023
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -601,6 +601,10 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     case 'system_modules' :
       // The 'Extend' module list page
 
+      // hide the memcache module
+      if (isset($form['modules']['Performance and scalability']['memcache'])) {
+        unset($form['modules']['Performance and scalability']['memcache']);
+      }
       // hide the password policy history module
       if (isset($form['modules']['Security']['password_policy_history'])) {
         unset($form['modules']['Security']['password_policy_history']);
@@ -736,6 +740,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         'auth_apic',
         'ibm_log_stdout',
         'eventstream',
+        'memcache',
       ];
       foreach ($moduleList as $module) {
         if (isset($form['modules'][$module])) {

@@ -1,4 +1,13 @@
 changes:
+  8.x-5.6.3:
+  - Fix icons (#787) (#789)
+  8.x-5.6.2: null
+  8.x-5.6.1: null
+  8.x-5.6.0:
+  - fix unit tests (#786)
+  - update version [8.x, 5.5.9] -> 8.x-5.6.0
+  8.x-5.5.8:
+  - register form validation catches URLs of all formats
   8.x-5.5.7:
   - Add unauthorized message to more failed login cases (#782)
   8.x-5.5.6:

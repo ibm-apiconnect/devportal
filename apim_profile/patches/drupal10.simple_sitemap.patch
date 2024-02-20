@@ -25,55 +25,6 @@
        return static::load(array_rand($ids));
      }
 
---- modules/simple_sitemap/modules/simple_sitemap_views/js/simple_sitemap.viewsUi.js   2023-02-10 10:47:08
-+++ modules/simple_sitemap/modules/simple_sitemap_views/js/simple_sitemap.viewsUi.js      2023-02-10 10:47:04
-@@ -3,12 +3,12 @@
-  * Views UI helpers for Simple XML Sitemap display extender.
-  */
-
--(function ($, Drupal) {
-+(function ($, Drupal, once) {
-   Drupal.simpleSitemapViewsUi = {};
-
-   Drupal.behaviors.simpleSitemapViewsUiArguments = {
-     attach: function attach() {
--      let $arguments = $('.indexed-arguments').once('simple-sitemap-views-ui-arguments');
-+      let $arguments = $(once('simple-sitemap-views-ui-arguments', '.indexed-arguments'));
-
-       if ($arguments.length) {
-         $arguments.each(function () {
-@@ -40,4 +40,4 @@
-     this.$checkboxes.slice(index).prop('checked', false);
-   };
-
--})(jQuery, Drupal);
-+})(jQuery, Drupal, once);
-
---- modules/simple_sitemap/js/simple_sitemap.sitemapEntities.js        2023-02-10 10:48:42
-+++ modules/simple_sitemap/js/simple_sitemap.sitemapEntities.js   2023-02-10 10:48:37
-@@ -2,13 +2,13 @@
-  * @file
-  * Attaches simple_sitemap behaviors to the sitemap entities form.
-  */
--(function ($, Drupal) {
-+(function ($, Drupal, once) {
-
-   "use strict";
-
-   Drupal.behaviors.simpleSitemapEntities = {
-     attach: function () {
--      let $checkboxes = $('table tr input:checkbox:checked').once('simple-sitemap-entities');
-+      let $checkboxes = $('simple-sitemap-entities', 'table tr input:checkbox:checked');
-
-       if ($checkboxes.length) {
-         $checkboxes.on('change', function () {
-@@ -37,4 +37,4 @@
-     }
-   });
-
--})(jQuery, Drupal);
-+})(jQuery, Drupal, once);
-
 --- modules/simple_sitemap/modules/simple_sitemap_views/simple_sitemap_views.libraries.yml     2023-02-10 10:50:42
 +++ modules/simple_sitemap/modules/simple_sitemap_views/simple_sitemap_views.libraries.yml        2023-02-10 10:50:38
 @@ -2,6 +2,7 @@

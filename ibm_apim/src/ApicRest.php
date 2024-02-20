@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -345,9 +345,9 @@ class ApicRest implements ApicRestInterface {
       curl_setopt($resource, CURLOPT_SSL_VERIFYPEER, TRUE);
       curl_setopt($resource, CURLOPT_SSL_VERIFYHOST, 2);
       curl_setopt($resource, CURLOPT_CAPATH, '/etc/ssl/certs');
-      \Drupal::logger('ibm_apim')->info('curl_set_accept_ssl: Calling ' . $apiType . ' API and validating server cert with the truststore'); 
+      \Drupal::logger('ibm_apim')->info('curl_set_accept_ssl: Calling ' . $apiType . ' API and validating server cert with the truststore');
     } else {
-      \Drupal::logger('ibm_apim')->warning('curl_set_accept_ssl: Calling ' . $apiType . ' API without validating server cert as neither ' . $caIngFile . ' nor ' . $caSvcFile . ' was present.'); 
+      \Drupal::logger('ibm_apim')->warning('curl_set_accept_ssl: Calling ' . $apiType . ' API without validating server cert as neither ' . $caIngFile . ' nor ' . $caSvcFile . ' was present.');
       curl_setopt($resource, CURLOPT_SSL_VERIFYPEER, FALSE);
       curl_setopt($resource, CURLOPT_SSL_VERIFYHOST, 0);
     }

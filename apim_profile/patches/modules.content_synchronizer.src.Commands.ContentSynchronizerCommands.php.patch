@@ -185,7 +185,7 @@
 +    $entity = $entityTypeManager->load($exportEntityId);
 +    if (!$entity) {
 +      throw new \Exception('No export_entity found [id:' . $exportEntityId . ']');
-     }
++    }
 +
 +    $entityList = $entity->getEntitiesList();
 +
@@ -208,7 +208,7 @@
 +        'bundle' => $entity->bundle()
 +      ];
 +      $rows[] = $row;
-+    }
+     }
 +
 +    return new RowsOfFields($rows);
    }
@@ -280,16 +280,16 @@
        $this->t('Entity Id ?'),
        NULL,
        function ($value) use ($entityTypeId) {
-@@ -107,7 +342,27 @@
+@@ -107,11 +342,31 @@
        [$this, 'canBeNull']);
 
      $this->logExportData(
 -      $this->contentSynchronizerManager->exportEntity($entityTypeId, $id, $destination)
 +      $this->contentSynchronizerManager->exportEntity($entityTypeId, $ids, $destination)
-+    );
-+  }
-+
-+  /**
+     );
+   }
+
+   /**
 +   * Export an entity into a tar.gz.
 +   *
 +   * @param string $destination
@@ -306,9 +306,13 @@
 +
 +    $this->logExportData(
 +      $this->contentSynchronizerManager->exportAll($destination)
-     );
-   }
-
++    );
++  }
++
++  /**
+    * Log the result of an export.
+    *
+    * @param array $exportData
 @@ -119,13 +374,50 @@
     */
    protected function logExportData(array $exportData) {
@@ -361,6 +365,28 @@
     * Create an Import Entity from the tar.gz file absolute path.
     *
     * @param string $absolutePath
+@@ -173,8 +465,8 @@
+    * @throws \Exception
+    */
+   public function launchImport($importId, array $options = [
+-    'publish' => FALSE,
+-    'update'  => FALSE,
++    'publish' => ImportProcessor::DEFAULT_PUBLICATION_TYPE,
++    'update'  => ImportProcessor::DEFAULT_UPDATE_TYPE,
+   ]) {
+
+     // Publish option.
+@@ -217,8 +509,8 @@
+    * @throws \Exception
+    */
+   public function createAndLaunchImport($absolutePath = NULL, array $options = [
+-    'publish' => FALSE,
+-    'update'  => FALSE,
++    'publish' => ImportProcessor::DEFAULT_PUBLICATION_TYPE,
++    'update'  => ImportProcessor::DEFAULT_UPDATE_TYPE,
+   ]) {
+     if ($import = $this->createImport($absolutePath)) {
+       $this->launchImport($import->id(), $options);
 @@ -226,6 +518,41 @@
    }
 

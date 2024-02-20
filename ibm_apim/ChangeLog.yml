@@ -1,4 +1,18 @@
 changes:
+  8.x-5.6.0:
+  - update version [8.x, 5.5.24] -> 8.x-5.6.0
+  8.x-5.5.23:
+  - ApiTaxonomy -> ApicTaxonomy
+  - velox/devportal#8723 - prevent user enumeration (#1066)
+  - velox/devportal#8738 - Copyright 2024
+  8.x-5.5.22:
+  - APIC User information command (#1063) (#1064)
+  8.x-5.5.21:
+  - velox/devportal#8259 prevent deinstallation of memcache (#1060)
+  8.x-5.5.20:
+  - remove additional icons on pwd check (#1059)
+  8.x-5.5.19:
+  - Remove unused config (#1056) (#1058)
   8.x-5.5.18:
   - Use correct css for Item (#1053) (#1054)
   8.x-5.5.17:

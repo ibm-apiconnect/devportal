@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -1290,6 +1290,15 @@ function apic_api_update_10004() {
       $view->save();
     }
   }
+}
+
+/**
+ * update the "apic_attachments" field configuration for the api content type to include the wsdl file extension
+ */
+function apic_api_update_10005() {
+  $field_config = FieldConfig::loadByName('node', 'api', 'apic_attachments');
+  $field_config->setSetting('file_extensions', 'txt doc pdf xls ppt pptx docx xlsx rtf odt ods odp md json yaml yml tgz tar wsdl zip');
+  $field_config->save();
 }
 
 /**

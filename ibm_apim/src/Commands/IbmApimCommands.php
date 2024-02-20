@@ -6,7 +6,7 @@ namespace Drupal\ibm_apim\Commands;
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -3136,7 +3136,7 @@ function drush_ibm_apim_activation_update($activation) {
       $last_time = $time_now;
 
       if ($pctMem > $memThreshold) {
-        fprintf(STDERR, "Processed %d objects in %f seconds (last 10 in %f seconds). Memory usage %.2f%%/%d%% (%d/%d bytes). Resetting Drupal cache.\n", $count, $elapsed_time, $elapsed_time_last_10, $pctMem, $memThreshold, $memUsageMB, $memoryLimitMB);
+        fprintf(STDERR, "Processed %d objects in %f seconds (last 10 in %f seconds). Memory usage %.2f%%/%d%% (%d/%d MB). Resetting Drupal cache.\n", $count, $elapsed_time, $elapsed_time_last_10, $pctMem, $memThreshold, $memUsageMB, $memoryLimitMB);
 
         // Only need to do one type of storage here as they all share the same memory cache instance
         \Drupal::entityTypeManager()->getStorage('node')->memoryCache->deleteAll();

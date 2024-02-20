@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -1580,7 +1580,6 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
       ->set('render_api_schema_view', TRUE)
       ->set('optimise_oauth_ux', TRUE)
       ->set('show_mtls_header', TRUE)
-      ->set('email_as_username', TRUE)
       ->set('application_image_upload', TRUE)
       ->set('hide_admin_registry', FALSE)
       ->set('render_api_schema_view', TRUE)

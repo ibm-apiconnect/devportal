@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -403,6 +403,7 @@ class FeaturedContentBlock extends BlockBase {
     $build['#attached']['library'][] = 'masonry/masonry.layout';
     $build['#attached']['library'][] = 'featuredcontent/featuredcontent';
     $build['#cache']['contexts'] = ['session'];
+    $build['#cache']['tags'] = ['featuredcontent'];
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $build);
     }

@@ -1,4 +1,11 @@
 changes:
+  8.x-5.6.0:
+  - update version [8.x, 5.5.12] -> 8.x-5.6.0
+  8.x-5.5.11:
+  - velox/devportal#8738 - Copyright 2024
+  8.x-5.5.10:
+  - updated error message to match other error messages
+  - tightening form validation to not allow url inputs
   8.x-5.5.9:
   - Remove addtoany (#340) (#342)
   8.x-5.5.8:

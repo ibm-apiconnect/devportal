@@ -97,9 +97,6 @@ ibm_apim.settings:
     show_mtls_header:
       type: boolean
       label: 'Show certificate in header for APIs secured with mutual TLS'
-    email_as_username:
-      type: boolean
-      label: 'Usernames are email addresses'
     allow_consumerorg_rename:
       type: boolean
       label: 'Allow consumer organization owners to rename their organization'

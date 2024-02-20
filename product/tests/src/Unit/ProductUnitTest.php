@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -45,7 +45,7 @@ class ProductUnitTest extends UnitTestCase {
    */
   public function testProductWithoutAnyApiReturnsEmptyArray(): void {
     $productBuilder = new MockProductNodeBuilder($this);
-    
+
     $mockProduct = $productBuilder->build();
 
     $result = Product::getPlansThatContainApi($mockProduct, $this->apiRef);
@@ -64,11 +64,11 @@ class ProductUnitTest extends UnitTestCase {
 
     $yaml = <<<EOT
       apis:
-        $this->apiRef: 
+        $this->apiRef:
           name: $this->apiRef
     EOT;
     $productBuilder->setData($yaml);
-    
+
     $mockProduct = $productBuilder->build();
 
     $result = Product::getPlansThatContainApi($mockProduct, $this->apiRef);
@@ -90,11 +90,11 @@ class ProductUnitTest extends UnitTestCase {
 
     $yaml = <<<EOT
     apis:
-      $this->unrelatedApiRef: 
+      $this->unrelatedApiRef:
         name: $this->unrelatedApiRef
     EOT;
     $productBuilder->setData($yaml);
-    
+
     $mockProduct = $productBuilder->build();
 
     $result = Product::getPlansThatContainApi($mockProduct, $this->apiRef);
@@ -117,11 +117,11 @@ class ProductUnitTest extends UnitTestCase {
 
     $yaml = <<<EOT
       apis:
-        $this->apiRef: 
+        $this->apiRef:
           name: $this->apiRef
     EOT;
     $productBuilder->setData($yaml);
-    
+
     $mockProduct = $productBuilder->build();
     $result = Product::getPlansThatContainApi($mockProduct, $this->apiRef);
 
@@ -148,13 +148,13 @@ class ProductUnitTest extends UnitTestCase {
 
     $yaml = <<<EOT
       apis:
-        $this->apiRef: 
+        $this->apiRef:
           name: $this->apiRef
-        $this->unrelatedApiRef: 
+        $this->unrelatedApiRef:
           name: $this->unrelatedApiRef
     EOT;
     $productBuilder->setData($yaml);
-    
+
     $mockProduct = $productBuilder->build();
 
     $result = Product::getPlansThatContainApi($mockProduct, $this->apiRef);
@@ -186,13 +186,13 @@ class ProductUnitTest extends UnitTestCase {
 
     $yaml = <<<EOT
       apis:
-        $this->apiRef: 
+        $this->apiRef:
           name: $this->apiRef
-        $this->unrelatedApiRef: 
+        $this->unrelatedApiRef:
           name: $this->unrelatedApiRef
     EOT;
     $productBuilder->setData($yaml);
-    
+
     $mockProduct = $productBuilder->build();
 
     $result = Product::getPlansThatContainApi($mockProduct, $this->apiRef);
@@ -218,11 +218,11 @@ class ProductUnitTest extends UnitTestCase {
 
     $yaml = <<<EOT
       apis:
-        $this->apiRef: 
+        $this->apiRef:
           name: $this->apiRef
     EOT;
     $productBuilder->setData($yaml);
-    
+
     $mockProduct = $productBuilder->build();
 
     $result = Product::getPlansThatContainApi($mockProduct, $this->apiRef);
@@ -249,11 +249,11 @@ class ProductUnitTest extends UnitTestCase {
 
     $yaml = <<<EOT
       apis:
-        $this->unrelatedApiRef: 
+        $this->unrelatedApiRef:
           name: $this->unrelatedApiRef
     EOT;
     $productBuilder->setData($yaml);
-    
+
     $mockProduct = $productBuilder->build();
 
     $result = Product::getPlansThatContainApi($mockProduct, $this->apiRef);

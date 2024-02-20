@@ -1,0 +1,34 @@
+{
+  "name":"lobsterr/drupal-superfish",
+  "homepage":"https://github.com/LOBsTerr/drupal-superfish",
+  "description":"Superfish library for the Drupal Superfish module.",
+  "type":"drupal-library",
+  "authors":[
+    {
+      "name":"Nikolay Lobachev",
+      "homepage":"https://www.drupal.org/u/lobsterr",
+      "role":"Maintainer"
+    },
+    {
+      "name":"mehrpadin",
+      "homepage":"https://www.drupal.org/u/mehrpadin",
+      "role":"Maintainer"
+    }
+  ],
+  "support":{
+    "issues":"https://github.com/LOBsTerr/drupal-superfish/issues",
+    "source":"https://github.com/LOBsTerr/drupal-superfish"
+  },
+  "repository":{
+    "type":"git",
+    "url":"git@github.com:LOBsTerr/drupal-superfish.git"
+  },
+  "peerDependencies":{
+    "jquery":">= 1.3.0"
+  },
+  "keywords":[
+    "plugin",
+    "jquery"
+  ],
+  "license":"MIT"
+}

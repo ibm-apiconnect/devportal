@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -157,6 +157,7 @@ function apim_profile_install() {
     'dropzonejs',
     'dropzonejs_eb_widget',
     'honeypot',
+    'memcache',
     'masonry',
     'masonry_views',
     'views_ajax_history',
@@ -186,9 +187,6 @@ function apim_profile_install() {
     'select_translation',
     'term_csv_export_import',
     'page_load_progress',
-    'warmer',
-    'warmer_cdn',
-    'warmer_entity',
     'svg_image_field',
     'views_taxonomy_term_name_depth',
     'extlink',
@@ -415,7 +413,6 @@ function apim_profile_default_apic_config() {
     ->set('render_api_schema_view', TRUE)
     ->set('optimise_oauth_ux', TRUE)
     ->set('show_mtls_header', TRUE)
-    ->set('email_as_username', TRUE)
     ->set('application_image_upload', TRUE)
     ->set('hide_admin_registry', FALSE)
     ->set('render_api_schema_view', TRUE)
@@ -1540,8 +1537,8 @@ function apim_profile_update_8102() {
     ->set('extlink_mailto_label', '(link sends email)')
     ->set('extlink_use_font_awesome', FALSE)
     ->set('extlink_font_awesome_classes', [
-      'links' => 'fa fa-external-link',
-      'mailto' => 'fa fa-envelope-o',
+      'links' => 'fa fa-solid fa-up-right-from-square',
+      'mailto' => 'fa fa-regular fa-envelope',
     ])
     ->set('extlink_icon_placement', '0')
     ->save();
@@ -3134,6 +3131,76 @@ function apim_profile_update_10016() {
   }
 }
 
+/**
+ * disable rss feed for taxonomy
+ */
+function apim_profile_update_10018() {
+  $view = Views::getView('taxonomy_term');
+  if ($view !== NULL) {
+    $view->setDisplay('feed_1');
+    $displayObj = $view->getDisplay()->setOption('enabled', FALSE);
+
+    $view->save();
+  }
+}
+
+/**
+ * Install memcache module
+ */
+function apim_profile_update_10019() {
+  module_install(['memcache']);
+}
+
+/**
+ * Uninstall warmer
+ */
+function apim_profile_update_10020() {
+  module_uninstall(['warmer']);
+}
+
+/**
+ * Update font awesome settings to use local library
+ */
+function apim_profile_update_10026() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('fontawesome.settings');
+  $config->set('use_cdn', FALSE);
+  $config->set('use_shim', FALSE);
+  $config->set('external_svg_location', '');
+  $config->set('external_shim_location', '');
+  $config->save(TRUE);
+}
+
+/**
+ * Update font awesome calsses to use fontawesome v6 format
+ */
+function apim_profile_update_10027() {
+  $config = \Drupal::service('config.factory')->getEditable('extlink.settings');
+  if ($config) {
+    $config->set('extlink_font_awesome_classes', [
+      'links' => 'fa fa-solid fa-up-right-from-square',
+      'mailto' => 'fa fa-regular fa-envelope',
+    ])->save(TRUE);
+  }
+}
+
+/**
+ * Ignore /user/* paths from redirecting to search404, as this leaks that the user doesn't exist
+ */
+function apim_profile_update_10029() {
+  $config = \Drupal::service('config.factory')->getEditable('search404.settings');
+  if ($config) {
+    $currentConfig = $config->get('search404_ignore_paths');
+
+    if (empty($currentConfig)) {
+      $config->set('search404_ignore_paths', '/user/*')->save(TRUE);
+    } else {
+      $appendedConfig = $currentConfig . "\n" . '/user/*';
+      $config->set('search404_ignore_paths', $appendedConfig)->save(TRUE);
+    }
+  }
+}
+
 function delete_config(array $configs) {
   foreach ($configs as $config) {
     try {
@@ -3198,6 +3265,8 @@ function module_uninstall(array $modules) {
           ->condition('name', $module, 'IN')
           ->execute();
     \Drupal::configFactory()->getEditable('core.extension')->clear("module.$module")->save(TRUE);
+    // Rebuild menu tree as we have observed this sometimes doesn't happen and causes issues
+    \Drupal::service('plugin.manager.menu.link')->rebuild();
   }
 }
 
