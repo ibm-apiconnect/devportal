@@ -83,21 +83,22 @@
    }
 
    /**
-@@ -152,12 +152,12 @@
+@@ -143,12 +143,12 @@
 
      // Prevent this page from showing when the module list is empty.
      if (empty($this->modules)) {
--      $this->messenger()->addError($this->t('The selected modules could not be uninstalled, either due to a website problem or due to the uninstall confirmation form timing out. Please try again.'));
-+      $this->messenger()->addError($this->t('The selected modules could not be disabled, either due to a website problem or due to the disable confirmation form timing out. Please try again.'));
+-      $this->messenger()->addError($this->t('The selected modules could not be uninstalled, either due to a website problem or due to the uninstall confirmation form timing out.'));
++      $this->messenger()->addError($this->t('The selected modules could not be disabled, either due to a website problem or due to the disable confirmation form timing out.'));
        return $this->redirect('system.modules_uninstall');
      }
 
      $data = $this->moduleExtensionList->getList();
 -    $form['text']['#markup'] = '<p>' . $this->t('The following modules will be completely uninstalled from your site, and <em>all data from these modules will be lost</em>!') . '</p>';
-+    $form['text']['#markup'] = '<p>' . $this->t('The following modules will be disabled for your site, and <em>all data from these modules will be lost</em>!') . '</p>';
++    $form['text']['#markup'] = '<p>' . $this->t('The following modules will be completely disabled from your site, and <em>all data from these modules will be lost</em>!') . '</p>';
      $form['modules'] = [
        '#theme' => 'item_list',
        '#items' => array_map(function ($module) use ($data) {
+
 @@ -182,7 +182,7 @@
      // Uninstall the modules.
      $this->moduleInstaller->uninstall($this->modules);

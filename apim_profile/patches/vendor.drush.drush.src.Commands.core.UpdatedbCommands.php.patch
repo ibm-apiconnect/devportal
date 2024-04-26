@@ -1,0 +1,30 @@
+--- vendor/drush/drush/src/Commands/core/UpdateDBCommands.php   2023-11-16 22:57:24
++++ vendor/drush/drush/src/Commands/core/UpdateDBCommands.php      2024-02-21 13:52:06
+@@ -359,6 +359,7 @@
+         }
+
+         $operations = [];
++        $apim_profile_drupal_10_update = NULL;
+
+         foreach ($updates as $update) {
+             if ($update['allowed']) {
+@@ -376,10 +377,18 @@
+                 }
+                 // Add this update function to the batch.
+                 $function = $update['module'] . '_update_' . $update['number'];
+-                $operations[] = ['\Drush\Commands\core\UpdateDBCommands::updateDoOne', [$update['module'], $update['number'], $dependency_map[$function]]];
++                if ($function === 'apim_profile_update_10001') {
++                    $apim_profile_drupal_10_update = ['\Drush\Commands\core\UpdateDBCommands::updateDoOne', [$update['module'], $update['number'], $dependency_map[$function]]];
++                } else {
++                    $operations[] = ['\Drush\Commands\core\UpdateDBCommands::updateDoOne', [$update['module'], $update['number'], $dependency_map[$function]]];
++                }
+             }
+         }
+
++        if ($apim_profile_drupal_10_update) {
++            array_unshift($operations, $apim_profile_drupal_10_update);
++        }
++
+         // Lastly, apply post update hooks.
+         $post_updates = \Drupal::service('update.post_update_registry')->getPendingUpdateFunctions();
+         if ($post_updates) {

@@ -1,0 +1,11 @@
+--- vendor/consolidation/site-alias/src/SiteAliasName.php       2024-02-06 16:49:59
++++ vendor/consolidation/site-alias/src/SiteAliasName.php  2024-02-06 16:50:24
+@@ -57,7 +57,7 @@
+     /**
+      * Match the parts of a regex name.
+      */
+-    const ALIAS_NAME_REGEX = '%^@?([a-zA-Z0-9_-]+)(\.[a-zA-Z0-9_-]+)?(\.[a-zA-Z0-9_-]+)?$%';
++    const ALIAS_NAME_REGEX = '%^@?([\.a-zA-Z0-9_-]+)(\.[a-zA-Z0-9_-]+)?(\.[a-zA-Z0-9_-]+)?$%';
+
+     /**
+      * Create a new site alias name

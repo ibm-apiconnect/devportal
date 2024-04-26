@@ -1,0 +1,10 @@
+--- core/modules/node/node.module       2024-02-27 17:09:24
++++ core/modules/node/node.module  2024-02-27 17:09:39
+@@ -1147,6 +1147,8 @@
+   if (!isset($batch_builder)) {
+     \Drupal::messenger()->addStatus(t('Content permissions have been rebuilt.'));
+     node_access_needs_rebuild(FALSE);
++  } else {
++    \Drupal::messenger()->addStatus(t('Content permissions rebuild has been initiated.'));
+   }
+ }

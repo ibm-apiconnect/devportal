@@ -12,7 +12,6 @@ distribution:
 
 # Required modules
 install:
-  - search
   - node
   - history
   - block

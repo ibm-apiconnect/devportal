@@ -252,18 +252,38 @@ index 560378c8cd4c6cf56c86265fd58025ab1875db93..822688ec5a0630425dbe0e00528a2aac
        return NULL;
      }
 
-diff --git modules/restrict_by_ip/src/RoleFirewall.php modules/restrict_by_ip/src/RoleFirewall.php
-index 0c2f7fb44493d6d062ea77076b3933d43a5deca9..218aa9b6ed5ad853ce65963aecc6c37793b497f7 100644
---- modules/restrict_by_ip/src/RoleFirewall.php
-+++ modules/restrict_by_ip/src/RoleFirewall.php
-@@ -44,7 +44,7 @@ class RoleFirewall implements RoleFirewallInterface {
+--- modules/restrict_by_ip/src/RoleFirewall.php		2024-02-12 13:11:05
++++ modules/restrict_by_ip/src/RoleFirewall.php		2024-02-09 17:04:14
+@@ -44,19 +44,26 @@
      foreach ($roles as $name) {
        $role_data = $this->config->get('role.' . $name);
-
+ 
 -      if (strlen($role_data) == 0) {
 +      if (empty($role_data)) {
          continue;
        }
+ 
+       $ranges = explode(';', $role_data);
+-
++      
++      $valid = FALSE;
+       foreach ($ranges as $range) {
+         try {
+           $this->ipTools->validateCIDR($user_ip, $range);
+         } catch (IPOutOfRangeException $e) {
+-          $remove_roles[] = $name;
++          continue;
+         }
++
++        $valid = TRUE;
+       }
++
++      if (!$valid) {
++        $remove_roles[] = $name;
++      }
+     }
+ 
+     return $remove_roles;
 
 --- modules/restrict_by_ip/restrict_by_ip.services.yml  2022-12-19 10:05:18
 +++ modules/restrict_by_ip/restrict_by_ip.services.yml     2022-12-19 10:05:43

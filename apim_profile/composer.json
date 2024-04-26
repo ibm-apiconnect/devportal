@@ -213,8 +213,8 @@
     "drupal/contact_block": "^2.0",
     "drupal/contact_storage": "^1.0@beta",
     "drupal/content_synchronizer": "^4.0@RC",
-    "drupal/core": "10.1.*",
-    "drupal/core-composer-scaffold": "10.1.*",
+    "drupal/core": "^10.2",
+    "drupal/core-composer-scaffold": "^10.2",
     "drupal/crop": "^2.0",
     "drupal/cshs": "^4.0",
     "drupal/csp": "^1.0@alpha",
@@ -242,7 +242,6 @@
     "drupal/flood_control": "^2.3",
     "drupal/focal_point": "^2.0@alpha",
     "drupal/fontawesome": "^2.26",
-    "drupal/graphql": "^4.6",
     "drupal/gutenberg": "^2.6",
     "drupal/health_check": "^1.0",
     "drupal/hierarchical_taxonomy_menu": "^2.0.0-beta1",
@@ -325,7 +324,7 @@
     "drupal/views_taxonomy_term_name_depth": "^7.1",
     "drupal/votingapi": "3.x-dev",
     "drupal/workbench": "^1.0",
-    "drush/drush": "^11.1",
+    "drush/drush": "^12.0",
     "enyo/dropzone": "^5.1",
     "firebase/php-jwt": "^6.0",
     "friends-of-behat/mink-extension": "^2.3",
@@ -355,7 +354,7 @@
     "wikimedia/composer-merge-plugin": "^2.0"
   },
   "require-dev": {
-    "drupal/core-dev": "10.1.*",
+    "drupal/core-dev": "^10.2",
     "mglaman/drupal-check": "^1.1",
     "zaporylie/composer-drupal-optimizations": "^1.2"
   },

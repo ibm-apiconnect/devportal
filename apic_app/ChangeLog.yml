@@ -1,4 +1,6 @@
 changes:
+  8.x-5.7.0:
+  - update version [8.x, 5.6.1] -> 8.x-5.7.0
   8.x-5.6.0:
   - update version [8.x, 5.5.11] -> 8.x-5.6.0
   8.x-5.5.10:

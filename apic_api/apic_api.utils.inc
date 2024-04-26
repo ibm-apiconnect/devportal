@@ -78,13 +78,16 @@ function apic_api_get_string_from_zip($data): string {
       $threeCharExt = mb_strtolower(mb_substr($fileName, -3));
       if ($fourCharExt === 'wsdl' || $threeCharExt === 'xml' || $threeCharExt === 'xsd') {
         $draft .= $fileName . '\n';
-        $handle = fopen($pathName, 'rb');
-        $contents = fread($handle, filesize($pathName));
-        fclose($handle);
-        $handle = NULL;
-        // remove BOM
-        $contents = str_replace("\xEF\xBB\xBF", '', $contents);
-        $draft .= $contents . '\n';
+        $size = filesize($pathName);
+        if ($size > 0) {
+          $handle = fopen($pathName, 'rb');
+          $contents = fread($handle, $size);
+          fclose($handle);
+          $handle = NULL;
+          // remove BOM
+          $contents = str_replace("\xEF\xBB\xBF", '', $contents);
+          $draft .= $contents . '\n';
+        }
       }
     }
   }

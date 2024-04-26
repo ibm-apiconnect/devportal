@@ -3,7 +3,7 @@
 @@ -98,8 +98,16 @@
        ];
      }
- 
+
 +    // Patched by IBM - determine which languages are enabled and whitelist
 +    // those filename "extensions" too
 +    $enabled_languages = \Drupal::languageManager()->getLanguages();
@@ -13,8 +13,8 @@
 +    }
 +
      $validators = [
--      'file_validate_extensions' => ['po'],
-+      'file_validate_extensions' => [$valid_extensions],
-       'file_validate_size' => [Environment::getUploadMaxSize()],
+-      'FileExtension' => ['extensions' => 'po'],
++      'FileExtension' => ['extensions' => $valid_extensions],
+       'FileSizeLimit' => ['fileLimit' => Environment::getUploadMaxSize()],
      ];
      $form['file'] = [
