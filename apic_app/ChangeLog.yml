@@ -1,4 +1,23 @@
 changes:
+  6.2.6:
+  - application subs tab a11y fixes (#391)
+  6.2.5:
+  - velox/devportal#8913 - CIO SonarQube
+  6.2.4:
+  - change portal-ci-v10-0 to portal-ci-v10-0-8
+  6.2.3:
+  - add env.GIT_COMMIT_SUMMARY
+  6.2.2:
+  - read only app creds (#389)
+  6.2.1:
+  - Update .whitesource (#388)
+  6.2.0:
+  - update version 6.1.14 -> 6.2.0
+  6.1.13:
+  - updated error message to match other error messages
+  - tightening form validation to not allow url inputs
+  6.1.12:
+  - Fix translations (#381) (#382)
   6.1.11:
   - add unit to width (#378) (#379)
   6.1.10:

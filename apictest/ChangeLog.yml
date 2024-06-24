@@ -1,4 +1,29 @@
 changes:
+  6.2.3:
+  - add env.GIT_COMMIT_SUMMARY
+  6.2.2:
+  - update whitesource (#279)
+  6.2.1:
+  - velox/devportal#8772 and velox/devportal#8503 tweaks due to changes (#277)
+  6.2.0:
+  - update version 6.1.16 -> 6.2.0
+  6.1.15:
+  - Port 443 not 4443
+  - Use port 443 not 4443
+  6.1.14:
+  - velox/devportal#8703 Fix IPv6 dirs
+  - velox/devportal#8703 Fix dirs for IPv6 changes
+  - velox/devportal#8703 Some dirs changed in the template when IPv6 support was added (#276)
+  6.1.13:
+  - Increase timeouts
+  6.1.12:
+  - Remove flag that doesn't exist
+  6.1.11:
+  - Use the drupal ignore file
+  6.1.10:
+  - Use the drupal ignore file
+  6.1.9:
+  - velox/devportal#8738 - Copyright 2024
   6.1.8:
   - velox/devportal#8681 Don't use warmer in the tests (#273)
   6.1.7:

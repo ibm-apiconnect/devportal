@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2021
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -75,6 +75,8 @@ class ConsumerOrgCheckSubscriber implements EventSubscriberInterface
       \Drupal::routeMatch()->getRouteName() === 'auth_apic.oidc_first_time_login' ||
       \Drupal::routeMatch()->getRouteName() === 'ibm_apim.noperms' ||
       \Drupal::routeMatch()->getRouteName() === 'session_limit.limit_form' ||
+      \Drupal::routeMatch()->getRouteName() === 'system.css_asset' ||
+      \Drupal::routeMatch()->getRouteName() === 'system.js_asset' ||
       \Drupal::routeMatch()->getRouteName() === 'auth_apic.invitation' ||
       \Drupal::routeMatch()->getRouteName() === 'user.logout' ||
       !\Drupal::currentUser()->isAuthenticated() ||

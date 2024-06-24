@@ -36,8 +36,8 @@ default:
             server_parameters:
               verify_peer: false
               verify_host: false
-              timeout: 90
-              max_duration: 90
+              timeout: 120
+              max_duration: 120
       base_url: "SITEURL"
       default_session: my_session
     Drupal\DrupalExtension:

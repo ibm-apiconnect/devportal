@@ -1,0 +1,10 @@
+--- vendor/consolidation/site-alias/src/SiteAliasManager.php    2024-02-21 11:37:06
++++ vendor/consolidation/site-alias/src/SiteAliasManager.php       2024-02-21 11:37:01
+@@ -125,6 +125,7 @@
+      */
+     public function setSelf(SiteAlias $selfSiteAlias)
+     {
++        $selfSiteAlias->set('paths.drush-script', '/usr/bin/drush');
+         $this->selfSiteAlias = $selfSiteAlias;
+         $this->setRoot($selfSiteAlias->localRoot());
+         return $this;

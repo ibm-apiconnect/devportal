@@ -1,0 +1,13 @@
+--- modules/memcache/src/Connection/MemcachedConnection.php 	2024-01-24 08:52:04.428135866 +0000
++++ modules/memcache/src/Connection/MemcachedConnection.php 	2024-01-24 08:51:58.257021031 +0000
+@@ -49,7 +49,9 @@
+    * {@inheritdoc}
+    */
+   public function addServer($server_path, $persistent = FALSE) {
+-    list($host, $port) = explode(':', $server_path);
++    $index = strrpos($server_path, ':');
++    $host = substr($server_path, 0, $index);
++    $port = substr($server_path, $index + 1);
+ 
+     if ($host == 'unix') {
+       // Memcached expects just the path to the socket without the protocol.

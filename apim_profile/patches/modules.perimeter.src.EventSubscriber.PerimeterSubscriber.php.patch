@@ -1,6 +1,6 @@
 --- modules/perimeter/src/EventSubscriber/PerimeterSubscriber.php	2021-06-24 12:54:23.000000000 +0100
 +++ modules/perimeter/src/EventSubscriber/PerimeterSubscriber.php	2021-06-24 12:54:23.000000000 +0100
-@@ -13,6 +13,7 @@
+@@ -14,6 +14,7 @@
  use Symfony\Component\HttpKernel\Event\ResponseEvent;
  use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  use Symfony\Component\HttpKernel\KernelEvents;
@@ -8,15 +8,13 @@
 
  /**
   * On page not found events, ban the IP if the request is suspicious.
-@@ -99,12 +100,16 @@
-    * Ban the IP if the request is suspicious.
+@@ -101,12 +102,13 @@
     */
    protected function handleBannedUrls(Request $request) {
+     $clientIp = $request->getClientIp();
+-    if ($this->currentUser->hasPermission('bypass perimeter defence rules') || $this->isWhitelisted($clientIp)) {
 +    $whitelist = Settings::get('reverse_proxy_addresses', []) ;
-+    if (in_array($request->getClientIp(), $whitelist)){
-+      return;
-+    }
-     if ($this->currentUser->hasPermission('bypass perimeter defence rules')) {
++    if ($this->currentUser->hasPermission('bypass perimeter defence rules') || $this->isWhitelisted($clientIp) || in_array($clientIp, $whitelist)) {
        return;
      }
      $request_path = $request->getPathInfo();

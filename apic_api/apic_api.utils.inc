@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -78,13 +78,16 @@ function apic_api_get_string_from_zip($data): string {
       $threeCharExt = mb_strtolower(mb_substr($fileName, -3));
       if ($fourCharExt === 'wsdl' || $threeCharExt === 'xml' || $threeCharExt === 'xsd') {
         $draft .= $fileName . '\n';
-        $handle = fopen($pathName, 'rb');
-        $contents = fread($handle, filesize($pathName));
-        fclose($handle);
-        $handle = NULL;
-        // remove BOM
-        $contents = str_replace("\xEF\xBB\xBF", '', $contents);
-        $draft .= $contents . '\n';
+        $size = filesize($pathName);
+        if ($size > 0) {
+          $handle = fopen($pathName, 'rb');
+          $contents = fread($handle, $size);
+          fclose($handle);
+          $handle = NULL;
+          // remove BOM
+          $contents = str_replace("\xEF\xBB\xBF", '', $contents);
+          $draft .= $contents . '\n';
+        }
       }
     }
   }

@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -323,6 +323,7 @@ class PaymentMethodCreateForm extends FormBase {
         'form_token',
         'form_id',
         'op',
+        'card'
       ])) {
         if (is_array($value) && isset($value[0]['value'])) {
           $value = $value[0]['value'];

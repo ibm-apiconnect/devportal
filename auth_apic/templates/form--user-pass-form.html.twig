@@ -17,13 +17,13 @@
 <div class='apic-user-form apic-user-form-reset-pwd {{ ur_count_class }} {{ ur_managed_class }}'>
   <div class='apic-reset-wrapper'>
     <div class='apic-portal-title'>{{ site_name }}</div>
-    <div class='apic-user-form-header'>
+    <h3 class='apic-user-form-header'>
       {% if user_managed_registry_present %}
         {{ 'Reset password'|t }}
       {% else %}
         {{ 'Reset \'admin\' password'|t }}
       {% endif %}
-    </div>
+    </h3>
     <form{{ attributes }}>
       <div class='apic-user-form-wrapper'>
         <div class='apic-user-form-container'>

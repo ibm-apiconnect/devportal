@@ -14,8 +14,8 @@ use Drupal\ghmarkdown\cebe\markdown\GithubMarkdown;
  *   id = "ghmarkdown",
  *   module = "ghmarkdown",
  *   title = @Translation("Markdown"),
- *   description = @Translation("Allows content to be submitted using Github Markdown, a simple plain-text syntax that
- *   is filtered into valid HTML."), type = Drupal\filter\Plugin\FilterInterface::TYPE_MARKUP_LANGUAGE,
+ *   description = @Translation("Allows content to be submitted using Github Markdown, a simple plain-text syntax that is filtered into valid HTML."), 
+ *   type = Drupal\filter\Plugin\FilterInterface::TYPE_MARKUP_LANGUAGE,
  * )
  */
 class GHMarkdown extends FilterBase {

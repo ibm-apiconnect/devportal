@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -169,6 +169,14 @@ class AdminForm extends ConfigFormBase {
       '#default_value' => $config->get('show_analytics'),
       '#weight' => -10,
       '#description' => t('Display API Consumer analytics in the portal. If unchecked then all analytics links will be removed.'),
+    ];
+
+    $form['config']['remove_IBM_keys'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Remove keys beginning with x-ibm from Open API document download'),
+      '#default_value' => $config->get('remove_IBM_keys'),
+      '#weight' => -10,
+      '#description' => t('If checked API consumers will be able to download the Open API documents without any key-value pairs which are IBM specific.'),
     ];
 
     $form['config']['soap_swagger_download'] = [
@@ -581,6 +589,7 @@ class AdminForm extends ConfigFormBase {
       ->set('autotag_with_phase', (bool) $form_state->getValue('autotag_with_phase'))
       ->set('show_cors_warnings', (bool) $form_state->getValue('show_cors_warnings'))
       ->set('show_analytics', (bool) $form_state->getValue('show_analytics'))
+      ->set('remove_IBM_keys', (bool) $form_state->getValue('remove_IBM_keys'))
       ->set('soap_swagger_download', (bool) $form_state->getValue('soap_swagger_download'))
       ->set('optimise_oauth_ux', (bool) $form_state->getValue('optimise_oauth_ux'))
       ->set('show_mtls_header', (bool) $form_state->getValue('show_mtls_header'))

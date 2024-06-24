@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -123,13 +123,16 @@ class ApplicationCreateForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-
+    $pattern = '/(https?|ftp|ftps|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]|www\.[A-Z0-9.-]+\.[A-Z]{2,4}/i';
     $name = $form_state->getValue('title');
     if (is_array($name) && isset($name[0]['value'])) {
       $name = $name[0]['value'];
     }
     if (!isset($name) || empty($name)) {
       $form_state->setErrorByName('Name', $this->t('Application name is a required field.'));
+    }
+    elseif (preg_match($pattern, $name)) {
+      $form_state->setErrorByName('title', $this->t('Application Title cannot contain URLs'));
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

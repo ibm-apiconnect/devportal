@@ -9,7 +9,7 @@
  use Drupal\Core\Session\SessionManager;
  use Drupal\Core\Extension\ModuleHandler;
  use Drupal\Core\Config\ConfigFactory;
-@@ -105,7 +105,7 @@
+@@ -113,7 +113,7 @@
     *   The event dispatcher service.
     * @param RouteMatchInterface $routeMatch
     *   The Route.
@@ -18,16 +18,16 @@
     *   The current user.
     * @param SessionManager $sessionManager
     *   Session manager.
-@@ -116,7 +116,7 @@
-    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-    *   The messenger.
+@@ -126,7 +126,7 @@
+    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
+    *   The logger factory.
     */
--  public function __construct(Connection $database, EventDispatcherInterface $eventDispatcher, RouteMatchInterface $routeMatch, AccountProxy $currentUser, SessionManager $sessionManager, ModuleHandler $moduleHandler, ConfigFactory $configFactory, MessengerInterface $messenger) {
-+  public function __construct(Connection $database, EventDispatcherInterface $eventDispatcher, RouteMatchInterface $routeMatch, AccountProxyInterface $currentUser, SessionManager $sessionManager, ModuleHandler $moduleHandler, ConfigFactory $configFactory, MessengerInterface $messenger) {
+-  public function __construct(Connection $database, EventDispatcherInterface $eventDispatcher, RouteMatchInterface $routeMatch, AccountProxy $currentUser, SessionManager $sessionManager, ModuleHandler $moduleHandler, ConfigFactory $configFactory, MessengerInterface $messenger, LoggerChannelFactoryInterface $loggerFactory) {
++  public function __construct(Connection $database, EventDispatcherInterface $eventDispatcher, RouteMatchInterface $routeMatch, AccountProxyInterface $currentUser, SessionManager $sessionManager, ModuleHandler $moduleHandler, ConfigFactory $configFactory, MessengerInterface $messenger, LoggerChannelFactoryInterface $loggerFactory) {
      $this->routeMatch = $routeMatch;
      $this->database = $database;
      $this->eventDispatcher = $eventDispatcher;
-@@ -507,7 +507,7 @@
+@@ -525,7 +525,7 @@
     */
    public function getMessageSeverity() {
      return $this->configFactory->get('session_limit.settings')

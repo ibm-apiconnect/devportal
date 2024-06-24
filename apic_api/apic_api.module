@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -462,6 +462,7 @@ function apic_api_preprocess_node(&$variables): void {
       }
 
       $showCorsWarnings = (boolean) $config->get('show_cors_warnings');
+      $removeIBMKeys = (boolean) $config->get('remove_IBM_keys');
       $soapSwaggerDownload = (boolean) $config->get('soap_swagger_download');
       $soapCodeSnippets = (boolean) $config->get('soap_codesnippets');
       $optimiseOauthUX = (boolean) $config->get('optimise_oauth_ux');
@@ -694,6 +695,7 @@ function apic_api_preprocess_node(&$variables): void {
         'apiTypeDocs' => $apiTypeDocs,
         'showApiVersion' => $ibmApimShowVersions,
         'showCorsWarnings' => $showCorsWarnings,
+        'removeIBMKeys' => $removeIBMKeys,
         'showSoapSwaggerDownload' => $soapSwaggerDownload,
         'optimiseOauthUX' => $optimiseOauthUX,
         'showMTLSHeader' => $showMTLSHeader,

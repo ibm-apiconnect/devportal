@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -53,7 +53,7 @@ function apim_profile_update_footerlinks() {
   $contactMenu = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/contact']);
   $contactMenu = reset($contactMenu);
   if (!empty($contactMenu)) {
-    add_contact_menu_translations($contactMenu);
+    add_contact_menu_translations($contactMenu, FALSE);
   }
 }
 
@@ -67,14 +67,14 @@ function apim_profile_update_terms_page() {
 
     $node = Node::load($tandcsNodeId);
     if (!empty($node)) {
-      add_terms_node_translations($node);
+      add_terms_node_translations($node, FALSE);
     }
   }
 
   $tandcsMenu = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/tsandcs']);
   $tandcsMenu = reset($tandcsMenu);
   if (!empty($tandcsMenu)) {
-    add_terms_menu_translations($tandcsMenu);
+    add_terms_menu_translations($tandcsMenu, FALSE);
   }
 }
 
@@ -88,14 +88,14 @@ function apim_profile_update_privacy_page() {
 
     $node = Node::load($privacyNodeId);
     if (!empty($node)) {
-      add_privacy_node_translations($node);
+      add_privacy_node_translations($node, FALSE);
     }
   }
 
   $privacyMenu = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/privacy']);
   $privacyMenu = reset($privacyMenu);
   if (!empty($privacyMenu)) {
-    add_privacy_menu_translations($privacyMenu);
+    add_privacy_menu_translations($privacyMenu, FALSE);
   }
 }
 
@@ -109,7 +109,7 @@ function apim_profile_update_faqs() {
   if (count($api_faq_node_ids) === 1) {
     $api_faq_node = \Drupal::entityTypeManager()->getStorage('node')->load(array_pop($api_faq_node_ids));
     if ($api_faq_node !== NULL) {
-      add_api_faq_node_translations($api_faq_node);
+      add_api_faq_node_translations($api_faq_node, FALSE);
     }
   }
   else {
@@ -126,7 +126,7 @@ function apim_profile_update_faqs() {
   if (count($app_faq_node_ids) === 1) {
     $app_faq_node = \Drupal::entityTypeManager()->getStorage('node')->load(array_pop($app_faq_node_ids));
     if ($app_faq_node !== NULL) {
-      add_app_faq_node_translations($app_faq_node);
+      add_app_faq_node_translations($app_faq_node, FALSE);
     }
   }
   else {
@@ -145,7 +145,7 @@ function apim_profile_update_asyncapi_pages() {
 
     $node = Node::load($asyncapiNodeId);
     if (!empty($node)) {
-      add_asyncapi_node_translations($node);
+      add_asyncapi_node_translations($node, FALSE);
     }
   }
 
@@ -158,7 +158,7 @@ function apim_profile_update_asyncapi_pages() {
 
     $node = Node::load($asyncapikafkaNodeId);
     if (!empty($node)) {
-      add_asyncapi_kafka_node_translations($node);
+      add_asyncapi_kafka_node_translations($node, FALSE);
     }
   }
 
@@ -171,7 +171,7 @@ function apim_profile_update_asyncapi_pages() {
 
     $node = Node::load($asyncapimqNodeId);
     if (!empty($node)) {
-      add_asyncapi_mq_node_translations($node);
+      add_asyncapi_mq_node_translations($node, FALSE);
     }
   }
 }
@@ -219,12 +219,11 @@ function apim_profile_create_terms_page() {
 /**
  * @param $link
  */
-function add_terms_menu_translations($link): void {
-
+function add_terms_menu_translations($link, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($link->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($link->hasTranslation($lang)) {
@@ -243,15 +242,13 @@ function add_terms_menu_translations($link): void {
 /**
  * @param $node
  */
-function add_terms_node_translations($node): void {
+function add_terms_node_translations($node, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
-
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($node->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
-
     if ($node->hasTranslation($lang)) {
       $node->removeTranslation($lang);
     }
@@ -313,11 +310,11 @@ function apim_profile_create_privacy_page() {
 /**
  * @param $link
  */
-function add_privacy_menu_translations($link): void {
+function add_privacy_menu_translations($link, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($link->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($link->hasTranslation($lang)) {
@@ -336,11 +333,11 @@ function add_privacy_menu_translations($link): void {
 /**
  * @param $node
  */
-function add_privacy_node_translations($node): void {
+function add_privacy_node_translations($node, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($node->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($node->hasTranslation($lang)) {
@@ -388,11 +385,11 @@ function apim_profile_create_footerlinks() {
 /**
  * @param $link
  */
-function add_contact_menu_translations($link): void {
+function add_contact_menu_translations($link, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($link->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($link->hasTranslation($lang)) {
@@ -445,12 +442,11 @@ function apim_profile_create_faqs() {
 /**
  * @param $node
  */
-function add_app_faq_node_translations($node): void {
-
+function add_app_faq_node_translations($node, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($node->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($node->hasTranslation($lang)) {
@@ -469,11 +465,11 @@ function add_app_faq_node_translations($node): void {
 /**
  * @param $node
  */
-function add_api_faq_node_translations($node): void {
+function add_api_faq_node_translations($node, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($node->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($node->hasTranslation($lang)) {
@@ -655,11 +651,11 @@ function get_localized_mq_content($langcode) {
 /**
  * @param $node
  */
-function add_asyncapi_node_translations($node): void {
+function add_asyncapi_node_translations($node, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($node->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($node->hasTranslation($lang)) {
@@ -682,11 +678,11 @@ function add_asyncapi_node_translations($node): void {
 /**
  * @param $node
  */
-function add_asyncapi_kafka_node_translations($node): void {
+function add_asyncapi_kafka_node_translations($node, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($node->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($node->hasTranslation($lang)) {
@@ -709,11 +705,11 @@ function add_asyncapi_kafka_node_translations($node): void {
 /**
  * @param $node
  */
-function add_asyncapi_mq_node_translations($node): void {
+function add_asyncapi_mq_node_translations($node, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($node->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($node->hasTranslation($lang)) {

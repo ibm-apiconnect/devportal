@@ -1,0 +1,17 @@
+--- vendor/drush/drush/src/Commands/LegacyCommands.php	2022-07-12 17:08:05.000000000 +0100
++++ vendor/drush/drush/src/Commands/LegacyCommands.php	2022-07-26 14:55:31.000000000 +0100
+@@ -8,14 +8,6 @@
+
+ final class LegacyCommands extends DrushCommands
+ {
+-    /**
+-     * site:alias-convert has been removed. Please use Drush 11 or convert by hand.
+-     */
+-    #[CLI\Command(name: 'site:alias-convert', aliases: ['sa-convert', 'sac'])]
+-    #[CLI\Obsolete]
+-    public function saconvert(): void
+-    {
+-    }
+
+     /**
+      * pm:security-php has been removed. Please use `composer audit` command.

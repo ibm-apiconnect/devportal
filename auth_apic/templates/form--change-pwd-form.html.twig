@@ -21,7 +21,7 @@ pass_reset_token ? 'apic-reset-pwd-form' : 'apic-change-pwd-form' %}
     pass_reset_token ? 'apic-user-form-wrapper' : 'apic-change-form-wrapper' %}
 {% if pass_reset_token %}
 <div class='apic-user-form apic-user-form-change-pwd {{ ur_count_class }}'>
-  <div class='apic-user-form-header'>{{ 'Change your password'|t }}</div>
+  <h3 class='apic-user-form-header'>{{ 'Change your password'|t }}</h3>
   <div class='apic-user-form-text'>{{ 'Change your password.'|t }}</div>
 {% endif %}
   <form{{ attributes.addClass(pwd_form_class) }}>

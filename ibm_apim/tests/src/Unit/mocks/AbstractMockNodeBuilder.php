@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2021, 2022
+ * (C) Copyright IBM Corporation 2021, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -50,7 +50,7 @@ abstract class AbstractMockNodeBuilder {
     if(is_array($value) && count($value) > 0) {
       $newField->method('getValue')->willReturn(array_map($createValueArray, $value));
       $newField->method('__get')->with('value')->willReturn($value[0]);
-    } else { 
+    } else {
       $newField->method('getValue')->willReturn($createValueArray($value));
       $newField->method('__get')->with('value')->willReturn($value);
     }

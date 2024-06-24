@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2021, 2022
+ * (C) Copyright IBM Corporation 2021, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -22,7 +22,7 @@ class MockProductNodeBuilder extends AbstractMockNodeBuilder {
     $this->product_apis = array_map('serialize', $apis);
     return $this;
   }
-  
+
   public function setPlans($plans) {
     $this->product_plans = array_map('serialize', $plans);
     return $this;

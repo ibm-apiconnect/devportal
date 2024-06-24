@@ -1,0 +1,76 @@
+--- vendor/drush/drush/src/Commands/pm/PmCommands.php	2021-05-17 13:13:50.834377257 +0000
++++ vendor/drush/drush/src/Commands/pm/PmCommands.php	2021-05-17 13:14:19.530594643 +0000
+@@ -102,9 +102,7 @@
+         if (!$this->getModuleInstaller()->install($modules, true)) {
+             throw new \Exception('Unable to install modules.');
+         }
+-        if (batch_get()) {
+-            drush_backend_batch_process();
+-        }
++
+         $this->logger()->success(dt('Successfully enabled: !list', $todo_str));
+     }
+
+@@ -221,6 +219,7 @@
+     #[CLI\Option(name: 'core', description: 'Only show extensions that are in Drupal core.')]
+     #[CLI\Option(name: 'no-core', description: 'Only show extensions that are not provided by Drupal core.')]
+     #[CLI\Option(name: 'package', description: 'Only show extensions having a given project packages (e.g. Development).')]
++    #[CLI\Option(name: 'custom', description: 'Only show custom extensions')]
+     #[CLI\FieldLabels(labels: [
+         'package' => 'Package',
+         'project' => 'Project',
+@@ -233,8 +232,21 @@
+     ])]
+     #[CLI\DefaultTableFields(fields: ['package', 'display_name', 'status', 'version'])]
+     #[CLI\FilterDefaultField(field: 'display_name')]
+-    public function pmList($options = ['format' => 'table', 'type' => 'module,theme', 'status' => 'enabled,disabled', 'package' => self::REQ, 'core' => false, 'no-core' => false]): RowsOfFields
++    public function pmList($options = ['format' => 'table', 'type' => 'module,theme', 'status' => 'enabled,disabled', 'package' => self::REQ, 'core' => false, 'no-core' => false, 'custom' => false]): RowsOfFields
+     {
++        if ($options['custom'] && str_contains($options['type'], 'theme')) {
++            $themes = \Drupal::service("extension.list.theme")->getPathnames();
++            $customThemes = array_filter($themes, function($value) {
++              return str_starts_with($value, 'sites/');
++            });
++        }
++        if ($options['custom'] && str_contains($options['type'], 'module')) {
++            $modules = \Drupal::service("extension.list.module")->getPathnames();
++            $customModules = array_filter($modules, function($value) {
++              return str_starts_with($value, 'sites/');
++            });
++        }
++
+         $rows = [];
+
+         $modules = $this->getExtensionListModule()->getList();
+@@ -245,6 +257,8 @@
+         $type_filter = StringUtils::csvToArray(strtolower($options['type']));
+         $status_filter = StringUtils::csvToArray(strtolower($options['status']));
+
++        $customThemesFilter = isset($customThemes) ? array_keys($customThemes) : [];
++        $customModulesFilter = isset($customModules) ? array_keys($customModules) : [];
+         foreach ($both as $key => $extension) {
+             // Fill in placeholder values as needed.
+             $extension->info += ['package' => ''];
+@@ -264,6 +278,22 @@
+                 continue;
+             }
+
++            // Filter by custom themes.
++            if (!empty($customThemesFilter) && $extension->getType() == 'theme') {
++                if (!in_array(strtolower($extension->getName()), $customThemesFilter)) {
++                    unset($modules[$key]);
++                    continue;
++                }
++            }
++
++            // Filter by custom modules.
++            if (!empty($customModulesFilter) && $extension->getType() == 'module') {
++                if (!in_array(strtolower($extension->getName()), $customModulesFilter)) {
++                    unset($modules[$key]);
++                    continue;
++                }
++            }
++
+             // Filter out core if --no-core specified.
+             if ($options['no-core']) {
+                 if ($extension->origin == 'core') {

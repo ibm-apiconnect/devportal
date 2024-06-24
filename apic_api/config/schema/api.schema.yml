@@ -106,9 +106,25 @@ field.field.node.api.comment:
   type: ibm_apim_config_object
   label: 'Comments'
 
-views.view.apis:
+views.view.apis.display.default.display_options.exposed_form.options:
   type: string
-  label: 'APIs'
+  sort_asc_label: 'Asc'
+
+views.view.apis.display.default.display_options.exposed_form.options:
+  type: string
+  sort_desc_label: 'Desc'
+
+views.view.apis.display.default.display_options.exposed_form.options:
+  type: string
+  exposed_sorts_label: 'Sort by'
+
+views.view.apis.display.default.display_options.exposed_form.options:
+  type: string
+  reset_button_label: 'Reset'
+
+views.view.apis.display.default.display_options.exposed_form.options:
+  type: string
+  submit_button: 'Apply'
 
 views.view.apis.display.default.display_options.exposed_form.options:
   type: string

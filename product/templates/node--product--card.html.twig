@@ -43,7 +43,7 @@
           {% endif %}
         </a>
       </div>
-      <div class="apicProductRating">
+      <div class="apicProductRating" role="form"  aria-label="apic-product-rating-{{ node.id }}">
         {{ content.apic_rating }}
       </div>
       {% if content.product_state['#items'][0].value is defined and content.product_state['#items'][0].value is not empty and content.product_state['#items'][0].value != 'published' %}

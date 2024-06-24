@@ -1,0 +1,37 @@
+--- modules/ultimate_cron/src/Commands/UltimateCronCommands.php 2024-02-15 16:40:25
++++ modules/ultimate_cron/src/Commands/UltimateCronCommands.php    2024-02-15 16:40:17
+@@ -278,21 +278,24 @@
+
+     $force = $options['force'];
+
+-    if (!$name) {
+-      throw new \Exception(dt("Running all cronjobs is not supported by Ultimate Cron's cron:run - please use Drupal Core's core:cron command!"));
++    $jobs = [];
++    if ($name) {
++      $job = CronJob::load($name);
++      if (!$job) {
++        throw new \Exception(dt('@name not found', ['@name' => $name]));
++      }
++      $jobs[] = $job;
++    } else {
++      $jobs = CronJob::loadMultiple();
+     }
+
+     // Run a specific job.
+-    $job = CronJob::load($name);
+-
+-    if (!$job) {
+-      throw new \Exception(dt('@name not found', ['@name' => $name]));
++    foreach ($jobs as $job) {
++      if ($force || $job->isScheduled()) {
++        $job->run(t('Launched by drush'));
++      }
+     }
+
+-    if ($force || $job->isScheduled()) {
+-      $job->run(t('Launched by drush'));
+-    }
+-
+   }
+
+   /**

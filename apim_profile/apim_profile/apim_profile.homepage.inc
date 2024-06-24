@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -218,12 +218,14 @@ function apim_profile_update_homepage_blocks() {
         $blockid = array_shift($nids);
         $block_content = BlockContent::load($blockid);
         if ($block_content !== NULL) {
-          $block_content->set('body', [
-            'value' => get_localized_welcomebanner_content('en'),
-            'format' => 'full_html',
-          ]);
-          $block_content->save();
-          add_welcome_block_translations($block_content);
+          if (!$block_content->hasTranslation('en')) {
+            $block_content->set('body', [
+              'value' => get_localized_welcomebanner_content('en'),
+              'format' => 'full_html',
+            ]);
+            $block_content->save();
+          }
+          add_welcome_block_translations($block_content, FALSE);
         }
       }
     }
@@ -242,12 +244,14 @@ function apim_profile_update_homepage_blocks() {
         $blockid = array_shift($nids);
         $block_content = BlockContent::load($blockid);
         if ($block_content !== NULL) {
-          $block_content->set('body', [
-            'value' => get_localized_gsb_content('en'),
-            'format' => 'full_html',
-          ]);
-          $block_content->save();
-          add_getting_started_block_content_translations($block_content);
+          if (!$block_content->hasTranslation('en')) {
+            $block_content->set('body', [
+              'value' => get_localized_gsb_content('en'),
+              'format' => 'full_html',
+            ]);
+            $block_content->save();
+          }
+          add_getting_started_block_content_translations($block_content, FALSE);
         }
       }
     }
@@ -266,12 +270,14 @@ function apim_profile_update_homepage_blocks() {
         $blockid = array_shift($nids);
         $block_content = BlockContent::load($blockid);
         if ($block_content !== NULL) {
-          $block_content->set('body', [
-            'value' => get_localized_gethelp_content('en'),
-            'format' => 'full_html',
-          ]);
-          $block_content->save();
-          add_get_help_block_content_translations($block_content);
+          if (!$block_content->hasTranslation('en')) {
+            $block_content->set('body', [
+              'value' => get_localized_gethelp_content('en'),
+              'format' => 'full_html',
+            ]);
+            $block_content->save();
+          }
+          add_get_help_block_content_translations($block_content, FALSE);
         }
       }
     }
@@ -283,12 +289,12 @@ function apim_profile_update_homepage_blocks() {
  *
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
-function add_get_help_block_content_translations(BlockContent $gethelp_block_content): void {
+function add_get_help_block_content_translations(BlockContent $gethelp_block_content, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
 
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($gethelp_block_content->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
 
@@ -314,12 +320,12 @@ function add_get_help_block_content_translations(BlockContent $gethelp_block_con
  *
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
-function add_getting_started_block_content_translations(BlockContent $gsg_block_content): void {
+function add_getting_started_block_content_translations(BlockContent $gsg_block_content, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
-  // add translations for the getting started block
+
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($gsg_block_content->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
 
@@ -347,13 +353,12 @@ function add_getting_started_block_content_translations(BlockContent $gsg_block_
  *
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
-function add_welcome_block_translations(BlockContent $welcome_block_content): void {
+function add_welcome_block_translations(BlockContent $welcome_block_content, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
 
-  // add translations for the welcomebanner
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($language->getId() === 'en') {
+    if ($lang === 'en' || ($welcome_block_content->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($welcome_block_content->hasTranslation($lang)) {
@@ -543,12 +548,14 @@ function apim_profile_update_forumsidebar_block() {
         $blockid = array_shift($nids);
         $block_content = BlockContent::load($blockid);
         if ($block_content !== NULL) {
-          $block_content->set('body', [
-            'value' => get_localized_forumblock_content('en'),
-            'format' => 'full_html',
-          ]);
+          if (!$block_content->hasTranslation('en')) {
+            $block_content->set('body', [
+              'value' => get_localized_forumblock_content('en'),
+              'format' => 'full_html',
+            ]);
+          }
           $block_content->save();
-          add_forum_block_translations($block_content);
+          add_forum_block_translations($block_content, FALSE);
         }
       }
     }
@@ -579,13 +586,12 @@ function get_localized_forumblock_content($langcode): string {
  *
  * @throws \Drupal\Core\Entity\EntityStorageException
  */
-function add_forum_block_translations(BlockContent $forum_block_content): void {
+function add_forum_block_translations(BlockContent $forum_block_content, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
 
-  // add translations for the forum sidebar
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($language->getId() === 'en') {
+    if ($lang === 'en' || ($forum_block_content->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($forum_block_content->hasTranslation($lang)) {
@@ -720,12 +726,12 @@ function apim_profile_main_menu_links() {
 /**
  * @param $link
  */
-function add_forum_link_translations($link): void {
-
+function add_forum_link_translations($link, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
+
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($link->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($link->hasTranslation($lang)) {
@@ -748,12 +754,12 @@ function add_forum_link_translations($link): void {
 /**
  * @param $link
  */
-function add_apps_link_translations($link): void {
-
+function add_apps_link_translations($link, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
+
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($link->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($link->hasTranslation($lang)) {
@@ -772,11 +778,12 @@ function add_apps_link_translations($link): void {
 /**
  * @param $link
  */
-function add_apis_link_translations($link): void {
+function add_apis_link_translations($link, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
+
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($link->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($link->hasTranslation($lang)) {
@@ -795,11 +802,12 @@ function add_apis_link_translations($link): void {
 /**
  * @param $link
  */
-function add_home_link_translations($link): void {
+function add_home_link_translations($link, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
+
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($link->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($link->hasTranslation($lang)) {
@@ -852,11 +860,12 @@ function apim_profile_login_menu_links() {
 /**
  * @param $link
  */
-function add_create_account_link_translations($link): void {
+function add_create_account_link_translations($link, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
+
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($link->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($link->hasTranslation($lang)) {
@@ -879,11 +888,12 @@ function add_create_account_link_translations($link): void {
 /**
  * @param $link
  */
-function add_sign_in_link_translations($link): void {
+function add_sign_in_link_translations($link, $overwrite = true): void {
   $languages = \Drupal::languageManager()->getLanguages();
+
   foreach ($languages as $language) {
     $lang = $language->getId();
-    if ($lang === 'en') {
+    if ($lang === 'en' || ($link->hasTranslation($lang) && !$overwrite)) {
       continue;
     }
     if ($link->hasTranslation($lang)) {
@@ -920,25 +930,25 @@ function apim_profile_update_main_menu_links() {
   $home_link = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/']);
   $home_link = reset($home_link);
   if (!empty($home_link)) {
-    add_home_link_translations($home_link);
+    add_home_link_translations($home_link, FALSE);
   }
 
   $apis_link = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/product']);
   $apis_link = reset($apis_link);
   if (!empty($apis_link)) {
-    add_apis_link_translations($apis_link);
+    add_apis_link_translations($apis_link, FALSE);
   }
 
   $apps_link = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/application']);
   $apps_link = reset($apps_link);
   if (!empty($apps_link)) {
-    add_apps_link_translations($apps_link);
+    add_apps_link_translations($apps_link, FALSE);
   }
 
   $forum_link = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/forum']);
   $forum_link = reset($forum_link);
   if (!empty($forum_link)) {
-    add_forum_link_translations($forum_link);
+    add_forum_link_translations($forum_link, FALSE);
   }
 }
 
@@ -949,12 +959,12 @@ function apim_profile_update_login_menu_links() {
   $login_link = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/user/login']);
   $login_link = reset($login_link);
   if (!empty($login_link)) {
-    add_sign_in_link_translations($login_link);
+    add_sign_in_link_translations($login_link, FALSE);
   }
 
   $register_link = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/user/register']);
   $register_link = reset($register_link);
   if (!empty($register_link)) {
-    add_create_account_link_translations($register_link);
+    add_create_account_link_translations($register_link, FALSE);
   }
 }

@@ -1,0 +1,27 @@
+--- vendor/drush/drush/src/Commands/core/RoleCommands.php       2024-04-02 17:27:23
++++ vendor/drush/drush/src/Commands/core/RoleCommands.php  2024-04-02 17:26:55
+@@ -15,6 +15,7 @@
+ use Symfony\Component\Console\Completion\CompletionInput;
+ use Symfony\Component\Console\Completion\CompletionSuggestions;
+ use Drush\Boot\DrupalBootLevels;
++use Drupal\user\RoleInterface;
+
+ final class RoleCommands extends DrushCommands implements SiteAliasManagerAwareInterface
+ {
+@@ -56,9 +57,13 @@
+     #[CLI\Bootstrap(level: DrupalBootLevels::FULL)]
+     public function delete($machine_name): void
+     {
+-        $role = Role::load($machine_name);
+-        $role->delete();
+-        $this->logger()->success(dt('Deleted "!role"', ['!role' => $machine_name]));
++        if ($machine_name != RoleInterface::ANONYMOUS_ID && $machine_name != RoleInterface::AUTHENTICATED_ID && $machine_name != 'administrator' && $machine_name != 'content_author' && $machine_name != 'forum_moderator') {
++            $role = Role::load($machine_name);
++            $role->delete();
++            $this->logger()->success(dt('Deleted "!role"', ['!role' => $machine_name]));
++        } else {
++            $this->logger()->warning(dt('"!role" is a protected role and cannot be deleted.', ['!role' => $machine_name]));
++        }
+     }
+
+     /**

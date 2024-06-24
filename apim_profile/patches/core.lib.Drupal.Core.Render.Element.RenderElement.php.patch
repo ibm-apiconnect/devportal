@@ -1,6 +1,6 @@
 --- core/lib/Drupal/Core/Render/Element/RenderElement.php	2019-04-24 12:07:17.388107928 +0000
 +++ core/lib/Drupal/Core/Render/Element/RenderElement.php	2019-04-24 12:07:57.876190026 +0000
-@@ -264,11 +264,6 @@
+@@ -268,11 +268,6 @@
        return $element;
      }
 
@@ -9,10 +9,10 @@
 -      $element['#attributes']['data-disable-refocus'] = "true";
 -    }
 -
-     // Add a reasonable default event handler if none was specified.
-     if (isset($element['#ajax']) && !isset($element['#ajax']['event'])) {
-       switch ($element['#type']) {
-@@ -321,6 +316,24 @@
+     // Add a data attribute to attempt to focus element that was focused before
+     // executing ajax commands.
+     if ($element['#ajax']['refocus-blur'] ?? FALSE) {
+@@ -331,6 +326,24 @@
        }
      }
 
@@ -36,4 +36,4 @@
 +
      // Attach JavaScript settings to the element.
      if (isset($element['#ajax']['event'])) {
-       $element['#attached']['library'][] = 'core/jquery.form';
+       // By default, focus should return to the element focused prior to the

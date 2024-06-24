@@ -1,4 +1,23 @@
 changes:
+  6.2.6:
+  - velox/devportal#8913 - CIO SonarQube
+  6.2.5:
+  - change portal-ci-v10-0 to portal-ci-v10-0-8
+  6.2.4:
+  - avt fixes (#798)
+  6.2.3:
+  - add env.GIT_COMMIT_SUMMARY
+  6.2.2:
+  - Using the external consumer allways for OIDC redirect
+  6.2.1:
+  - Update .whitesource (#790)
+  6.2.0:
+  - update version 6.1.14 -> 6.2.0
+  6.1.13:
+  - Fix icons (#787) (#788)
+  6.1.12:
+  - fix unit tests (#786)
+  - velox/devportal#8738 - Copyright 2024
   6.1.11:
   - register form validation catches URLs of all formats
   6.1.10:

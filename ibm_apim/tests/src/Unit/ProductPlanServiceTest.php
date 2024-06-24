@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -64,14 +64,14 @@ class ProductPlanServiceTest extends UnitTestCase {
     ]
   ];
 
-  protected function setup(): void 
-  
+  protected function setup(): void
+
   {
     $this->prophet = new Prophet();
     $this->languageManager = $this->prophet->prophesize(\Drupal\Core\Language\LanguageManagerInterface::class);
     $this->translationManager = $this->prophet->prophesize(\Drupal\Core\StringTranslation\TranslationManager::class);
     $this->utils = $this->prophet->prophesize(\Drupal\ibm_apim\Service\Utils::class);
-    $this->taxonomy = $this->prophet->prophesize(\Drupal\apic_api\Service\ApiTaxonomy::class);
+    $this->taxonomy = $this->prophet->prophesize(\Drupal\ibm_apim\Service\ApicTaxonomy::class);
     // need to mock up the translation functions
     // simple string translation
     $this->translationManager->translate(Argument::type('string'))->will(function ($args) {
@@ -355,7 +355,7 @@ class ProductPlanServiceTest extends UnitTestCase {
           'value' => '100/1hour',
         ],
       ],
-    ];   
+    ];
 
     $asyncapi = file_get_contents(__DIR__ . "/resources/basic_asyncapi.json");
     $decodedApi = json_decode($asyncapi, TRUE, 512, JSON_THROW_ON_ERROR);
@@ -470,7 +470,7 @@ class ProductPlanServiceTest extends UnitTestCase {
       [
         'node' => $node,
       ],
-      // load in another api to prove it doesn't show up 
+      // load in another api to prove it doesn't show up
       [
         'node' => $anotherNode,
       ],
@@ -532,7 +532,7 @@ class ProductPlanServiceTest extends UnitTestCase {
       [
         'node' => $node,
       ],
-      // load in another api to prove it doesn't show up 
+      // load in another api to prove it doesn't show up
       [
         'node' => $anotherNode,
       ],

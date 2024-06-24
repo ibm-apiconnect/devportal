@@ -281,7 +281,9 @@
 .applicationCredentials .credentialsTable .credentialsContent .credentialsData .credentialSummary {
   padding: 10px 0;
 }
-
+.appSecret button.shwpd, appId button.shwpd, .clientIDContainer button.shwpd {
+  margin-left: 1rem;
+}
 .applicationSubscriptions {
   margin-top: 30px;
 }

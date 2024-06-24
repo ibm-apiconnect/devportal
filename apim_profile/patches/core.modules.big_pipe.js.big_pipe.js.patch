@@ -1,0 +1,10 @@
+--- core/modules/big_pipe/js/big_pipe.js        2024-02-29 10:09:44
++++ core/modules/big_pipe/js/big_pipe.js   2024-02-29 10:10:09
+@@ -89,6 +89,7 @@
+    */
+   function checkMutation(node) {
+     return Boolean(
++      node &&
+       node.nodeType === Node.ELEMENT_NODE &&
+         node.nodeName === 'SCRIPT' &&
+         node.dataset &&

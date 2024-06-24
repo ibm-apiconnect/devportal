@@ -1,17 +1,20 @@
 --- modules/perimeter/perimeter.module	2021-07-26 10:47:19.000000000 +0100
 +++ modules/perimeter/perimeter.module	2021-07-26 10:51:02.000000000 +0100
-@@ -2,22 +2,35 @@
- use Drupal\Core\Database\Database;
- use Drupal\ban\BanIpManager;
+@@ -9,6 +9,7 @@
  use Drupal\Component\Utility\Xss;
+ use Drupal\Core\Database\Database;
+ use Drupal\Core\Routing\RouteMatchInterface;
 +use Drupal\Core\Site\Settings;
- 
- function perimeter_honeypot_reject($form_id, $uid, $type){
+
+ /**
+  * Implements hook_help().
+@@ -34,18 +35,30 @@
+ function perimeter_honeypot_reject($form_id, $uid, $type) {
    // Honeypot might remove the uid param at some point later.
    $uid = \Drupal::currentUser()->id();
--  if($uid != 1 && ($type=='honeypot_time' && $form_id != 'user_login_form')){
-+  $whitelist = Settings::get('reverse_proxy_addresses', []) ;
-+  if($uid != 1 && ($type=='honeypot_time' && $form_id != 'user_login_form') && (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true)){
+-  if ($uid != 1 && ($type == 'honeypot_time' && $form_id != 'user_login_form')) {
++  $whitelist = Settings::get('reverse_proxy_addresses', []);
++  if ($uid != 1 && ($type == 'honeypot_time' && $form_id != 'user_login_form') && (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true)) {
      $ip = \Drupal::request()->getClientIp();
 -    $connection = Database::getConnection();
 -    $banManager = new BanIpManager($connection);
@@ -45,6 +48,6 @@
 +          '%source' => isset($_SERVER['HTTP_REFERER']) ? Xss::filter($_SERVER['HTTP_REFERER']) : '',
 +          '%browser' => isset($_SERVER['HTTP_USER_AGENT']) ? Xss::filter($_SERVER['HTTP_USER_AGENT']) : '',
 +        ]);
-+    }
++      }
    }
  }

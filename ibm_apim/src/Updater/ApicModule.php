@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -77,7 +77,7 @@ class ApicModule extends Module {
     foreach ($files as $file) {
       $rc = self::checkFunctionNames($file->uri);
       if ($rc !== TRUE) {
-        throw new UpdaterException(t('The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/docs/SSMNED_v10cd?topic=extend-custom-module-development-background-prerequisites', ['%file' => $file->uri]));
+        throw new UpdaterException(t('The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/docs/SSMNED_10.0.8?topic=extend-custom-module-development-background-prerequisites', ['%file' => $file->uri]));
       }
     }
 

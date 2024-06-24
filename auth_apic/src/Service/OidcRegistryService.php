@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -187,7 +187,7 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
       $url = $host . URL::fromRoute('auth_apic.az')->toString();
     }
     else {
-      $url = $this->apimUtils->createFullyQualifiedUrl('/consumer-api/oauth2/authorize');
+      $url = $this->apimUtils->getOidcRedirectEndpoint('/consumer-api/oauth2/authorize');
     }
 
     $url .= '?client_id=' . $client_id;
@@ -226,31 +226,31 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
     if ($this->moduleHandler->moduleExists('social_media_links')) {
       switch ($registry->getProviderType()) {
         case 'facebook':
-          $image['html'] = '<i class="fa fa-facebook" aria-hidden="true" style="font-size: 18px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-facebook-f" aria-hidden="true" style="font-size: 18px;"></i>';
           $image['class'] = 'fa-facebook';
           break;
         case 'slack':
-          $image['html'] = '<i class="fa fa-slack" aria-hidden="true" style="font-size: 19px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-slack" aria-hidden="true" style="font-size: 19px;"></i>';
           $image['class'] = 'fa-slack';
           break;
         case 'twitter':
-          $image['html'] = '<i class="fa fa-twitter" aria-hidden="true" style="font-size: 19px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-twitter" aria-hidden="true" style="font-size: 19px;"></i>';
           $image['class'] = 'fa-twitter';
           break;
         case 'windows_live':
-          $image['html'] = '<i class="fa fa-windows" aria-hidden="true" style="font-size: 17px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-windows" aria-hidden="true" style="font-size: 17px;"></i>';
           $image['class'] = 'fa-windows';
           break;
         case 'linkedin':
-          $image['html'] = '<i class="fa fa-linkedin-square" aria-hidden="true" style="font-size: 20px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-linkedin" aria-hidden="true" style="font-size: 20px;"></i>';
           $image['class'] = 'fa-linkedin-square';
           break;
         case 'google':
-          $image['html'] = '<i class="fa fa-google" aria-hidden="true" style="font-size: 18px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-google" aria-hidden="true" style="font-size: 18px;"></i>';
           $image['class'] = 'fa-google';
           break;
         case 'github':
-          $image['html'] = '<i class="fa fa-github" aria-hidden="true" style="font-size: 21px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-github" aria-hidden="true" style="font-size: 21px;"></i>';
           $image['class'] = 'fa-github';
           break;
       }

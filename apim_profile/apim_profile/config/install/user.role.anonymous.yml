@@ -9,6 +9,4 @@ permissions:
   - 'access comments'
   - 'access content'
   - 'access site-wide contact form'
-  - 'use advanced search'
   - 'use text format restricted_html'
-  - 'search content'

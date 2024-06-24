@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2023
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -750,7 +750,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       break;
     case 'system_site_maintenance_mode':
 			if (isset($form['maintenance_mode']['#description'])) {
-        $form['maintenance_mode']['#description'] = t('<em>Important:</em> Maintenance mode is designed for short-term site maintenance; it is not meant for long-term usage. While a site is in maintenance mode, the database is not updated with new content from API Manager. As soon as the maintenance tasks are finished, you must take the site out of maintenance mode. Do not log out of the Developer Portal while the site is in maintenance mode, as you will not be able to log back in to the UI. In this case, maintenance mode can be turned off only by using the CLI; see: ') . ' <a href="https://www.ibm.com/docs/SSMNED_v10cd?topic=tasks-toggling-site-in-out-maintenance-mode" target="_new">' . t('Documentation') . '</a>' . t(' for details');
+        $form['maintenance_mode']['#description'] = t('<em>Important:</em> Maintenance mode is designed for short-term site maintenance; it is not meant for long-term usage. While a site is in maintenance mode, the database is not updated with new content from API Manager. As soon as the maintenance tasks are finished, you must take the site out of maintenance mode. Do not log out of the Developer Portal while the site is in maintenance mode, as you will not be able to log back in to the UI. In this case, maintenance mode can be turned off only by using the CLI; see: ') . ' <a href="https://www.ibm.com/docs/SSMNED_10.0.8?topic=tasks-toggling-site-in-out-maintenance-mode" target="_new">' . t('Documentation') . '</a>' . t(' for details');
 			}
       break;
     case 'system_theme_settings':

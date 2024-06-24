@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -136,7 +136,7 @@ class ApicOidcAzCodeControllerTest extends UnitTestCase {
     $this->encryptionProfile = $this->prophet->prophesize('\Drupal\encrypt\EncryptionProfileInterface');
     $translator = $this->prophet->prophesize('\Drupal\Core\StringTranslation\TranslationInterface');
     $this->storeFactory->get('auth_apic_storage')->willReturn($this->store);
-    $route = $this->prophet->prophesize('Drupal\Core\Routing\UrlGenerator;');
+    $route = $this->prophet->prophesize('Drupal\Core\Routing\UrlGenerator');
     $container = new ContainerBuilder();
 
 

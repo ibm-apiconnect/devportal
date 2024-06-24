@@ -18,7 +18,24 @@
  }
 
  /**
-@@ -1116,7 +1125,7 @@
+@@ -1035,11 +1044,12 @@
+  */
+ function user_role_revoke_permissions($rid, array $permissions = []) {
+   // Revoke permissions for the role.
+-  $role = Role::load($rid);
+-  foreach ($permissions as $permission) {
+-    $role->revokePermission($permission);
++  if ($role = Role::load($rid)) {
++    foreach ($permissions as $permission) {
++      $role->revokePermission($permission);
++    }
++    $role->trustData()->save();
+   }
+-  $role->trustData()->save();
+ }
+
+ /**
+@@ -1159,7 +1169,7 @@
    $request_time = \Drupal::time()->getRequestTime();
    foreach ($values as $field => $value) {
      // Set cookie for 365 days.
@@ -27,7 +44,7 @@
    }
  }
 
-@@ -1127,7 +1136,7 @@
+@@ -1170,7 +1180,7 @@
   *   A cookie name such as 'homepage'.
   */
  function user_cookie_delete($cookie_name) {

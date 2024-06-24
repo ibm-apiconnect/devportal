@@ -1,6 +1,6 @@
 --- /dev/null   2023-08-31 17:00:43
 +++ modules/content_synchronizer/src/Plugin/content_synchronizer/type_processor/TextFieldItemListProcessor.php  2023-08-31 17:00:28
-@@ -0,0 +1,373 @@
+@@ -0,0 +1,375 @@
 +<?php
 +
 +namespace Drupal\content_synchronizer\Plugin\content_synchronizer\type_processor;
@@ -272,9 +272,11 @@
 +        ->accessCheck(TRUE)
 +        ->execute();
 +
-+      $file = $fileStorage->load(reset($files));
-+      if ($file) {
-+        $entities[] = $file;
++      if ($files) {
++        $file = $fileStorage->load(reset($files));
++        if ($file) {
++          $entities[] = $file;
++        }
 +      }
 +    }
 +

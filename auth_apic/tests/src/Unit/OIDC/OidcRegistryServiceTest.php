@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -114,7 +114,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->state->get('ibm_apim.site_client_id')->willReturn('iamaclientid');
     $this->utils->base64_url_encode(Argument::any())->willReturn('base64encodedstate');
     $this->apimUtils->getHostUrl()->willReturn('https://portal.example.com');
-    $this->apimUtils->createFullyQualifiedUrl('/consumer-api/oauth2/authorize')
+    $this->apimUtils->getOidcRedirectEndpoint('/consumer-api/oauth2/authorize')
       ->willReturn('https://mgmt.example.com/consumer-api/oauth2/authorize');
 
     $service = $this->getServiceUnderTest();
@@ -159,7 +159,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->state->get('ibm_apim.site_client_id')->willReturn('iamaclientid');
     $this->utils->base64_url_encode(Argument::any())->willReturn('base64encodedstate');
     $this->apimUtils->getHostUrl()->willReturn('http://portal.example.com');
-    $this->apimUtils->createFullyQualifiedUrl('/consumer-api/oauth2/authorize')
+    $this->apimUtils->getOidcRedirectEndpoint('/consumer-api/oauth2/authorize')
       ->willReturn('http://mgmt.example.com/consumer-api/oauth2/authorize');
 
     $service = $this->getServiceUnderTest();

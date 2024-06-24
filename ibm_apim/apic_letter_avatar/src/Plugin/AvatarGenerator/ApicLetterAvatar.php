@@ -71,6 +71,7 @@ class ApicLetterAvatar extends AvatarGeneratorBase {
       // File cannot chain methods.
       $file = File::create();
       $file->setFileUri($path);
+      $file->setFileName(basename($path));
       $file->setOwnerId($account->id());
       // Temporary until AvatarPreview adds usage.
       $file->setTemporary();

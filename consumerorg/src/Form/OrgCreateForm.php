@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -197,9 +197,13 @@ class OrgCreateForm extends FormBase {
     if (is_array($name) && isset($name[0]['value'])) {
       $name = $name[0]['value'];
     }
+    $pattern = '/(https?|ftp|ftps|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]|www\.[A-Z0-9.-]+\.[A-Z]{2,4}/i';
     $name = trim($name);
     if (!isset($name) || empty($name)) {
       $form_state->setErrorByName('title', $this->t('Organization title is a required field.'));
+    }
+    elseif (preg_match($pattern, $name)) {
+      $form_state->setErrorByName('title', $this->t('Organization Title cannot contain URLs'));
     }
   }
 

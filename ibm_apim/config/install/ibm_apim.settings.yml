@@ -7,6 +7,7 @@ validate_apis: true
 autotag_with_phase: false
 show_cors_warnings: true
 show_analytics: true
+remove_IBM_keys: false
 soap_swagger_download: false
 optimise_oauth_ux: false
 show_mtls_header: true

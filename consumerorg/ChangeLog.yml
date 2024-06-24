@@ -1,4 +1,21 @@
 changes:
+  6.2.5:
+  - velox/devportal#8913 - CIO SonarQube
+  6.2.4:
+  - Remove card field from payment method create request (#349)
+  6.2.3:
+  - change portal-ci-v10-0 to portal-ci-v10-0-8
+  6.2.2:
+  - add env.GIT_COMMIT_SUMMARY
+  6.2.1:
+  - Update .whitesource (#347)
+  6.2.0:
+  - update version 6.1.13 -> 6.2.0
+  6.1.12:
+  - velox/devportal#8738 - Copyright 2024
+  6.1.11:
+  - updated error message to match other error messages
+  - tightening form validation to not allow url inputs
   6.1.10:
   - Remove addtoany (#340) (#341)
   6.1.9:

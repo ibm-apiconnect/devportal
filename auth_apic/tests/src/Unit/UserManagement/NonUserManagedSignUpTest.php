@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -30,12 +30,12 @@ namespace Drupal\Tests\auth_apic\Unit {
   class NonUserManagedSignUpTest extends AuthApicUserManagementBaseTestClass {
 
     /**
-     * @var \Drupal\ibm_apim\Service\APIMServer|\Prophecy\Prophecy\ObjectProphecy 
+     * @var \Drupal\ibm_apim\Service\APIMServer|\Prophecy\Prophecy\ObjectProphecy
      */
     protected $mgmtServer;
 
     /**
-     * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface 
+     * @var \Prophecy\Prophecy\ObjectProphecy|\Psr\Log\LoggerInterface
      */
     protected $logger;
 
@@ -121,5 +121,3 @@ namespace Drupal\Tests\auth_apic\Unit {
   }
 
  }
-
-

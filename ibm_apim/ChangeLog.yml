@@ -1,4 +1,34 @@
 changes:
+  6.2.10:
+  - velox/devportal#8913 - CIO SonarQube
+  6.2.9:
+  - change portal-ci-v10-0 to portal-ci-v10-0-8
+  6.2.8:
+  - add env.GIT_COMMIT_SUMMARY
+  6.2.7:
+  - Fix variable reference
+  6.2.6:
+  - update doclink for 10.0.8 (#1078)
+  6.2.5:
+  - Using the external consumer allways for OIDC redirect
+  6.2.4:
+  - set filename on letter avatar (#1071) (#1075)
+  6.2.3:
+  - Update .whitesource (#1076)
+  6.2.2:
+  - Removed the world 'free' from plan description
+  6.2.1:
+  - Fix css loading issue when not in consumerorg (#1068) (#1069)
+  6.2.0:
+  - update version 6.1.41 -> 6.2.0
+  6.1.40:
+  - add remove keys option (#1067)
+  6.1.39:
+  - ApiTaxonomy -> ApicTaxonomy
+  - velox/devportal#8723 - prevent user enumeration (#1066)
+  - velox/devportal#8738 - Copyright 2024
+  6.1.38:
+  - APIC User information command (#1063) (#1065)
   6.1.37:
   - Delete expire pending users (#1061)
   6.1.36:

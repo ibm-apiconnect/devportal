@@ -1,4 +1,22 @@
 changes:
+  6.2.4:
+  - a11y fix for api cards (#214)
+  6.2.3:
+  - velox/devportal#8913 - CIO SonarQube
+  6.2.2:
+  - change portal-ci-v10-0 to portal-ci-v10-0-8
+  6.2.1:
+  - add env.GIT_COMMIT_SUMMARY
+  - update whitesource configuration (#211)
+  - velox/devportal#8830 Ignore zero byte files for the search string
+  6.2.0:
+  - update version 6.1.17 -> 6.2.0
+  6.1.16:
+  - add remove x-ibm keys (#209)
+  6.1.15:
+  - velox/devportal#8738 - Copyright 2024
+  6.1.14:
+  - Fix translations (#206) (#207)
   6.1.13:
   - Only label ibm MQ as MQ (#204)
   6.1.12:

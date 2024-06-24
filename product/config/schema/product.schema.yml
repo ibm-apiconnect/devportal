@@ -142,9 +142,29 @@ field.field.node.product.apic_updated_at:
   type: ibm_apim_config_object
   label: 'Modification time'
 
-views.view.products:
+views.view.products.display.default.display_options.exposed_form.options:
   type: string
-  label: 'Products'
+  sort_asc_label: 'Asc'
+
+views.view.products.display.default.display_options.exposed_form.options:
+  type: string
+  sort_desc_label: 'Desc'
+
+views.view.products.display.default.display_options.filters.title.expose:
+  type: string
+  label: 'Name'
+
+views.view.products.display.default.display_options.exposed_form.options:
+  type: string
+  exposed_sorts_label: 'Sort by'
+
+views.view.products.display.default.display_options.exposed_form.options:
+  type: string
+  reset_button_label: 'Reset'
+
+views.view.products.display.default.display_options.exposed_form.options:
+  type: string
+  submit_button: 'Apply'
 
 views.view.products.display.default.display_options.exposed_form.options:
   type: string

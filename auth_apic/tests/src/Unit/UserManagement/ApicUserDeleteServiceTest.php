@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -60,7 +60,7 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->entityTypeManager = $this->prophet->prophesize(\Drupal\Core\Entity\EntityTypeManagerInterface::class);
       $this->drupalUserStorage = $this->prophet->prophesize(UserStorageInterface::class);
       $this->entityTypeManager->getStorage('user')->willReturn($this->drupalUserStorage->reveal());
-      $user = $this->prophet->prophesize(User::class);
+      $user = $this->prophet->prophesize(ApicUser::class);
       $this->drupalUserStorage->load(Argument::any())->willReturn($user->reveal());
     }
 

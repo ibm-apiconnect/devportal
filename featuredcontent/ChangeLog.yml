@@ -1,4 +1,14 @@
 changes:
+  6.2.3:
+  - change portal-ci-v10-0 to portal-ci-v10-0-8
+  6.2.2:
+  - add env.GIT_COMMIT_SUMMARY
+  6.2.1:
+  - Update .whitesource (#55)
+  6.2.0:
+  - update version 6.1.7 -> 6.2.0
+  6.1.6:
+  - velox/devportal#8738 - Copyright 2024
   6.1.5:
   - Added cache tag (#53)
   6.1.4:

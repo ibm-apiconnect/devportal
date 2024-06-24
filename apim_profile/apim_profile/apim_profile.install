@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -89,7 +89,6 @@ function apim_profile_install() {
     'big_pipe',
     'media',
     'ckeditor5',
-    'search',
   ];
 
   $module_dependencies = [
@@ -150,7 +149,6 @@ function apim_profile_install() {
     'linkit',
     'health_check',
     'editor_advanced_link',
-    'file_upload_secure_validator',
     'select_or_other',
     'crop',
     'focal_point',
@@ -409,6 +407,7 @@ function apim_profile_default_apic_config() {
     ->set('autotag_with_phase', FALSE)
     ->set('show_cors_warnings', TRUE)
     ->set('show_analytics', TRUE)
+    ->set('remove_IBM_keys', FALSE)
     ->set('soap_swagger_download', FALSE)
     ->set('render_api_schema_view', TRUE)
     ->set('optimise_oauth_ux', TRUE)
@@ -462,6 +461,11 @@ function apim_profile_default_apic_config() {
     ->getEditable('system.maintenance')
     ->set('message', '<h3>Sorry! Our site is currently under maintenance. We should be back shortly.</h3>')
     ->save(TRUE);
+
+  $config = \Drupal::service('config.factory')->getEditable('blazy.settings');
+  if ($config) {
+    $config->set('use_theme_blazy', TRUE)->save(TRUE);
+  }
 }
 
 /**
@@ -1537,8 +1541,8 @@ function apim_profile_update_8102() {
     ->set('extlink_mailto_label', '(link sends email)')
     ->set('extlink_use_font_awesome', FALSE)
     ->set('extlink_font_awesome_classes', [
-      'links' => 'fa fa-external-link',
-      'mailto' => 'fa fa-envelope-o',
+      'links' => 'fa fa-solid fa-up-right-from-square',
+      'mailto' => 'fa fa-regular fa-envelope',
     ])
     ->set('extlink_icon_placement', '0')
     ->save();
@@ -2798,19 +2802,16 @@ function apim_profile_update_10001() {
     'use search_api_autocomplete for search_content'
   ]);
 
-  $role = Role::load('content_author');
-  if ($role !== NULL) {
-    user_role_revoke_permissions('content_author', [
-      'access in-place editing',
-      'bypass content access control',
-      'access printer-friendly version',
-      'access browse_content_iframe entity browser pages',
-      'access browse_files entity browser pages',
-      'access browse_content entity browser pages',
-      'access browse_files_modal entity browser pages',
-      'use text format ghmarkdown'
-    ]);
-  }
+  user_role_revoke_permissions('content_author', [
+    'access in-place editing',
+    'bypass content access control',
+    'access printer-friendly version',
+    'access browse_content_iframe entity browser pages',
+    'access browse_files entity browser pages',
+    'access browse_content entity browser pages',
+    'access browse_files_modal entity browser pages',
+    'use text format ghmarkdown'
+  ]);
 
   user_role_revoke_permissions('administrator', [
     'access flood unblock',
@@ -2825,7 +2826,6 @@ function apim_profile_update_10001() {
     'administer embed buttons',
     'bypass password policies',
     'use search_api_autocomplete for search_content',
-    'administer search',
     'administer search autocomplete',
     'administer addtoany'
   ]);
@@ -2878,24 +2878,18 @@ function apim_profile_update_10001() {
   // Also need to remove a config to entity_browser here
   \Drupal::configFactory()->getEditable('user.role.administrator')->clear("dependencies.module.entity_browser")->save(TRUE);
 
-  module_install(['rdf', 'unlimited_number', 'ckeditor5', 'search']);
+  module_install(['rdf', 'unlimited_number', 'ckeditor5']);
 
   // Add role back after we enable the right modules
   user_role_grant_permissions('administrator', [
-    'search content',
-    'use advanced search',
     'use search_api_autocomplete for search_content'
   ]);
 
   user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, [
-    'search content',
-    'use advanced search',
     'use search_api_autocomplete for search_content'
   ]);
 
   user_role_grant_permissions(RoleInterface::AUTHENTICATED_ID, [
-    'search content',
-    'use advanced search',
     'use search_api_autocomplete for search_content'
   ]);
 
@@ -3158,6 +3152,158 @@ function apim_profile_update_10020() {
   module_uninstall(['warmer']);
 }
 
+/**
+ * Update font awesome settings to use local library
+ */
+function apim_profile_update_10026() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('fontawesome.settings');
+  $config->set('use_cdn', FALSE);
+  $config->set('use_shim', FALSE);
+  $config->set('external_svg_location', '');
+  $config->set('external_shim_location', '');
+  $config->save(TRUE);
+}
+
+/**
+ * Update font awesome calsses to use fontawesome v6 format
+ */
+function apim_profile_update_10027() {
+  $config = \Drupal::service('config.factory')->getEditable('extlink.settings');
+  if ($config) {
+    $config->set('extlink_font_awesome_classes', [
+      'links' => 'fa fa-solid fa-up-right-from-square',
+      'mailto' => 'fa fa-regular fa-envelope',
+    ])->save(TRUE);
+  }
+}
+
+/**
+ * Add remove_IBM_keys to ibm_apim settings
+ */
+function apim_profile_update_10028() {
+  $config = \Drupal::service('config.factory')->getEditable('ibm_apim.settings');
+  if ($config) {
+    $config->set('remove_IBM_keys', FALSE)->save(TRUE);
+  }
+}
+
+/**
+ * Ignore /user/* paths from redirecting to search404, as this leaks that the user doesn't exist
+ */
+function apim_profile_update_10029() {
+  $config = \Drupal::service('config.factory')->getEditable('search404.settings');
+  if ($config) {
+    $currentConfig = $config->get('search404_ignore_paths');
+
+    if (empty($currentConfig)) {
+      $config->set('search404_ignore_paths', '/user/*')->save(TRUE);
+    } else {
+      $appendedConfig = $currentConfig . "\n" . '/user/*';
+      $config->set('search404_ignore_paths', $appendedConfig)->save(TRUE);
+    }
+  }
+}
+
+/**
+ * Uninstall unused graphql module
+ */
+function apim_profile_update_10030() {
+  module_uninstall(['graphql']);
+}
+
+/**
+ * Uninstall search module and remove its permissions
+ */
+function apim_profile_update_10031() {
+  module_uninstall(['search']);
+  user_role_revoke_permissions('administrator', [
+    'search content',
+  ]);
+  user_role_revoke_permissions(RoleInterface::ANONYMOUS_ID, [
+    'search content',
+  ]);
+  user_role_revoke_permissions(RoleInterface::AUTHENTICATED_ID, [
+    'search content',
+  ]);
+}
+
+/**
+ * Enable use_theme_blazy to remove errors on status page
+ */
+function apim_profile_update_10032() {
+  $config = \Drupal::service('config.factory')->getEditable('blazy.settings');
+  if ($config) {
+    $config->set('use_theme_blazy', TRUE)->save(TRUE);
+  }
+}
+
+/**
+ * Disable file_upload_secure_validator module
+ */
+function apim_profile_update_10033() {
+  module_uninstall(['file_upload_secure_validator']);
+  delete_config(['file_upload_secure_validator.settings']);
+}
+
+/**
+ * Add localhost for ipv4 and ipv6 to perimeter whitelist
+ */
+function apim_profile_update_10034() {
+  $config = \Drupal::service('config.factory')->getEditable('perimeter.settings');
+  if ($config) {
+    $currentConfig = $config->get('whitelisted_ips');
+
+    if (empty($currentConfig)) {
+      $config->set('whitelisted_ips', [ '::1', '127.0.0.1' ])->save(TRUE);
+    } else {
+      $appendedConfig = array_merge($currentConfig, [ '::1', '127.0.0.1' ]);
+      $config->set('whitelisted_ips', $appendedConfig)->save(TRUE);
+    }
+  }
+}
+
+/**
+ * Add content_author and forum_moderator roles back if they have been deleted.
+ */
+function apim_profile_update_10035() {
+    $role = Role::load('forum_moderator');
+    if ($role === NULL) {
+      add_config(['user.role.forum_moderator']);
+    }
+    $role = Role::load('content_author');
+    if ($role === NULL) {
+      add_config(['user.role.content_author']);
+    }
+}
+
+/**
+ * Disable and remove login_security module
+ */
+function apim_profile_update_10036() {
+  module_uninstall(['login_security']);
+}
+
+/**
+* Remove Unused config feature flag cli_language_fix in ibm_apim.feature_flags
+*/
+function apim_profile_update_10037() {
+    \Drupal::configFactory()
+    ->getEditable('ibm_apim.feature_flags')
+    ->clear("cli_language_fix")
+    ->save();
+}
+
+/**
+* Delete orphaned perimeter config if the module is disabled
+*/
+function apim_profile_update_10038() {
+    $moduleHandler = \Drupal::service('module_handler');
+    if (!$moduleHandler->moduleExists('perimeter')) {
+      delete_config(['perimeter.settings']);
+    }
+}
+
 function delete_config(array $configs) {
   foreach ($configs as $config) {
     try {
@@ -3222,6 +3368,8 @@ function module_uninstall(array $modules) {
           ->condition('name', $module, 'IN')
           ->execute();
     \Drupal::configFactory()->getEditable('core.extension')->clear("module.$module")->save(TRUE);
+    // Rebuild menu tree as we have observed this sometimes doesn't happen and causes issues
+    \Drupal::service('plugin.manager.menu.link')->rebuild();
   }
 }
 

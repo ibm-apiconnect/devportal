@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2022
+ * (C) Copyright IBM Corporation 2018, 2024
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -70,6 +70,44 @@ class ApimUtils {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $complete_url);
     }
     return $complete_url;
+  }
+
+  public function getOidcRedirectEndpoint($url): string {
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $url);
+    }
+
+    $oidc_redirect_file = '/web/config/apim_oidc_redirect';
+
+    if (file_exists($oidc_redirect_file)) {
+      try {
+        $oidc_redirect_url = trim(file_get_contents($oidc_redirect_file));
+        if (isset($oidc_redirect_url) && !empty($oidc_redirect_url)) {
+          $returnValue = $this->stripConsumerApiSuffix($oidc_redirect_url) . $url;
+        }
+        else {
+          $this->logger->error('getOidcRedirectEndpoint():: /web/config/apim_oidc_redirect not set correctly, value: %data.', [
+            '%data' => $oidc_redirect_url,
+          ]);
+          $returnValue = NULL;
+        }
+      } catch (Throwable $e) {
+        $this->logger->error('Get OIDC redirect endpoint exception: %data.', [
+          '%data' => $e->getMessage(),
+        ]);
+        $returnValue = NULL;
+      }
+    }
+    else {
+      $returnValue = $this->createFullyQualifiedUrl($url);
+    }
+
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $returnValue);
+    }
+
+    return $returnValue;
+
   }
 
   public function removeFullyQualifiedUrl($url): string {
