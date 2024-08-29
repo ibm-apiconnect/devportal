@@ -254,7 +254,6 @@
     "drupal/legal": "^3.0",
     "drupal/libraries": "^4.0",
     "drupal/linkit": "^6.0.x-dev",
-    "drupal/login_security": "^2.0",
     "drupal/mailsystem": "^4.1",
     "drupal/masonry": "^4.0",
     "drupal/masonry_views": "^4.0",
@@ -376,14 +375,6 @@
       "phpstan/extension-installer": true,
       "php-http/discovery": true
     }
-  },
-  "autoload": {
-    "classmap": [
-      "scripts/composer/ScriptHandler.php"
-    ],
-    "files": [
-      "load.environment.php"
-    ]
   },
   "scripts": {
     "pre-install-cmd": [

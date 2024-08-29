@@ -1,25 +1,23 @@
 --- modules/legal/src/Form/LegalAdminSettingsForm.php
 +++ modules/legal/src/Form/LegalAdminSettingsForm.php
-@@ -64,13 +64,8 @@ class LegalAdminSettingsForm extends ConfigFormBase {
+@@ -73,12 +73,6 @@
        '#default_value' => $config->get('user_profile_display'),
      ];
- 
+
 -    $form['accept_every_login'] = [
 -      '#type'          => 'checkbox',
 -      '#title'         => $this->t('Ask to accept T&Cs on every login'),
 -      '#default_value' => $config->get('accept_every_login'),
 -    ];
- 
-     return parent::buildForm($form, $form_state);
-   }
-
-  /**
-@@ -83,7 +78,7 @@ class LegalAdminSettingsForm extends ConfigFormBase {
+-
+     $description = $this->t("The default URL to redirect the user to after
+     login. This should be an internal path starting with a slash, or an
+     absolute URL. Defaults to the logged-in user's account page.");
+@@ -103,7 +97,7 @@
      $this->configFactory->getEditable('legal.settings')
        ->set('except_roles', $values['except_roles'])
        ->set('user_profile_display', $values['user_profile_display'])
 -      ->set('accept_every_login', $values['accept_every_login'])
 +      ->set('accept_every_login', 0)
+       ->set('login_redirect_url', trim($values['login_redirect_url']))
        ->save();
- 
-     $this->messenger()->addMessage($this->t('Configuration changes have been saved.'));

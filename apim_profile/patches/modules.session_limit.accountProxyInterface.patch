@@ -1,38 +1,101 @@
 --- modules/session_limit/src/Services/SessionLimit.php	2019-10-30 14:32:31.000000000 +0000
 +++ modules/session_limit/src/Services/SessionLimit.php	2019-10-30 14:33:31.000000000 +0000
-@@ -15,7 +15,7 @@
- use Symfony\Component\HttpKernel\KernelEvents;
- use Symfony\Component\EventDispatcher\EventSubscriberInterface;
- use Drupal\Core\Database\Connection;
+@@ -8,8 +8,7 @@
+ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+ use Drupal\Core\Messenger\MessengerInterface;
+ use Drupal\Core\Routing\RouteMatchInterface;
+-use Drupal\Core\Session\AccountInterface;
 -use Drupal\Core\Session\AccountProxy;
 +use Drupal\Core\Session\AccountProxyInterface;
+ use Drupal\Core\Session\AnonymousUserSession;
  use Drupal\Core\Session\SessionManager;
- use Drupal\Core\Extension\ModuleHandler;
- use Drupal\Core\Config\ConfigFactory;
-@@ -105,7 +105,7 @@
-    *   The event dispatcher service.
-    * @param RouteMatchInterface $routeMatch
-    *   The Route.
--   * @param AccountProxy $currentUser
-+   * @param AccountProxyInterface $currentUser
-    *   The current user.
-    * @param SessionManager $sessionManager
-    *   Session manager.
-@@ -116,7 +116,7 @@
-    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-    *   The messenger.
+ use Drupal\Core\Url;
+@@ -58,7 +57,7 @@
+   /**
+    * The current user.
+    *
+-   * @var \Drupal\Core\Session\AccountInterface
++   * @var \Drupal\Core\Session\AccountProxyInterface
     */
--  public function __construct(Connection $database, EventDispatcherInterface $eventDispatcher, RouteMatchInterface $routeMatch, AccountProxy $currentUser, SessionManager $sessionManager, ModuleHandler $moduleHandler, ConfigFactory $configFactory, MessengerInterface $messenger) {
-+  public function __construct(Connection $database, EventDispatcherInterface $eventDispatcher, RouteMatchInterface $routeMatch, AccountProxyInterface $currentUser, SessionManager $sessionManager, ModuleHandler $moduleHandler, ConfigFactory $configFactory, MessengerInterface $messenger) {
-     $this->routeMatch = $routeMatch;
+   protected $currentUser;
+
+@@ -119,7 +118,7 @@
+    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
+    *   The logger factory.
+    */
+-  public function __construct(Connection $database, EventDispatcherInterface $eventDispatcher, RouteMatchInterface $routeMatch, AccountProxy $currentUser, SessionManager $sessionManager, ModuleHandler $moduleHandler, ConfigFactory $configFactory, MessengerInterface $messenger, LoggerChannelFactoryInterface $loggerFactory) {
++  public function __construct(Connection $database, EventDispatcherInterface $eventDispatcher, RouteMatchInterface $routeMatch, AccountProxyInterface $currentUser, SessionManager $sessionManager, ModuleHandler $moduleHandler, ConfigFactory $configFactory, MessengerInterface $messenger, LoggerChannelFactoryInterface $loggerFactory) {
      $this->database = $database;
      $this->eventDispatcher = $eventDispatcher;
-@@ -507,7 +507,7 @@
+     $this->routeMatch = $routeMatch;
+@@ -433,13 +432,13 @@
+   /**
+    * Get the number of active sessions for a user.
+    *
+-   * @param \Drupal\Core\Session\AccountInterface $account
++   * @param \Drupal\Core\Session\AccountProxyInterface $account
+    *   The user to check on.
+    *
+    * @return int
+    *   The total number of active sessions for the given user
+    */
+-  public function getUserActiveSessionCount(AccountInterface $account) {
++  public function getUserActiveSessionCount(AccountProxyInterface $account) {
+     $query = $this->database->select('sessions', 's')
+       // Use distinct so that HTTP and HTTPS sessions
+       // are considered a single sessionId.
+@@ -460,13 +459,13 @@
+   /**
+    * Get a list of active sessions for a user.
+    *
+-   * @param \Drupal\Core\Session\AccountInterface $account
++   * @param \Drupal\Core\Session\AccountProxyInterface $account
+    *   The user to check on.
+    *
+    * @return array
+    *   A list of session objects for the user.
+    */
+-  public function getUserActiveSessions(AccountInterface $account) {
++  public function getUserActiveSessions(AccountProxyInterface $account) {
+     $query = $this->database->select('sessions', 's')
+       ->fields('s', ['uid', 'sid', 'hostname', 'timestamp'])
+       ->condition('s.uid', $account->id());
+@@ -484,13 +483,13 @@
+   /**
+    * Get the maximum sessions allowed for a specific user.
+    *
+-   * @param \Drupal\Core\Session\AccountInterface $account
++   * @param \Drupal\Core\Session\AccountProxyInterface $account
+    *   The user to check on.
+    *
+    * @return int
+    *   The number of allowed sessions. A value less than 1 means unlimited.
+    */
+-  public function getUserMaxSessions(AccountInterface $account) {
++  public function getUserMaxSessions(AccountProxyInterface $account) {
+     $limit = $this->configFactory->get('session_limit_max');
+     $role_limits = $this->configFactory->get('session_limit_roles');
+
+@@ -561,19 +560,19 @@
+    *   Severity configuration value.
     */
    public function getMessageSeverity() {
-     return $this->configFactory->get('session_limit.settings')
--      ->get('session_limit_logged_out_message_severity');
-+      ->get('session_limit_logged_out_message_severity') ?? '';
+-    return $this->configFactory->get('session_limit_logged_out_message_severity');
++    return $this->configFactory->get('session_limit_logged_out_message_severity') ?? '';
    }
 
    /**
+    * Get the logged out message for the given user.
+    *
+-   * @param \Drupal\Core\Session\AccountInterface $account
++   * @param \Drupal\Core\Session\AccountProxyInterface $account
+    *   Current user.
+    *
+    * @return string
+    *   Logout message.
+    */
+-  public function getMessage(AccountInterface $account) {
++  public function getMessage(AccountProxyInterface $account) {
+     return t('You have been automatically logged out. Someone else has logged in with your username and password and the maximum number of @number simultaneous session(s) was exceeded. This may indicate that your account has been compromised or that account sharing is not allowed on this site. Please contact the site administrator if you suspect your account has been compromised.', [
+       '@number' => $this->getUserMaxSessions($account),
+     ]);

@@ -1,4 +1,213 @@
 changes:
+  8.x-20240626-1621:
+    commits: null
+    modules:
+      apic_api:
+        8.x-5.8.3:
+        - velox/devportal#9012
+      apic_app:
+        8.x-5.8.5: null
+        8.x-5.8.4:
+        - Fix dynamic property
+        - velox/devportal#9012
+  8.x-20240614-1621:
+    commits:
+    - velox/devportal#9007 - update config sql dumps
+    modules:
+      product:
+        8.x-5.8.3:
+        - velox/devportal#9012
+  8.x-20240530-1622:
+    commits:
+    - Clean up some common config that can be orphaned (#1099)
+    modules:
+      ibm_apim:
+        8.x-5.8.7:
+        - Check if variable exists first (#1086) (#1089)
+  8.x-20240530-1023:
+    commits: null
+    modules:
+      auth_apic:
+        8.x-5.8.3:
+        - velox/devportal#8913 - CIO SonarQube
+      featuredcontent:
+        8.x-5.8.2:
+        - fix sonarqube key
+        - velox/devportal#8913 - CIO SonarQube
+      apic_app:
+        8.x-5.8.3:
+        - velox/devportal#8913 - CIO SonarQube
+      ibm_apim:
+        8.x-5.8.6:
+        - velox/devportal#8913 - CIO SonarQube
+  8.x-20240529-2221:
+    commits: null
+    modules:
+      socialblock:
+        8.x-5.8.2:
+        - velox/devportal#8913 - CIO SonarQube
+      product:
+        8.x-5.8.2:
+        - velox/devportal#8913 - CIO SonarQube
+      mail_subscribers:
+        8.x-5.8.2:
+        - velox/devportal#8913 - CIO SonarQube
+      themegenerator:
+        8.x-5.8.2:
+        - velox/devportal#8913 - CIO SonarQube
+      instana_eum:
+        8.x-5.8.2:
+        - velox/devportal#8913 - CIO SonarQube
+      connect_theme:
+        8.x-5.8.3:
+        - velox/devportal#8913 - CIO SonarQube
+  8.x-20240529-1514:
+    commits: null
+    modules:
+      consumerorg:
+        8.x-5.8.3:
+        - velox/devportal#8913 - CIO SonarQube
+  8.x-20240522-1621:
+    commits:
+    - velox/devportal#8913 - CIO SonarQube
+    modules:
+      consumerorg:
+        8.x-5.8.2:
+        - Remove card field from payment method create request (#351)
+  8.x-20240522-1038:
+    commits: null
+    modules:
+      socialblock:
+        8.x-5.8.1:
+        - add env.GIT_COMMIT_SUMMARY
+      product:
+        8.x-5.8.1:
+        - add env.GIT_COMMIT_SUMMARY
+      ghmarkdown:
+        8.x-5.8.1:
+        - add env.GIT_COMMIT_SUMMARY
+      auth_apic:
+        8.x-5.8.2:
+        - add env.GIT_COMMIT_SUMMARY
+      mail_subscribers:
+        8.x-5.8.1:
+        - add env.GIT_COMMIT_SUMMARY
+      themegenerator:
+        8.x-5.8.1:
+        - add env.GIT_COMMIT_SUMMARY
+      featuredcontent:
+        8.x-5.8.1:
+        - add env.GIT_COMMIT_SUMMARY
+      apic_api:
+        8.x-5.8.1:
+        - add env.GIT_COMMIT_SUMMARY
+      apic_app:
+        8.x-5.8.2:
+        - add env.GIT_COMMIT_SUMMARY
+      ibm_apim:
+        8.x-5.8.5:
+        - add env.GIT_COMMIT_SUMMARY
+      consumerorg:
+        8.x-5.8.1:
+        - add env.GIT_COMMIT_SUMMARY
+      apictest:
+        8.x-5.8.1:
+        - add env.GIT_COMMIT_SUMMARY
+      instana_eum:
+        8.x-5.8.1:
+        - add env.GIT_COMMIT_SUMMARY
+      connect_theme:
+        8.x-5.8.2:
+        - add env.GIT_COMMIT_SUMMARY
+  8.x-20240516-1621:
+    commits:
+    - Process search_api index cron every minute and make 30 seconds so it can get 200 done (#1090) (#1092)
+    modules:
+      auth_apic:
+        8.x-5.8.1:
+        - improve logging for validating user uniqueness
+        - Using the external consumer allways for OIDC redirect
+  8.x-20240514-1621:
+    commits:
+    - Update modules
+    - add env.GIT_COMMIT_SUMMARY
+    modules:
+      ibm_apim:
+        8.x-5.8.4: null
+        8.x-5.8.3:
+        - Fix variable reference
+        - Using the external consumer allways for OIDC redirect
+  8.x-20240509-1621:
+    commits:
+    - Fix missing moduleHandler (#1087) (#1089)
+    - Remove from config install, patch and update function to remove if disabled (#1084) (#1086)
+    modules:
+      apic_app:
+        8.x-5.8.1:
+        - read only app creds (#389)
+      connect_theme:
+        8.x-5.8.1:
+        - read only app creds (#248)
+  8.x-20240426-1246:
+    commits:
+    - Dont overwrite translations that already exist (#1081) (#1083)
+    - Remove feature flag (#1078) (#1080)
+    modules:
+      ibm_apim:
+        8.x-5.8.2:
+        - set filename on letter avatar (#1071)
+  8.x-20240307-0526:
+    commits:
+    - Remove and update
+    - removing login_security module and the patches
+    - disabling some options that we don't support
+    - Removed the world 'free' from plan description on translation files
+    - Fix filter type for CKEditor5 Plugin (#1073) (#1075)
+    - Various Drupal Cherry Picks (#1072)
+    - Update version for 10.0.5.8
+    modules:
+      socialblock:
+        8.x-5.8.0:
+        - update version [8.x, 5.7.1] -> 8.x-5.8.0
+      product:
+        8.x-5.8.0:
+        - update version [8.x, 5.7.1] -> 8.x-5.8.0
+      ghmarkdown:
+        8.x-5.8.0:
+        - update version [8.x, 5.7.1] -> 8.x-5.8.0
+      auth_apic:
+        8.x-5.8.0:
+        - update version [8.x, 5.7.1] -> 8.x-5.8.0
+      mail_subscribers:
+        8.x-5.8.0:
+        - update version [8.x, 5.7.1] -> 8.x-5.8.0
+      themegenerator:
+        8.x-5.8.0:
+        - update version [8.x, 5.7.1] -> 8.x-5.8.0
+      featuredcontent:
+        8.x-5.8.0:
+        - update version [8.x, 5.7.1] -> 8.x-5.8.0
+      apic_api:
+        8.x-5.8.0:
+        - update version [8.x, 5.7.2] -> 8.x-5.8.0
+      apic_app:
+        8.x-5.8.0:
+        - update version [8.x, 5.7.1] -> 8.x-5.8.0
+      ibm_apim:
+        8.x-5.8.1:
+        - Removed the world 'free' from plan description
+      consumerorg:
+        8.x-5.8.0:
+        - update version [8.x, 5.7.1] -> 8.x-5.8.0
+      apictest:
+        8.x-5.8.0:
+        - update version [8.x, 5.7.1] -> 8.x-5.8.0
+      instana_eum:
+        8.x-5.8.0:
+        - update version [8.x, 5.7.1] -> 8.x-5.8.0
+      connect_theme:
+        8.x-5.8.0:
+        - update version [8.x, 5.7.1] -> 8.x-5.8.0
   8.x-20240306-1121:
     commits: null
     modules:
@@ -9795,4 +10004,4 @@ changes:
         - try to make it more tolerant of yum issues
         8.x-1.3.132:
         - try to make it more tolerant of yum issues
-  8.x-20240307-0526:
+  8.x-20240627-0421:

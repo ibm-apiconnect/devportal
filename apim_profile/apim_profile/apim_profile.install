@@ -28,7 +28,7 @@ use Drupal\user\Entity\User;
 use Drupal\user\RoleInterface;
 use Drupal\views\Views;
 use Drupal\Core\Config\FileStorage;
-
+use Drupal\ultimate_cron\Entity\CronJob;
 
 /**
  * Implements hook_install().
@@ -149,7 +149,6 @@ function apim_profile_install() {
     'linkit',
     'health_check',
     'editor_advanced_link',
-    'file_upload_secure_validator',
     'select_or_other',
     'crop',
     'focal_point',
@@ -2802,19 +2801,16 @@ function apim_profile_update_10001() {
     'use search_api_autocomplete for search_content'
   ]);
 
-  $role = Role::load('content_author');
-  if ($role !== NULL) {
-    user_role_revoke_permissions('content_author', [
-      'access in-place editing',
-      'bypass content access control',
-      'access printer-friendly version',
-      'access browse_content_iframe entity browser pages',
-      'access browse_files entity browser pages',
-      'access browse_content entity browser pages',
-      'access browse_files_modal entity browser pages',
-      'use text format ghmarkdown'
-    ]);
-  }
+  user_role_revoke_permissions('content_author', [
+    'access in-place editing',
+    'bypass content access control',
+    'access printer-friendly version',
+    'access browse_content_iframe entity browser pages',
+    'access browse_files entity browser pages',
+    'access browse_content entity browser pages',
+    'access browse_files_modal entity browser pages',
+    'use text format ghmarkdown'
+  ]);
 
   user_role_revoke_permissions('administrator', [
     'access flood unblock',
@@ -3254,6 +3250,109 @@ function apim_profile_update_10034() {
       $config->set('whitelisted_ips', $appendedConfig)->save(TRUE);
     }
   }
+}
+
+/**
+ * Add content_author and forum_moderator roles back if they have been deleted.
+ */
+function apim_profile_update_10035() {
+    $role = Role::load('forum_moderator');
+    if ($role === NULL) {
+      add_config(['user.role.forum_moderator']);
+    }
+    $role = Role::load('content_author');
+    if ($role === NULL) {
+      add_config(['user.role.content_author']);
+    }
+}
+
+/**
+ * Disable and remove login_security module
+ */
+function apim_profile_update_10036() {
+  module_uninstall(['login_security']);
+}
+
+/**
+* Remove Unused config feature flag cli_language_fix in ibm_apim.feature_flags
+*/
+function apim_profile_update_10037() {
+  \Drupal::configFactory()
+  ->getEditable('ibm_apim.feature_flags')
+  ->clear("cli_language_fix")
+  ->save();
+}
+
+/**
+* Delete orphaned perimeter config if the module is disabled
+*/
+function apim_profile_update_10038() {
+    $moduleHandler = \Drupal::service('module_handler');
+    if (!$moduleHandler->moduleExists('perimeter')) {
+      delete_config(['perimeter.settings']);
+    }
+}
+
+/**
+* Update search_api_cron schedule to be every minute
+*/
+function apim_profile_update_10039() {
+  $search_api_cron = Cronjob::load("search_api_cron");
+  $one_minute_cron = array("* * * * *");
+
+  $scheduler_config = $search_api_cron->getConfiguration('scheduler')['rules'];
+  $scheduler_config['rules'] = $one_minute_cron;
+  $scheduler_config = $search_api_cron->setConfiguration('scheduler', $scheduler_config);
+
+  $search_api_cron->save();
+
+  \Drupal::service('config.factory')
+  ->getEditable('search_api.settings')
+  ->set('cron_worker_runtime', 30)
+  ->save();
+}
+
+/**
+ * Enable js_cookie module as its a dependency of autologout
+ */
+function apim_profile_update_10040() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('autologout') && !$moduleHandler->moduleExists('js_cookie')) {
+    module_install(['js_cookie']);
+  }
+}
+
+/**
+* Delete orphaned config if the module is disabled
+*/
+function apim_profile_update_10041() {
+    $moduleHandler = \Drupal::service('module_handler');
+    if (!$moduleHandler->moduleExists('bartik')) {
+      delete_config([
+        'bartik.settings', 'block.block.bartik_account_menu',
+        'block.block.bartik_branding', 'block.block.bartik_breadcrumbs', 'block.block.bartik_content',
+        'block.block.bartik_footer', 'block.block.bartik_help', 'block.block.bartik_local_actions',
+        'block.block.bartik_local_tasks', 'block.block.bartik_main_menu', 'block.block.bartik_messages',
+        'block.block.bartik_page_title', 'block.block.bartik_powered', 'block.block.bartik_tools'
+      ]);
+    }
+    if (!$moduleHandler->moduleExists('classy')) {
+      delete_config(['classy.settings']);
+    }
+    if (!$moduleHandler->moduleExists('seven')) {
+      delete_config([
+        'seven.settings', 'block.block.seven_breadcrumbs', 'block.block.seven_content',
+        'block.block.seven_help', 'block.block.seven_local_actions', 'block.block.seven_login',
+        'block.block.seven_messages', 'block.block.seven_page_title', 'block.block.seven_primary_local_tasks',
+        'block.block.seven_secondary_local_tasks'
+    ]);
+    }
+    if (!$moduleHandler->moduleExists('adminimal_admin_toolbar')) {
+      delete_config(['adminimal_admin_toolbar.settings']);
+    }
+    if (!$moduleHandler->moduleExists('extlink')) {
+      delete_config(['extlink.settings']);
+    }
 }
 
 function delete_config(array $configs) {

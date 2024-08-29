@@ -1,4 +1,12 @@
 changes:
+  8.x-5.8.3:
+  - velox/devportal#8913 - CIO SonarQube
+  8.x-5.8.2:
+  - add env.GIT_COMMIT_SUMMARY
+  8.x-5.8.1:
+  - read only app creds (#248)
+  8.x-5.8.0:
+  - update version [8.x, 5.7.1] -> 8.x-5.8.0
   8.x-5.7.0:
   - update version [8.x, 5.6.1] -> 8.x-5.7.0
   8.x-5.6.0:

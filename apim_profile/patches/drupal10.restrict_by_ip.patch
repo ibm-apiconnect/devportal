@@ -121,168 +121,26 @@ index d2c8c06..c8d012e 100644
      // Enable modules needed for these tests.
      parent::setUp();
 
---- modules/restrict_by_ip/restrict_by_ip.module        2022-12-15 10:08:40
-+++ modules/restrict_by_ip/restrict_by_ip copy.module   2022-12-15 16:42:52
-@@ -1,5 +1,6 @@
- <?php
-
-+use Drupal\restrict_by_ip\Exception\InvalidIPException;
- /**
-  * @file
-  * Restrict logins or roles to whitelisted IP addresses.
-@@ -104,12 +105,12 @@
- function restrict_by_ip_user_profile_validate($form, &$form_state) {
-   $ip_tools = \Drupal::service('restrict_by_ip.ip_tools');
-   $ips = $form_state->getvalue('restrict_by_ip_address');
--  if (strlen($ips) > 0) {
-+  if (!empty($ips)) {
-     foreach (explode(';', $ips) as $ip) {
-       try {
-         $ip_tools->validateIP($ip);
-       }
--      catch (\Drupal\restrict_by_ip\Exception\InvalidIPException $e) {
-+      catch (InvalidIPException $e) {
-         $form_state->setErrorByName('restrict_by_ip_address', t($e->getMessage()));
-       }
-     }
-@@ -124,7 +125,7 @@
-   $user = $form_state->getFormObject()->getEntity();
-   $ips = $form_state->getValue('restrict_by_ip_address');
-
--  if (strlen($ips) > 0) {
-+  if (!empty($ips)) {
-     $config->set('user.' . $user->id(), $ips)->save();
-   }
-   else {
-@@ -154,7 +155,7 @@
-     $form_name = _restrict_by_ip_hash_role_name($name);
-     $ranges = variable_get('restrict_by_ip_role_' . $form_name, '');
-     // Only check IP if an IP restriction is set for this role
--    if (strlen($ranges) > 0) {
-+    if (!empty($ranges)) {
-       $ipaddresses = explode(';', $ranges);
-       $match = FALSE;
-       foreach ($ipaddresses as $ipaddress) {
-
-diff --git modules/restrict_by_ip/src/Form/LoginSettingsForm.php modules/restrict_by_ip/src/Form/LoginSettingsForm.php
-index 959243419e3ca737dee8756fffdd2bf9301f3642..c9ca60e00687139a04cc3f02a3f8035ead55c854 100644
---- modules/restrict_by_ip/src/Form/LoginSettingsForm.php
-+++ modules/restrict_by_ip/src/Form/LoginSettingsForm.php
-@@ -78,7 +78,7 @@ class LoginSettingsForm extends ConfigFormBase {
-   public function validateForm(array &$form, FormStateInterface $form_state) {
-     parent::validateForm($form, $form_state);
-
--    if (strlen($form_state->getValue('restrict_by_ip_login_range')) > 0) {
-+    if (!empty($form_state->getValue('restrict_by_ip_login_range'))) {
-       $ip_addresses = explode(";", $form_state->getValue('restrict_by_ip_login_range'));
-       foreach ($ip_addresses as $ip) {
-         try {
-diff --git modules/restrict_by_ip/src/Form/RoleSettingsForm.php modules/restrict_by_ip/src/Form/RoleSettingsForm.php
-index edb2ba9e8c5916a69e78f7916a023497f2164201..7ce4eb3cda08a0a1b10fc1555870e0a12ef2c2c0 100644
---- modules/restrict_by_ip/src/Form/RoleSettingsForm.php
-+++ modules/restrict_by_ip/src/Form/RoleSettingsForm.php
-@@ -81,7 +81,7 @@ class RoleSettingsForm extends ConfigFormBase {
-     parent::validateForm($form, $form_state);
-
-     foreach ($form_state->getValues() as $key => $value) {
--      if (strpos($key, 'restrict_by_ip_role_') !== FALSE && strlen($value) > 0) {
-+      if (strpos($key, 'restrict_by_ip_role_') !== FALSE && !empty($value)) {
-         $ip_addresses = explode(";", $value);
-         foreach ($ip_addresses as $ip) {
-           try {
-diff --git modules/restrict_by_ip/src/Form/UserSettingsForm.php modules/restrict_by_ip/src/Form/UserSettingsForm.php
-index 738514e8dc56bb890db625a939972587710ee4d4..3627b1f159eddfe48b152e7d9c325f3ffdb0e758 100644
---- modules/restrict_by_ip/src/Form/UserSettingsForm.php
-+++ modules/restrict_by_ip/src/Form/UserSettingsForm.php
-@@ -89,7 +89,7 @@ class UserSettingsForm extends ConfigFormBase {
-
-     // Validation for existing restrictions.
-     foreach ($form_state->getValues() as $key => $value) {
--      if (strpos($key, 'restrict_by_ip_user_') !== FALSE && strlen($value) > 0) {
-+      if (strpos($key, 'restrict_by_ip_user_') !== FALSE && !empty($value)) {
-         $ip_addresses = explode(";", $value);
-         foreach ($ip_addresses as $ip) {
-           try {
-@@ -103,7 +103,7 @@ class UserSettingsForm extends ConfigFormBase {
-     }
-
-     // Validation for new restriction.
--    if (strlen($form_state->getValue('name')) > 0) {
-+    if (!empty($form_state->getValue('name'))) {
-       // Validate no existing restriction.
-       if ($config->get('user.' . $form_state->getValue('name')) !== NULL) {
-         $form_state->setErrorByName('name', $this->t('Restriction for that user already exist.'));
-@@ -136,7 +136,7 @@ class UserSettingsForm extends ConfigFormBase {
-         continue;
-       }
-
--      if (strlen($value) > 0) {
-+      if (!empty($value)) {
-         $config->set(str_replace('restrict_by_ip_user_', 'user.', $key), $value);
-       }
-       else {
-@@ -145,7 +145,7 @@ class UserSettingsForm extends ConfigFormBase {
-     }
-
-     // New restriction.
--    if (strlen($form_state->getValue('name')) > 0) {
-+    if (!empty($form_state->getValue('name'))) {
-       $config->set('user.' . $form_state->getValue('name'), $form_state->getValue('restriction'));
-     }
-
-diff --git modules/restrict_by_ip/src/LoginFirewall.php modules/restrict_by_ip/src/LoginFirewall.php
-index 560378c8cd4c6cf56c86265fd58025ab1875db93..822688ec5a0630425dbe0e00528a2aaceb338528 100644
---- modules/restrict_by_ip/src/LoginFirewall.php
-+++ modules/restrict_by_ip/src/LoginFirewall.php
-@@ -97,7 +97,7 @@ class LoginFirewall implements LoginFirewallInterface {
-     $global_data = $this->config->get('login_range');
-
-     // If there is no global IP restriction configured, we allow all.
--    if (strlen($global_data) == 0) {
-+    if (empty($global_data)) {
-       return NULL;
-     }
-
-@@ -118,7 +118,7 @@ class LoginFirewall implements LoginFirewallInterface {
-     $user_data = $this->config->get('user.' . $account->id());
-
-     // If there is no user IP restriction configured, we allow all.
--    if (strlen($user_data) == 0) {
-+    if (empty($user_data)) {
-       return NULL;
-     }
-
 --- modules/restrict_by_ip/src/RoleFirewall.php		2024-02-12 13:11:05
 +++ modules/restrict_by_ip/src/RoleFirewall.php		2024-02-09 17:04:14
-@@ -44,19 +44,26 @@
-     foreach ($roles as $name) {
-       $role_data = $this->config->get('role.' . $name);
- 
--      if (strlen($role_data) == 0) {
-+      if (empty($role_data)) {
-         continue;
-       }
- 
+@@ -50,13 +50,17 @@
+
        $ranges = explode(';', $role_data);
--
-+      
-+      $valid = FALSE;
+
++      $valid = true;
        foreach ($ranges as $range) {
          try {
            $this->ipTools->validateCIDR($user_ip, $range);
          } catch (IPOutOfRangeException $e) {
 -          $remove_roles[] = $name;
-+          continue;
++          $valid = false;
          }
-+
-+        $valid = TRUE;
        }
-+
 +      if (!$valid) {
 +        $remove_roles[] = $name;
 +      }
      }
- 
+
      return $remove_roles;
 
 --- modules/restrict_by_ip/restrict_by_ip.services.yml  2022-12-19 10:05:18

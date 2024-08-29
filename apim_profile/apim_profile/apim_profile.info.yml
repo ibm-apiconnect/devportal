@@ -79,7 +79,6 @@ install:
   - health_check
   - editor_advanced_link
   - linkit
-  - file_upload_secure_validator
   - select_or_other
   - crop
   - focal_point

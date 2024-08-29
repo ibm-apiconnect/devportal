@@ -323,6 +323,7 @@ class PaymentMethodCreateForm extends FormBase {
         'form_token',
         'form_id',
         'op',
+        'card'
       ])) {
         if (is_array($value) && isset($value[0]['value'])) {
           $value = $value[0]['value'];

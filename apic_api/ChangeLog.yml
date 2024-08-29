@@ -1,4 +1,12 @@
 changes:
+  8.x-5.8.3:
+  - velox/devportal#9012
+  8.x-5.8.2:
+  - velox/devportal#8913 - CIO SonarQube
+  8.x-5.8.1:
+  - add env.GIT_COMMIT_SUMMARY
+  8.x-5.8.0:
+  - update version [8.x, 5.7.2] -> 8.x-5.8.0
   8.x-5.7.1:
   - velox/devportal#8830 Ignore zero byte files for the search string
   8.x-5.7.0:

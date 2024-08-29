@@ -142,41 +142,9 @@ field.field.node.product.apic_updated_at:
   type: ibm_apim_config_object
   label: 'Modification time'
 
-views.view.products.display.default.display_options.exposed_form.options:
-  type: string
-  sort_asc_label: 'Asc'
-
-views.view.products.display.default.display_options.exposed_form.options:
-  type: string
-  sort_desc_label: 'Desc'
-
-views.view.products.display.default.display_options.filters.title.expose:
-  type: string
-  label: 'Name'
-
-views.view.products.display.default.display_options.exposed_form.options:
-  type: string
-  exposed_sorts_label: 'Sort by'
-
-views.view.products.display.default.display_options.exposed_form.options:
-  type: string
-  reset_button_label: 'Reset'
-
-views.view.products.display.default.display_options.exposed_form.options:
-  type: string
-  submit_button: 'Apply'
-
-views.view.products.display.default.display_options.exposed_form.options:
-  type: string
-  text_input_required: 'Select any filter and click on Apply to see results'
-
-views.view.products.display.default.display_options.exposed_form.options.bef.sort.advanced:
-  type: string
-  collapsible_label: 'Sort options'
-
-views.view.products.display.default.display_options.exposed_form.options.bef.general:
-  type: string
-  secondary_label: 'Advanced options'
+views.view.products.display.default.display_options.exposed_form:
+  type: views.exposed_form.bef
+  label: 'Better Exposed Filters'
 
 views.view.products.display.default.display_options.filters.title.expose:
   type: string

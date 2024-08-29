@@ -66,11 +66,11 @@
             {% elseif element['#planInfo']['billingInfo'] %}
               {{ element['#planInfo']['name'] }}: {% set sub_billing_info = element['#planInfo']['billingInfo'] %}{% trans %}Subscription of {{ sub_billing_info | raw }} for unlimited calls{% endtrans %}
             {% elseif element['#planInfo']['rateLimit'] == 'multiple' %}
-              {{ element['#planInfo']['name'] }}: {% trans %}Free subscription for multiple rate limits{% endtrans %}
+              {{ element['#planInfo']['name'] }}: {% trans %}Subscription for multiple rate limits{% endtrans %}
             {% elseif element['#planInfo']['rateLimit']  %}
-              {{ element['#planInfo']['name'] }}: {% trans %}Free subscription for {{ element['#planInfo']['rateLimit'] }}{% endtrans %}
+              {{ element['#planInfo']['name'] }}: {% trans %}Subscription for {{ element['#planInfo']['rateLimit'] }}{% endtrans %}
             {% else %}
-              {{ element['#planInfo']['name'] }}: {% trans %}Free subscription for unlimited calls{% endtrans %}
+              {{ element['#planInfo']['name'] }}: {% trans %}Subscription for unlimited calls{% endtrans %}
             {% endif %}
           </td>
           {% if element['#planInfo']['billingInfo'] %}

@@ -136,7 +136,7 @@ class DisplayCredsForm extends FormBase {
       $form['#attached']['library'][] = 'clipboardjs/drupal';
       if (isset($this->creds['client_id'])) {
         $form['client_id'] = [
-          '#markup' => Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input id="clientIDInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientIDInputLabel" value="' . $this->creds['client_id'] . '" />
+          '#markup' => Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input id="clientIDInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientIDInputLabel" readonly aria-readonly value="' . $this->creds['client_id'] . '" />
                 <div id="hiddenClientIDInput" class="offscreen-field">' . $this->creds['client_id'] . '</div>
                 <button class="clipboardjs-button" type="button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientIDInput">
                   ' . file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_app') . "/images/clipboard.svg") . '</button></div></div>'),
@@ -145,7 +145,7 @@ class DisplayCredsForm extends FormBase {
       }
       if (isset($this->creds['client_secret'])) {
         $form['client_secret'] = [
-          '#markup' => Markup::create('<div class="clientSecretContainer"><label for="client_secret" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input id="clientSecretInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientSecretInputLabel" value="' . $this->creds['client_secret'] . '" />
+          '#markup' => Markup::create('<div class="clientSecretContainer"><label for="client_secret" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input id="clientSecretInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientSecretInputLabel" readonly aria-readonly value="' . $this->creds['client_secret'] . '" />
                 <div id="hiddenClientSecretInput" class="offscreen-field">' . $this->creds['client_secret'] . '</div>
                 <button class="clipboardjs-button" type="button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientSecretInput">
                   ' . file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_app') . "/images/clipboard.svg") . '</button></div></div>'),

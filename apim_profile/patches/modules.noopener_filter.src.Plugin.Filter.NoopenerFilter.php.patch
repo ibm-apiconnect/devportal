@@ -1,0 +1,11 @@
+--- modules/noopener_filter/src/Plugin/Filter/NoopenerFilter.php
++++ modules/noopener_filter/src/Plugin/Filter/NoopenerFilter.php
+@@ -12,7 +12,7 @@ use Drupal\filter\Plugin\FilterBase;
+  * @Filter(
+  *   id = "filter_noopener",
+  *   title = @Translation("Add noopener to all links"),
+- *   type = Drupal\filter\Plugin\FilterInterface::TYPE_HTML_RESTRICTOR
++ *   type = \Drupal\filter\Plugin\FilterInterface::TYPE_TRANSFORM_IRREVERSIBLE,
+  * )
+  */
+ class NoopenerFilter extends FilterBase {

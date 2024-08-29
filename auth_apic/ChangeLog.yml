@@ -1,4 +1,13 @@
 changes:
+  8.x-5.8.3:
+  - velox/devportal#8913 - CIO SonarQube
+  8.x-5.8.2:
+  - add env.GIT_COMMIT_SUMMARY
+  8.x-5.8.1:
+  - improve logging for validating user uniqueness
+  - Using the external consumer allways for OIDC redirect
+  8.x-5.8.0:
+  - update version [8.x, 5.7.1] -> 8.x-5.8.0
   8.x-5.7.0:
   - update version [8.x, 5.6.4] -> 8.x-5.7.0
   8.x-5.6.3:

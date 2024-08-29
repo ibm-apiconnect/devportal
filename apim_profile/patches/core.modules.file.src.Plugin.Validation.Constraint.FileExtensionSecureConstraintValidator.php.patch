@@ -1,0 +1,17 @@
+--- core/modules/file/src/Plugin/Validation/Constraint/FileExtensionSecureConstraintValidator.php      2024-03-20 14:15:55.402780311 +0000
++++ core/modules/file/src/Plugin/Validation/Constraint/FileExtensionSecureConstraintValidator.php      2024-03-20 14:15:25.555180055 +0000
+@@ -42,8 +42,13 @@
+       throw new UnexpectedTypeException($constraint, FileExtensionSecureConstraint::class);
+     }
+
++    $fileName = $file->getFilename();
++    if (empty($fileName)) {
++      $fileName = basename($file->getFileUri());
++    }
++
+     $allowInsecureUploads = $this->configFactory->get('system.file')->get('allow_insecure_uploads');
+-    if (!$allowInsecureUploads && preg_match(FileSystemInterface::INSECURE_EXTENSION_REGEX, $file->getFilename())) {
++    if (!$allowInsecureUploads && preg_match(FileSystemInterface::INSECURE_EXTENSION_REGEX, $fileName)) {
+       $this->context->addViolation($constraint->message);
+     }
+   }

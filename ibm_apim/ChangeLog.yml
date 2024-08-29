@@ -1,4 +1,20 @@
 changes:
+  8.x-5.8.7:
+  - Check if variable exists first (#1086) (#1089)
+  8.x-5.8.6:
+  - velox/devportal#8913 - CIO SonarQube
+  8.x-5.8.5:
+  - add env.GIT_COMMIT_SUMMARY
+  8.x-5.8.4: null
+  8.x-5.8.3:
+  - Fix variable reference
+  - Using the external consumer allways for OIDC redirect
+  8.x-5.8.2:
+  - set filename on letter avatar (#1071)
+  8.x-5.8.1:
+  - Removed the world 'free' from plan description
+  8.x-5.8.0:
+  - update version [8.x, 5.7.2] -> 8.x-5.8.0
   8.x-5.7.1:
   - Fix css loading issue when not in consumerorg (#1068) (#1070)
   8.x-5.7.0:

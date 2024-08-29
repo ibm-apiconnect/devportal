@@ -1,25 +1,26 @@
 --- modules/legal/src/Form/LegalLogin.php
 +++ modules/legal/src/Form/LegalLogin.php
-@@ -196,7 +196,7 @@ class LegalLogin extends FormBase {
-       $redirect = $_GET['destination'];
+@@ -325,7 +325,7 @@
+       $redirect = Url::fromRoute('entity.user.canonical', $params);
      }
- 
--    $form_state->setRedirectUrl(Url::fromUserInput($redirect));
+
+-    $form_state->setRedirectUrl($redirect);
 +    $form_state->setRedirectUrl(Url::fromRoute('<front>'));
- 
+
      // Option to require user to accept T&Cs on every login.
      if ($config->get('accept_every_login') == '1') {
-@@ -229,12 +229,10 @@ class LegalLogin extends FormBase {
+@@ -358,12 +358,12 @@
          '%name'  => $user->get('name')->getString(),
          '%tc_id' => $values['tc_id'],
        ]);
--
++
+
 +    \Drupal::service('messenger')->addMessage($this->t('You have accepted the Terms & Conditions and can now login.'));
      // User has new permissions, so we clear their menu cache.
-     \Drupal::cache('menu')->delete($values['uid']);
- 
+     $this->cache->delete($values['uid']);
+
 -    // Log user in.
 -    user_login_finalize($user);
    }
- 
+
    /**

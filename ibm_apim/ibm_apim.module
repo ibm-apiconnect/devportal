@@ -1609,7 +1609,7 @@ function ibm_apim_preprocess_form_element(&$variables) {
 }
 
 function ibm_apim_preprocess_form_element_label(&$variables) {
-  if (!empty($variables['element']['#is_widget']) || $variables['element']['#element_type'] === 'item') {
+  if (!empty($variables['element']['#is_widget']) || (array_key_exists('#element_type', $variables['element']) && $variables['element']['#element_type'] === 'item')) {
     unset($variables['element']['#attributes']['for']);
     unset($variables['attributes']['for']);
   }

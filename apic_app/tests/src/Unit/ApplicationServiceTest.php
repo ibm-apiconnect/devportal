@@ -32,6 +32,7 @@ class ApplicationServiceTest extends UnitTestCase {
   private $dependencyInjection;
 
   private $applicationService;
+  private $applicationBuilder;
 
   protected function setup(): void {
     $this->mockUserUtils = $this->createStub(\Drupal\ibm_apim\Service\UserUtils::class);

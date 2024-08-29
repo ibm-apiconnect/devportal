@@ -695,7 +695,7 @@ class ApicUserRegisterForm extends RegisterForm {
         if ($user_with_same_email !== NULL) {
           $this->logger->warning('registration failed: Email %email is already in use', ['%email' => $emailAddress]);
         } else if ($username_in_same_registry !== NULL) {
-          $this->logger->warning('registration failed: Username %name already exists in user registry', ['%name' => $emailAddress]);
+          $this->logger->warning('registration failed: Username %name already exists in user registry', ['%name' => $username]);
         }
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, FALSE);
         return FALSE;

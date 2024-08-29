@@ -1,0 +1,10 @@
+--- core/modules/user/src/RoleAccessControlHandler.php        2024-04-02 15:25:12
++++ core/modules/user/src/RoleAccessControlHandler.php   2024-04-02 15:24:51
+@@ -20,7 +20,7 @@
+   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
+     switch ($operation) {
+       case 'delete':
+-        if ($entity->id() == RoleInterface::ANONYMOUS_ID || $entity->id() == RoleInterface::AUTHENTICATED_ID) {
++        if ($entity->id() == RoleInterface::ANONYMOUS_ID || $entity->id() == RoleInterface::AUTHENTICATED_ID || $entity->id() == 'content_author' || $entity->id() == 'forum_moderator') {
+           return AccessResult::forbidden();
+         }
