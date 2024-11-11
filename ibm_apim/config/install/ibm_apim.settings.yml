@@ -2,6 +2,7 @@ autocreate_apiforum: true
 show_placeholder_images: true
 show_register_app: true
 show_versions: true
+show_anonymous_apis: true
 enable_api_test: true
 validate_apis: true
 autotag_with_phase: false

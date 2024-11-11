@@ -58,7 +58,7 @@
        }
      }
      else {
-@@ -171,31 +180,282 @@
+@@ -171,30 +180,282 @@
     *
     * @param string $entityTypeId
     *   The entity type id.
@@ -154,9 +154,9 @@
 +    }
 +
 +    $exportEntity->save();
-   }
-
-   /**
++  }
++
++  /**
 +   * Remove content entities to an export entity
 +   *
 +   * @param string $exportId
@@ -203,7 +203,8 @@
 +   *   The destination data.
 +   */
 +  public function exportAll($destination = '') {
-+    $contentTypes = \Drupal::service('entity_type.repository')->getEntityTypeLabels(TRUE)['Content'];
++    $content_key = array_keys(\Drupal::service('entity_type.repository')->getEntityTypeLabels(TRUE))[0];
++    $contentTypes = \Drupal::service('entity_type.repository')->getEntityTypeLabels(TRUE)[$content_key];
 +    $contentTypes = array_filter($contentTypes, function($x) { return !$this->isBlocked($x); });
 +    $blockedTypes = [ "user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs",
 +                  "apic_app_application_creds", "avatars_preview", "comment", "contact_message", "search_api_task", "vote", "vote_result" ];
@@ -337,19 +338,18 @@
 +      ];
 +      $exportKey++;
 +    }
-+  }
-+
+   }
+
 +  public function finishBatchExport(&$processor, $destination, &$data) {
 +    $tempArchive = $this->fileSystem->realpath($processor->closeProcess());
 +    // Deplace archive.
 +    $data['destination'] = $this->setDestination($destination, $tempArchive);
 +  }
 +
-+  /**
+   /**
     * Create a tar.gz file.
     *
-    * @param array $entitiesToExport
-@@ -208,7 +468,7 @@
+@@ -208,7 +469,7 @@
     * @return array
     *   The data of the export.
     */
@@ -358,7 +358,7 @@
      $writer = new ExportEntityWriter();
      $writer->initFromId(($label ?: time()));
      $processor = new ExportProcessor($writer);
-@@ -228,10 +488,19 @@
+@@ -228,10 +489,19 @@
          $status = $this->t('Error');
        }
 
@@ -379,7 +379,7 @@
          '@status' => $status,
        ];
      }
-@@ -279,19 +548,39 @@
+@@ -279,19 +549,39 @@
      foreach ($rootEntities as $key => $rootEntityData) {
        try {
          $entity = $importProcessor->importEntityFromRootData($rootEntityData);
@@ -422,7 +422,7 @@
            ->setAbsolute(TRUE)
            ->toString() : '',
          '@errorMessage' => $errorMessage ?? '',
-@@ -342,11 +631,11 @@
+@@ -342,11 +632,11 @@
        }
 
        if ($absolutePath) {

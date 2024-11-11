@@ -1,0 +1,44 @@
+--- core/lib/Drupal/Core/Url.php        2024-07-08 14:17:52
++++ core/lib/Drupal/Core/Url.php   2024-07-08 14:17:20
+@@ -104,6 +104,8 @@
+    */
+   protected $internalPath;
+
++  protected $actual;
++
+   /**
+    * Constructs a new Url object.
+    *
+@@ -124,10 +126,11 @@
+    * @todo Update this documentation for non-routed URIs in
+    *   https://www.drupal.org/node/2346787
+    */
+-  public function __construct($route_name, $route_parameters = [], $options = []) {
++  public function __construct($route_name, $route_parameters = [], $options = [], $actual = FALSE) {
+     $this->routeName = $route_name;
+     $this->routeParameters = $route_parameters;
+     $this->options = $options;
++    $this->actual = $actual;
+   }
+
+   /**
+@@ -150,8 +153,8 @@
+    * @see \Drupal\Core\Url::fromUserInput()
+    * @see \Drupal\Core\Url::fromUri()
+    */
+-  public static function fromRoute($route_name, $route_parameters = [], $options = []) {
+-    return new static($route_name, $route_parameters, $options);
++  public static function fromRoute($route_name, $route_parameters = [], $options = [], $actual = FALSE) {
++    return new static($route_name, $route_parameters, $options, $actual);
+   }
+
+   /**
+@@ -762,7 +765,7 @@
+       return $this->unroutedUrlAssembler()->assemble($this->getUri(), $this->getOptions(), $collect_bubbleable_metadata);
+     }
+
+-    return $this->urlGenerator()->generateFromRoute($this->getRouteName(), $this->getRouteParameters(), $this->getOptions(), $collect_bubbleable_metadata);
++    return $this->actual ? $this->urlGenerator()->generateActualFromRoute($this->getRouteName(), $this->getRouteParameters(), $this->getOptions()) : $this->urlGenerator()->generateFromRoute($this->getRouteName(), $this->getRouteParameters(), $this->getOptions(), $collect_bubbleable_metadata);
+   }
+
+   /**

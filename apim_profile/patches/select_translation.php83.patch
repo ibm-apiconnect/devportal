@@ -1,0 +1,11 @@
+--- modules/select_translation/src/Plugin/views/filter/SelectTranslation.php    2024-05-24 20:26:30
++++ modules/select_translation/src/Plugin/views/filter/SelectTranslation.php       2024-05-24 20:26:26
+@@ -24,6 +24,8 @@
+    */
+   // @codingStandardsIgnoreLine
+   public $no_operator = TRUE;
++
++  public $valueTitle = "";
+
+   /**
+    * {@inheritdoc}

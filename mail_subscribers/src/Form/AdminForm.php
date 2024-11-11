@@ -15,6 +15,8 @@ namespace Drupal\mail_subscribers\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\mail_subscribers\Entity\EmailList;
+use Drupal\Core\Render\Markup;
 
 /**
  * APIC settings form.
@@ -39,7 +41,6 @@ class AdminForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
-
     $config = $this->config('mail_subscribers.settings');
     $siteConfig = \Drupal::config('system.site');
 
@@ -50,16 +51,16 @@ class AdminForm extends ConfigFormBase {
     $fromName = $config->get('from_name');
     $form['from']['from_name'] = [
       '#type' => 'textfield',
-      '#title' => t('Sender\'s name'),
-      '#description' => t("Enter the sender's human readable name. Note: this value is not used by the APIC Email Provider, it will use the From address configured in the API Manager instead."),
+      '#title' => t('Copy recipient\'s name'),
+      '#description' => t("Enter the copy recipient's human readable name. Note: the sender's human readable name used by the APIC Email Provider is the From name configured in the API Manager."),
       '#default_value' => $fromName ?? $siteConfig->get('name'),
       '#maxlen' => 255,
     ];
     $fromMail = $config->get('from_mail');
     $form['from']['from_mail'] = [
       '#type' => 'textfield',
-      '#title' => t('Sender\'s email'),
-      '#description' => t("Enter the sender's email address. Note: this value is not used by the APIC Email Provider, it will use the From address configured in the API Manager instead."),
+      '#title' => t('Copy recipient\'s email'),
+      '#description' => t("Enter the copy recipient's email address. Note: the sender's email address value is used by the APIC Email Provider is the From address configured in the API Manager."),
       '#required' => TRUE,
       '#default_value' => $fromMail ?? $siteConfig->get('mail'),
       '#maxlen' => 255,
@@ -101,6 +102,53 @@ class AdminForm extends ConfigFormBase {
       '#default_value' => $config->get('debug'),
       '#description' => $this->t('When checked all outgoing messages are logged in the system log. A logged e-mail does not guarantee that it is sent or will be delivered. It only indicates that a message is send to the PHP mail() function. No status information is available of delivery by the PHP mail() function.'),
     ];
+
+    $entities = EmailList::loadMultiple();
+    // Table header.
+    $header = [
+      'title' => $this->t('Name'),
+      'operations' => $this->t('Operations'),
+
+    ];
+
+    // Table rows.
+    $rows = [];
+    foreach ($entities as $entity) {
+      $rows[$entity->id()] = [
+        'title' => $entity->get('title')->value,
+        'operations' => [
+          'data' => [
+            '#type' => 'dropbutton',
+            '#title' => $this->t('View'),
+            '#dropbutton_type' => 'small',
+            '#links' => array(
+              // 'simple_form' => array(
+              //   'title' => $this->t('Edit'),
+              //   'url' => Url::fromRoute('apic_app.create_modal'),
+              // ),
+              'delete' => array(
+                'title' => $this->t('Delete'),
+                'url' => Url::fromRoute('mail_subscribers.delete', ['listId' => $entity->id()]),
+              ),
+            ),
+          ],
+        ],
+      ];
+    }
+    if (!empty($rows)) {
+      $form['entity_deletion_heading'] = [
+        '#type' => 'markup',
+        '#markup' => Markup::create(
+          '<label class="form-item__label">' . $this->t('Email Lists') . '</label>'),
+      ];
+
+      // Build the table.
+      $form['lists'] = [
+        '#type' => 'table',
+        '#header' => $header,
+        '#rows' => $rows,
+      ];
+    }
 
     return parent::buildForm($form, $form_state);
   }

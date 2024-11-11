@@ -5,9 +5,11 @@ search404_jump: false
 search404_skip_auto_search: false
 search404_disable_error_message: false
 search404_use_or: false
+search404_use_customclue: ''
 search404_use_search_engine: false
 search404_ignore_extensions: 'htm html php'
-search404_ignore_query: 'gif jpg jpeg bmp png'
+search404_deny_all_file_extensions: false
+search404_deny_specific_file_extensions: 'gif jpg jpeg bmp png'
 search404_first: false
 search404_first_on_paths: ''
 search404_regex: ''
@@ -19,4 +21,6 @@ search404_page_title: 'Page not found'
 search404_ignore: 'and or the'
 search404_custom_error_message: ''
 search404_page_redirect: ''
-search404_ignore_paths: '/user/*'
+search404_ignore_paths : '/user/*'
+search404_ignore_language: false
+search404_search_file_entities: false

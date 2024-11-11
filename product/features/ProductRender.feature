@@ -1,7 +1,7 @@
+@api
 Feature: Product Rendering
   As Andre I am able to view a Product.
 
-    @api
   Scenario: I can see the Product that uses extended name regex
     Given I am not logged in
     Given apis:
@@ -16,7 +16,6 @@ Feature: Product Rendering
     Then I should see the text "AZaz API"
     And there are no errors
 
-  @api
   Scenario: I can see the Product
     Given I am not logged in
     Given apis:

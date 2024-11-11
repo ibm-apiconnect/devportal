@@ -123,6 +123,14 @@ class AdminForm extends ConfigFormBase {
       '#description' => t('If unchecked then version numbers will not be displayed for APIs or Products.'),
     ];
 
+    $form['config']['show_anonymous_apis'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Show API details to anonymous users'),
+      '#default_value' => $config->get('show_anonymous_apis'),
+      '#weight' => -11,
+      '#description' => t('If unchecked then anonymous users will be required to log in to view API details.'),
+    ];
+
     $form['config']['enable_api_test'] = [
       '#type' => 'checkbox',
       '#title' => t('Allow live testing of APIs'),
@@ -584,6 +592,7 @@ class AdminForm extends ConfigFormBase {
       ->set('show_placeholder_images', (bool) $form_state->getValue('show_placeholder_images'))
       ->set('show_register_app', (bool) $form_state->getValue('show_register_app'))
       ->set('show_versions', (bool) $form_state->getValue('show_versions'))
+      ->set('show_anonymous_apis', (bool) $form_state->getValue('show_anonymous_apis'))
       ->set('enable_api_test', (bool) $form_state->getValue('enable_api_test'))
       ->set('validate_apis', (bool) $form_state->getValue('validate_apis'))
       ->set('autotag_with_phase', (bool) $form_state->getValue('autotag_with_phase'))

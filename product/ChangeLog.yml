@@ -1,4 +1,8 @@
 changes:
+  6.3.1:
+  - velox/devportal#9012
+  6.3.0:
+  - update version 6.2.7 -> 6.3.0
   6.2.6:
   - 896810.0.8 (#297)
   6.2.5:

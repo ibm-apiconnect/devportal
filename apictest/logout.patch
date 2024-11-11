@@ -1,0 +1,32 @@
+--- vendor/drupal/drupal-extension/src/Drupal/DrupalExtension/Manager/DrupalAuthenticationManager.php        2024-07-03 13:40:40
++++ vendor/drupal/drupal-extension/src/Drupal/DrupalExtension/Manager/DrupalAuthenticationManager.php   2024-07-03 13:40:30
+@@ -9,6 +9,7 @@
+ use Drupal\DrupalDriverManagerInterface;
+ use Drupal\DrupalExtension\DrupalParametersTrait;
+ use Drupal\DrupalExtension\MinkAwareTrait;
++use Drupal\Core\Url;
+
+ /**
+  * Default implementation of the Drupal authentication manager service.
+@@ -102,12 +103,17 @@
+      */
+     public function logout()
+     {
+-        $this->getSession()->visit($this->locatePath($this->getDrupalText('logout_url')));
+-        $this->userManager->setCurrentUser(false);
++        $this->getSession()->visit($this->locatePath(Url::fromRoute('user.logout.confirm')->toString()));
++        $element = $this->getSession()->getPage();
++        $submit = $element->findButton('op');
++        if (isset($submit)) {
++            $submit->click();
++            $this->userManager->setCurrentUser(false);
+
+-        // Log the user out on the backend if possible.
+-        if ($this->driverManager->getDriver() instanceof AuthenticationDriverInterface) {
+-            $this->driverManager->getDriver()->logout();
++            // Log the user out on the backend if possible.
++            if ($this->driverManager->getDriver() instanceof AuthenticationDriverInterface) {
++                $this->driverManager->getDriver()->logout();
++            }
+         }
+     }

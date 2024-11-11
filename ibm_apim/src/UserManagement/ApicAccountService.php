@@ -189,7 +189,18 @@ class ApicAccountService implements ApicAccountInterface {
       // some user registries don't have a mail address and we store a known value to
       // identify this case and still be valid in Drupal so don't overwrite it with NULL
       if ($user->getMail() !== NULL && $user->getMail() !== '') {
-        $account->set('mail', $user->getMail());
+        $newEmail = $user->getMail();
+        if ($user->getUsername() === 'admin') {
+          $config = \Drupal::service('config.factory')->getEditable('contact.form.feedback');
+          if ($config) {
+            $oldEmail = [$account->mail->value];
+            $currentConfig = $config->get('recipients');
+            $updatedConfig = array_diff($currentConfig, $oldEmail);
+            $updatedConfig[] = $newEmail;
+            $config->set('recipients', $updatedConfig)->save();
+          }
+        }
+        $account->set('mail', $newEmail);
       }
       else {
         $this->logger->notice('updateLocalAccount - email address not available. Not updating to maintain what is already in the database');

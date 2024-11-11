@@ -82,16 +82,26 @@ class AllSubscribersWizard extends FormWizardBase {
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $cached_values = $form_state->getTemporaryValue('wizard');
 
+    $data = \Drupal::service('tempstore.private')->get('mail_subscribers')->get('data');
     $cached_values['objectType'] = 'all';
-    if (isset($cached_values['product'])) {
-      unset($cached_values['product']);
+    if (isset($cached_values['products'])) {
+      unset($cached_values['products']);
     }
-    if (isset($cached_values['api'])) {
-      unset($cached_values['api']);
+    if (isset($cached_values['apis'])) {
+      unset($cached_values['apis']);
     }
-    if (isset($cached_values['plan'])) {
-      unset($cached_values['plan']);
+    if (isset($cached_values['plans'])) {
+      unset($cached_values['plans']);
     }
+    if (isset($cached_values['consumerorgs'])) {
+      unset($cached_values['consumerorgs']);
+    }
+    if (!empty($data)) {
+      $cached_values = array_merge($cached_values, $data);
+      $cached_values['predefined'] = true;
+    }
+
+
     $form_state->setTemporaryValue('wizard', $cached_values);
 
     $form = parent::buildForm($form, $form_state);

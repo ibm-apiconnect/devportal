@@ -98,6 +98,32 @@ mail_subscribers.plan_wizard.step:
   options:
     _admin_route: TRUE
 
+mail_subscribers.consumerorg_wizard:
+  path: '/subscribers/consumerorg'
+  defaults:
+    _wizard: '\Drupal\mail_subscribers\Wizard\ConsumerOrganizationWizard'
+    _title: 'Email subscribers'
+    tempstore_id: 'mail_subscribers.wizard'
+    machine_name: 'MailSubscribersWizard'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _mail_subscribers_access_check: 'TRUE'
+  options:
+    _admin_route: TRUE
+
+mail_subscribers.consumerorg_wizard.step:
+  path: '/subscribers/consumerorg/{step}'
+  defaults:
+    _wizard: '\Drupal\mail_subscribers\Wizard\ConsumerOrganizationWizard'
+    _title: 'Email subscribers'
+    tempstore_id: 'mail_subscribers.wizard'
+    machine_name: 'MailSubscribersWizard'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _mail_subscribers_access_check: 'TRUE'
+  options:
+    _admin_route: TRUE
+
 mail_subscribers.all_wizard:
   path: '/subscribers/all'
   defaults:
@@ -123,3 +149,15 @@ mail_subscribers.all_wizard.step:
     _mail_subscribers_access_check: 'TRUE'
   options:
     _admin_route: TRUE
+
+mail_subscribers.delete:
+  path: '/admin/config/system/mail_subscribers/{listId}/delete'
+  defaults:
+    _form: '\Drupal\mail_subscribers\Form\EmailListDeleteForm'
+    _title: 'Delete an email list'
+  requirements:
+    _permission: 'administer mail subscribers'
+  options:
+    parameters:
+      listId:
+        type: 'mail_subscribers.listid'

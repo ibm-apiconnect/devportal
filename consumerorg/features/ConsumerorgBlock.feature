@@ -1,8 +1,8 @@
+@api
 Feature: Consumer Organization Block
   In order to use the developer portal
   the Con Org drop-down menu must display the correct options for my role
 
-  @api
   # Note that this a negative test for an admin user (uid=1) that should not see a con org menu
   Scenario: Sign in as the admin user (uid==1) and verify that the con org menu is not visible
     Given users:
@@ -17,7 +17,6 @@ Feature: Consumer Organization Block
     And I should not see the text "Select organization"
     And there are no errors
 
-  @api
   Scenario: Sign in as a con org owner and verify that the con org menu options are correct
     Given users:
       | name              | mail              | pass                  | status |
@@ -33,7 +32,6 @@ Feature: Consumer Organization Block
     And I should see the text "Select organization"
     And there are no errors
 
-  @api
   Scenario: Sign in as a con org owner of multiple orgs, and verify that the con org menu options are correct
     Given users:
       | name              | mail              | pass                  | status |
@@ -52,7 +50,6 @@ Feature: Consumer Organization Block
     And there are no errors
 
 
-  @api
   Scenario: As owner of one con org, I can click on my con org and be taken to the myorg page
     Given users:
       | name              | mail              | pass                  | status |
@@ -74,7 +71,6 @@ Feature: Consumer Organization Block
     And there are no errors
 
 
-  @api
   Scenario: As owner of multiple con orgs, I can click my con org and be taken to the myorg page
     Given users:
       | name              | mail              | pass                  | status |
@@ -98,7 +94,6 @@ Feature: Consumer Organization Block
     And there are no errors
 
 
-  @api
   Scenario: As a con org owner of multiple orgs, I can switch to a different org from the conorg block, and view changed org in /myorg page
     Given users:
       | name              | mail              | pass                  | status |

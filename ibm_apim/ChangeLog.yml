@@ -1,4 +1,10 @@
 changes:
+  6.3.2: null
+  6.3.1:
+  - Check if variable exists first (#1086) (#1087)
+  - Php83 v100 (#1084) (#1085)
+  6.3.0:
+  - update version 6.2.11 -> 6.3.0
   6.2.10:
   - velox/devportal#8913 - CIO SonarQube
   6.2.9:

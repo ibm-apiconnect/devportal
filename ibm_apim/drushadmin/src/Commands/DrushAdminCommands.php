@@ -45,24 +45,33 @@ class DrushAdminCommands extends DrushCommands {
    * A comma separated list of themes can be provided.
    *
    * @param $theme_name - The machine name of the theme (comma separate multiple themes).
+   * @option $dry-run Just return all the folder names of themes that will be deleted.
    *
    * @command theme-delete
    * @usage drush theme-delete [theme_name]
    *   Uninstall one or more custom themes. Delete one or more custom themes. It will fail if the theme is still enabled.
    */
-  public function drush_drushadmin_theme_delete($theme_name): void {
+  public function drush_drushadmin_theme_delete($theme_name, $options = ['dry-run' => false]): void {
     if ($theme_name !== NULL) {
       $theme = \Drupal::service('ibm_apim.utils')->getDisabledCustomExtensions('theme');
       $inputThemes = explode(',', $theme_name);
+      if ($options['dry-run']) {
+        $this->logger->notice("Dry Run detected listing themes that will be deleted:");
+      }
       foreach ($inputThemes as $inputTheme) {
-        // Check if the specified module is a disabled custom module
-        if (array_key_exists($inputTheme, $theme)) {
-          \Drupal::service('ibm_apim.module')->deleteExtensionOnFileSystem('theme', [$inputTheme], FALSE);
-          \Drupal::logger("drushadmin")->notice("@theme_name deleted.", ['@theme_name' => $inputTheme]);
-        }
-        else {
-          \Drupal::logger("drushadmin")
-            ->error("@theme_name not deleted. It is either still activated or is not a custom theme.", ['@theme_name' => $inputTheme]);
+        if (!$options['dry-run']) {
+          // Check if the specified module is a disabled custom module
+          if (array_key_exists($inputTheme, $theme)) {
+            \Drupal::service('ibm_apim.module')->deleteExtensionOnFileSystem('theme', [$inputTheme], FALSE);
+            \Drupal::logger("drushadmin")->notice("@theme_name deleted.", ['@theme_name' => $inputTheme]);
+          }
+          else {
+            \Drupal::logger("drushadmin")
+              ->error("@theme_name not deleted. It is either still activated or is not a custom theme.", ['@theme_name' => $inputTheme]);
+          }
+        } else {
+          $directory_path = DRUPAL_ROOT . DIRECTORY_SEPARATOR . \Drupal::service('extension.path.resolver')->getPath('theme', $inputTheme);
+          $this->logger->notice(t("@directory_path", ['@directory_path' => $directory_path]));
         }
       }
     }
@@ -220,24 +229,36 @@ class DrushAdminCommands extends DrushCommands {
    * A comma separated list of modules can be provided.
    *
    * @param $module_name - The machine name of the module (comma separate multiple modules).
+   * @option $dry-run Just return all the folder names of themes that will be deleted.
    *
    * @command module-delete
    * @usage drush module-delete [module_name]
    *   Uninstall one or more custom modules. Delete one or more custom modules. It will fail if the module is still enabled.
    */
-  public function drush_drushadmin_module_delete($module_name): void {
+  public function drush_drushadmin_module_delete($module_name, $options = ['dry-run' => false]): void {
     if ($module_name !== NULL) {
       $modules = \Drupal::service('ibm_apim.utils')->getDisabledCustomExtensions('module');
+      if ($options['dry-run']) {
+        $this->logger->notice("Dry Run detected listing modules that will be deleted:");
+      }
       $inputModules = explode(',', $module_name);
       foreach ($inputModules as $inputModule) {
-        // Check if the specified module is a disabled custom module
-        if (array_key_exists($inputModule, $modules)) {
-          \Drupal::service('ibm_apim.module')->deleteExtensionOnFileSystem('module', [$inputModule], FALSE);
-          \Drupal::logger("drushadmin")->notice("@module_name deleted.", ['@module_name' => $inputModule]);
-        }
-        else {
-          \Drupal::logger("drushadmin")
-            ->error("@module_name not deleted. It is either still activated or is not a custom module.", ['@module_name' => $inputModule]);
+        if (!$options['dry-run']) {
+          // Check if the specified module is a disabled custom module
+          if (array_key_exists($inputModule, $modules)) {
+            \Drupal::service('ibm_apim.module')->deleteExtensionOnFileSystem('module', [$inputModule], FALSE);
+            \Drupal::logger("drushadmin")->notice("@module_name deleted.", ['@module_name' => $inputModule]);
+          }
+          else {
+            \Drupal::logger("drushadmin")
+              ->error("@module_name not deleted. It is either still activated or is not a custom module.", ['@module_name' => $inputModule]);
+          }
+        } else {
+          $module_folder = \Drupal::service('extension.path.resolver')->getPath('module', $inputModule);
+          if ($module_folder) {
+            $directory_path = DRUPAL_ROOT . DIRECTORY_SEPARATOR . $module_folder;
+            $this->logger->notice(t("@directory_path", ['@directory_path' => $directory_path]));
+          }
         }
       }
     }

@@ -1,14 +1,14 @@
 --- vendor/drush/drush/src/Commands/core/RoleCommands.php       2024-04-02 17:27:23
 +++ vendor/drush/drush/src/Commands/core/RoleCommands.php  2024-04-02 17:26:55
 @@ -15,6 +15,7 @@
+ use Drush\Utils\StringUtils;
  use Symfony\Component\Console\Completion\CompletionInput;
  use Symfony\Component\Console\Completion\CompletionSuggestions;
- use Drush\Boot\DrupalBootLevels;
 +use Drupal\user\RoleInterface;
 
- final class RoleCommands extends DrushCommands implements SiteAliasManagerAwareInterface
+ final class RoleCommands extends DrushCommands
  {
-@@ -56,9 +57,13 @@
+@@ -62,9 +63,13 @@
      #[CLI\Bootstrap(level: DrupalBootLevels::FULL)]
      public function delete($machine_name): void
      {

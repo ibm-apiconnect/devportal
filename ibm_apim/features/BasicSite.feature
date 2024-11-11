@@ -1,3 +1,4 @@
+@api
 Feature: Basic site verification
   In order to use the developer portal I need to verify that the site has been created and is ready to use.
 

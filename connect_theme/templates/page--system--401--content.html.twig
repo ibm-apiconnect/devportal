@@ -1,0 +1,6 @@
+<div class="401-content">
+  <h1 class="page-header-error">{{ '↳ Error 401'|t }}</h1>
+  <h1 class="page-header">{{ 'Unauthorized access'|t }}</h1>
+  <p>{{ 'Sorry, you do not have permission to view this page.'|t }}</p>
+  <a href="{{ path('user.login', {'redirectto': redirectto })}}">{{ 'Go to login'|t }}</a>
+</div>

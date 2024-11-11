@@ -1,10 +1,10 @@
+@api
 Feature: ConsumerorgRoles
   In order to use the developer portal
   I need to be sure that consumer organization roles provide the correct level of access
 
   # needs to run in zombie driver cos goutte seems to cache the webpage meaning the updated node is not shown
 
-  @api
   Scenario: Add application credentials
     Given I am not logged in
     Given users:

@@ -29,20 +29,24 @@ class ChooseApiStep extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $form['intro'] = [
-      '#markup' => '<p>' . t('This wizard will email all subscribers of product plans that contain a specific API. Each subscriber will be sent an individual email.') . '</p>'
-        . '<p>' . t('Enter the name of the API:') . '</p>',
+      '#markup' => '<p>' . t('This wizard will email all subscribers of product plans that contain the chosen APIs. Each subscriber will be sent an individual email.') . '</p>'
+        . '<p>' . t('Enter the names of the APIs:') . '</p>',
       '#weight' => 0,
     ];
 
-    $form['api'] = [
+    $form['apis'] = [
       '#type' => 'entity_autocomplete',
       '#target_type' => 'node',
       '#selection_handler' => 'default',
+      '#tags' => TRUE,
+      '#maxlength' => NULL,
       // Optional. The default selection handler is pre-populated to 'default'.
       '#selection_settings' => [
         'target_bundles' => ['api'],
       ],
-      '#title' => t('Type the first few characters of the API you would like to select. You can then select from the available search results. Please note the search results are affected by which APIs you can access.'),
+      '#title' => t('APIs'),
+      '#description' => t('Type the first few characters of the API you would like to add then select from the available search results. Multiple apis can be added by separating them by a comma. Please note the search results are affected by which APIs you can access.'),
+
     ];
 
     return $form;
@@ -53,8 +57,8 @@ class ChooseApiStep extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state): ?bool {
 
-    if (empty($form_state->getUserInput()['api'])) {
-      $form_state->setErrorByName('api', t('You must select an API.'));
+    if (empty($form_state->getUserInput()['apis'])) {
+      $form_state->setErrorByName('apis', t('You must select at least one API.'));
       return FALSE;
     }
     return NULL;
@@ -66,10 +70,13 @@ class ChooseApiStep extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     $cached_values = $form_state->getTemporaryValue('wizard');
 
-    $api = $form_state->getValue('api');
-
+    $apis = $form_state->getValue('apis');
     $cached_values['objectType'] = 'api';
-    $cached_values['api'] = $api;
+    $values = [];
+    foreach ($apis as $api) {
+      $values[] = $api['target_id'];
+    }
+    $cached_values['apis'] = $values;
 
     $form_state->setTemporaryValue('wizard', $cached_values);
 

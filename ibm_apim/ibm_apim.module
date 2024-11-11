@@ -220,6 +220,12 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
         'messages' => NULL,
       ],
     ],
+    'ibm_apim_account_status_messages_block' => [
+      'variables' => [
+        'header' => NULL,
+        'messages' => NULL,
+      ],
+    ],
     'ibm_apim_wizard_title_block' => [
       'variables' => [
         'header' => NULL,
@@ -496,6 +502,10 @@ function ibm_apim_preprocess_html(&$variables) {
  */
 function ibm_apim_page_attachments(array &$attachments) {
   $attachments['#attached']['library'][] = 'ibm_apim/core';
+}
+
+function ibm_apim_preprocess_page(&$variables) {
+  $variables['redirectto'] = \Drupal::request()->get('redirectto');
 }
 
 /**
@@ -1609,7 +1619,7 @@ function ibm_apim_preprocess_form_element(&$variables) {
 }
 
 function ibm_apim_preprocess_form_element_label(&$variables) {
-  if (!empty($variables['element']['#is_widget']) || $variables['element']['#element_type'] === 'item') {
+  if (!empty($variables['element']['#is_widget']) || (array_key_exists('#element_type', $variables['element']) && $variables['element']['#element_type'] === 'item')) {
     unset($variables['element']['#attributes']['for']);
     unset($variables['attributes']['for']);
   }

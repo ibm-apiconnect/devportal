@@ -139,6 +139,9 @@ class CredentialsBlock extends BlockBase implements ContainerFactoryPluginInterf
     foreach ($credsArray as $cred) {
       $credentials[] = $cred->toArray();
     }
+    usort($credentials, function ($a, $b) {
+      return strcasecmp($a['title'] ?? 'Default credentials', $b['title'] ?? 'Default credentials');
+    });
     $nodeArray = [
       'application_id' => ['value' => $node->application_id->value],
       'credentials' => $credentials,

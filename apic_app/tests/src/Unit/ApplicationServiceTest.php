@@ -33,6 +33,8 @@ class ApplicationServiceTest extends UnitTestCase {
 
   private $applicationService;
 
+  private $applicationBuilder;
+
   protected function setup(): void {
     $this->mockUserUtils = $this->createStub(\Drupal\ibm_apim\Service\UserUtils::class);
     $this->mockApimUtils = $this->createStub(\Drupal\ibm_apim\Service\ApimUtils::class);

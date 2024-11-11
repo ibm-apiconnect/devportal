@@ -1,7 +1,7 @@
+@api
 Feature: Consumer Organization Nodes
   Check the node rendering for consumerorgs in different scenarios
 
-  @api
   Scenario: Sign in as different users and view the corg node directly (not via /myorg)
     Given I am not logged in
     Given users:
@@ -51,7 +51,6 @@ Feature: Consumer Organization Nodes
     And I should see the text "Consumer organization displayed as read only"
     And there are no errors
 
-  @api
   Scenario: Admin should not be able to edit the org title from admin edit page
     Given I am not logged in
     Given users:

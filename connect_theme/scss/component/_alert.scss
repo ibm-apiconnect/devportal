@@ -28,6 +28,10 @@
   display: flex;
 }
 
+.messages__wrapper {
+  margin-top: 0.75rem;
+}
+
 .alert.alert-success {
   border-left: 5px solid $alert-success-border;
 
@@ -60,6 +64,10 @@
     $color: "rgb(" + red($alert-danger-border) + "%2C" + green($alert-danger-border) + "%2C" + blue($alert-danger-border) + ")";
     content: url("data:image/svg+xml,%3C%3Fxml%20version='1.0'%20encoding='utf-8'%3F%3E%3C!--%20Generator:%20Adobe%20Illustrator%2023.0.2,%20SVG%20Export%20Plug-In%20.%20SVG%20Version:%206.00%20Build%200)%20--%3E%3Csvg%20version='1.1'%20id='icon'%20xmlns='http://www.w3.org/2000/svg'%20x='0px'%20y='0px'%20width='16px'%20height='16px'%20viewBox='0%200%2016%2016'%20style='enable-background:new%200%200%2016%2016;'%20xml:space='preserve'%3E%3Cstyle%20type='text/css'%3E%20.st0%7Bfill:none;%7D%20.st1%7Bopacity:0;fill-opacity:0;%7D%0A%3C/style%3E%3Crect%20id='_Transparent_Rectangle_'%20class='st0'%20width='16'%20height='16'/%3E%3Cpath%20fill='#{$color}'%20d='M8,1C4.1,1,1,4.1,1,8s3.1,7,7,7s7-3.1,7-7S11.9,1,8,1z%20M10.7,11.5L4.5,5.3l0.8-0.8l6.2,6.2L10.7,11.5z'/%3E%3Cpath%20fill='#{$color}'%20id='inner-path'%20class='st1'%20d='M10.7,11.5L4.5,5.3l0.8-0.8l6.2,6.2L10.7,11.5z'/%3E%3C/svg%3E");
   }
+}
+
+.adminstatusmessages {
+  padding-top: 0.75rem;
 }
 
 .alert .close {

@@ -1,7 +1,7 @@
+@api
 Feature: Product PathAlias
   As a consumer I should see products honouring their path alias.
 
-  @api
   Scenario: I can see products using their path alias
     Given I am not logged in
     Given users:
@@ -19,7 +19,6 @@ Feature: Product PathAlias
     Then I should see a link with href including "/product/climbingweather"
     And there are no errors
 
-  @api
   Scenario: I can see products using name:version
     Given I am not logged in
     Given users:

@@ -253,7 +253,7 @@ class Api {
         $node->set('apic_catalog_id', $configService->getEnvId());
         $node->set('api_id', $api['id']);
         $node->set('apic_version', $api['consumer_api']['info']['version']);
-        if (isset($api['consumer_api']['info']['x-pathalias'])) {
+        if (isset($api['consumer_api']['info']['x-pathalias']) && preg_match('/^[A-Za-z0-9_.-]+$/', $api['consumer_api']['info']['x-pathalias'])) {
           $node->set('apic_pathalias', $api['consumer_api']['info']['x-pathalias']);
         }
 

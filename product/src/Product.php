@@ -20,6 +20,7 @@ use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\ibm_apim\Controller\IbmApimContentController;
 use Throwable;
 
 /**
@@ -52,6 +53,9 @@ class Product {
     $hostVariable = $siteConfig->getApimHost();
 
     $oldTags = NULL;
+    $oldAttachments = NULL;
+    $oldImage = NULL;
+    $oldPathAlias = NULL;
     $xName = NULL;
     $oldNode = NULL;
 
@@ -102,6 +106,11 @@ class Product {
         }
       }
 
+      $oldAttachments = $oldNode->apic_attachments->getValue();
+      $oldImage = $oldNode->apic_image->getValue();
+      $oldPathAlias = $oldNode->apic_pathalias->getValue();
+      $oldNode->set('apic_pathalias', NULL);
+
       // duplicate node
       $node = $oldNode->createDuplicate();
       $node->save();
@@ -111,6 +120,8 @@ class Product {
 
       // wipe all our fields to ensure they get set to new values
       $node->set('apic_tags', []);
+      $node->set('apic_attachments', NULL);
+      $node->set('apic_image', NULL);
 
       $node->set('uid', 1);
       $node->set('apic_hostname', $hostVariable);
@@ -161,6 +172,24 @@ class Product {
     }
     else {
       \Drupal::logger('product')->error('Create product: initial node not set.', []);
+    }
+
+    if ($node !== NULL && $oldAttachments !== NULL && !empty($oldAttachments)) {
+      foreach ($oldAttachments as $key => $existingAttachment) {
+        $file = \Drupal::entityTypeManager()->getStorage('file')->load($existingAttachment['target_id']);
+        $fullUrl = \Drupal::service('file_system')->realpath($file->getFileUri());
+        IbmApimContentController::addAttachment($node, $fullUrl, $existingAttachment['description']);
+      }
+    }
+
+    if ($node !== NULL && $oldImage !== NULL && !empty($oldImage)) {
+      $file = \Drupal::entityTypeManager()->getStorage('file')->load($oldImage[0]['target_id']);
+      $fullUrl = \Drupal::service('file_system')->realpath($file->getFileUri());
+      IbmApimContentController::setIcon($node, $fullUrl, $oldImage[0]['alt']);
+    }
+
+    if ($node !== NULL && $oldPathAlias !== NULL && !empty($oldPathAlias)) {
+      $node->set('apic_pathalias', $oldPathAlias);
     }
 
     if ($node !== NULL && $oldTags !== NULL && !empty($oldTags)) {
@@ -507,8 +536,8 @@ class Product {
           $node->set('apic_updated_at', strval(strtotime($product['updated_at'])));
         }
 
-        if (isset($product['catalog_product']['info']['x-pathalias'])) {
-          $node->set('apic_pathalias', $product['catalog_product']['info']['x-pathalias']);
+        if (isset($product['catalog_product']['info']['x-pathalias']) && preg_match('/^[A-Za-z0-9:_.\-]+$/', $product['catalog_product']['info']['x-pathalias'])) {
+            $node->set('apic_pathalias', $product['catalog_product']['info']['x-pathalias']);
         }
 
         if (isset($product['billing_url'])) {
@@ -524,7 +553,7 @@ class Product {
                 $sourcePlan = $supersedePlan['source'];
                 $targetPlan = $supersedePlan['target'];
                 if (isset($product['catalog_product']['plans'][$targetPlan])) {
-                  if (!\is_array($product['catalog_product']['plans'][$targetPlan]['supersedes'])) {
+                  if (!array_key_exists('supersedes', $product['catalog_product']['plans'][$targetPlan]) || !\is_array($product['catalog_product']['plans'][$targetPlan]['supersedes'])) {
                     $product['catalog_product']['plans'][$targetPlan]['supersedes'] = [];
                   }
                   $product['catalog_product']['plans'][$targetPlan]['supersedes'][] = [

@@ -43,6 +43,14 @@ body.toolbar-fixed {
 
 }
 
+.toolbar-loading .apicStickyHeader {
+  left: 265px;
+}
+
+[data-admin-toolbar="collapsed"] .toolbar-loading .apicStickyHeader {
+  left: 72px;
+}
+
 // Remove flicking.
 body.toolbar-loading {
 

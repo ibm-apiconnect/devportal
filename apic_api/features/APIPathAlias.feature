@@ -1,7 +1,7 @@
+@api
 Feature: API PathAlias
   As a consumer I should see APIs honouring their path alias.
 
-  @api
   Scenario: I can see APIs using their path alias
     Given I am not logged in
     Given users:

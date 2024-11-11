@@ -906,7 +906,12 @@ class SiteConfig {
   }
 
   public function getSelfServiceOnboardingTTL() {
-    return $this->state->get('ibm_apim.site_config')["consumer_self_service_onboarding_ttl"];
+    $siteConfig = $this->state->get('ibm_apim.site_config');
+    if (!empty($siteConfig)) {
+      return $siteConfig["consumer_self_service_onboarding_ttl"];
+    }
+
+    return '';
   }
 
 

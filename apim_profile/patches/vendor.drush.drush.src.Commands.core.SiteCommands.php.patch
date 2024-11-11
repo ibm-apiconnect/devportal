@@ -1,9 +1,9 @@
 --- vendor/drush/drush/src/Commands/core/SiteCommands.php	2022-07-25 16:47:59.000000000 +0100
 +++ vendor/drush/drush/src/Commands/core/SiteCommands.php	2022-07-25 16:48:02.000000000 +0100
-@@ -9,6 +9,15 @@
- use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
- use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
- use Consolidation\OutputFormatters\StructuredData\UnstructuredListData;
+@@ -11,6 +11,14 @@
+ use Drush\Commands\AutowireTrait;
+ use Drush\Commands\DrushCommands;
+ use Symfony\Component\Filesystem\Filesystem;
 +use Symfony\Component\Console\Input\Input;
 +use Symfony\Component\Console\Output\Output;
 +use Symfony\Component\Filesystem\Path;
@@ -12,19 +12,18 @@
 +use Consolidation\SiteAlias\SiteAliasFileDiscovery;
 +use Drush\SiteAlias\LegacyAliasConverter;
 +use Drush\Drush;
-+use Drush\Boot\DrupalBootLevels;
 
- final class SiteCommands extends DrushCommands implements SiteAliasManagerAwareInterface
- {
-@@ -16,6 +25,7 @@
+ #[CLI\Bootstrap(DrupalBootLevels::NONE)]
+ final class SiteCommands extends DrushCommands
+@@ -19,6 +27,7 @@
 
      const SET = 'site:set';
      const ALIAS = 'site:alias';
 +    const ALIAS_CONVERT = 'site:alias-convert';
 
-     /**
-      * Set a site alias that will persist for the current session.
-@@ -119,6 +129,80 @@
+     public function __construct(
+         private readonly SiteAliasManagerInterface $siteAliasManager
+@@ -128,6 +137,80 @@
          }
      }
 
@@ -104,4 +103,4 @@
 +
      protected function siteAliasExportList(array $aliasList, $options): array
      {
-         $result = array_map(
+         return array_map(

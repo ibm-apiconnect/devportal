@@ -1,5 +1,5 @@
---- modules/warmer/src/Drush/Commands/WarmerCommands.php        2023-11-06 15:35:07
-+++ modules/warmer/src/Drush/Commands/WarmerCommands.php   2023-11-06 15:35:04
+--- modules/warmer/src/Commands/WarmerCommands.php        2023-11-06 15:35:07
++++ modules/warmer/src/Commands/WarmerCommands.php   2023-11-06 15:35:04
 @@ -181,4 +181,45 @@
      return NULL;
    }

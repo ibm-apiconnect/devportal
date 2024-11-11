@@ -1,4 +1,10 @@
 changes:
+  6.3.2: null
+  6.3.1:
+  - Fix dynamic property
+  - velox/devportal#9012
+  6.3.0:
+  - update version 6.2.7 -> 6.3.0
   6.2.6:
   - application subs tab a11y fixes (#391)
   6.2.5:

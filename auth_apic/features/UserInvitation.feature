@@ -1,3 +1,4 @@
+@api
 Feature: User Invitation Controller
   After being invited to the portal the provided token will be processed and I
   will be routed accordingly.
@@ -12,7 +13,6 @@ Feature: User Invitation Controller
   #   And there are no messages
   #   And there are no warnings
 
-  @api
   Scenario: Hit the user register route directly - authenticated user
     Given I am not logged in
     Given users:
@@ -65,7 +65,6 @@ Feature: User Invitation Controller
     And the "Consumer organization" field should contain ""
     And the "Password" field should contain ""
 
-  @api
   Scenario: Inviting a user who is logged in when they open the link
     Given I am not logged in
     And I have apim public keys stored
@@ -83,7 +82,6 @@ Feature: User Invitation Controller
     And there are no messages
     And I should be on "/"
 
-  @api
   Scenario: Inviting a user who exists
     Given I am not logged in
     And I have apim public keys stored
@@ -105,7 +103,6 @@ Feature: User Invitation Controller
     And there are no messages
     And I should be on "/user/register"
 
-  @api
   Scenario: Inviting a user who exists check admin is not present
     Given I am not logged in
     And I have apim public keys stored
@@ -121,7 +118,6 @@ Feature: User Invitation Controller
     And I should see "To complete your invitation, sign in to an existing account or sign up to create a new account."
     And I should not see the link "admin"
 
-  @api
   Scenario: Member invitation sign in with lur registry
     Given I am not logged in
     And I have apim public keys stored

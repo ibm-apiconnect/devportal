@@ -1,7 +1,7 @@
+@api
 Feature: Org member invitation
   As Andre I am able to invite a user to an organization I am in, with different user roles.
 
-  @api
   Scenario: As an org owner, I can view the invite org member form
     Given I am not logged in
     Given users:
@@ -18,7 +18,6 @@ Feature: Org member invitation
     And I should see the text "Cancel"
     And I should see the text "Save"
 
-  @api
   Scenario: As an org owner, I can send an org member invitation
     Given I am not logged in
     Given users:
@@ -37,7 +36,6 @@ Feature: Org member invitation
     And I should see the text "Invitation sent successfully."
     And there are no errors
 
-  @api
   # Note that this a negative test for an admin user (uid=1) that manually sets their url to the /myorg/invite page
   Scenario: Sign in as the admin user (uid==1) and try to view the Invite page
     Given users:
@@ -47,10 +45,9 @@ Feature: Org member invitation
     When I go to "/myorg/invite"
     Then I should get a "403" HTTP response
     And I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
     And there are no errors
 
-  @api
   Scenario: As an org member, role=administrator, I can send an org member invitation for role=Administrator
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -78,7 +75,6 @@ Feature: Org member invitation
     And I should see the text "Pending"
     And there are no errors
 
-  @api
   Scenario: As an org member, role=administrator, I can send an org member invitation for role=Viewer
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -107,7 +103,6 @@ Feature: Org member invitation
     And there are no errors
 
 
-  @api
   Scenario: As an org owner, I can send an org member invitation for the role=Developer (default)
     Given I am not logged in
     Given users:
@@ -132,7 +127,6 @@ Feature: Org member invitation
     And I should see the text "Pending"
     And there are no errors
 
-  @api
   Scenario: As an org owner, I cannot send an org member invitation when invitation disabled
     Given I am not logged in
     Given consumer org invitation is disabled
@@ -148,9 +142,8 @@ Feature: Org member invitation
     When I go to "/myorg/invite"
     Then I should get a "403" HTTP response
     And I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
 
-  @api
   Scenario: As an org owner, I can only send invitations to enabled roles
     Given I am not logged in
     Given consumer org invitation is enabled

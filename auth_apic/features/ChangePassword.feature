@@ -1,8 +1,8 @@
+@api
 Feature: Change Password
   In order to use the developer portal securely
   I need to be able to change my password
 
-  @api
   Scenario: View the change password form as admin
     Given userregistries:
       | type | title                           | url                           | user_managed | default |
@@ -14,7 +14,6 @@ Feature: Change Password
     Then I should see the text "Confirm password"
     Then I should see the "Save" button
 
-  @api
   Scenario: View the change password form as non-admin
     Given userregistries:
       | type | title                           | url                           | user_managed | default |
@@ -33,7 +32,6 @@ Feature: Change Password
     Then I should see the text "Confirm password"
     Then I should see the "Save" button
 
-  @api
   Scenario: Submit change password form as non-admin user
     Given users:
       | name              | mail              | pass                  | status |
@@ -56,7 +54,6 @@ Feature: Change Password
 
 #  Admin users - we need to check 2 cases, uid===1 special case and a user which has the administrator role.
 #                uid===1 is a local drupal user and will use the standard form behaviour.
-  @api
   Scenario: Submit change password form as user with administrator role
     Given userregistries:
       | type | title                           | url                           | user_managed | default |
@@ -69,7 +66,6 @@ Feature: Change Password
     And I press the "Save" button
     Then I should see the text "Password changed successfully"
 
-  @api
   Scenario: Submit change password form as admin user
     Given users:
       | name              | mail              | pass                  | status |
@@ -90,7 +86,6 @@ Feature: Change Password
     And I press the "Save" button
     Then I should see the text "Your password has been changed."
 
-  @api
   Scenario: Wrong current password as admin user
     Given users:
       | name              | mail              | pass                  | status |
@@ -103,7 +98,6 @@ Feature: Change Password
     And I press the "Save" button
     Then I should see the text "The current password you provided is incorrect."
 
-  @api
   Scenario: Wrong current password as non-admin
     Given userregistries:
       | type | title                           | url                           | user_managed | default |
@@ -122,7 +116,6 @@ Feature: Change Password
     And I press the "Save" button
     Then I should see the text "The old password is incorrect"
 
-  @api
   Scenario: Invalid new password as non-admin
     Given userregistries:
       | type | title                           | url                           | user_managed | default |
@@ -145,9 +138,8 @@ Feature: Change Password
     Given I am not logged in
     When I go to "/user/1/change-password"
     Then the response status code should be 403
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
 
-  @api
   Scenario: Change password for users with the same username
     Given I am not logged in
     Given userregistries:
@@ -185,7 +177,6 @@ Feature: Change Password
     And I should see the text "Password changed successfully"
 
 
-  @api
   Scenario: Change password for a user on writable ldap
     Given I am not logged in
     Given userregistries:
@@ -207,4 +198,3 @@ Feature: Change Password
     And there are no warnings
     And there are messages
     And I should see the text "Password changed successfully"
-

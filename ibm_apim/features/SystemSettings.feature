@@ -1,8 +1,8 @@
+@api
 Feature: System Settings
   In order to use the developer portal
   I need to be configure system settings
 
-  @api
   Scenario: System Settings - Proxy settings
     Given I am logged in as a user with the "Administrator" role
     And restore ibm_apim settings default values

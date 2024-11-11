@@ -1,3 +1,4 @@
+@api
 Feature: Sign in/ Sign up via an OIDC provider
   In order to use the developer portal
   I need to be able to Sign in via an oidc provider.
@@ -192,4 +193,3 @@ Feature: Sign in/ Sign up via an OIDC provider
   #   Then there are no errors
   #   And there are no messages
   #   And there are no warnings
-

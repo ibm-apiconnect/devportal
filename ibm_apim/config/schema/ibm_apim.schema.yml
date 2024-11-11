@@ -70,6 +70,9 @@ ibm_apim.settings:
     show_versions:
       type: boolean
       label: 'Show versions'
+    show_anonymous_apis:
+      type: boolean
+      label: 'Show API details to anomymous users'
     enable_api_test:
       type: boolean
       label: 'Allow testing of APIs'

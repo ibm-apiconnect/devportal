@@ -1,0 +1,7 @@
+FROM portal-site-template
+
+ARG JWK_B64_KEY
+ENV JWK_B64_KEY=${JWK_B64_KEY}
+COPY site-template_setup.sh /tmp/
+COPY build/ibm_apim_devportal-10.x-*.tgz /opt/ibm/upgrade/
+RUN bash /tmp/site-template_setup.sh

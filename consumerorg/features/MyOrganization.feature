@@ -1,8 +1,8 @@
+@api
 Feature: My Organization
   In order to use the developer portal
   I need to be able to view my organization page
 
-  @api
   Scenario: Sign in as an organization owner and view my organization page with no members
     Given I am not logged in
     Given users:
@@ -23,7 +23,6 @@ Feature: My Organization
     And I should see the text "You don't currently have any members."
     And there are no errors
 
-  @api
   Scenario: Sign in as an org owner, go to My org page, click Edit org name, and be taken to myorg/edit form
     Given I am not logged in
     Given users:
@@ -39,7 +38,6 @@ Feature: My Organization
     And there are no errors
     And there are no messages
 
-  @api
   Scenario: Sign in as an org owner, go to My org page, click Delete org, and be taken to myorg/delete form
     Given I am not logged in
     Given users:
@@ -54,7 +52,6 @@ Feature: My Organization
     Then I should be on "/myorg/delete"
     # There will be an error on this page if the user is not a member of any other organizations
 
-  @api
   Scenario: Sign in as an org owner, go to My org page, click Invite, and be taken to myorg/invite form
     Given I am not logged in
     Given users:
@@ -71,7 +68,6 @@ Feature: My Organization
     And there are no messages
 
 
-  @api
   # Note that this a negative test for an admin user (uid=1) that manually sets their url to the /myorg page
   Scenario: Sign in as the admin user (uid==1) and try to view the My Organization page
     Given users:
@@ -81,10 +77,9 @@ Feature: My Organization
     When I go to "/myorg"
     Then I should get a "403" HTTP response
     And I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
     And there are no errors
 
-  @api
   Scenario: As the org owner, I can view multiple members with different roles correctly in the My Organization page
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -125,7 +120,6 @@ Feature: My Organization
     And there are no errors
     And there are no messages
 
-  @api
   Scenario: As the org owner, I can view one member correctly in the My Organization page
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -146,7 +140,6 @@ Feature: My Organization
     And there are no errors
     And there are no messages
 
-  @api
   Scenario: As an org member, role=administrator, I can view the My Org page, and see correct text options
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -169,7 +162,6 @@ Feature: My Organization
     And there are no errors
     And there are no messages
 
-  @api
   Scenario: As an org member, role=developer, I can view the My Org page, and see correct text options
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -192,7 +184,6 @@ Feature: My Organization
     And there are no errors
     And there are no messages
 
-  @api
   Scenario: As an org member, role=viewer, I can view the My Org page, and see correct text options
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -216,7 +207,6 @@ Feature: My Organization
     And there are no messages
 
 
-  @api
   Scenario: As an org owner, I see correct text options for a pending administrator invitation on the My Org page
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -241,7 +231,6 @@ Feature: My Organization
 # I'm not checking for the success message, as this is part of the invitation flow & tested separately
     And there are no errors
 
-  @api
   Scenario: As an org owner, I see correct text options for a pending developer invitation on the My Org page
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -265,7 +254,6 @@ Feature: My Organization
     Then I should not see the text "Delete member"
     And there are no errors
 
-  @api
   Scenario: As an org owner, I see correct text options for a pending viewer invitation on the My Org page
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -290,7 +278,6 @@ Feature: My Organization
     And there are no errors
 
 
-  @api
   Scenario: As an org member, role=administrator, I can click Invite and be taken to the myorg/invite form
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -310,7 +297,6 @@ Feature: My Organization
     And there are no errors
     And there are no messages
 
-  @api
   Scenario: As an org member, role=developer, I cannot invite new members
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -327,9 +313,8 @@ Feature: My Organization
     Then I should not see the text "Invite"
     When I go to "/myorg/invite"
     Then I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
 
-  @api
   Scenario: As an org member, role=viewer, I cannot invite new members
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -346,9 +331,8 @@ Feature: My Organization
     Then I should not see the text "Invite"
     When I go to "/myorg/invite"
     Then I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
 
-  @api
   Scenario: As the org owner, with multiple members with different roles, I can click Invite and be taken to the myorg/invite form
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -374,7 +358,6 @@ Feature: My Organization
     And there are no errors
     And there are no messages
 
-  @api
   Scenario: As an admin member of an org with multiple members with different roles, I can click Invite and be taken to the myorg/invite form
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -400,7 +383,6 @@ Feature: My Organization
     And there are no errors
     And there are no messages
 
-  @api
   Scenario: As a developer member of an org with multiple members with different roles, I cannot invite new members
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -423,9 +405,8 @@ Feature: My Organization
     Then I should not see the text "Invite"
     When I go to "/myorg/invite"
     Then I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
 
-  @api
   Scenario: As a viewer member of an org with multiple members with different roles, I cannot invite new members
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -448,4 +429,4 @@ Feature: My Organization
     Then I should not see the text "Invite"
     When I go to "/myorg/invite"
     Then I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."

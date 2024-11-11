@@ -1,9 +1,9 @@
+@api
 Feature: Getting started page
   Check the first time login page looks correct
   This is a duplicate test to the ones in auth_apic but put here for early alerting if it breaks
   If this test fails then the ones in auth_apic will too!
 
-  @api
   Scenario: Sign in for the first time
     Given I am not logged in
     Given users:
@@ -24,4 +24,3 @@ Feature: Getting started page
     Then there are no errors
     And there are no messages
     And there are no warnings
-

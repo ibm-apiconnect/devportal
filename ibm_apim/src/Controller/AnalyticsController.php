@@ -129,7 +129,7 @@ class AnalyticsController extends ControllerBase {
     $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString(TRUE)->getGeneratedUrl();
     $dashboard = \Drupal::config('ibm_apim.settings')->get('analytics_dashboard');
     if (empty($dashboard)) {
-      $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
+      $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'top_products', 'top_apis', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
     }
     $drupalSettings = [
       'analytics' => [
@@ -217,9 +217,9 @@ class AnalyticsController extends ControllerBase {
       $offset = $this->requestStack->getCurrentRequest()->query->get('offset');
       $timeframe = $this->requestStack->getCurrentRequest()->query->get('timeframe');
       if (empty($app)) {
-        $url = "/consumer-analytics/orgs/${consumerOrgId}/dashboard";
+        $url = "/consumer-analytics/orgs/" . $consumerOrgId . "/dashboard";
       } else {
-        $url = "/consumer-analytics/orgs/${consumerOrgId}/apps/${app}/dashboard";
+        $url = "/consumer-analytics/orgs/" . $consumerOrgId . "/apps/" . $app . "/dashboard";
       }
 
       $parameters = [];
@@ -271,7 +271,7 @@ class AnalyticsController extends ControllerBase {
         $data = array_shift($data);
         $dashboard = \Drupal::config('ibm_apim.settings')->get('analytics_dashboard');
         if (empty($dashboard)) {
-          $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
+          $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'top_products', 'top_apis', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
         }
         try {
           $decoded = json_decode($data, TRUE, 512, JSON_THROW_ON_ERROR);

@@ -196,14 +196,14 @@ class EnterContentStep extends FormBase {
     ];
     $form['carbon_copy'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Send a copy of all messages to the sender.'),
-      '#description' => $this->t("This will send a copy of each email that is generated to the sender.  Because the email may contain context specific tokens, new email content is generated for each recipient with the correct token replacement.  This option will send a copy of all generated emails to the sender "),
+      '#title' => $this->t('Send a copy of all messages to the copy recipient.'),
+      '#description' => $this->t("This will send a copy of each email that is generated to the copy recipient. Because the email may contain context specific tokens, new email content is generated for each recipient with the correct token replacement. This option will send a copy of all generated emails to the copy recipient configured in the site settings."),
       '#default_value' => $carbon_copy,
     ];
     $form['send_original'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Send a copy of the original message to the sender.'),
-      '#description' => $this->t("This will send a single copy of the email to the sender without the replacement of any tokens that may have been selected"),
+      '#title' => $this->t('Send a copy of the original message to the copy recipient.'),
+      '#description' => $this->t("This will send a single copy of the email to the copy recipient without the replacement of any tokens that may have been selected."),
       '#default_value' => $send_original,
     ];
 
@@ -249,6 +249,7 @@ class EnterContentStep extends FormBase {
     $cached_values['direct'] = $direct;
     $cached_values['carbon_copy'] = $carbon_copy;
     $cached_values['send_original'] = $send_original;
+    $cached_values['instance'] = time();
 
     $form_state->setTemporaryValue('wizard', $cached_values);
 

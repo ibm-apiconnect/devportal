@@ -64,7 +64,7 @@ class UserCheckSubscriber implements EventSubscriberInterface
       $userId = $matches[2];
 
       // a user is not authorized to access another user's page unless they are an admin
-      $userUnauthorized = (int) \Drupal::currentUser()->id() !== (int) $userId && !((int) \Drupal::currentUser()->id() === 1 || in_array('administrator', \Drupal::currentUser()->getRoles()));
+      $userUnauthorized = (int) \Drupal::currentUser()->id() !== (int) $userId && !((int) \Drupal::currentUser()->id() === 1 ||  \Drupal::currentUser()->hasPermission('access user profiles'));
 
       if (\Drupal::currentUser()->isAuthenticated()) {
         if ($userUnauthorized) {

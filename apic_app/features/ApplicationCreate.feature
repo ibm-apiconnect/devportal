@@ -1,8 +1,8 @@
+@api
 Feature: ApplicationCreate
   In order to use the developer portal
   I need to be able to register applications
 
-  @api
   Scenario: Create application (green path)
     Given I am not logged in
     Given users:
@@ -35,7 +35,6 @@ Feature: ApplicationCreate
     Then I delete all applications from the site
 
 
-  @api
   Scenario: Create application as an anonymous user (fail)
     Given I am not logged in
     Given I do not have any applications
@@ -43,11 +42,10 @@ Feature: ApplicationCreate
     Then I should get a "403" HTTP response
     #Note that actual response is to redirect users to login page, but setupbehat is hardcoded to a r4032login response as follows
     And I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
     And there are no errors
 
 
-  @api
   Scenario: Create application as the admin user uid==1 (fail)
     Given users:
       | name              | mail              | pass                  | status |
@@ -56,11 +54,10 @@ Feature: ApplicationCreate
     When I go to "/application/new"
     Then I should get a "403" HTTP response
     And I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
     And there are no errors
 
 
-  @api
   Scenario: Create application as a user with the role viewer (fail)
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -78,11 +75,10 @@ Feature: ApplicationCreate
     Then I should get a "403" HTTP response
     #Note that actual response is to redirect users to login page, but setupbehat is hardcoded to a r4032login response as follows
     And I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
     And there are no errors
 
 
-  @api
   Scenario: Create application as a user with the role developer
     Given I do not have an analytics service
     Given users:
@@ -119,7 +115,6 @@ Feature: ApplicationCreate
     Then I delete all applications from the site
 
 
-  @api
   Scenario: Create application as a user with the role administrator
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -155,7 +150,6 @@ Feature: ApplicationCreate
     Then I delete all applications from the site
 
 
-  @api
   Scenario: Create an application with one OAuth redirect endpoint
     Given I am not logged in
     Given users:
@@ -189,7 +183,6 @@ Feature: ApplicationCreate
     Then I delete all applications from the site
 
 
-  @api
   Scenario: Create an application with multiple OAuth redirect endpoints
     Given I am not logged in
     Given users:
@@ -222,7 +215,6 @@ Feature: ApplicationCreate
     And there are no errors
     Then I delete all applications from the site
 
-  @api
   Scenario: Create application with text custom field
     Given I am not logged in
     Given users:
@@ -252,7 +244,6 @@ Feature: ApplicationCreate
     Then I delete all applications from the site
     Then I delete the text type custom fields for application entities
 
-  @api
   Scenario: Create application with timestamp custom field
     Given I am not logged in
     Given users:
@@ -291,7 +282,6 @@ Feature: ApplicationCreate
     Then I delete all applications from the site
     Then I delete the timestamp type custom fields for application entities
 
-  @api
   Scenario: Create application with datetime custom field
     Given I am not logged in
     Given users:
@@ -329,5 +319,3 @@ Feature: ApplicationCreate
     Then I should see the text "00:00"
     Then I delete all applications from the site
     Then I delete the datetime type custom fields for application entities
-  
- 

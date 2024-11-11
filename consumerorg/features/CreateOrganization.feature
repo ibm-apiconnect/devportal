@@ -1,7 +1,7 @@
+@api
 Feature: Create consumer organization
   Depending on my role, I am able to create an organization.
 
-  @api
   Scenario: As Andre I can view the create new consumer organization form
     Given I am not logged in
     Given users:
@@ -18,7 +18,6 @@ Feature: Create consumer organization
     And I should see the text "Cancel"
     And I should see the text "Save"
 
-  @api
   Scenario: As Andre I can create a new consumer organization
     Given I am not logged in
     Given users:
@@ -36,7 +35,6 @@ Feature: Create consumer organization
     And I should see the text "Consumer organization created successfully."
     And there are no errors
 
-  @api
   # Note that this a negative test for an admin user (uid=1) that manually sets their url to the /myorg/create page
   Scenario: Sign in as the admin user (uid==1) and try to view the My Organization page
     Given users:
@@ -46,12 +44,11 @@ Feature: Create consumer organization
     When I go to "/myorg/create"
     Then I should get a "403" HTTP response
     And I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
     And there are no errors
 
 
 #This test is half done - cannot check display of org name until cache issue fixed: velox/devportal#4657
-  @api
   Scenario: As Andre I can create a new consumer organization with ,&-! in the title
     Given I am not logged in
     Given users:

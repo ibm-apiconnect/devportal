@@ -1,4 +1,6 @@
 changes:
+  6.3.0:
+  - update version 6.2.4 -> 6.3.0
   6.2.3:
   - add env.GIT_COMMIT_SUMMARY
   6.2.2:

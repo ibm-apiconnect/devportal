@@ -526,7 +526,7 @@ function apic_api_preprocess_node(&$variables): void {
           $pathQuery->condition('apic_pathalias.value', $selectedProductNid);
           $pathNids = $pathQuery->accessCheck()->execute();
           if (count($pathNids) > 0) {
-            $selectedProductNid = array_key_first($pathNids);
+            $selectedProductNid = reset($pathNids);
           }
         }
         $apps = \Drupal::service('apic_app.application')->listApplications();

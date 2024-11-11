@@ -1,7 +1,7 @@
+@api
 Feature: Application Rendering
   As Andre I am able to view an application.
 
-  @api
   Scenario: I can see an application when there is an analytics service
     Given I have an analytics service
     Given I am not logged in
@@ -26,7 +26,6 @@ Feature: Application Rendering
     And there are no errors
 
 
-  @api
   Scenario: I can see an application when there is no analytics service
     Given I do not have an analytics service
     Given I am not logged in
@@ -53,7 +52,6 @@ Feature: Application Rendering
     And there are no errors
 
 
-  @api
   Scenario: I can see the application with a subscription and an analytics service
     Given I have an analytics service
     Given I am not logged in
@@ -92,7 +90,6 @@ Feature: Application Rendering
     And there are no errors
 
 
-  @api
   Scenario: I can see the application with a subscription when there is no analytics service
     Given I do not have an analytics service
     Given I am not logged in
@@ -131,7 +128,6 @@ Feature: Application Rendering
     And there are no errors
 
 
-  @api
   Scenario: I can see an application when there are no subscriptions
     Given I have an analytics service
     Given I am not logged in

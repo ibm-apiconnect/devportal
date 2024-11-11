@@ -1,9 +1,9 @@
 --- modules/workbench/src/Controller/WorkbenchContentController.php	2019-04-25 20:24:46.000000000 +0100
 +++ modules/workbench/src/Controller/WorkbenchContentController.php	2019-04-25 20:25:06.000000000 +0100
-@@ -6,11 +6,12 @@
+@@ -4,11 +4,12 @@
+
+ use Drupal\node\Controller\NodeController;
  use Drupal\views\Views;
- use Drupal\views\Plugin\Block\ViewsBlock;
- use Drupal\views\Plugin\views\display\Embed;
 +use Drupal\ibm_apim\Controller\IbmApimNodeController;
 
  /**

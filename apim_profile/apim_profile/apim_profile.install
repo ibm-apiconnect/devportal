@@ -28,7 +28,7 @@ use Drupal\user\Entity\User;
 use Drupal\user\RoleInterface;
 use Drupal\views\Views;
 use Drupal\Core\Config\FileStorage;
-
+use Drupal\ultimate_cron\Entity\CronJob;
 
 /**
  * Implements hook_install().
@@ -79,7 +79,6 @@ function apim_profile_install() {
     'link',
     'menu_link_content',
     'forum',
-    'tour',
     'update',
     'content_translation',
     'language',
@@ -93,8 +92,6 @@ function apim_profile_install() {
 
   $module_dependencies = [
     'acl',
-    'admin_toolbar',
-    'admin_toolbar_tools',
     'bootstrap_layouts',
     'blazy',
     'blazy_ui',
@@ -107,6 +104,7 @@ function apim_profile_install() {
     'mailsystem',
     'taxonomy_menu',
     'autologout',
+    'js_cookie',
     'session_limit',
     'token',
     'typed_data',
@@ -174,7 +172,6 @@ function apim_profile_install() {
     'avatars',
     'mimemail',
     'views_autocomplete_filters',
-    'multiple_fields_remove_button',
     'account_field_split',
     'eu_cookie_compliance',
     'serialization',
@@ -198,6 +195,13 @@ function apim_profile_install() {
     'restrict_by_ip',
     'content_synchronizer',
     'fontawesome',
+    'jquery_ui_resizable',
+    'layout_builder',
+    'navigation',
+    'navigation_top_bar',
+    'jquery_ui_draggable',
+    'jquery_ui_effects',
+    'maxlength',
   ];
 
   $our_modules = [
@@ -402,6 +406,7 @@ function apim_profile_default_apic_config() {
     ->set('show_placeholder_images', TRUE)
     ->set('show_register_app', TRUE)
     ->set('show_versions', TRUE)
+    ->set('show_anonymous_apis', TRUE)
     ->set('enable_api_test', TRUE)
     ->set('validate_apis', TRUE)
     ->set('autotag_with_phase', FALSE)
@@ -2866,6 +2871,8 @@ function apim_profile_update_10001() {
 
   delete_config(['views.view.content_browser', 'ckeditor_media_embed.settings']);
 
+  module_install(['jquery_ui_effects']);
+
   $uninstall_modules = [ 'ckeditor_media_embed', 'console',
   'flood_unblock', 'message', 'message_notify', 'message_subscribe',
   'video_embed_field', 'video_embed_html5', 'content_browser',
@@ -2963,14 +2970,17 @@ function apim_profile_update_10006() {
  * Update default captcha challenge points to be image_captcha/Image
  */
 function apim_profile_update_10007() {
-  $query = \Drupal::entityQuery('captcha_point');
-  $ids = $query->accessCheck()->execute();
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('captcha')) {
+    $query = \Drupal::entityQuery('captcha_point');
+    $ids = $query->accessCheck()->execute();
 
-  foreach ($ids as $id) {
-    $cp = CaptchaPoint::load($id);
-    if ($cp !== NULL && $cp->getCaptchaType() == 'default') {
-      $cp->setCaptchaType('image_captcha/Image');
-      $cp->save();
+    foreach ($ids as $id) {
+      $cp = CaptchaPoint::load($id);
+      if ($cp !== NULL && $cp->getCaptchaType() == 'default') {
+        $cp->setCaptchaType('image_captcha/Image');
+        $cp->save();
+      }
     }
   }
 }
@@ -3029,12 +3039,13 @@ function apim_profile_update_10011() {
   $moduleHandler = \Drupal::service('module_handler');
   $form_id = 'contact_message_feedback_form';
 
-  try {
-    _apim_profile_enable_captcha_on_form($form_id);
-  } catch (Throwable $e) {
-    // just ignore it
-  }
   if ($moduleHandler->moduleExists('captcha')) {
+    try {
+      _apim_profile_enable_captcha_on_form($form_id);
+    } catch (Throwable $e) {
+      // just ignore it
+    }
+
     $captcha_point = \Drupal::entityTypeManager()->getStorage('captcha_point')->load($form_id);
     if (!isset($captcha_point)) {
       $captcha_point = new \Drupal\captcha\Entity\CaptchaPoint([
@@ -3288,10 +3299,10 @@ function apim_profile_update_10036() {
 * Remove Unused config feature flag cli_language_fix in ibm_apim.feature_flags
 */
 function apim_profile_update_10037() {
-    \Drupal::configFactory()
-    ->getEditable('ibm_apim.feature_flags')
-    ->clear("cli_language_fix")
-    ->save();
+  \Drupal::configFactory()
+  ->getEditable('ibm_apim.feature_flags')
+  ->clear("cli_language_fix")
+  ->save();
 }
 
 /**
@@ -3302,6 +3313,203 @@ function apim_profile_update_10038() {
     if (!$moduleHandler->moduleExists('perimeter')) {
       delete_config(['perimeter.settings']);
     }
+}
+
+/**
+* Update search_api_cron schedule to be every minute
+*/
+function apim_profile_update_10039() {
+  $search_api_cron = Cronjob::load("search_api_cron");
+  $one_minute_cron = array("* * * * *");
+
+  $scheduler_config = $search_api_cron->getConfiguration('scheduler')['rules'];
+  $scheduler_config['rules'] = $one_minute_cron;
+  $scheduler_config = $search_api_cron->setConfiguration('scheduler', $scheduler_config);
+
+  $search_api_cron->save();
+
+  \Drupal::service('config.factory')
+  ->getEditable('search_api.settings')
+  ->set('cron_worker_runtime', 30)
+  ->save();
+}
+
+/**
+ * Enable js_cookie module as its a dependency of autologout
+ */
+function apim_profile_update_10040() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('autologout') && !$moduleHandler->moduleExists('js_cookie')) {
+    module_install(['js_cookie']);
+  }
+}
+
+/**
+* Delete orphaned config if the module is disabled
+*/
+function apim_profile_update_10041() {
+    $moduleHandler = \Drupal::service('module_handler');
+    if (!$moduleHandler->moduleExists('bartik')) {
+      delete_config([
+        'bartik.settings', 'block.block.bartik_account_menu',
+        'block.block.bartik_branding', 'block.block.bartik_breadcrumbs', 'block.block.bartik_content',
+        'block.block.bartik_footer', 'block.block.bartik_help', 'block.block.bartik_local_actions',
+        'block.block.bartik_local_tasks', 'block.block.bartik_main_menu', 'block.block.bartik_messages',
+        'block.block.bartik_page_title', 'block.block.bartik_powered', 'block.block.bartik_tools'
+      ]);
+    }
+    if (!$moduleHandler->moduleExists('classy')) {
+      delete_config(['classy.settings']);
+    }
+    if (!$moduleHandler->moduleExists('seven')) {
+      delete_config([
+        'seven.settings', 'block.block.seven_breadcrumbs', 'block.block.seven_content',
+        'block.block.seven_help', 'block.block.seven_local_actions', 'block.block.seven_login',
+        'block.block.seven_messages', 'block.block.seven_page_title', 'block.block.seven_primary_local_tasks',
+        'block.block.seven_secondary_local_tasks'
+    ]);
+    }
+    if (!$moduleHandler->moduleExists('adminimal_admin_toolbar')) {
+      delete_config(['adminimal_admin_toolbar.settings']);
+    }
+    if (!$moduleHandler->moduleExists('extlink')) {
+      delete_config(['extlink.settings']);
+    }
+}
+
+/**
+* Enable new Drupal Admin Navigation and disable Admin Toolbar
+*/
+function apim_profile_update_10042() {
+  user_role_revoke_permissions('administrator', ['access tour']);
+  module_uninstall(['tour', 'admin_toolbar', 'admin_toolbar_tools']);
+  module_install(['layout_builder', 'navigation', 'navigation_top_bar', 'jquery_ui_resizable']);
+  user_role_grant_permissions('administrator', ['access navigation', 'configure navigation layout']);
+}
+
+/**
+* Update search404 config due to some variables missing
+*/
+function apim_profile_update_10043() {
+  $config = \Drupal::service('config.factory')->getEditable('search404.settings');
+  if ($config) {
+    $currentConfig = $config->get('search404_use_customclue');
+    if (empty($currentConfig)) {
+      $config->set('search404_use_customclue', TRUE)->save(TRUE);
+    }
+    $currentConfig = $config->get('search404_deny_all_file_extensions');
+    if (empty($currentConfig)) {
+      $config->set('search404_deny_all_file_extensions', FALSE)->save(TRUE);
+    }
+    $currentConfig = $config->get('search404_deny_specific_file_extensions');
+    if (empty($currentConfig)) {
+      $config->set('search404_deny_specific_file_extensions', 'gif jpg jpeg bmp png')->save(TRUE);
+    }
+    $currentConfig = $config->get('search404_ignore_language');
+    if (empty($currentConfig)) {
+      $config->set('search404_ignore_language', FALSE)->save(TRUE);
+    }
+    $currentConfig = $config->get('search404_search_file_entities');
+    if (empty($currentConfig)) {
+      $config->set('search404_search_file_entities', FALSE)->save(TRUE);
+    }
+    $currentConfig = $config->get('search404_ignore_query');
+    if (!empty($currentConfig)) {
+      $config->clear('search404_ignore_query')->save(TRUE);
+    }
+  }
+}
+
+/**
+* Remove multiple_fields_remove_button as its now a core drupal functionaility
+*/
+function apim_profile_update_10044() {
+  module_uninstall(['multiple_fields_remove_button']);
+}
+
+/**
+* Enable jquery_ui_draggable for connect_theme
+*/
+function apim_profile_update_10045() {
+  module_install(['jquery_ui_draggable']);
+}
+
+/**
+* Enable maxlength module so descriptions can be limited on character length
+*/
+function apim_profile_update_10046() {
+  module_install(['maxlength']);
+
+  $maxlengthSettings = [
+    'maxlength_js_enforce' => TRUE,
+  ];
+
+  // Enable max length for Application descriptions
+  $maxlengthSettings['maxlength_js_label'] = 'Description is limited to @limit characters, remaining: <strong>@remaining</strong>';
+  $maxlengthSettings['maxlength_js'] = 65535;
+  $app_form_display = \Drupal::entityTypeManager()
+  ->getStorage('entity_form_display')
+  ->load('node.application.default');
+  $corg_form_display = \Drupal::entityTypeManager()
+  ->getStorage('entity_form_display')
+  ->load('node.consumerorg.default');
+
+  $app_description = $app_form_display->getComponent('apic_summary');
+
+  if(!isset($app_description['third_party_settings']['maxlength'])) {
+    $app_description['third_party_settings']['maxlength'] = $maxlengthSettings;
+  }
+
+  // Enable max length for Application and Consumer Org Titles
+  $maxlengthSettings['maxlength_js_label'] = 'Title is limited to @limit characters, remaining: <strong>@remaining</strong>';
+  $maxlengthSettings['maxlength_js'] = 255;
+
+  $app_title = $app_form_display->getComponent('title');
+  if(!isset($app_title['third_party_settings']['maxlength'])) {
+    $app_title['third_party_settings']['maxlength'] = $maxlengthSettings;
+  }
+
+  $corg_title = $corg_form_display->getComponent('title');
+  if(!isset($corg_title['third_party_settings']['maxlength'])) {
+    $corg_title['third_party_settings']['maxlength'] = $maxlengthSettings;
+  }
+
+  $app_form_display->setComponent('apic_summary', $app_description);
+  $app_form_display->setComponent('title', $app_title);
+  $app_form_display->save();
+
+  $corg_form_display->setComponent('title', $corg_title);
+  $corg_form_display->save();
+}
+
+/**
+* Uninstall email_tfa if installed as its a banned module
+*/
+function apim_profile_update_10800() {
+  \Drupal::service('update.update_hook_registry')->markFutureUpdateEquivalent(10900, '10.0.9.0');
+  module_uninstall(['email_tfa']);
+}
+
+/**
+* Add admin email to feedback form recipients if the config exists and email not already present
+*/
+function apim_profile_update_10801() {
+  \Drupal::service('update.update_hook_registry')->markFutureUpdateEquivalent(10901, '10.0.9.0');
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  $account = User::load(1);
+  $config = \Drupal::service('config.factory')->getEditable('contact.form.feedback');
+  if ($config && $account) {
+    $adminEmail = $account->mail->value;
+    $currentConfig = $config->get('recipients');
+    if (!in_array($adminEmail, $currentConfig)) {
+      $currentConfig[] = $adminEmail;
+      $config->set('recipients', $currentConfig)->save();
+    }
+  }
 }
 
 function delete_config(array $configs) {

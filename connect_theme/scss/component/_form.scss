@@ -1215,3 +1215,11 @@ input[type="file"] {
   border-radius: 0;
   border: 0;
 }
+
+.application-create-form button[value="Remove"], .application-update-form button[value="Remove"], .modal-application-create-form button[value="Remove"] {
+  height: 40px;
+  padding: initial;
+  padding-right: 60px;
+  padding-left: 12px;
+  margin-left: 10px;
+}

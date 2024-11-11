@@ -315,6 +315,7 @@ class ProductCommands extends DrushCommands {
               ->error('Drush product supersede : found a product in a strange lifecycle state \'@state\'. Expected \'published\' or \'deprecated\'.', ['@state' => $product['state']]);
           }
         }
+
         if (isset($oldNid, $newNid)) {
           Product::updateBasicPageRefs($oldNid, $newNid, TRUE);
         }
@@ -464,7 +465,7 @@ class ProductCommands extends DrushCommands {
         }
         $apiCommand = new ApicApiCommands();
         $apiCommand->drush_apic_api_massupdate($content['consumer_apis'], 'product_supersede');
-
+        $deleteProducts = [];
         foreach ($content['products'] as $product) {
           if ($product['state'] === 'retired') {
             $query = \Drupal::entityQuery('node');
@@ -475,7 +476,7 @@ class ProductCommands extends DrushCommands {
               $oldNid = array_shift($nids);
             }
 
-            $this->drush_product_delete($product, 'product_replace');
+            $deleteProducts[] = $product;
           }
           elseif ($product['state'] === 'deprecated') {
             $this->drush_product_update(['product' => $product], 'product_replace');
@@ -505,6 +506,13 @@ class ProductCommands extends DrushCommands {
               ->error('Drush product replace : found a product in a strange lifecycle state \'@state\'. Expected \'published\', \'deprecated\' or \'retired\'.', ['@state' => $product['state']]);
           }
         }
+
+        if (isset($deleteProducts)) {
+          foreach ($deleteProducts as $deleteProduct) {
+            $this->drush_product_delete($deleteProduct, 'product_replace');
+          }
+        }
+
         if (isset($oldNid, $newNid)) {
           Product::updateBasicPageRefs($oldNid, $newNid, FALSE);
         }

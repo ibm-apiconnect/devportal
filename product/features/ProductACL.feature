@@ -1,9 +1,9 @@
+@api
 Feature: ProductACL
   In order to use the developer portal
   I need to be able to access products I should be allowed to access
 
   @acl
-  @api
   Scenario: Create product with public visibility and test its access control
     # Hard coding these for now.  For full stack testing, substitute with real users/consumerorgs
     # in the Then clauses below
@@ -56,7 +56,6 @@ Feature: ProductACL
 
 
   @acl
-  @api
   Scenario: Create product with auth visibility and test its access control
     Given users:
       | name      | mail                  | pass     | status |
@@ -102,7 +101,6 @@ Feature: ProductACL
 
 
   @acl
-  @api
   Scenario: Create product with org url visibility and test its access control
     Given users:
       | name      | mail                  | pass     | status |
@@ -159,7 +157,6 @@ Feature: ProductACL
 
 
   @acl
-  @api
   Scenario: Create product with tag visibility and test its access control
     Given users:
       | name      | mail                  | pass     | status |
@@ -216,7 +213,6 @@ Feature: ProductACL
 
 
   @acl
-  @api
   Scenario: Create product with it's visibility disabled and test its access control
     Given users:
       | name      | mail                  | pass     | status |

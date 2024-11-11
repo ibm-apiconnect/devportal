@@ -1,11 +1,11 @@
 --- core/modules/user/src/Plugin/Block/UserLoginBlock.php	2022-05-23 09:20:24.154000913 +0000
 +++ core/modules/user/src/Plugin/Block/UserLoginBlock.php	2022-05-23 13:30:47.085197363 +0000
-@@ -83,7 +83,7 @@
+@@ -99,7 +99,7 @@
     * {@inheritdoc}
     */
    public function build() {
--    $form = \Drupal::formBuilder()->getForm('Drupal\user\Form\UserLoginForm');
-+    $form = \Drupal::formBuilder()->getForm('Drupal\auth_apic\Form\ApicUserLoginForm');
+-    $form = $this->formBuilder->getForm(UserLoginForm::class);
++    $form = $this->formBuilder->getForm('Drupal\auth_apic\Form\ApicUserLoginForm');
      unset($form['name']['#attributes']['autofocus']);
-     // When unsetting field descriptions, also unset aria-describedby attributes
-     // to avoid introducing an accessibility bug.
+     $form['name']['#size'] = 15;
+     $form['pass']['#size'] = 15;

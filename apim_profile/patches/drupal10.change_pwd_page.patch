@@ -11,3 +11,27 @@ index e2d289dd86d1e1397f054671f8c8d86727b75679..60cd5e887ac535a0663b0856ffbebb7e
      if ($current_pass_input) {
        $user = User::load(\Drupal::currentUser()->id());
        if (!$this->passwordHasher->check($current_pass_input, $user->getPassword())) {
+
+diff --git modules/change_pwd_page/src/Form/ChangePasswordForm.php modules/change_pwd_page/src/Form/ChangePasswordForm.php
+index e2d289d..011492e 100644
+--- modules/change_pwd_page/src/Form/ChangePasswordForm.php
++++ modules/change_pwd_page/src/Form/ChangePasswordForm.php
+@@ -123,6 +123,10 @@ class ChangePasswordForm extends FormBase {
+           ]);
+         }
+       }
++      $form['account']['name'] = [
++        '#type' => 'hidden',
++        '#value' => $account->getAccountName(),
++      ];
+
+       // This should never show. The data is needed by other modules.
+       $roles = array_map(['\Drupal\Component\Utility\Html', 'escape'], user_role_names(TRUE));
+@@ -159,6 +163,7 @@ class ChangePasswordForm extends FormBase {
+    */
+   public function submitForm(array &$form, FormStateInterface $form_state) {
+     $user = $form_state->getFormObject()->getEntity();
++    $user->setUsername($form_state->getValue('name'));
+     $user->setPassword($form_state->getValue('pass'));
+     $user->save();
+     $this->messenger()->addStatus($this->t('Your password has been changed.'));

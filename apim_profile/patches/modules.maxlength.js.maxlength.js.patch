@@ -1,0 +1,10 @@
+--- modules/maxlength/js/maxlength.js   2024-08-22 10:53:41
++++ modules/maxlength/js/maxlength.js      2024-09-30 16:24:22
+@@ -99,6 +99,8 @@
+     if (count === undefined) {
+       count = ml.strip_tags(obj.val()).length;
+     }
++
++    counter.addClass('bx--label');
+
+     let available = limit - count;

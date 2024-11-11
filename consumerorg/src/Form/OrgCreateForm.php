@@ -231,7 +231,11 @@ class OrgCreateForm extends FormBase {
     }
 
     if ($response->getRedirect() !== NULL) {
-      $form_state->setRedirectUrl(Url::fromRoute($response->getRedirect()));
+      $url = Url::fromRoute($response->getRedirect());
+      if ($response->getRedirect() === '/user/logout') {
+        $url = Url::fromRoute($response->getRedirect(), [], [], TRUE);
+      }
+      $form_state->setRedirectUrl($url);
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

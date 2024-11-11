@@ -1,3 +1,4 @@
+@api
 Feature: Forgot Password
   If I have fogotten my password or it has been compromised.
   I need to request a password reset
@@ -11,7 +12,6 @@ Feature: Forgot Password
     And I should see the text "Username or email address"
     And I should see the "Submit" button
 
-  @api
   Scenario: Request new password for andre user (non-admin) - via username
     Given I am not logged in
     Given users:
@@ -30,7 +30,6 @@ Feature: Forgot Password
     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
     And I am at "/user/login"
 
-  @api
   Scenario: Request new password for andre user (non-admin) - via email address
     Given I am not logged in
     Given users:
@@ -49,7 +48,6 @@ Feature: Forgot Password
     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
     And I am at "/user/login"
 
-  @api
   Scenario: Request new password for admin user - username
     Given I am not logged in
     Given users:
@@ -65,7 +63,6 @@ Feature: Forgot Password
     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
     And I am at "/user/login"
 
-  @api
   Scenario: Request new password for admin user - email address
     Given I am not logged in
     Given users:
@@ -81,7 +78,6 @@ Feature: Forgot Password
     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
     And I am at "/user/login"
 
-  @api
   Scenario: Request new password for non-existent user - via username
   This scenario covers when a site is recreated but the user has forgotten their password.
   The management server knows the password but drupal doesn't have a record.
@@ -97,7 +93,6 @@ Feature: Forgot Password
     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
     And I am at "/user/login"
 
-  @api
   Scenario: Request new password for non-existent user - email address
     Given I am not logged in
     Given I am at "/user/password"
@@ -110,7 +105,6 @@ Feature: Forgot Password
     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
     And I am at "/user/login"
 
-  @api
   Scenario: Forgot password form loads with multiple user registries
     Given the cache has been cleared
     Given I am not logged in
@@ -128,7 +122,6 @@ Feature: Forgot Password
     And I should see the link "@data(user_registries[2].title)"
     And I should see the link "Back to Sign in"
 
-  @api
   Scenario: Forgot password for !user_managed registry
     Given the cache has been cleared
     Given I am not logged in
@@ -139,7 +132,6 @@ Feature: Forgot Password
     And I should see the text "@data(user_registries[2].title)"
     And I should see the text "If you have forgotten your local administrator password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your authentication provider."
 
-  @api
   Scenario: Forgot password changes user registry via link
     Given the cache has been cleared
     Given I am not logged in
@@ -155,7 +147,6 @@ Feature: Forgot Password
     And I should see the text "If you have forgotten your local administrator password, you can reset it here. Your @data(user_registries[2].title) account is managed externally and you must contact your authentication provider."
     And I should see the link "@data(user_registries[0].title)"
 
-  @api
   Scenario: Forgot password form for multiple users with the same name
     Given I am not logged in
     Given userregistries:
@@ -184,7 +175,6 @@ Feature: Forgot Password
     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
 
 
-  @api
   Scenario: Forgot password form loads for writable ldap
     Given the cache has been cleared
     Given I am not logged in
@@ -206,7 +196,6 @@ Feature: Forgot Password
     And I should see the link "Back to Sign in"
 
 
-  @api
   Scenario: Request new password for a writable ldap andre user
     Given the cache has been cleared
     Given I am not logged in
@@ -230,4 +219,3 @@ Feature: Forgot Password
     And I should see the text "If the account exists, an email has been sent with further instructions to reset the password."
     And I am at "/user/login"
     And I should see the text "Sign in with @data(user_registries[2].title)"
-

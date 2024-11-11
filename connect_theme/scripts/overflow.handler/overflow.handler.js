@@ -98,7 +98,7 @@
 
             $ul.children('li').each(function (i, el) {
                 if ( $(this).is(":visible")) {
-                    liWidth += $(this).width();
+                    liWidth += $(this).width()+1;
                 }
                 // #debug
                 if (config.debug) console.info('li width: ' + liWidth);

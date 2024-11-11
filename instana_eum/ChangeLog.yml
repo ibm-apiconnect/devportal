@@ -1,4 +1,6 @@
 changes:
+  6.3.0:
+  - update version 6.2.4 -> 6.3.0
   6.2.3:
   - velox/devportal#8913 - CIO SonarQube
   6.2.2:
