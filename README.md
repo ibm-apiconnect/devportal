@@ -5,6 +5,7 @@ using the Drupal content management system.</p>
 
 <h2>Branches</h2>
 <p><code>master</code> - Drupal v10 based portal for use with APIC v10.0.x (CD) (https://github.com/ibm-apiconnect/devportal)</p>
+<p><code>APIC_v10.0.8</code> - Drupal v10 based portal for use with APIC v10.0.8.x (LTS) (https://github.com/ibm-apiconnect/devportal/tree/APIC_v10.0.8)</p>
 <p><code>APIC_v10.0.5</code> - Drupal v10 based portal for use with APIC v10.0.5.x (LTS) (https://github.com/ibm-apiconnect/devportal/tree/APIC_v10.0.5)</p>
 <p><code>APIC_v10.0.1</code> - Drupal v9 based portal for use with APIC v10.0.1.x (LTS) (https://github.com/ibm-apiconnect/devportal/tree/APIC_v10.0.1)</p>
 <p><code>APIC_v2018</code> - Drupal v9 based portal for use with APIC v2018 (https://github.com/ibm-apiconnect/devportal/tree/APIC_v2018)</p>
