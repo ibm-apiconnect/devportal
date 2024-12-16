@@ -1,0 +1,187 @@
+.page-node-type-case-study h1.page-header {
+  display: none;
+}
+
+.apicCardMain .apicCaseStudyDesc
+{
+  padding: 0.75rem 0;
+}
+
+.apicCardMain .apicCaseStudyTitle.bx--about__title--name span{
+  display: flex;
+  font-size: 0.875rem;
+  line-height: 18px;
+  word-break: break-word;
+  font-weight: 600;
+  font-family: 'IBM Plex Sans', sans-serif;
+  padding-top: 10px;
+}
+
+.apicCardMain .apicCaseStudyDesc,  .apicCardMain .apicCaseStudyDesc p{
+  font-size:0.875rem;
+  line-height: 1;
+  height: 6rem;
+}
+
+.apicCardMain .apicCaseStudyLink svg {
+  justify-self: end;
+}
+
+
+.apicCardMain .apicCaseStudyLink svg {
+  margin-left: 90%;
+  fill: currentColor;
+}
+
+.apicCardMain .apicCaseStudyImage {
+  height:150px;
+}
+
+.apicCardMain .apicCaseStudyImage img {
+  justify-self: center;
+  max-height: 150px;
+}
+
+.apicCaseStudyCard .apicCardMain .apicCaseStudyImage .field {
+  margin: 0;
+}
+
+/* make the case study card clickable */
+.bx--card .apicCard.apicCaseStudyCard {
+  position: relative;
+  max-height: 19rem;
+  }
+
+.apicCaseStudyCard a::before {
+    content: "";
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+  }
+
+/* case study page */
+.page-node-type-case-study .container,
+.page-node-type-case-study .container section {
+  padding: 0;
+}
+
+.apicCaseStudy .apicCaseStudyHeader {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.apicCaseStudy .apicCaseStudyHeader {
+  background: white;
+  padding: 0.5rem 2rem;
+}
+
+h1.CaseStudyName {
+  color: #161616;
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  font-size: 2rem;
+  line-height: 40px;
+  font-weight: 300;
+  letter-spacing: 0px;
+  margin: 0;
+}
+
+.apicCaseStudy .apicCaseStudyHeader .breadcrumb {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.125rem;
+  letter-spacing: 0.16px;
+  margin-bottom: unset;
+  background-color: inherit;
+  padding: 0;
+}
+
+.apicCaseStudyTitle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.apicCaseStudyTitleText {
+  display: flex;
+  align-items: baseline;
+  max-width: calc(100% - 6rem);
+}
+
+.apicCaseStudy .apicCaseStudyContent {
+  padding: 2rem;
+}
+.apicCaseStudy .apicCaseStudySummary {
+  margin: 0 0 12px;
+}
+/* make cards */
+.apicCaseStudyAssocProd .field--items {
+  display:flex;
+}
+
+.apicCaseStudyAssocProd .field--items .field--item a::before {
+  content: "";
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+}
+
+.apicCaseStudyAssocProd .field--label {
+  font-size: 1.25rem;
+  line-height: 1.75em;
+  font-weight: 400;
+  letter-spacing: 0px;
+}
+
+.apicCaseStudyAssocProd .field--items .field--item {
+  position: relative;
+  height: 20px;
+  box-sizing: border-box;
+  margin: 0 2px 0 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font-family: inherit;
+  vertical-align: baseline;
+  display: flex;
+  flex-direction: column;
+  width: 18.75rem;
+  max-width: 18.75rem;
+  min-height: 18.75rem;
+  max-height: 25rem;
+  background-color: #ffffff;
+  border: 1px solid #ffffff;
+  margin-bottom: 2px;
+}
+
+.apicCaseStudyAssocProd .field--item a {
+  font-size: 0.875rem;
+  line-height: 18px;
+  word-break: break-word;
+  font-weight: 600;
+  font-family: 'IBM Plex Sans', sans-serif;
+  display: block;
+  overflow-x: hidden;
+  width: 16rem;
+  margin: 0;
+  padding: 1rem 1rem;
+}
+
+.featuredCaseStudiesBlockHeader {
+  display: inline-block;
+  width: calc(100% / 4 - 8px);
+  min-width: 250px;
+  vertical-align: top;
+}
+
+.featuredCaseStudies.featuredCaseStudiesBlockWrapper {
+  margin: 1.5rem 2rem;
+}
+
+.featuredCaseStudiesContainer {
+  display: inline-block;
+  width: 75%;
+}

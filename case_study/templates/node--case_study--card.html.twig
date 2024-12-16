@@ -1,0 +1,47 @@
+{#
+/**
+ * @file
+ * Default card theme implementation for apis.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+'node',
+'node--id-' ~ node.id,
+('node--type-' ~ node.bundle)|clean_class,
+view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
+'bx--card'
+] -%}
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  <div class="apicCard apicCaseStudyCard">
+    <div class="apicCardMain">
+      <div{{ content_attributes }}>
+        {% if content.field_case_image is defined and content.field_case_image|render|trim is not empty %}
+          <div class="apicCaseStudyImage">
+            {{ content.field_case_image }}
+          </div>
+         {% else %}
+          <div class="apicCaseStudyImage">
+            <img src="{{ images_path }}/images/case_study_placeholder.png" loading="lazy" alt="placeholder" class="img-responsive" typeof="foaf:Image" />
+          </div>
+        {% endif %}
+        <div class="apicCaseStudyTitle bx--about__title--name" data-toggle="tooltip" data-placement="bottom" title="{{- node.title[0].value -}}">
+          {{ title_prefix }}
+          {% if label and not page %}
+            <div{{ title_attributes }}>
+              {{ label }} 
+            </div>
+          {% endif %}
+          {{ title_suffix }}
+        </div>
+        <div class="apicCaseStudyDesc apicFade">
+          {{ content.body[0] }}
+        </div>
+        <a class="apicCaseStudyLink" href="{{ url }}" rel="bookmark">
+          <svg width="16px" height="14px" viewBox="0 0 16 14" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd"><polygon id="Shape" points="12.6 6 0 6 0 8 12.7 8 7.7 12.7 9 14 16 7 9 0 7.7 1.3"></polygon></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</article>
