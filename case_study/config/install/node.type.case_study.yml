@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+  enforced:
+    module:
+      - case_study
+third_party_settings:
+  menu_ui:
+    available_menus:
+      - main
+    parent: 'main:'
+name: 'Case study'
+type: case_study
+description: 'Use <em>case studies</em> for your reference cases, showing examples of use and customer success stories.  '
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: false

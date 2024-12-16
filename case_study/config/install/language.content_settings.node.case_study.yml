@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.case_study
+  module:
+    - content_translation
+  enforced:
+    module:
+      - case_study
+third_party_settings:
+  content_translation:
+    enabled: true
+id: node.case_study
+target_entity_type_id: node
+target_bundle: case_study
+default_langcode: site_default
+language_alterable: true

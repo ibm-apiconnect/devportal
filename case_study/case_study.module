@@ -1,0 +1,135 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2024
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ * Provides APIC integration.
+ */
+
+ use Drupal\Core\Render\Markup;
+ use Drupal\page_manager\Entity\Page;
+ use Drupal\Core\Url;
+
+/**
+ * Add twig templates
+ *
+ * @param $existing
+ * @param $type
+ * @param $theme
+ * @param $path
+ *
+ * @return array
+ */
+function case_study_theme($existing, $type, $theme, $path): array {
+  return [
+    'productcasestudy_block' => [
+      'variables' => [
+        'productCaseStudies' => NULL,
+      ],
+    ],
+    'casestudy_block' => [
+      'variables' => [
+        'caseStudies' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
+* Implements hook_module_preuninstall().
+*/
+function case_study_module_preuninstall($module, bool $is_syncing) {
+  if ($module == 'case_study') {
+    $storage_handler = \Drupal::entityTypeManager()->getStorage("node");
+    $entities = $storage_handler->loadByProperties(["type" => "case_study"]);
+    // Delete all case_study entities
+    $storage_handler->delete($entities);
+
+    $page = Page::load('welcome');
+    // should only be one page variant, so we'll just grab the first one
+    if ($page !== NULL) {
+        $page_variants = $page->getVariants();
+        reset($page_variants);
+        $page_variant = array_values($page_variants)[0];
+        $blocks = $page_variant->get('variant_settings')['blocks'];
+        $blockUUID = '';
+        foreach ($blocks as $blockKey => $blockValue) {
+          if ($blockValue['id'] == 'casestudy_block') {
+             $blockUUID = $blockKey;
+             break;
+          }
+        }
+        if (!empty($blockUUID)) {
+          $variant_plugin = $page_variant->getVariantPlugin();
+          $variant_plugin->removeBlock($blockUUID);
+          $page_variant->save();
+        }
+    }
+  }
+}
+
+/**
+ * Need to use our custom content type templates
+ *
+ * @param $variables
+ * @param $hook
+ * @param $info
+ */
+function case_study_preprocess(&$variables, $hook, &$info) {
+  if ($hook === 'node') {
+    $contentTypeToShow = $variables['node']->bundle();
+    if ($contentTypeToShow === 'case_study') {
+      ibm_apim_entry_trace(__FUNCTION__, NULL);
+
+      //Load the view mode names.
+      $allViewModes = \Drupal::service('entity_display.repository')->getViewModes('node');
+      //View mode for this request.
+      $viewModeToUse = $variables['view_mode'];
+      //Is the view mode defined for nodes?
+      if (array_key_exists($viewModeToUse, $allViewModes)) {
+        //Is there a template file for the view modes in the module?
+        if ($viewModeToUse === 'full') {
+          $templateFileName = 'node--' . $contentTypeToShow;
+        }
+        else {
+          $templateFileName = 'node--' . $contentTypeToShow . '--' . $viewModeToUse;
+        }
+
+        $themeName = \Drupal::theme()->getActiveTheme()->getName();
+        $themePath = \Drupal::theme()->getActiveTheme()->getPath();
+        if (file_exists($themePath . '/templates/node/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates/node';
+          $info['template'] = $templateFileName;
+        }
+        elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates';
+          $info['template'] = $templateFileName;
+        }
+        else {
+          $templateFilePath = \Drupal::service('extension.list.module')->getPath('case_study') . '/templates/' . $templateFileName . '.html.twig';
+          if (file_exists($templateFilePath)) {
+            $info['theme path'] = \Drupal::service('extension.list.module')->getPath('case_study');
+            $info['path'] = \Drupal::service('extension.list.module')->getPath('case_study') . '/templates';
+            $info['template'] = $templateFileName;
+          }
+        }
+      }
+      $variables['images_path'] = base_path() . \Drupal::service('extension.list.module')->getPath('case_study');
+      $variables['#attached']['library'][] = 'case_study/basic';
+
+      ibm_apim_exit_trace(__FUNCTION__, NULL);
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{#
+/**
+ * @file
+ * Default teaser theme implementation for products.
+ *
+ * @ingroup themeable
+ */
+#}
+{%- set classes = [
+  'node',
+  'node--id-' ~ node.id,
+  ('node--type-' ~ node.bundle)|clean_class,
+  view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
+  ('casestudyNodeID-' ~ node.id)|clean_class,
+  ('casestudyTitle-' ~ node.title[0].value)|clean_class
+] -%}
+
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+  <div class="apicCaseStudy">
+    <header class="node__header--has-meta node__header apicCaseStudyHeader">
+      <div class="breadcrumb">
+        <a href="{{ path('view.case_studies.page_1') }}">{{ 'Case studies'|t }}</a> /
+      </div>
+      <div class="apicCaseStudyTitle">
+        <div class="apicCaseStudyTitleText">
+          <h1 class="CaseStudyName apicTruncate">
+                <span id="node-{{ node.id }}-title"
+                      class="field field-name-title field-formatter-string field-type-string field-label-hidden">{{- label -}}</span>
+          </h1>
+        </div>
+      </div>
+    </header>
+   
+    <div class="apicCaseStudyContent">
+       
+        <div class="node__content">
+          {% if content.body['#items'][0].summary is defined and content.body['#items'][0].summary is not empty %}
+            <div class="apicCaseStudySummary">
+              <p>{{ content.body['#items'][0].summary }}</p>
+            </div>
+          {% endif %}
+        
+          {% if content.body['#items'][0].value is defined and content.body['#items'][0].value is not empty %}
+            <div class="apicCaseStudyDesc">
+              {{ content.body }}
+            </div>
+          {% endif %}
+          
+          {% if content.field_associated_api_products is defined and content.field_associated_api_products|render|trim is not empty %}
+          <div class="apicCaseStudyAssocProd">
+            {{ content.field_associated_api_products }}
+          </div>
+          {% endif %}
+        </div>
+    </div>
+  </div>
+</article>
