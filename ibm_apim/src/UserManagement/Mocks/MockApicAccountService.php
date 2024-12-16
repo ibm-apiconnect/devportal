@@ -94,7 +94,7 @@ class MockApicAccountService implements ApicAccountInterface {
    * @inheritDoc
    * @throws \Exception
    */
-  public function registerApicUser(ApicUser $user): ?EntityInterface {
+  public function registerApicUser(ApicUser $user, bool $userMightExist = TRUE): ?EntityInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $user->getUsername());
     }

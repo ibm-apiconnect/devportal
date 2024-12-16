@@ -1,23 +1,11 @@
---- modules/votingapi_widgets/js/fivestars.js	2018-05-10 20:39:51.000000000 +0100
-+++ modules/votingapi_widgets/js/fivestars.js	2018-05-10 20:40:58.000000000 +0100
-@@ -3,7 +3,7 @@
-  * Attaches fivestar rating.
-  */
-
--(function ($, Drupal) {
-+(function ($, Drupal, once) {
-   Drupal.behaviors.fiveStarRating = {
-     attach: function (context, settings) {
-      $('body').find('.fivestar').each(function () {
-@@ -36,9 +36,9 @@
+--- modules/votingapi_widgets/js/fivestars.js   2024-09-02 15:14:14
++++ modules/votingapi_widgets/js/fivestars.js      2024-09-03 15:16:42
+@@ -36,7 +36,7 @@
          },
        };
 
--      $this.find('select').once('processed').barrating('show', options);
-+      setTimeout(function(){ $(once('processed', $this)).find('select').barrating('show', options); },500);
+-      $(once('processed', 'select', this)).barrating('show', options);
++      setTimeout(function(){ $(once('processed', 'select', this)).barrating('show', options); }.bind(this), 500);
        $this.find('[type=submit]').hide();
      });
      }
-   };
--})(jQuery, Drupal);
-+})(jQuery, Drupal, once);

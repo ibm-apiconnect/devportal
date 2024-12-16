@@ -749,6 +749,32 @@ function apic_app_update_10004() {
   }
 }
 
+/**
+ * Update description to be a expand_collapse_formatter field to default view
+ */
+function apic_app_update_10900() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  $view = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.application.default');
+  if ($view !== NULL) {
+    $summary = $view->getComponent('apic_summary');
+    $summary['settings'] = [
+      'trim_length' => 1200,
+      'default_state' => 'collapsed',
+      'link_text_open' => 'Show more',
+      'link_text_close' => 'Show less',
+      'link_class_open' => 'ecf-open',
+      'link_class_close' => 'ecf-close'
+    ];
+    $summary['type'] = 'expand_collapse_formatter';
+    $view->setComponent('apic_summary', $summary);
+    $view->save();
+  }
+}
+
 function apic_app_removeConfigDependency($config, $dep) {
   \Drupal::logger('apic_app')->notice('Checking @config for @dep.', ['@config' => $config, '@dep' => $dep]);
   try {

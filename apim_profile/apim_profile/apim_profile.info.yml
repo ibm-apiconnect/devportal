@@ -50,7 +50,6 @@ install:
   - link
   - field_group
   - menu_link_content
-  - tour
   - update
   - page_manager
   - page_manager_ui
@@ -129,6 +128,13 @@ install:
   - media
   - content_synchronizer
   - fontawesome
+  - jquery_ui_resizable
+  - navigation
+  - navigation_top_bar
+  - jquery_ui_draggable
+  - jquery_ui_effects
+  - maxlength
+  - expand_collapse_formatter
 
 themes:
   - olivero

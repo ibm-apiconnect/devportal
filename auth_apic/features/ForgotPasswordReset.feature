@@ -1,3 +1,4 @@
+@api
 Feature: Forgotten Password Reset
   I have received a reset password link for the portal.
   I can reset the password.
@@ -14,7 +15,7 @@ Feature: Forgotten Password Reset
   #   And I am at "/user/forgot-password?token=invalidToken"
   #   Then I should see the text "Invalid token. Contact the system administrator for assistance."
 
-  # Other tests for password reset are not possible in behat for the time being give the way that the user id is encoded 
+  # Other tests for password reset are not possible in behat for the time being give the way that the user id is encoded
   # in the activation token, these will be handled in unit tests.
   # Tests ommitted:
   #   Scenario: View password reset form with valid resetPasswordToken

@@ -301,7 +301,7 @@ function apic_app_preprocess_node(&$variables) {
         $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString(TRUE)->getGeneratedUrl();
         $dashboard = \Drupal::config('ibm_apim.settings')->get('analytics_dashboard');
         if (empty($dashboard)) {
-          $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
+          $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'top_products', 'top_apis', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
         }
         $variables['#attached']['library'][] = 'ibm_apim/analytics';
         $variables['#attached']['drupalSettings']['analytics']['proxyURL'] = $url;

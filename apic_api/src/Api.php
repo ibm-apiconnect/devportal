@@ -253,7 +253,7 @@ class Api {
         $node->set('apic_catalog_id', $configService->getEnvId());
         $node->set('api_id', $api['id']);
         $node->set('apic_version', $api['consumer_api']['info']['version']);
-        if (isset($api['consumer_api']['info']['x-pathalias'])) {
+        if (isset($api['consumer_api']['info']['x-pathalias']) && preg_match('/^[A-Za-z0-9_.-]+$/', $api['consumer_api']['info']['x-pathalias'])) {
           $node->set('apic_pathalias', $api['consumer_api']['info']['x-pathalias']);
         }
 
@@ -518,7 +518,7 @@ class Api {
 
         if ($this->utils->hashMatch($existingNodeHash, $node, 'new-api')) {
           if ($event !== 'internal') {
-            \Drupal::logger('apic_api')->notice('Update api: No update required as the hash matched for @apiName @version', [
+            ibm_apim_snapshot_debug('Update api: No update required as the hash matched for @apiName @version', [
               '@apiName' => $api['name'],
               '@version' => $api['consumer_api']['info']['version'],
             ]);
@@ -602,12 +602,13 @@ class Api {
           }
 
           $node->save();
+          $returnValue = $node;
 
           if ($event !== 'internal') {
             // Calling all modules implementing 'hook_apic_api_update':
             $moduleHandler->invokeAll('apic_api_update', ['node' => $node, 'data' => $api]);
 
-            \Drupal::logger('apic_api')->notice('API @api @version updated', [
+            ibm_apim_snapshot_debug('API @api @version updated', [
               '@api' => $node->getTitle(),
               '@version' => $node->apic_version->value,
             ]);
@@ -615,7 +616,6 @@ class Api {
         }
       }
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-      $returnValue = $node;
     }
     else {
       \Drupal::logger('apic_api')->error('Update api: no node provided.', []);
@@ -635,7 +635,7 @@ class Api {
    * @return bool
    * @throws \Drupal\Core\Entity\EntityStorageException|\JsonException
    */
-  public function createOrUpdate($api, $event): bool {
+  public function createOrUpdate($api, $event): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $api['consumer_api']['info']['x-ibm-name'] . ':' . $api['consumer_api']['info']['version']);
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'api');
@@ -647,19 +647,19 @@ class Api {
       $nid = array_shift($nids);
       $node = Node::load($nid);
       if ($node !== NULL) {
-        $this->update($node, $api, $event);
-        $createdOrUpdated = FALSE;
+        $node = $this->update($node, $api, $event);
+        $createdOrUpdated = $node ? 'updated' : '';
       }
       else {
         // the existing node must have got deleted, create a new one
         $this->create($api, $event);
-        $createdOrUpdated = TRUE;
+        $createdOrUpdated = 'created';
       }
     }
     else {
       // no existing node for this API so create one
       $this->create($api, $event);
-      $createdOrUpdated = TRUE;
+      $createdOrUpdated = 'created';
     }
     \Drupal::service('cache_tags.invalidator')->invalidateTags(['featuredcontent']);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $createdOrUpdated);

@@ -24,6 +24,7 @@ use Drupal\ibm_apim\Service\Interfaces\PermissionsServiceInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
+use Drush\Drush;
 use Throwable;
 
 /**
@@ -265,7 +266,6 @@ class SiteConfig {
         }
       }
       else {
-        $this->logger->notice('getApimHost():: Unable to find hostname via known file on appliance, assuming test environment.');
         $returnValue = 'example.com';
       }
     }
@@ -544,13 +544,53 @@ class SiteConfig {
   }
 
   /**
+   * Are client_id and client_secret encrypted. This only true once both
+   * client_id and client_id_new enc keys have gone and the new enckey
+   * exists.
+   *
+   * @return void
+   */
+  private function clientIdAndSecretAreEncrypted(): bool {
+    $keyName = 'enckey';
+    $clientIdkeyName = 'client_id';
+    $clientIdNewkeyName = 'client_id_new';
+    if (\Drupal::service('key.repository')->getKey($keyName)
+      && ! \Drupal::service('key.repository')->getKey($clientIdkeyName)
+      && ! \Drupal::service('key.repository')->getKey($clientIdNewkeyName)) {
+        return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Set client id for this site.
+   */
+  public function setClientId($client_id) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    if ($this->clientIdAndSecretAreEncrypted()) {
+      $encryptionProfile = \Drupal::service('ibm_apim.utils')->loadEncryptionProfile('socialblock');
+      $encryptionService = \Drupal::service('encryption');
+      $client_id = $encryptionService->encrypt($client_id, $encryptionProfile);
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $this->state->set('ibm_apim.site_client_id', $client_id);
+  }
+
+  /**
    * Retrieve client id for this site.
    */
   public function getClientId() {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
     $client_id = $this->state->get('ibm_apim.site_client_id');
     if ($client_id) {
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $client_id);
+      if ($this->clientIdAndSecretAreEncrypted()) {
+       $encryptionProfile = \Drupal::service('ibm_apim.utils')->loadEncryptionProfile('socialblock');
+       $encryptionService = \Drupal::service('encryption');
+       $client_id = $encryptionService->decrypt($client_id, $encryptionProfile);
+      }
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
       $returnValue = $client_id;
     }
     else {
@@ -562,13 +602,35 @@ class SiteConfig {
   }
 
   /**
+   * Set client secret for this site.
+   */
+  public function setClientSecret($client_secret) {
+    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
+    if ($this->clientIdAndSecretAreEncrypted()) {
+      $encryptionProfile = \Drupal::service('ibm_apim.utils')->loadEncryptionProfile('socialblock');
+      $encryptionService = \Drupal::service('encryption');
+      $client_secret = $encryptionService->encrypt($client_secret, $encryptionProfile);
+    }
+    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    $this->state->set('ibm_apim.site_client_secret', $client_secret);
+  }
+
+  /**
    * Retrieve client secret for this site.
    */
   public function getClientSecret() {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+
     $client_secret = $this->state->get('ibm_apim.site_client_secret');
     if ($client_secret) {
-      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      if ($this->clientIdAndSecretAreEncrypted()) {
+        $encryptionProfile = \Drupal::service('ibm_apim.utils')->loadEncryptionProfile('socialblock');
+        $encryptionService = \Drupal::service('encryption');
+        $client_secret = $encryptionService->decrypt($client_secret, $encryptionProfile);
+      }
+
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__). NULL;
       $returnValue = $client_secret;
     }
     else {
@@ -710,7 +772,7 @@ class SiteConfig {
   }
 
   /**
-   * This function allows the changing of the site client id and so re-encrypts all the data in the socialblock encryption profile
+   * This function allows the changing of the encryption key and so re-encrypts all the data in the socialblock encryption profile
    *
    * @param $newClientId
    *
@@ -718,117 +780,192 @@ class SiteConfig {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function updateEncryptionKey($newClientId): void {
-    $deleteOldKey = NULL;
-    if ($newClientId !== NULL) {
-      // create new encryption key
-      $moduleHandler = \Drupal::service('module_handler');
-      if (!$moduleHandler->moduleExists('key') || !$moduleHandler->moduleExists('encrypt') || !$moduleHandler->moduleExists('real_aes')) {
-        // Enabling required encryption modules
-        $moduleInstaller = \Drupal::service('module_installer');
-        $moduleInstaller->install(['key', 'encrypt', 'real_aes']);
-      }
-      $keyName = 'client_id';
-      $value = str_replace(['_', '-'], '', $newClientId);
+  public function updateEncryptionKey($newKeyName, $IDAndSecretAreAlreadyEncrypted): bool {
 
-      // key must be 32bytes/256bits in length for an AES profile
-      $value = str_pad($value, 32, 'x');
-      $key = \Drupal::service('key.repository')->getKey($keyName);
-      if (isset($key) && !empty($key)) {
-        // key exists
-        $deleteOldKey = $keyName;
-        $keyName .= '_new';
-      }
+    $profileName = $IDAndSecretAreAlreadyEncrypted ? 'socialblockprevious' :  'socialblock';
+    $encryptionProfile = \Drupal::service('ibm_apim.utils')->loadEncryptionProfile($profileName);
+    $encryptionService = \Drupal::service('encryption');
 
+    // update site_client_id and secret
+    $client_id = $this->state->get('ibm_apim.site_client_id');
+    $client_secret = $this->state->get('ibm_apim.site_client_secret');
+
+    if ($IDAndSecretAreAlreadyEncrypted) {
       try {
-        $key = \Drupal\key\Entity\Key::create([
-          'id' => $keyName,
-          'label' => $keyName,
-          'key_type' => 'encryption',
-          'key_type_settings' => ['key_size' => 256],
-          'key_provider' => 'config',
-          'key_provider_settings' => [
-            'base64_encoded' => FALSE,
-            'key_value' => $value,
-          ],
-          'key_input' => 'text_field',
-          'key_input_settings' => ['base64_encoded' => FALSE],
-        ]);
-        $key->save();
-      } catch (EntityStorageException $e) {
+        $client_id = $encryptionService->decrypt($client_id, $encryptionProfile);
+        $client_secret = $encryptionService->decrypt($client_secret, $encryptionProfile);
+      } catch (Throwable $e) {
+        Drush::output()->writeln('Could not decrypt client id and secret with this key (message: ' . $e->getMessage() . ') Will try the next one.');
+        return FALSE;
       }
 
-      $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load('socialblock');
-      $encryptionKey = \Drupal::service('key.repository')->getKey($keyName);
+      if ($client_id === NULL || $client_secret === NULL) {
+        Drush::output()->writeln('Could not decrypt client id and secret with this key. Will try the next one');
+        return FALSE;
+      }
+    }
 
-      if ($encryptionProfile !== NULL && $encryptionKey !== NULL) {
-        $encryptionService = \Drupal::service('encryption');
+    // decrypt socialblock config
+    $socialBlockConfig = \Drupal::config('socialblock.settings');
+    $data = $socialBlockConfig->get('credentials');
+    if (!empty($data)){
+      try {
+        $unencryptedData = $encryptionService->decrypt($data, $encryptionProfile);
+      } catch (Throwable $e) {
+        Drush::output()->writeln('Could not decrypt socialblock.settings with this key (message: ' . $e->getMessage() . ') Will try the next one.');
+        return FALSE;
+      }
 
-        // decrypt socialblock config
-        $socialBlockConfig = \Drupal::config('socialblock.settings');
-        $data = $socialBlockConfig->get('credentials');
-        if (!empty($data)){
-          $socialBlockSettings = unserialize($encryptionService->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
-        }
+      if ($unencryptedData === NULL) {
+        Drush::output()->writeln('Could not decrypt credentials with this key. Will try the next one');
+        return FALSE;
+      }
+      $socialBlockSettings = unserialize($unencryptedData, ['allowed_classes' => FALSE]);
+    }
 
-        // decrypt payment methods
-        $decryptedPayments = [];
-        if ($moduleHandler->moduleExists('consumerorg')) {
-          $ibmApimConfig = \Drupal::config('ibm_apim.settings');
-          $paymentEncryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
-          // only need to do the decryption / re-encryption if using our socialblock profile
-          if (($paymentEncryptionProfileName === 'socialblock') && \Drupal::database()->schema() !== NULL && \Drupal::database()
-              ->schema()
-              ->tableExists("consumerorg_payment_methods")) {
-            $query = \Drupal::entityQuery('consumerorg_payment_method');
-            $queryIds = $query->accessCheck()->execute();
+    // decrypt payment methods
+    $decryptedPayments = [];
+    if ($this->moduleHandler->moduleExists('consumerorg')) {
+      $ibmApimConfig = \Drupal::config('ibm_apim.settings');
+      $paymentEncryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
+      // only need to do the decryption / re-encryption if using our socialblock profile
+      if (($paymentEncryptionProfileName === 'socialblock') && \Drupal::database()->schema() !== NULL && \Drupal::database()
+          ->schema()
+          ->tableExists("consumerorg_payment_methods")) {
+        $query = \Drupal::entityQuery('consumerorg_payment_method');
+        $queryIds = $query->accessCheck()->execute();
 
-            foreach (array_chunk($queryIds, 50) as $chunk) {
-              $paymentEntities = \Drupal::entityTypeManager()->getStorage('consumerorg_payment_method')->loadMultiple($chunk);
-              if (!empty($paymentEntities)) {
-                foreach ($paymentEntities as $paymentEntity) {
-                  $configuration = unserialize($encryptionService->decrypt($paymentEntity->configuration(), $encryptionProfile), ['allowed_classes' => FALSE]);
-                  $decryptedPayments[$paymentEntity->id()] = $configuration;
-                }
+        foreach (array_chunk($queryIds, 50) as $chunk) {
+          $paymentEntities = \Drupal::entityTypeManager()->getStorage('consumerorg_payment_method')->loadMultiple($chunk);
+          if (!empty($paymentEntities)) {
+            foreach ($paymentEntities as $paymentEntity) {
+              try {
+                $unencryptedData = $encryptionService->decrypt($paymentEntity->configuration(), $encryptionProfile);
+              } catch (Throwable $e) {
+                Drush::output()->writeln('Could not decrypt paymentEntities with this key (message: ' . $e->getMessage() . ') Will try the next one.');
+                return FALSE;
               }
+
+              if ($unencryptedData === NULL) {
+                Drush::output()->writeln('Could not decrypt paymentEntities with this key. Will try the next one');
+                return FALSE;
+              }
+              $configuration = unserialize($unencryptedData, ['allowed_classes' => FALSE]);
+              $decryptedPayments[$paymentEntity->id()] = $configuration;
             }
           }
         }
+      }
+    }
 
-        // update encryption profile to use new key
-        $encryptionProfile->setEncryptionKey($encryptionKey);
-        $encryptionProfile->save();
+    if (! $IDAndSecretAreAlreadyEncrypted) {
+      \Drupal::service('ibm_apim.utils')->createEncryptionProfile('socialblock', $newKeyName);
+    }
 
-        // re-encrypt socialblock config
-        if (isset($socialBlockSettings)) {
-          $encryptedSocialBlockSettings = $encryptionService->encrypt(serialize($socialBlockSettings), $encryptionProfile);
-          $this->configFactory->getEditable('socialblock.settings')->set('credentials', $encryptedSocialBlockSettings)->save();
+    $encryptionProfile = \Drupal::service('ibm_apim.utils')->loadEncryptionProfile('socialblock');
+
+    // re-encrypt client id and secret
+    $this->state->set('ibm_apim.site_client_id', $encryptionService->encrypt($client_id, $encryptionProfile));
+    $this->state->set('ibm_apim.site_client_secret', $encryptionService->encrypt($client_secret, $encryptionProfile));
+    $this->state->delete('ibm_apim.client_id'); // This used to be accidentally created by the scripts
+
+    // re-encrypt socialblock config
+    if (isset($socialBlockSettings)) {
+      $encryptedSocialBlockSettings = $encryptionService->encrypt(serialize($socialBlockSettings), $encryptionProfile);
+      $this->configFactory->getEditable('socialblock.settings')->set('credentials', $encryptedSocialBlockSettings)->save();
+    }
+
+    // re-encrypt payment methods
+    if (!empty($decryptedPayments) && $this->moduleHandler->moduleExists('consumerorg') && \Drupal::database()
+        ->schema() !== NULL && \Drupal::database()->schema()->tableExists("consumerorg_payment_methods")) {
+      foreach ($decryptedPayments as $id => $encryptedConfiguration) {
+        $configuration = $encryptionService->encrypt(serialize($encryptedConfiguration), $encryptionProfile);
+        $query = \Drupal::entityQuery('consumerorg_payment_method');
+        $query->condition('id', $id);
+        $queryIds = $query->accessCheck()->execute();
+        if (isset($queryIds) && !empty($queryIds)) {
+          $entityId = array_shift($queryIds);
+          $paymentMethodEntity = \Drupal\consumerorg\Entity\PaymentMethod::load($entityId);
+          if ($paymentMethodEntity !== NULL) {
+            $paymentMethodEntity->set('configuration', $configuration);
+            $paymentMethodEntity->save();
+          }
         }
+      }
+    }
 
-        // re-encrypt payment methods
-        if (!empty($decryptedPayments) && $moduleHandler->moduleExists('consumerorg') && \Drupal::database()
-            ->schema() !== NULL && \Drupal::database()->schema()->tableExists("consumerorg_payment_methods")) {
-          foreach ($decryptedPayments as $id => $encryptedConfiguration) {
-            $configuration = $encryptionService->encrypt(serialize($encryptedConfiguration), $encryptionProfile);
-            $query = \Drupal::entityQuery('consumerorg_payment_method');
-            $query->condition('id', $id);
-            $queryIds = $query->accessCheck()->execute();
-            if (isset($queryIds) && !empty($queryIds)) {
-              $entityId = array_shift($queryIds);
-              $paymentMethodEntity = \Drupal\consumerorg\Entity\PaymentMethod::load($entityId);
-              if ($paymentMethodEntity !== NULL) {
-                $paymentMethodEntity->set('configuration', $configuration);
-                $paymentMethodEntity->save();
-              }
+    return TRUE;
+  }
+
+    /**
+   * This function allows the changing of the encryption key and so re-encrypts all the data in the socialblock encryption profile
+   *
+   * @param $newClientId
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function resetEncryption($newKeyName, $IDAndSecretAreAlreadyEncrypted): void {
+
+    Drush::output()->writeln('ERROR: Failed to decrypt socialblock and payment data. Zeroing it out.');
+
+    // find all payment methods
+    $deleteThesePaymentEntities = [];
+    if ($this->moduleHandler->moduleExists('consumerorg')) {
+      $ibmApimConfig = \Drupal::config('ibm_apim.settings');
+      $paymentEncryptionProfileName = $ibmApimConfig->get('payment_method_encryption_profile');
+      // only need to do the decryption / re-encryption if using our socialblock profile
+      if (($paymentEncryptionProfileName === 'socialblock') && \Drupal::database()->schema() !== NULL && \Drupal::database()
+          ->schema()
+          ->tableExists("consumerorg_payment_methods")) {
+        $query = \Drupal::entityQuery('consumerorg_payment_method');
+        $queryIds = $query->accessCheck()->execute();
+
+        foreach (array_chunk($queryIds, 50) as $chunk) {
+          $paymentEntities = \Drupal::entityTypeManager()->getStorage('consumerorg_payment_method')->loadMultiple($chunk);
+          if (!empty($paymentEntities)) {
+            foreach ($paymentEntities as $paymentEntity) {
+              $deleteThesePaymentEntities[$paymentEntity->id()] = TRUE;
             }
           }
         }
+      }
+    }
 
-        // delete old key
-        if ($deleteOldKey !== NULL) {
-          $oldKey = \Drupal\key\Entity\Key::load($deleteOldKey);
-          if ($oldKey !== NULL) {
-            $oldKey->delete();
+    // Update encryption profile
+    if (! $IDAndSecretAreAlreadyEncrypted) {
+      \Drupal::service('ibm_apim.utils')->createEncryptionProfile('socialblock', $newKeyName);
+    }
+
+    $encryptionService = \Drupal::service('encryption');
+    $encryptionProfile = \Drupal::service('ibm_apim.utils')->loadEncryptionProfile('socialblock');
+
+    // blank client id and secret
+    $this->state->set('ibm_apim.site_client_id', $encryptionService->encrypt('', $encryptionProfile));
+    $this->state->set('ibm_apim.site_client_secret', $encryptionService->encrypt('', $encryptionProfile));
+    $this->state->delete('ibm_apim.client_id'); // This used to be accidentally created by the scripts
+
+    // blank socialblock config
+    $socialBlockConfig = \Drupal::config('socialblock.settings');
+    $data = $socialBlockConfig->get('credentials');
+    if (!empty($data)){
+      $encryptedSocialBlockSettings = $encryptionService->encrypt(serialize([]), $encryptionProfile);
+      $this->configFactory->getEditable('socialblock.settings')->set('credentials', $encryptedSocialBlockSettings)->save();
+    }
+
+    // delete payment methods
+    if (!empty($deleteThesePaymentEntities) && $this->moduleHandler->moduleExists('consumerorg') && \Drupal::database()
+        ->schema() !== NULL && \Drupal::database()->schema()->tableExists("consumerorg_payment_methods")) {
+      foreach ($deleteThesePaymentEntities as $id => $deleteMe) {
+        $query = \Drupal::entityQuery('consumerorg_payment_method');
+        $query->condition('id', $id);
+        $queryIds = $query->accessCheck()->execute();
+        if (isset($queryIds) && !empty($queryIds)) {
+          $entityId = array_shift($queryIds);
+          $paymentMethodEntity = \Drupal\consumerorg\Entity\PaymentMethod::load($entityId);
+          if ($paymentMethodEntity !== NULL) {
+            $paymentMethodEntity->delete();
           }
         }
       }
@@ -906,7 +1043,12 @@ class SiteConfig {
   }
 
   public function getSelfServiceOnboardingTTL() {
-    return $this->state->get('ibm_apim.site_config')["consumer_self_service_onboarding_ttl"];
+    $siteConfig = $this->state->get('ibm_apim.site_config');
+    if (!empty($siteConfig)) {
+      return $siteConfig["consumer_self_service_onboarding_ttl"];
+    }
+
+    return '';
   }
 
 

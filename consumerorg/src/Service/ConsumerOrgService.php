@@ -573,91 +573,120 @@ class ConsumerOrgService {
       $userStorage = \Drupal::service('ibm_apim.user_storage');
 
       if ($consumer->getMembers() !== NULL) {
+        $usersMap = [];
         foreach ($consumer->getMembers() as $member) {
-          // Add Activity Feed Event Log
-          $eventEntity = new ApicEvent();
-          $eventEntity->setArtifactType('member');
-          $timestamp = $member->getCreatedAt();
-          // is_int not sufficient here, so use pattern matching instead
-          if ($timestamp !== NULL && !preg_match("/^\d+$/", $timestamp)) {
-            $timestamp = strtotime($timestamp);
-          }
-          // if timestamp still not set default to current time
-          if ($timestamp === NULL) {
-            $timestamp = time();
-          }
-          $eventEntity->setTimestamp($timestamp);
-          $eventEntity->setEvent('create');
-          $eventEntity->setArtifactUrl($member->getUrl());
-          $eventEntity->setConsumerOrgUrl($member->getOrgUrl());
-          $eventEntity->setData(['member' => $member->getUser()->getUsername(), 'orgName' => $consumer->getTitle()]);
-          $this->eventLogService->createIfNotExist($eventEntity);
-
-          // check if there is an updated event needed too
-          if ($member->getUpdatedAt() !== NULL && $member->getCreatedAt() !== NULL && $member->getCreatedAt() !== $member->getUpdatedAt()) {
-            $updateEventEntity = clone $eventEntity;
-            $updateEventEntity->setEvent('update');
-            $updateEventEntity->setTimestamp($member->getUpdatedAt());
-            $this->eventLogService->createIfNotExist($updateEventEntity);
-          }
-
           $memberlist[] = $member->getUserUrl();
           $memberArray = $member->toArray();
           $members[] = serialize($memberArray);
-          $user = $member->getUser();
-          if ($user !== NULL && $user->getUsername() !== NULL) {
-
-            $userAccount = $userStorage->load($user);
-
-            // if there isn't an account for this user then we have enough information to create and use it at this point.
-            if ($userAccount === NULL) {
-              $this->logger->notice('registering new account for %username based on member data.', ['%username' => $user->getUsername()]);
-              try {
-                $userAccount = $this->accountService->registerApicUser($user);
-              } catch (Throwable $e) {
-                // Quietly ignore errors from duplicate users to prevent webhooks from blowing up.
-                $this->logger->notice('Failed creating apic user %username, ignoring exception', ['%username' => $user->getUsername()]);
+          if ($event != 'internal-group') {
+            $user = $member->getUser();
+            if ($user !== NULL && $user->getUsername() !== NULL && $user->getApicUserRegistryUrl() != NULL) {#
+              if (!isset($usersMap[$user->getApicUserRegistryUrl()])) {
+                $usersMap[$user->getApicUserRegistryUrl()] = [];
               }
+              $usersMap[$user->getApicUserRegistryUrl()][] = $user;
+            }
+          }
+        }
+
+        // Loop over the users in each registry as a batch and create a map of ID -> name
+        foreach ($usersMap as $userRegistryUrl => $usersArray) {
+          // userAccounts will be a map of ID -> userObject
+          // Chunk these into pages of 1000 to avoid using up too much RAM
+          $usersChunks = array_chunk($usersArray, 1000);
+          foreach ($usersChunks as $usersChunk) {
+            $userNames = [];
+            foreach ($usersChunk as $user) {
+              $userNames[] = $user->getUsername();
+            }
+            $userAccounts = $userStorage->loadMultiple($userNames, $userRegistryUrl);
+
+            // Create an index based on username
+            $userNameToId = [];
+            foreach ($userAccounts as $userAccountId => $userObject) {
+              $userNameToId[$userObject->getAccountName()] = $userAccountId;
             }
 
-            if ($userAccount) {
-              // For all non-admin users, don't store their password in our database.
-              // We have to do this here as well as inside updateLocalAccount so that the hashes
-              // will match if nothing has changed
-              if ((int) $userAccount->id() !== 1) {
-                $userAccount->setPassword(NULL);
+            // Loop over all  users that we asked for and see if they exist or not
+            foreach ($usersChunk as $user) {
+              $userId = $userNameToId[$user->getUsername()] ?? NULL;
+              $userAccount = $userId === NULL ? NULL : $userAccounts[$userId];
+              // if there isn't an account for this user then we have enough information to create and use it at this point.
+              if ($userAccount === NULL) {
+                ibm_apim_snapshot_debug('registering new account for %username based on member data.', ['%username' => $user->getUsername()]);
+                try {
+                  $userAccount = $this->accountService->registerApicUser($user, userMightExist: FALSE);
+                } catch (Throwable $e) {
+                  // Quietly ignore errors from duplicate users to prevent webhooks from blowing up.
+                  $this->logger->notice('Failed creating apic user %username, ignoring exception', ['%username' => $user->getUsername()]);
+                }
               }
 
-              $existingUserAccountHash = $this->utils->generateNodeHash($userAccount, 'old-account');
-              // consumerorg_url is a multi value field which Drupal represents using a FieldItemList class
-              // this causes headaches as seen below....
-              $consumerorg_urls = $userAccount->consumerorg_url->getValue();
-              if ($consumerorg_urls === NULL) {
-                $consumerorg_urls = [];
-              }
+              if ($userAccount) {
+                // For all non-admin users, don't store their password in our database.
+                // We have to do this here as well as inside updateLocalAccount so that the hashes
+                // will match if nothing has changed
+                if ((int) $userAccount->id() !== 1) {
+                  $userAccount->setPassword(NULL);
+                }
 
-              // Doesn't update the custom fields since they're not in the right format
-              $updatedAccount = $this->accountService->updateLocalAccount($user, $userAccount, FALSE);
-              if ($updatedAccount !== NULL) {
-                $userAccount = $updatedAccount;
-              }
+                $existingUserAccountHash = $this->utils->generateNodeHash($userAccount, 'old-account');
+                // consumerorg_url is a multi value field which Drupal represents using a FieldItemList class
+                // this causes headaches as seen below....
+                $consumerorg_urls = $userAccount->consumerorg_url->getValue();
+                if ($consumerorg_urls === NULL) {
+                  $consumerorg_urls = [];
+                }
 
-              // Add the custom fields to the user
-              $customFields = $this->userService->getMetadataFields();
-              $this->utils->saveCustomFields($userAccount, $customFields, $memberArray['user'], TRUE, FALSE);
+                // Doesn't update the custom fields since they're not in the right format
+                $updatedAccount = $this->accountService->updateLocalAccount($user, $userAccount, FALSE);
+                if ($updatedAccount !== NULL) {
+                  $userAccount = $updatedAccount;
+                }
 
-              // Add the consumerorg if it isn't already associated with this user
-              if (!$this->isConsumerorgAssociatedWithAccount($consumer->getUrl(), $userAccount)) {
-                $consumerorg_urls[] = $consumer->getUrl();
-                $userAccount->set('consumerorg_url', $consumerorg_urls);
-              }
+                // Add the custom fields to the user
+                $customFields = $this->userService->getMetadataFields();
+                $this->utils->saveCustomFields($userAccount, $customFields, $memberArray['user'], TRUE, FALSE);
 
-              if ($this->utils->hashMatch($existingUserAccountHash, $userAccount, 'new-account')) {
-                if ($event !== 'internal') {
-                  $this->logger->notice('UserAccount @user not updated as the hash matched', ['@user' => $userAccount->id()]);}
-              } else {
-                $this->logger->notice('UserAccount @user updated', ['@user' => $userAccount->id()]);
-                $userAccount->save();
+                // Add the consumerorg if it isn't already associated with this user
+                if (!$this->isConsumerorgAssociatedWithAccount($consumer->getUrl(), $userAccount)) {
+                  $consumerorg_urls[] = $consumer->getUrl();
+                  $userAccount->set('consumerorg_url', $consumerorg_urls);
+                }
+
+                if ($this->utils->hashMatch($existingUserAccountHash, $userAccount, 'new-account')) {
+                  ibm_apim_snapshot_debug('UserAccount @user not updated as the hash matched', ['@user' => $userAccount->id()]);
+                } else {
+                  // Add Activity Feed Event Log
+                  $eventEntity = new ApicEvent();
+                  $eventEntity->setArtifactType('member');
+                  $timestamp = $member->getCreatedAt();
+                  // is_int not sufficient here, so use pattern matching instead
+                  if ($timestamp !== NULL && !preg_match("/^\d+$/", $timestamp)) {
+                    $timestamp = strtotime($timestamp);
+                  }
+                  // if timestamp still not set default to current time
+                  if ($timestamp === NULL) {
+                    $timestamp = time();
+                  }
+                  $eventEntity->setTimestamp($timestamp);
+                  $eventEntity->setEvent('create');
+                  $eventEntity->setArtifactUrl($member->getUrl());
+                  $eventEntity->setConsumerOrgUrl($member->getOrgUrl());
+                  $eventEntity->setData(['member' => $member->getUser()->getUsername(), 'orgName' => $consumer->getTitle()]);
+                  $this->eventLogService->createIfNotExist($eventEntity);
+
+                  // check if there is an updated event needed too
+                  if ($member->getUpdatedAt() !== NULL && $member->getCreatedAt() !== NULL && $member->getCreatedAt() !== $member->getUpdatedAt()) {
+                    $updateEventEntity = clone $eventEntity;
+                    $updateEventEntity->setEvent('update');
+                    $updateEventEntity->setTimestamp($member->getUpdatedAt());
+                    $this->eventLogService->createIfNotExist($updateEventEntity);
+                  }
+
+                  ibm_apim_snapshot_debug('UserAccount @user updated', ['@user' => $userAccount->id()]);
+                  $userAccount->save();
+                }
               }
             }
           }
@@ -682,11 +711,11 @@ class ConsumerOrgService {
       }
 
       if ($this->utils->hashMatch($existingNodeHash, $node, 'new-consumer_org')) {
-        if ($event !== 'internal') {
-          $this->logger->notice('Consumer organization @consumerorg not updated as the hash matched', ['@consumerorg' => $node->getTitle()]);
-        }
+        ibm_apim_snapshot_debug('Consumer organization @consumerorg not updated as the hash matched', ['@consumerorg' => $node->getTitle()]);
       } else {
+        ibm_apim_snapshot_debug('Consumer organization @consumerorg saved', ['@consumerorg' => $node->getTitle()]);
         $node->save();
+        $returnValue = $node;
 
         if ($node !== NULL && $event !== 'internal') {
           // Add Activity Feed Event Log
@@ -743,7 +772,6 @@ class ConsumerOrgService {
       }
 
       ibm_apim_exit_trace(__FUNCTION__, NULL);
-      $returnValue = $node;
     }
     else {
       $this->logger->error('Update consumerorg: no node provided.', []);
@@ -765,7 +793,7 @@ class ConsumerOrgService {
    * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \JsonException
    */
-  public function createOrUpdateNode(ConsumerOrg $consumer, $event): bool {
+  public function createOrUpdateNode(ConsumerOrg $consumer, $event): string {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $consumer->getUrl());
     }
@@ -780,19 +808,19 @@ class ConsumerOrgService {
         $nid = array_shift($nids);
         $node = Node::load($nid);
         if ($node !== NULL) {
-          $this->updateNode($node, $consumer, $event);
-          $createdOrUpdated = FALSE;
+          $node = $this->updateNode($node, $consumer, $event);
+          $createdOrUpdated = $node ? 'updated' : '';
         }
       }
       else {
         // no existing node for this consumerorg so create one
         $this->createNode($consumer, $event);
-        $createdOrUpdated = TRUE;
+        $createdOrUpdated = 'created';
       }
     }
     else {
       $this->logger->debug('unit test environment, createOrUpdateNode skipped');
-      $createdOrUpdated = FALSE;
+      $createdOrUpdated = 'created';
     }
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $createdOrUpdated);
@@ -1455,6 +1483,7 @@ class ConsumerOrgService {
       $nextExistingConsumerorgUrl = $valueArray['value'];
       if ($nextExistingConsumerorgUrl === $consumerorg_url) {
         $returnValue = TRUE;
+        break;
       }
     }
 

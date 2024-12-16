@@ -13,20 +13,20 @@ Scenario: Change password is not available as andre user.
   Given I am logged in as "@data(andre.name)"
   And I go to "/user/@uid/change-password"
   Then the response status code should be 403
-  And I should see the text "You are not authorized to access this page."
+  And I should see the text "You are not authorized to access the requested page."
 
 @api
   Scenario: Change password is not available as a user with an administrator role.
   Given I am logged in as an "administrator"
   And I go to "/user/@uid/change-password"
   Then the response status code should be 403
-  And I should see the text "You are not authorized to access this page."
+  And I should see the text "You are not authorized to access the requested page."
 
   Scenario: Change password form is not available if not logged in
   Given I am not logged in
   When I go to "/user/1/change-password"
   Then the response status code should be 403
-  And I should see the text "You are not authorized to access this page."
+  And I should see the text "You are not authorized to access the requested page."
 
 @api
 Scenario: Change password form is available as admin (uid=1) user
@@ -51,7 +51,7 @@ Scenario: Change password form for andre is not available to admin (uid=1) user
   Given I am logged in as "@data(admin.name)"
   And I go to "/user/@uid(@data(andre.name))/change-password"
   Then the response status code should be 403
-  And I should see the text "You are not authorized to access this page."
+  And I should see the text "You are not authorized to access the requested page."
 
 # TODO....
 #@api
@@ -66,7 +66,7 @@ Scenario: Change password form for andre is not available to admin (uid=1) user
 #  Given I am logged in as "@data(admin.name)"
 #  And I go to "/user/@uid(@data(andre.name))/change-password"
 #  Then the response status code should be 403
-#  And I should see the text "You are not authorized to access this page."
+#  And I should see the text "You are not authorized to access the requested page."
 #
 
 
@@ -134,7 +134,7 @@ Scenario: Change password form for andre is not available to admin (uid=1) user
 #  Given I am not logged in
 #  When I go to "/user/1/change-password"
 #  Then the response status code should be 403
-#  And I should see the text "You are not authorized to access this page."
+#  And I should see the text "You are not authorized to access the requested page."
 #
 #
 #

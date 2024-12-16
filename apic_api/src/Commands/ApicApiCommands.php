@@ -89,11 +89,11 @@ class ApicApiCommands extends DrushCommands {
       $time_end = microtime(true);
       $execution_time = (microtime(true) - $time_start);
 
-      if ($createdOrUpdated) {
-        fprintf(STDERR, "Drush %s created API '%s' in %f seconds\n", $func, $ref, $execution_time);
+      if ($createdOrUpdated === 'created') {
+        ibm_apim_snapshot_debug("Drush %s created API '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
       }
-      else {
-        fprintf(STDERR, "Drush %s updated existing API '%s' in %f seconds\n", $func, $ref, $execution_time);
+      else if ($createdOrUpdated === 'updated') {
+        ibm_apim_snapshot_debug("Drush %s updated API '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
       }
       $moduleHandler = \Drupal::service('module_handler');
       if ($func !== 'MassUpdate' && $moduleHandler->moduleExists('views')) {

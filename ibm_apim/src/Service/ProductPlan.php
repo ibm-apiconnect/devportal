@@ -360,11 +360,12 @@ class ProductPlan {
    * @param string $planId The ID of the plan object to process
    * @param array $plan The plan object to process
    * @param array $apiList All drupal API nodes for the product
+   * @param array|null $componentRateLimits Contains Rate limit definitions if published to a lightweight gateway
    *
    * @return array Plan array that contains all relevant data for each api within it
    * @throws \JsonException
    */
-  public function process(string $planId, array $plan, array $apiList, array $productApis): array {
+  public function process(string $planId, array $plan, array $apiList, array $productApis, array|null $componentRateLimits = NULL): array {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__FUNCTION__, NULL);
     }
@@ -386,7 +387,7 @@ class ProductPlan {
       }
     }
 
-    $parsedRateLimit = $this->parseRateLimits($plan);
+    $parsedRateLimit = $this->parseRateLimits($plan, $componentRateLimits);
     $planArray['rateLimit'] = $parsedRateLimit['planRateLimit'];
     $planArray['requiresApproval'] = $plan['approval'] ?? FALSE;
     $planArray['planId'] = $planId;
@@ -443,7 +444,7 @@ class ProductPlan {
    *
    * @return array
    */
-  public function parseRateLimits($plan): array {
+  public function parseRateLimits($plan, $componentRateLimits = NULL): array {
     $planRateLimit = $this->parseRateLimit('unlimited');
     $tooltip = NULL;
     if (isset($plan['rate-limits']) || isset($plan['burst-limits'])) {
@@ -499,6 +500,18 @@ class ProductPlan {
     }
     elseif (isset($plan['rate-limit']) && $plan['rate-limit']['value'] !== NULL) {
       $planRateLimit = $this->parseRateLimit($plan['rate-limit']['value']);
+    } elseif (isset($plan['rateLimitMap']['plan-limit']) && isset($componentRateLimits)) {
+      $rateLimitName = $plan['rateLimitMap']['plan-limit'];
+      $rateLimit = $componentRateLimits[$rateLimitName][0];
+      $periodCount = $rateLimit['intervalLen'];
+      $quantity = $rateLimit['max'];
+      $intervalUnit = $rateLimit['intervalUnit'];
+      $planRateLimit = $this->translationManager->formatPlural($periodCount, '@quantity @call per @intervalUnit', '@quantity @call per @count @intervalUnits', [
+        '@quantity' => $this->utils->format_number_locale($quantity, 0),
+        '@count' => $this->utils->format_number_locale($periodCount, 0),
+        '@intervalUnit' => $intervalUnit,
+        '@call' => $this->translationManager->formatPlural($quantity, 'call', 'calls'),
+      ]);
     }
 
     return ['planRateLimit' => $planRateLimit, 'tooltip' => $tooltip];

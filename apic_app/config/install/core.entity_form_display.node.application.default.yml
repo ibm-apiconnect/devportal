@@ -35,7 +35,11 @@ content:
     settings:
       rows: 5
       placeholder: ''
-    third_party_settings: {  }
+    third_party_settings:
+      maxlength:
+        maxlength_js: 65535
+        maxlength_js_enforce: TRUE
+        maxlength_js_label: 'Description is limited to @limit characters, remaining: <strong>@remaining</strong>'
     type: string_textarea
   application_image:
     weight: 2
@@ -57,7 +61,11 @@ content:
     settings:
       size: 60
       placeholder: ''
-    third_party_settings: {  }
+    third_party_settings:
+      maxlength:
+        maxlength_js: 255
+        maxlength_js_enforce: TRUE
+        maxlength_js_label: 'Title is limited to @limit characters, remaining: <strong>@remaining</strong>'
 hidden:
   apic_catalog_id: true
   apic_hostname: true

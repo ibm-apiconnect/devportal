@@ -1,8 +1,8 @@
+@api
 Feature: My Organization Billing
   In order to use the developer portal
   I need to be able to view my organization billing page
 
-  @api
   Scenario: Sign in as an organization owner and view my organization billing page with no errors
     Given users:
       | name              | mail              | pass                  | status |
@@ -18,7 +18,6 @@ Feature: My Organization Billing
     And there are no warnings
     And there are no messages
 
-  @api
   Scenario: I can add a payment method
     Given I have an analytics service
     Given I have a billing service
@@ -42,7 +41,6 @@ Feature: My Organization Billing
     And there are no errors
     And there are no warnings
 
-  @api
   Scenario: I can see my payment methods
     Given users:
       | name              | mail              | pass                  | status |

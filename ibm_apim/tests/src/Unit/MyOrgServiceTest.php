@@ -33,6 +33,11 @@ class MyOrgServiceTest extends UnitTestCase {
    */
   private Prophet $prophet;
 
+  /**
+   * @var \Drupal\Core\File\FileUrlGenerator|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $fileUrlGenerator;
+
   protected function setup(): void {
     $this->prophet = new Prophet();
     $this->fileUrlGenerator = $this->prophet->prophesize(FileUrlGenerator::class);

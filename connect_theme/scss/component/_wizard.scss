@@ -176,7 +176,12 @@
 .route-ibm-apimsubscription-wizardnoplanstep{
   .apicFormContent {
     padding:0;
-    margin-bottom: 0;
+  }
+  .apicFormContent+.apicFormContent {
+    margin-bottom:0;
+  }
+  .apicFormFooter {
+    border-top: none;
   }
 }
 

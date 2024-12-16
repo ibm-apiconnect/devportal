@@ -13,5 +13,6 @@ COPY libraries /tmp/libraries
 COPY overrides /tmp/overrides
 COPY apim_profile /tmp/apim_profile
 COPY patches /tmp/patches
+COPY devportal-local-modules /tmp/devportal-local-modules
 COPY getdeps.sh composer.json composer.lock site-template_setup.sh build_in_container.sh create_credentials.sh /tmp/
 RUN bash /tmp/build_in_container.sh

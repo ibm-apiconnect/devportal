@@ -57,12 +57,18 @@
         </tbody>
       </table>
     </div>
+    
     <div class="apicFormFooter">
       {% if element['#subscriptionDetails'].referer is defined %}
         <a class="button"
            href="{{ element['#subscriptionDetails'].referer }}">{{ 'Done'|t }}</a>
       {% endif %}
     </div>
+    {% if element['#productRecommendations'] %}
+      <div class="contentInnerWrapper prodRecSubscribe" id="contentWrapper">
+        {{ drupal_block('productrecommendations_block', {'prodNode': element['#subscriptionDetails'].productNodeId}, wrapper=false)}}
+      </div>
+    {% endif %}
   {% else %}
     <div class="apic-user-form-wrapper">
       <form {{ attributes }}>

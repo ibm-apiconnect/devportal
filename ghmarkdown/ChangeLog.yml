@@ -1,10 +1,8 @@
 changes:
-  6.2.5:
-  - Update GHMarkdown.php
   6.2.4:
-  - velox/devportal#8913 - CIO SonarQube
+  - Update GHMarkdown.php
   6.2.3:
-  - change portal-ci-v10-0 to portal-ci-v10-0-8
+  - velox/devportal#8913 - CIO SonarQube
   6.2.2:
   - add env.GIT_COMMIT_SUMMARY
   6.2.1:

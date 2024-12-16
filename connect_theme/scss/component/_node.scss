@@ -241,15 +241,3 @@ article footer {
 .route-productview footer.footer.container {
   margin-top: 0;
 }
-
-.multiple-fields-remove-button.apicSecondary.button {
-  top: calc(40% - 0.5rem);
-  background-color: transparent;
-  vertical-align: top;
-  height: auto;
-  display: inline-block;
-}
-.multiple-fields-remove-button.apicSecondary.button:hover,
-.multiple-fields-remove-button.apicSecondary.button:focus {
-  background-color: transparent;
-}

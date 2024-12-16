@@ -1,3 +1,4 @@
+@api
 Feature: Sign-up
   In order to use the developer portal
   As an anonymous user
@@ -187,7 +188,6 @@ Feature: Sign-up
     And there are no warnings
     And there are no messages
 
-  @api
   Scenario: Self signup form changes user registry via link
     Given the cache has been cleared
     Given I am not logged in
@@ -202,7 +202,6 @@ Feature: Sign-up
     And I should see the text "Sign up with @data(user_registries[2].title)"
     And I should see the link "@data(user_registries[0].title)"
 
-  @api
   Scenario: Register form loads non default registry directly
     Given I am not logged in
     Given userregistries:
@@ -212,7 +211,6 @@ Feature: Sign-up
     When I am at "/user/register?registry_url=@data(user_registries[1].url)"
     Then I should see the text "Sign up with @data(user_registries[1].title)"
 
-  @api
   Scenario: Register form handles invalid user registry url query parameter by using default registry
     Given I am not logged in
     Given userregistries:
@@ -222,7 +220,6 @@ Feature: Sign-up
     When I am at "/user/register?registry_url=thisisnotvalid"
     Then I should see the text "Sign up with @data(user_registries[0].title)"
 
-  @api
   Scenario: Register form handles valid but incorrect user registry url query parameter by using default registry
     Given I am not logged in
     Given userregistries:
@@ -305,7 +302,6 @@ Feature: Sign-up
     And I should see the text "The password does not satisfy the password policies."
     And I should not see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
 
-  @api
   Scenario: register second user (unique username and email address - success)
     Given I am not logged in
     Given userregistries:
@@ -330,7 +326,6 @@ Feature: Sign-up
     And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
     And there are no warnings
 
-  @api
   Scenario: sign up with username in the same registry - fail
     Given I am not logged in
     Given userregistries:
@@ -355,7 +350,6 @@ Feature: Sign-up
     And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
     And there are no warnings
 
-  @api
   Scenario: sign up with existing email address in same registry - fail
     Given I am not logged in
     Given userregistries:
@@ -380,7 +374,6 @@ Feature: Sign-up
     And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
     And there are no warnings
 
-  @api
   Scenario: sign up with existing email address in different registry - fail
     Given I am not logged in
     Given userregistries:
@@ -405,7 +398,6 @@ Feature: Sign-up
     And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
     And there are no warnings
 
-  @api
   Scenario: sign up with same username in different registry - success.
     Given I am not logged in
     Given userregistries:

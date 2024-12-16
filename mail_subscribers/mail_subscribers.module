@@ -190,10 +190,12 @@ function mail_subscribers_batch_deliver_finished($success, $results, $operations
     foreach ($results as $result) {
       \Drupal::messenger()->addMessage($result);
     }
+    $objectType = \Drupal::service('tempstore.private')->get('mail_subscribers')->get('objectType');
 
     // Redirect to summary page of wizard
     return new RedirectResponse(
-      Url::fromRoute('mail_subscribers.product_wizard.step', ['step' => 'summary'])->toString());
+      Url::fromRoute('mail_subscribers.' . $objectType . '_wizard.step', ['step' => 'summary'])->toString()
+    );
   }
   else {
     return NULL;

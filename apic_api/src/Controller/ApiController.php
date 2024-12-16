@@ -31,7 +31,10 @@ class ApiController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\RedirectResponse|array
    */
   public function apiView(NodeInterface $apiNode = NULL) {
-    if ($apiNode !== NULL && $apiNode->bundle() === 'api') {
+    if (\Drupal::currentUser()->isAnonymous() && !((boolean) \Drupal::config('ibm_apim.settings')->get('show_anonymous_apis'))) {
+      $url =  Url::fromRoute('system.401', ['redirectto' => Url::fromRoute('<current>')->getInternalPath()])->toString();
+      $returnValue = new RedirectResponse($url);
+    } elseif ($apiNode !== NULL && $apiNode->bundle() === 'api') {
       $view_builder = \Drupal::entityTypeManager()->getViewBuilder('node');
       $build = $view_builder->view($apiNode, 'full');
       $returnValue = $build;

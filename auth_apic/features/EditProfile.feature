@@ -1,8 +1,8 @@
+@api
 Feature: Edit Profile
   As a user of the developer portal
   I want to be able to edit my account details
 
-  @api
   Scenario: Viewing the edit profile form as a non admin user
     Given I am not logged in
     Given users:
@@ -32,7 +32,6 @@ Feature: Edit Profile
     And I should see the text "Save"
     And I should see the text "Delete account"
 
-  @api
   Scenario: Editing user details as a non admin user
     Given I am not logged in
     Given users:
@@ -59,7 +58,6 @@ Feature: Edit Profile
     And the "Last Name" field should contain "@data(andre.lastName)"
 
 
-  @api
   # This test is testing for admin users where uid!=1 i.e. apim users
   # who have been given the admin role by another admin
   Scenario: Viewing the edit profile form as a user with the Administrator role
@@ -84,7 +82,6 @@ Feature: Edit Profile
     And I should see the text "Save"
     And I should see the text "Delete account"
 
-  @api
   # This is a user with administrator role, not uid==1 admin user.
   Scenario: Editing user details as a user with administrator role
     Given I am logged in as a user with the "Administrator" role and I have the following fields:
@@ -98,7 +95,6 @@ Feature: Edit Profile
     And the "First Name" field should contain "Changed Name Admin"
     And the "Last Name" field should contain "Changed Last Name Admin"
 
-  @api
   Scenario: View own edit profile form as admin user (uid==1)
     Given users:
       | name              | mail              | pass                  | status |
@@ -120,7 +116,6 @@ Feature: Edit Profile
     And I should see the text "Save"
     And I should not see the text "Delete account"
 
-  @api
   Scenario: View another users edit profile form as admin user (uid==1)
     Given users:
       | name              | mail              | pass                  | status |
@@ -147,7 +142,6 @@ Feature: Edit Profile
     And I should see the text "Save"
     And I should not see the text "Delete account"
 
-  @api
   Scenario: View admin user edit profile form as andre with Administrator role
     Given users:
       | name              | mail              | pass                  | status |
@@ -173,7 +167,6 @@ Feature: Edit Profile
     And I should see the text "Save"
     And I should not see the text "Delete account"
 
-  @api
   Scenario: View edit profile form as LDAP (!user_managed) user
     Given I am not logged in
     Given userregistries:
@@ -206,7 +199,6 @@ Feature: Edit Profile
     And I should see the text "Save"
     And I should see the text "Delete account"
 
-  @api
   Scenario: Change profile preferred language as LDAP (!user_managed) user
     Given I am not logged in
     Given userregistries:
@@ -230,7 +222,6 @@ Feature: Edit Profile
     And there are no warnings
 
 
-  @api
   Scenario: View edit profile form as a writable LDAP user
     Given the cache has been cleared
     Given I am not logged in
@@ -269,7 +260,6 @@ Feature: Edit Profile
     And I should see the text "Save"
     And I should see the text "Delete account"
 
-  @api
   Scenario: Change profile first name and last name as a writable LDAP user
     Given the cache has been cleared
     Given I am not logged in
@@ -294,7 +284,6 @@ Feature: Edit Profile
     And there are no errors
     And there are no warnings
 
-  @api
   Scenario: Edit profile by users with the same username
     Given I am not logged in
     Given userregistries:
@@ -331,7 +320,6 @@ Feature: Edit Profile
     And I should see the text "Your account has been updated."
 
 
-  @api
   Scenario: Edit profile with text type custom fields
     Given I am not logged in
     Given users:
@@ -361,7 +349,6 @@ Feature: Edit Profile
     Then I delete the text type custom fields for user entities
 
 
-  @api
   Scenario: Edit profile with timestamp type custom fields
     Given I am not logged in
     Given users:
@@ -399,7 +386,6 @@ Feature: Edit Profile
     And I should see the text "00:00"
     Then I delete the timestamp type custom fields for user entities
 
-  @api
   Scenario: Edit profile with date type custom fields
     Given I am not logged in
     Given users:

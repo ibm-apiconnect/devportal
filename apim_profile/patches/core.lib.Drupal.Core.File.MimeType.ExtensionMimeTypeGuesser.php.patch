@@ -1,0 +1,20 @@
+--- core/lib/Drupal/Core/File/MimeType/ExtensionMimeTypeGuesser.php     2024-09-12 10:45:37
++++ core/lib/Drupal/Core/File/MimeType/ExtensionMimeTypeGuesser.php        2024-09-20 16:43:49
+@@ -384,6 +384,7 @@
+       344 => 'x-epoc/x-sisx-app',
+       345 => 'x-world/x-vrml',
+       361 => 'application/json',
++      363 => 'application/yaml',
+     ],
+
+     // Extensions added to this list MUST be lower-case.
+@@ -869,6 +870,9 @@
+       'aac' => 360,
+       'json' => 361,
+       'avif' => 362,
++      'md' => 292,
++      'yml' => 363,
++      'yaml' => 363.
+     ],
+     // cspell:enable
+   ];

@@ -1,9 +1,9 @@
+@api
 Feature: ApplicationList
   In order to use the developer portal
   I need to see a list of my applications
 
   @mocked
-  @api
   Scenario: Empty application list
     Given I am not logged in
     Given users:

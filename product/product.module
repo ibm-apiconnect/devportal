@@ -562,7 +562,8 @@ function product_preprocess_node(&$variables) {
             // its not valid though and there is an apim bug to get it fixed. We cannot continue without a plan name though!
             if ($plan['name'] !== NULL && !empty(trim($plan['name']))) {
               $planId = $variables['node']->apic_url->value . ':' . $plan['name'];
-              $planArray[$planId] = $planService->process($planId, $plan, $apiList, $productData['apis']);
+              $componentRateLimits = isset($productData['components']['rateLimits']) ? $productData['components']['rateLimits'] : NULL;
+              $planArray[$planId] = $planService->process($planId, $plan, $apiList, $productData['apis'], $componentRateLimits);
               if (isset($plan['deploymentState'])) {
                 $planArray[$planId]['deploymentState'] = $plan['deploymentState'];
               }
@@ -604,6 +605,9 @@ function product_preprocess_node(&$variables) {
         $docPages = Product::getLinkedPages($variables['node']->id());
         $variables['docpages'] = $docPages;
         $variables['#attached']['library'][] = 'apic_app/subscribe';
+        $moduleHandler = \Drupal::service('module_handler');
+        $variables['case_study'] = $moduleHandler->moduleExists('case_study');
+        $variables['product_recommendations'] = $config->get('product_recommendations.enabled');
         $moduleHandler = \Drupal::service('module_handler');
         // this is needed for the fontawesome symbols in the plan table
         if ($moduleHandler->moduleExists('social_media_links')) {
@@ -816,6 +820,11 @@ function product_menu_links_discovered_alter(&$links) {
  */
 function product_theme($existing, $type, $theme, $path): array {
   return [
+    'productrecommendations_block' => [
+      'variables' => [
+        'productRecommendations' => NULL,
+      ],
+    ],
     'product_select' => [
       'variables' => [
         'apiNid' => NULL,

@@ -70,7 +70,6 @@
 
 .route-productview .apicMainContent,
 .route-productapi .apicMainContent {
-  margin-top: 48px;
   width: 100%;
 }
 
@@ -122,7 +121,11 @@
   max-width: calc(100% - 6rem);
 }
 
-.field.apis .field__label.label,
+.apicProduct .apicProductBody .productRecommendationCards .field {
+  margin: unset;
+}
+
+.field.apis .field__label.label, .field__label.label,
 .field.plans .field__label.label {
   margin-top: 0;
 }
@@ -250,14 +253,11 @@ ul.apicProductApiList {
   padding-left: 1rem;
   align-self: flex-end;
   font-weight: bold;
+  color: #525252;
 }
 
-.apicProductTermsOfService a.collapsed:after {
-  content: "\f107";
-}
-
-.apicProductTermsOfService a:not(.collapsed):after {
-  content: "\f106";
+.apicProductTermsOfService a:not(.collapsed) svg {
+  transform: rotate(180deg);
 }
 
 .apicApiTeaser {
@@ -1078,6 +1078,7 @@ a.bx--side-nav__link,
   color: #161616;
 }
 
+.comments h2,
 h3.field__label.label
 {
   font-size: 1.25rem;
@@ -1165,7 +1166,7 @@ h3.field__label.label
 
 .planApiVersion {
   margin-left: 0.3rem;
-} 
+}
 
 .planApiCheck svg{
   height: 100%;
@@ -1320,4 +1321,3 @@ h3.field__label.label
 .planRatesAndBilling p {
   margin-bottom: 0.3rem;
 }
-

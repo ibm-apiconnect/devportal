@@ -71,7 +71,8 @@ class ProductController extends ControllerBase {
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse|array
    */
-  public function productView(NodeInterface $prodNode) {
+
+  function productView(NodeInterface $prodNode) {
     if ($prodNode !== NULL && $prodNode->bundle() === 'product') {
       $viewBuilder = \Drupal::entityTypeManager()->getViewBuilder('node');
       $returnValue = $viewBuilder->view($prodNode, 'full');
@@ -209,6 +210,10 @@ class ProductController extends ControllerBase {
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $found);
     if ($found) {
+      if (\Drupal::currentUser()->isAnonymous() && !((bool) \Drupal::config('ibm_apim.settings')->get('show_anonymous_apis'))) {
+        $url =  Url::fromRoute('system.401', ['redirectto' => Url::fromRoute('<current>')->getInternalPath()])->toString();
+        return new RedirectResponse($url);
+      }
       $attached = ['library' => []];
       $attached['library'][] = 'product/basic';
       $moduleHandler = \Drupal::service('module_handler');

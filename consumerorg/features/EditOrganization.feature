@@ -1,8 +1,8 @@
+@api
 Feature: Edit Consumer Organization
   In order to use the developer portal
   I need to be able to edit my organization title
 
-  @api
   Scenario: As an organization owner, I can go to the edit organization page
     Given I am not logged in
     Given users:
@@ -22,7 +22,6 @@ Feature: Edit Consumer Organization
     And there are no errors
 
 
-  @api
   Scenario: As an organization owner, I can edit the organization title
     Given I am not logged in
     Given users:
@@ -44,7 +43,6 @@ Feature: Edit Consumer Organization
     And there are no errors
 
 
-  @api
   Scenario: As an org member, role=administrator, I can go to the edit organization page
     Given I am not logged in
     Given users:
@@ -68,7 +66,6 @@ Feature: Edit Consumer Organization
     And there are no errors
 
 
-  @api
   Scenario: As an org member, role=administrator, I can edit the organization title
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -93,7 +90,6 @@ Feature: Edit Consumer Organization
     And there are no errors
 
 
-  @api
   Scenario: As an org member, role=developer, I cannot see the edit organization option
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -112,7 +108,6 @@ Feature: Edit Consumer Organization
     And there are no messages
 
 
-  @api
   Scenario: As an org member, role=developer, I cannot edit the organization title
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -127,11 +122,10 @@ Feature: Edit Consumer Organization
     Given I am logged in as "@data(andre[4].mail)"
     When I go to "/myorg/edit"
     Then I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
     And there are no errors
 
 
-  @api
   Scenario: As an org member, role=viewer, I cannot see the edit organization option
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -150,7 +144,6 @@ Feature: Edit Consumer Organization
     And there are no messages
 
 
-  @api
   Scenario: As an org member, role=viewer, I cannot edit the organization title
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -165,10 +158,9 @@ Feature: Edit Consumer Organization
     Given I am logged in as "@data(andre[3].mail)"
     When I go to "/myorg/edit"
     Then I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
     And there are no errors
 
-  @api
   Scenario: As an org owner, I can edit the custom fields
     Given users:
       | name              | mail              | pass                  | status |

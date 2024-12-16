@@ -196,6 +196,15 @@ if (typeof jQuery === 'undefined') {
     loadingText: 'loading...'
   }
 
+  Button.prototype.sanitize = function (unsafeText) {
+    return unsafeText
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   Button.prototype.setState = function (state) {
     var d    = 'disabled'
     var $el  = this.$element
@@ -208,7 +217,7 @@ if (typeof jQuery === 'undefined') {
 
     // push to event loop to allow forms to submit
     setTimeout($.proxy(function () {
-      $el[val](data[state] == null ? this.options[state] : data[state])
+      $el[val](data[state] == null ? this.options[state] : this.sanitize(data[state]))
 
       if (state == 'loadingText') {
         this.isLoading = true

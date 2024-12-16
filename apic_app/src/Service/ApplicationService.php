@@ -369,8 +369,7 @@ class ApplicationService {
       $node->set('application_subscription_refs', $newArray);
 
       if ($this->utils->hashMatch($existingNodeHash, $node, 'new-app')) {
-        if ($event !== 'internal') {
-          \Drupal::logger('apic_app')->notice('App @app not updated as the hash matched', ['@app' => $node->getTitle()]);}
+        ibm_apim_snapshot_debug('App @app not updated as the hash matched', ['@app' => $node->getTitle()]);
       } else {
         $node->save();
 
@@ -378,18 +377,18 @@ class ApplicationService {
           // we have support for calling create hook here as well because of timing issues with webhooks coming in and sending us down
           // the update path in createOrUpdate even when the initial user action was create
           if ($event === 'create' || $event === 'app_create') {
-            \Drupal::logger('apic_app')->notice('Application @app created (update path)', ['@app' => $node->getTitle()]);
+            ibm_apim_snapshot_debug('Application @app created (update path)', ['@app' => $node->getTitle()]);
 
             $this->invokeAppCreateHook($create_hook_app, $node);
           } else {
-            \Drupal::logger('apic_app')->notice('Application @app updated', ['@app' => $node->getTitle()]);
+            ibm_apim_snapshot_debug('Application @app updated', ['@app' => $node->getTitle()]);
 
             // Calling all modules implementing 'hook_apic_app_update':
             $this->moduleHandler->invokeAll('apic_app_update', [$node, $app]);
           }
         }
+        $returnValue = $node;
       }
-      $returnValue = $node;
     }
     else {
       \Drupal::logger('apic_app')->error('Update application: no node provided.', []);
@@ -411,7 +410,7 @@ class ApplicationService {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function createOrUpdate($app, $event, $formState = NULL): bool {
+  public function createOrUpdate($app, $event, $formState = NULL): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $query = \Drupal::entityQuery('node');
@@ -419,24 +418,26 @@ class ApplicationService {
     $query->condition('application_id.value', $app['id']);
 
     $nids = $query->accessCheck()->execute();
-
+    $changed = FALSE;
     if (isset($nids) && !empty($nids)) {
       $nid = array_shift($nids);
       $node = Node::load($nid);
       if ($node !== NULL) {
-        $this->update($node, $app, $event, $formState);
-        $createdOrUpdated = FALSE;
+        $changed = $this->update($node, $app, $event, $formState) !== NULL;
+        $createdOrUpdated = $changed ? 'updated' : '';
       }
       else {
         // no existing node for this App so create one
         $this->create($app, $event, $formState);
-        $createdOrUpdated = TRUE;
+        $createdOrUpdated = 'created';
+        $changed = TRUE;
       }
     }
     else {
       // no existing node for this App so create one
       $this->create($app, $event, $formState);
-      $createdOrUpdated = TRUE;
+      $createdOrUpdated = 'created';
+      $changed = TRUE;
     }
 
     // Add Activity Feed Event Log
@@ -485,16 +486,18 @@ class ApplicationService {
     }
     $eventEntity->setData(['name' => $appTitle]);
 
-    // if this is update then check there is already a create event in the db
-    if ($eventType === 'update' && isset($app['created_at']) && $app['created_at'] !== $app['updated_at']) {
-      $createEventEntity = clone $eventEntity;
-      $timestamp = strtotime($app['created_at']);
-      $createEventEntity->setTimestamp((int) $timestamp);
-      $createEventEntity->setEvent('create');
-      $this->eventLogService->createIfNotExist($createEventEntity);
-    }
+    if ($changed) {
+      // if this is update then check there is already a create event in the db
+      if ($eventType === 'update' && isset($app['created_at']) && $app['created_at'] !== $app['updated_at']) {
+        $createEventEntity = clone $eventEntity;
+        $timestamp = strtotime($app['created_at']);
+        $createEventEntity->setTimestamp((int) $timestamp);
+        $createEventEntity->setEvent('create');
+        $this->eventLogService->createIfNotExist($createEventEntity);
+      }
 
-    $this->eventLogService->createIfNotExist($eventEntity);
+      $this->eventLogService->createIfNotExist($eventEntity);
+    }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $createdOrUpdated);
     return $createdOrUpdated;
   }

@@ -106,37 +106,9 @@ field.field.node.api.comment:
   type: ibm_apim_config_object
   label: 'Comments'
 
-views.view.apis.display.default.display_options.exposed_form.options:
-  type: string
-  sort_asc_label: 'Asc'
-
-views.view.apis.display.default.display_options.exposed_form.options:
-  type: string
-  sort_desc_label: 'Desc'
-
-views.view.apis.display.default.display_options.exposed_form.options:
-  type: string
-  exposed_sorts_label: 'Sort by'
-
-views.view.apis.display.default.display_options.exposed_form.options:
-  type: string
-  reset_button_label: 'Reset'
-
-views.view.apis.display.default.display_options.exposed_form.options:
-  type: string
-  submit_button: 'Apply'
-
-views.view.apis.display.default.display_options.exposed_form.options:
-  type: string
-  text_input_required: 'Select any filter and click on Apply to see results'
-
-views.view.apis.display.default.display_options.exposed_form.options.bef.sort.advanced:
-  type: string
-  collapsible_label: 'Sort options'
-
-views.view.apis.display.default.display_options.exposed_form.options.bef.general:
-  type: string
-  secondary_label: 'Advanced options'
+views.view.apis.display.default.display_options.exposed_form:
+  type: views.exposed_form.bef
+  label: 'Better Exposed Filters'
 
 views.view.apis.display.default.display_options.filters.title.expose:
   type: string

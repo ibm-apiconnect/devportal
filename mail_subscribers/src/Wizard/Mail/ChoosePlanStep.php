@@ -63,42 +63,49 @@ class ChoosePlanStep extends FormBase {
     ];
 
     $cached_values = $form_state->getTemporaryValue('wizard');
-    $product = $cached_values['product'];
-
-    if (empty($product)) {
+    $products = $cached_values['products'];
+    if (empty($products)) {
       $wizardUrl = Link::fromTextAndUrl(t('Plan subscription wizard'), \Drupal\Core\Url::fromRoute('mail_subscribers.plan_wizard'));
-      $this->messenger->addError(t('Email wizard was invoked with no product. Start the wizard again from the %wizardurl page.', ['%wizardurl' => $wizardUrl]));
+      $this->messenger->addError(t('Email wizard was invoked with no products. Start the wizard again from the %wizardurl page.', ['%wizardurl' => $wizardUrl]));
       $this->redirect('<front>')->send();
       return [];
     }
-    $product = Node::load($product);
+    $products = Node::loadMultiple(array_values($products));
+
+    $productsPlans = [];
+    foreach($products as $product) {
+      foreach ($product->product_plans->getValue() as $arrayValue) {
+        $productsPlans[$product->id()][] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+      }
+    }
+    if ($productsPlans === NULL || empty($productsPlans)) {
+      $wizard_url = Link::fromTextAndUrl(t('Plan subscription wizard'), \Drupal\Core\Url::fromRoute('mail_subscribers.plan_wizard'));
+      $this->messenger->addError(t('No plans found for these products. Start the wizard again from the %wizardurl page.', ['%wizardurl' => $wizard_url]));
+      $this->redirect('<front>')->send();
+      return [];
+    }
 
     $options = [];
+    foreach ($productsPlans as $product => $plans) {
+      foreach ($plans as $plan) {
+        \Drupal::logger('qq')->debug(print_r($product,true));
+        $options[$product][$plan['name']] = $plan['title'];
+      }
+    }
 
-    $productPlans = [];
-    foreach ($product->product_plans->getValue() as $arrayValue) {
-      $productPlans[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-    }
-    if ($productPlans === NULL || empty($productPlans)) {
-      $wizard_url = Link::fromTextAndUrl(t('Plan subscription wizard'), \Drupal\Core\Url::fromRoute('mail_subscribers.plan_wizard'));
-      $this->messenger->addError(t('No plans found for this product. Start the wizard again from the %wizardurl page.', ['%wizardurl' => $wizard_url]));
-      $this->redirect('<front>')->send();
-      return [];
-    }
-    foreach ($productPlans as $plan) {
-      $options[$plan['name']] = $plan['title'];
-    }
     $this->plans = $options;
-    $keys = array_keys($options);
-    $default = reset($keys);
 
-    $form['plan'] = [
-      '#type' => 'radios',
-      '#title' => t('Plan'),
-      '#options' => $options,
-      '#description' => t('Select which product plan to use'),
-      '#default_value' => $default,
-    ];
+    foreach ($productsPlans as $productId => $plans) {
+      $keys = array_keys($options[$productId]);
+      $default = reset($keys);
+      $form[$productId . '_plan'] = [
+        '#type' => 'radios',
+        '#title' => t($products[$productId]->title->value . ' Plans'),
+        '#options' => $options[$productId],
+        '#description' => t('Select which product plan to use'),
+        '#default_value' => $default,
+      ];
+    }
 
     return $form;
   }
@@ -119,11 +126,13 @@ class ChoosePlanStep extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     $cached_values = $form_state->getTemporaryValue('wizard');
-
-    $plan = $form_state->getUserInput()['plan'];
+    $plans = [];
+    foreach($cached_values['products'] as $productId) {
+      $plans[$productId] = $form_state->getUserInput()[$productId . '_plan'];
+      $cached_values['plans'][$productId] = ['name' => $plans[$productId], 'title' => $this->plans[$productId][$plans[$productId]]];
+    }
 
     $cached_values['objectType'] = 'plan';
-    $cached_values['plan'] = ['name' => $plan, 'title' => $this->plans[$plan]];
 
     $form_state->setTemporaryValue('wizard', $cached_values);
 

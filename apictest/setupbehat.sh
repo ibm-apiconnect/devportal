@@ -21,6 +21,8 @@ then
   echo Installing drupal behat extensions
   cd $BASEDIR/vendor/drupal/drupal-extension
   npm install || true
+
+  patch -p0 --directory=$BASEDIR -i $APICTESTDIR/patches/logout.patch
 else
   if [[ -z "$1" ]]
   then
@@ -57,6 +59,8 @@ else
   echo Installing drupal behat extensions
   cd $BASEDIR/vendor/drupal/drupal-extension
   npm install || true
+
+  patch -p0 --directory=$BASEDIR -i $APICTESTDIR/patches/logout.patch
 fi
 
 ## default to using mocks if not explicitly passed in

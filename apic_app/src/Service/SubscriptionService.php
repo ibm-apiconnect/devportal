@@ -77,7 +77,7 @@ class SubscriptionService {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function create(string $appUrl, string $subId, string $product, string $plan, string $consumerOrgUrl, $state, $billingUrl, $subscription): bool {
+  public function create(string $appUrl, string $subId, string $product, string $plan, string $consumerOrgUrl, $state, $billingUrl, $subscription): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$appUrl, $subId]);
     $created = FALSE;
     $appUrl = Html::escape($this->apimUtils->removeFullyQualifiedUrl($appUrl));
@@ -100,7 +100,8 @@ class SubscriptionService {
     // Populate an array of field values.  We use this to see if we need to perform an update or to create a new record
     $fields = [
       'uuid' => $subId,
-      'billing_url' => $billingUrl,
+      // billing_url could be the empty string, but Drupal will store NULL for that
+      'billing_url' => !empty($billingUrl) ? $billingUrl : NULL,
       'state' => $state,
       'plan' => $plan,
       'app_url' => $appUrl,
@@ -141,20 +142,24 @@ class SubscriptionService {
       [$created, $appEntityId] = $this->doCreate($fields, $created_at, $updated_at);
     }
 
+    $returnValue = '';
     if ($created === TRUE) {
       // Add the create event log entry
       $this->addEventLog('create', $created_at, $appEntityId, $fields, $created_by);
+      $returnValue = 'created';
     } else if ($updated === TRUE) {
       // Add the update event log entry
       $this->addEventLog('update', $updated_at, $appEntityId, $fields, $updated_by);
+      $returnValue = 'updated';
     } else {
-      \Drupal::logger('apic_app')->notice('Subscription @subid already existed and had not changed. No update was carried out', [
+      ibm_apim_snapshot_debug('Subscription @subid already existed and had not changed. No update was carried out', [
         '@subid' => $subId,
       ]);
+      $returnValue = 'hashMatch';
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $created);
-    return $created;
+    return $returnValue;
   }
 
   /**
@@ -362,9 +367,9 @@ class SubscriptionService {
    * @throws \Drupal\Core\Entity\EntityStorageException*@throws \Exception
    * @throws \Exception
    */
-  public function createOrUpdate($subscription): bool {
+  public function createOrUpdate($subscription): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $returnValue = NULL;
+    $returnValue = '';
     if (isset($subscription['id'], $subscription['app_url'], $subscription['product_url'])) {
       if (!isset($subscription['state'])) {
         $subscription['state'] = 'enabled';

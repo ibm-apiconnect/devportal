@@ -38,6 +38,7 @@ class ConfirmSend extends FormBase {
     $direct = $cached_values['direct'];
     $carbon_copy = $cached_values['carbon_copy'];
     $send_original = $cached_values['send_original'];
+    $send_unique = $cached_values['send_unique'];
     $priority = $cached_values['priority'];
     $receipt = $cached_values['receipt'];
     $headers = $cached_values['headers'];
@@ -48,62 +49,117 @@ class ConfirmSend extends FormBase {
     ];
 
     if ($objectType === 'product') {
-      $node = Node::load($cached_values['product']);
-      if ($node !== NULL) {
+      $nodes = Node::loadMultiple($cached_values['products']);
+      if (!empty($nodes)) {
         if ($role === 'owners') {
+          $titles = [];
+          foreach ($nodes as $node) {
+            $titles[] = $node->getTitle();
+          }
+          $titles = implode(', ', $titles);
           $form['product'] = [
-            '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to any %product_title plan the following message:', ['%product_title' => $node->getTitle()]) . '</p>',
+            '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to any of the following products: @titles', ['@titles' => $titles]) . '</p>',
             '#weight' => -80,
           ];
         }
         else {
+          $titles = [];
+          foreach ($nodes as $node) {
+            $titles[] = $node->getTitle();
+          }
+          $titles = implode(', ', $titles);
           $form['product'] = [
-            '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to any %product_title plan the following message:', ['%product_title' => $node->getTitle()]) . '</p>',
+            '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to any of the following products: @titles', ['@titles' => $titles]) . '</p>',
             '#weight' => -80,
           ];
         }
       }
     }
     elseif ($objectType === 'plan') {
-      $plan = $cached_values['plan'];
-      $node = Node::load($cached_values['product']);
-      if ($node !== NULL) {
+      $plans = $cached_values['plans'];
+      $nodes = Node::loadMultiple($cached_values['products']);
+      if (!empty($nodes)) {
         if ($role === 'owners') {
+          $plansList = '';
+          foreach ($nodes as $node) {
+            $productTitle = $node->getTitle();
+            $planTitle = $plans[$node->id()]['title'];
+
+            // Add each product and plan pair to the list
+            $plansList .= $this->t('@product: @plan', [
+              '@product' => $productTitle,
+              '@plan' => $planTitle,
+            ]) . '<br />';
+          }
+
           $form['plan'] = [
-            '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to the %product_title %plan plan the following message:', [
-                '%product_title' => $node->getTitle(),
-                '%plan' => $plan['title'],
-              ]) . '</p>',
+            '#markup' => '<p>' . $this->t('Emailing all consumer organization owners subscribing to the following plans:') . '</p>' .
+            '<p>' . $plansList . '</p>',
             '#weight' => -80,
           ];
         }
         else {
+          $plansList = '';
+          foreach ($nodes as $node) {
+            $productTitle = $node->getTitle();
+            $planTitle = $plans[$node->id()]['title'];
+
+            // Add each product and plan pair to the list
+            $plansList .= $this->t('@product: @plan', [
+              '@product' => $productTitle,
+              '@plan' => $planTitle,
+            ]) . '<br />';
+          }
+
           $form['plan'] = [
-            '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to the %product_title %plan plan the following message:', [
-                '%product_title' => $node->getTitle(),
-                '%plan' => $plan['title'],
-              ]) . '</p>',
+            '#markup' => '<p>' . $this->t('Emailing all consumer organization members subscribing to the following plans:') . '</p>' .
+              '<p>' . $plansList . '</p>',
             '#weight' => -80,
           ];
         }
       }
     }
     elseif ($objectType === 'api') {
-      $node = Node::load($cached_values['api']);
+      $nodes = Node::loadMultiple($cached_values['apis']);
       if ($role === 'owners') {
+
+        $titles = [];
+        foreach ($nodes as $node) {
+          $titles[] = $node->getTitle();
+        }
+        $titles = implode(', ', $titles);
+
         $form['api'] = [
-          '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to plans containing API: %api_title the following message:', ['%api_title' => $node->getTitle()]) . '</p>',
+          '#markup' => '<p>' . $this->t('Email all owners of consumer organizations subscribing to plans containing APIs: %titles.', ['%titles' => $titles]) . '</p>',
           '#weight' => -80,
         ];
       }
       else {
+        $titles = [];
+        foreach ($nodes as $node) {
+          $titles[] = $node->getTitle();
+        }
+        $titles = implode(', ', $titles);
+
         $form['api'] = [
-          '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to plans containing API: %api_title the following message:', ['%api_title' => $node->getTitle()]) . '</p>',
+          '#markup' => '<p>' . $this->t('Email all members of consumer organizations subscribing to plans containing APIs: %titles.', ['%titles' => $titles]) . '</p>',
           '#weight' => -80,
         ];
       }
-    }
-    elseif ($objectType === 'all') {
+    } elseif ($objectType === 'consumerorg') {
+      if ($role === 'owners') {
+        $form['all'] = [
+          '#markup' => '<p>' . $this->t('Email all owners of all consumer organization the following message:') . '</p>',
+          '#weight' => -80,
+        ];
+      }
+      else {
+        $form['all'] = [
+          '#markup' => '<p>' . $this->t('Email all members of all consumer organization the following message:') . '</p>',
+          '#weight' => -80,
+        ];
+      }
+    } elseif ($objectType === 'all') {
       if ($role === 'owners') {
         $form['all'] = [
           '#markup' => '<p>' . $this->t('Email all owners of all consumer organization the following message:') . '</p>',
@@ -171,18 +227,26 @@ class ConfirmSend extends FormBase {
       '#disabled' => TRUE,
       '#weight' => -20,
     ];
+    $form['send_unique'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Only send one email per user even if they\'re in multiple lists.'),
+      '#description' => $this->t("This will ensure each user only receives the email once, even if they're part of multiple selected apis, products, plans or consumer orgs."),
+      '#default_value' => $send_unique,
+      '#disabled' => TRUE,
+      '#weight' => -20,
+    ];
     $form['carbon_copy'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Send a copy of the message to the sender.'),
-      '#description' => $this->t("This will send a copy of each email that is generated to the sender.  Because the email may contain context specific tokens, new email content is generated for each recipient with the correct token replacement.  This option will send a copy of all generated emails to the sender "),
+      '#title' => $this->t('Send a copy of the message to the copy recipient.'),
+      '#description' => $this->t("This will send a copy of each email that is generated to the copy recipient. Because the email may contain context specific tokens, new email content is generated for each recipient with the correct token replacement. This option will send a copy of all generated emails to the copy recipient configured in the site settings."),
       '#default_value' => $carbon_copy,
       '#disabled' => TRUE,
       '#weight' => -10,
     ];
     $form['send_original'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Send a copy of the original message to the sender.'),
-      '#description' => $this->t("This will send a single copy of the email to the sender without the replacement of any tokens that may have been selected"),
+      '#title' => $this->t('Send a copy of the original message to the copy recipient.'),
+      '#description' => $this->t("This will send a single copy of the email to the copy recipient without the replacement of any tokens that may have been selected."),
       '#default_value' => $send_original,
       '#disabled' => TRUE,
       '#weight' => -10,
@@ -219,9 +283,7 @@ class ConfirmSend extends FormBase {
     $from_mail = $config->get('from_mail');
     $from['name'] = ($from_mail !== NULL && !empty($from_name)) ? $from_name : $site_config->get('name');
     $from['mail'] = ($from_mail !== NULL && !empty($from_mail)) ? $from_mail : $site_config->get('mail');
-
     $rc = NULL;
-
     if ($cached_values['objectType'] === 'product' && $cached_values['role'] === 'owners') {
       $rc = $mailService->mailProductOwners($cached_values, $from, $langcode);
     }
@@ -239,6 +301,12 @@ class ConfirmSend extends FormBase {
     }
     elseif ($cached_values['objectType'] === 'api' && $cached_values['role'] === 'members') {
       $rc = $mailService->mailApiMembers($cached_values, $from, $langcode);
+    }
+    elseif ($cached_values['objectType'] === 'consumerorg' && $cached_values['role'] === 'owners') {
+      $rc = $mailService->mailConsumerorgOwners($cached_values, $from, $langcode);
+    }
+    elseif ($cached_values['objectType'] === 'consumerorg' && $cached_values['role'] === 'members') {
+      $rc = $mailService->mailConsumerorgMembers($cached_values, $from, $langcode);
     }
     elseif ($cached_values['objectType'] === 'all' && $cached_values['role'] === 'owners') {
       $rc = $mailService->mailAllOwners($cached_values, $from, $langcode);
@@ -266,6 +334,7 @@ class ConfirmSend extends FormBase {
       \Drupal::state()->set('mail_subscribers.result', $result_state);
     }
     $form_state->setTemporaryValue('wizard', $cached_values);
+    \Drupal::service('tempstore.private')->get('mail_subscribers')->set('objectType', $cached_values['objectType']);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
   }

@@ -1,7 +1,7 @@
+@api
 Feature: API Rendering
   As Andre I am able to view an API.
 
-  @api
   Scenario: I can see the API that uses extended name regex
     Given I am not logged in
     Given apis:
@@ -16,7 +16,6 @@ Feature: API Rendering
     Then I should see the text "AZaz API"
     And there are no errors
 
-  @api
   Scenario: I can see the API
     Given I am not logged in
     Given apis:

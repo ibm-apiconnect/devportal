@@ -398,6 +398,7 @@ function apic_api_preprocess_node(&$variables): void {
     $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
     $renderApiSchemaView = (boolean) $config->get('render_api_schema_view');
     $api_max_depth = $config->get('api_max_depth');
+    $variables['#cache']['max-age'] = 0;
     if ($api_max_depth === NULL || !is_int($api_max_depth) || $api_max_depth < 2 || $api_max_depth > 25) {
       $api_max_depth = 9;
     }
@@ -526,7 +527,7 @@ function apic_api_preprocess_node(&$variables): void {
           $pathQuery->condition('apic_pathalias.value', $selectedProductNid);
           $pathNids = $pathQuery->accessCheck()->execute();
           if (count($pathNids) > 0) {
-            $selectedProductNid = array_key_first($pathNids);
+            $selectedProductNid = reset($pathNids);
           }
         }
         $apps = \Drupal::service('apic_app.application')->listApplications();

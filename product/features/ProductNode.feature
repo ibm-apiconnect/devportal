@@ -1,7 +1,7 @@
+@api
 Feature: Product Fields
   As Admin I should not be able to edit core fields.
 
-  @api
   Scenario: I can not see the Product interal fields
     Given I am not logged in
     Given users:

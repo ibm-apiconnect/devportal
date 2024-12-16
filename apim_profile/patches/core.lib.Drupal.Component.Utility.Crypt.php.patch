@@ -1,0 +1,11 @@
+--- core/lib/Drupal/Component/Utility/Crypt.php	2024-07-04 12:33:45.000000000 +0100
++++ core/lib/Drupal/Component/Utility/Crypt.php	2024-07-16 14:07:41.918512211 +0100
+@@ -46,7 +46,7 @@
+    *   any = padding characters removed.
+    */
+   public static function hashBase64($data) {
+-    $hash = base64_encode(hash('sha256', $data, TRUE));
++    $hash = base64_encode(openssl_digest($data, 'sha256', TRUE));
+     // Modify the hash so it's safe to use in URLs.
+     return str_replace(['+', '/', '='], ['-', '_', ''], $hash);
+   }

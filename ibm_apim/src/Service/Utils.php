@@ -30,6 +30,102 @@ class Utils {
   public function __construct() {
   }
 
+
+  /**
+   * Creates a Key Entity referencing the correct env var
+  */
+   public function saveEncKey($keyName, $envVarName): void {
+    $oldKey = \Drupal\key\Entity\Key::load($keyName);
+    if ($oldKey !== NULL) {
+      $oldKey->delete();
+    }
+    $key = \Drupal\key\Entity\Key::create([
+      'id' => $keyName,
+      'label' => $keyName,
+      'key_type' => 'encryption',
+      'key_type_settings' => ['key_size' => 256],
+      'key_provider' => 'env',
+      'key_provider_settings' => [
+        'strip_line_breaks' => TRUE,
+        'base64_encoded' => TRUE,
+        'env_variable' => $envVarName,
+      ],
+      'key_input' => 'none',
+      'key_input_settings' => [],
+    ]);
+    $key->save();
+  }
+
+  /**
+   * delete an enckey
+   *
+   * @return void
+   */
+  public function deleteEncKey($keyName): void {
+    $oldKey = \Drupal\key\Entity\Key::load($keyName);
+    if ($oldKey !== NULL) {
+      $oldKey->delete();
+    }
+  }
+
+  /**
+   * delete an encryption profile
+   *
+   * @return void
+   */
+  public function deleteEncProfile($profileName): void {
+    $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($profileName);
+    if ($encryptionProfile) {
+      $encryptionProfile->delete();
+    }
+  }
+
+  /**
+   * delete ALL old enckeys
+   *
+   * @return void
+   */
+  public function deletePreviousEncKeys($profileName): void {
+    for($i=0; $i < 64; $i++) {
+      $this->deleteEncKey('oldenckey' .$i);
+    }
+    $this->deleteEncProfile($profileName);
+  }
+
+  /**
+   * Creates an encryption profile
+   *
+   * @param mixed $profileName
+   * @param mixed $keyName
+   * @return void
+   */
+  public function createEncryptionProfile($profileName, $keyName): void {
+    $this->deleteEncProfile($profileName);
+    $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::create([
+      'id' => $profileName,
+      'label' => $profileName,
+      'encryption_method' => 'real_aes',
+      'encryption_key' => $keyName,
+      'encryption_method_configuration' => [],
+    ]);
+    $encryptionProfile->save();
+  }
+
+  /**
+   *  loads an encryption profile
+   * @param mixed $profileName
+   * @throws \Exception
+   * @return \Drupal\ibm_apim\Service\EncryptionProfile
+   */
+  public function loadEncryptionProfile($profileName): \Drupal\encrypt\Entity\EncryptionProfile {
+    // check there is an encryption profile
+    $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($profileName);
+    if (! $encryptionProfile) {
+      throw new \Exception("Failed to find an EncryptionProfile with the name: $profileName");
+    }
+    return $encryptionProfile;
+  }
+
   /**
    * Set a node field to a string value, or an empty array if the string value is ''
    * to do a database update or not.

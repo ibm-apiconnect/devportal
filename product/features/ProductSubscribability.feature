@@ -1,7 +1,7 @@
+@api
 Feature: ProductSubscribability
   I should not be able subscribe to products if the respective option is disabled
 
-  @api
   Scenario: Accessing a product which has its subscribe disabled while not logged in
     Given users:
       | name      | mail                  | pass     | status |
@@ -24,7 +24,6 @@ Feature: ProductSubscribability
     And I should see the "Select" button
     And the field ".btn.subscribe" should be disabled
 
-  @api
   Scenario: Accessing a product which has its subscribability set to tags
     Given users:
       | name      | mail                  | pass     | status |
@@ -48,7 +47,6 @@ Feature: ProductSubscribability
     Then I should see the "Select" button
     And the field ".btn.subscribe" should be disabled
 
-  @api
   Scenario: Accessing a product which has its subscribability set to org_url
     Given users:
       | name      | mail                  | pass     | status |

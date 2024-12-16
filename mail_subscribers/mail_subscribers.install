@@ -115,3 +115,7 @@ function mail_subscribers_schema(): array {
  */
 function mail_subscribers_uninstall() {
 }
+
+function  mail_subscribers_update_10001() {
+  \Drupal::entityDefinitionUpdateManager()->installEntityType(\Drupal::entityTypeManager()->getDefinition('mail_subscribers_email_list'));
+}

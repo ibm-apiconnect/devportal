@@ -99,7 +99,7 @@ class ProductPlanServiceTest extends UnitTestCase {
       }
       else {
         $string = $args[2];
-        if (is_array($args[3]) && !empty(is_array($args[3]))) {
+        if (isset($args[3]) && is_array($args[3]) && !empty(is_array($args[3]))) {
           // do manual replace
           return strtr($string, $args[3]);
         }
@@ -168,6 +168,12 @@ class ProductPlanServiceTest extends UnitTestCase {
     $service = new ProductPlan($this->languageManager->reveal(), $this->translationManager->reveal(), $this->utils->reveal());
     $result = $service->parseRateLimits(['rate-limits' => ['default' => ['value' => '10/hour']]]);
     self::assertEquals(['planRateLimit' => '10 calls per hour', 'tooltip' => NULL], $result);
+  }
+
+  public function testSingleRateLimitsLightweightGateway(): void {
+    $service = new ProductPlan($this->languageManager->reveal(), $this->translationManager->reveal(), $this->utils->reveal());
+    $result = $service->parseRateLimits(['rateLimitMap' => ['plan-limit' => 'default']], ['default' => [ 0 => ['intervalLen' => '2', 'max' => '100', 'intervalUnit' => 'hour']]]);
+    self::assertEquals(['planRateLimit' => '100 calls per 2 hours', 'tooltip' => NULL], $result);
   }
 
   public function testMultipleRateLimits(): void {

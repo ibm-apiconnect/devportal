@@ -123,6 +123,14 @@ class AdminForm extends ConfigFormBase {
       '#description' => t('If unchecked then version numbers will not be displayed for APIs or Products.'),
     ];
 
+    $form['config']['show_anonymous_apis'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Show API details to anonymous users'),
+      '#default_value' => $config->get('show_anonymous_apis'),
+      '#weight' => -11,
+      '#description' => t('If unchecked then anonymous users will be required to log in to view API details.'),
+    ];
+
     $form['config']['enable_api_test'] = [
       '#type' => 'checkbox',
       '#title' => t('Allow live testing of APIs'),
@@ -306,6 +314,48 @@ class AdminForm extends ConfigFormBase {
       '#default_value' => $config->get('allow_user_delete'),
       '#weight' => -12,
       '#description' => t('If checked then users will be allowed to delete their accounts.'),
+    ];
+
+    // application options
+    $form['products'] = [
+      '#type' => 'fieldset',
+      '#title' => t('Products'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    ];
+    $form['products']['product_recommendations'] = [
+      '#type' => 'fieldset',
+      '#title' => t('Recommendations'),
+      '#collapsible' => FALSE,
+      '#collapsed' => FALSE,
+      '#tree' => TRUE,
+    ];
+    $form['products']['product_recommendations']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Enable API Product Recommendations'),
+      '#default_value' => (bool) $config->get('product_recommendations.enabled'),
+      '#weight' => -15,
+      '#attributes' => [
+        'id' => 'product_recommendations_enabled',
+      ],
+      '#description' => t('Frequently subscribed to other products will be recommended to the end users.'),
+    ];
+    $form['products']['product_recommendations']['count'] = [
+      '#type' => 'number',
+      '#title' => t('API Product Recommendation Count'),
+      '#default_value' => (int) $config->get('product_recommendations.count'),
+      '#weight' => -15,
+      '#min' => 1,
+      '#max' => 20,
+      '#attributes' => [
+        'id' => 'product_recommendations_count',
+      ],
+      '#description' => t('How many API Product Recommendations are shown to the end users.'),
+      '#states' => [
+        'enabled' => [
+          ':input[id="product_recommendations_enabled"]' => ['checked' => TRUE],
+        ],
+      ],
     ];
 
     // application options
@@ -584,6 +634,7 @@ class AdminForm extends ConfigFormBase {
       ->set('show_placeholder_images', (bool) $form_state->getValue('show_placeholder_images'))
       ->set('show_register_app', (bool) $form_state->getValue('show_register_app'))
       ->set('show_versions', (bool) $form_state->getValue('show_versions'))
+      ->set('show_anonymous_apis', (bool) $form_state->getValue('show_anonymous_apis'))
       ->set('enable_api_test', (bool) $form_state->getValue('enable_api_test'))
       ->set('validate_apis', (bool) $form_state->getValue('validate_apis'))
       ->set('autotag_with_phase', (bool) $form_state->getValue('autotag_with_phase'))
@@ -618,7 +669,14 @@ class AdminForm extends ConfigFormBase {
       ->set('codesnippets', $codesnippets)
       ->set('router_type', $form_state->getValue('router_type'))
       ->set('example_array_items', (int) $form_state->getValue('example_array_items'))
+      ->set('product_recommendations.enabled', (bool) $form_state->getValue(['product_recommendations', 'enabled']))
+      ->set('product_recommendations.count', (int) $form_state->getValue(['product_recommendations', 'count']))
       ->save();
+
+    # Invalidate Twig cache if product recommendations has been turned on or off
+    if ((bool) $this->config('ibm_apim.settings')->get('product_recommendations.enabled') != (bool) $form_state->getValue(['product_recommendations', 'enabled'])) {
+      \Drupal::service('twig')->invalidate();
+    }
 
     // If we're just enabling categories then we should go process all the apis & products in our db to check them for categories
     if ((bool) $form_state->getValue('enabled') === TRUE && ($currentCategories['enabled'] !== (bool) $form_state->getValue('enabled') ||

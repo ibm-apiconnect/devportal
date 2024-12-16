@@ -28,7 +28,7 @@ class IbmApimContentController extends ControllerBase {
    *
    * @return string A success message
    */
-  private static function setIcon($node, string $iconPath, string $iconAltText): string {
+  public static function setIcon($node, string $iconPath, string $iconAltText): string {
     $responseMessage = '';
 
     $nodeType = $node->getType();
@@ -212,7 +212,7 @@ class IbmApimContentController extends ControllerBase {
    *
    * @return string A success message
    */
-  private static function addAttachment($node, string $attachmentPath, string $description = ''): string {
+  public static function addAttachment($node, string $attachmentPath, string $description = ''): string {
     $responseMessage = '';
     $nodeType = $node->getType();
     $fileRepository = \Drupal::service('file.repository');

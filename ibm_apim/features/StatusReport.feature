@@ -1,7 +1,7 @@
+@api
 Feature: System Status Report
   Check the status report page renders correctly
 
-  @api
   Scenario: Sign in as admin and check the report renders correctly
     Given I am not logged in
     Given users:

@@ -1,4 +1,5 @@
 <?php
+
 /********************************************************* {COPYRIGHT-TOP} ***
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
@@ -32,11 +33,10 @@ class ChooseProductStep extends FormBase {
     if ($cached_values['objectType'] === 'plan') {
       $form['intro'] = [
         '#markup' => '<p>' . t('This wizard will email all subscribers of a specific plan for a specific Product. Each subscriber will be sent an individual email.') . '</p>'
-          . '<p>' . t('Select the Product below and then select one of its Plans on the next page.') . '</p>',
+          . '<p>' . t('Select the Products below and then select one of its Plans on the next page.') . '</p>',
         '#weight' => 0,
       ];
-    }
-    else {
+    } else {
       $form['intro'] = [
         '#markup' => '<p>' . t('This wizard will email all subscribers of any plan for a specific Product. Each subscriber will be sent an individual email.') . '</p>'
           . '<p>' . t('Enter the name of the Product:') . '</p>',
@@ -44,15 +44,18 @@ class ChooseProductStep extends FormBase {
       ];
     }
 
-    $form['product'] = [
+    $form['products'] = [
       '#type' => 'entity_autocomplete',
       '#target_type' => 'node',
       '#selection_handler' => 'default',
+      '#tags' => TRUE,
       // Optional. The default selection handler is pre-populated to 'default'.
       '#selection_settings' => [
         'target_bundles' => ['product'],
       ],
-      '#title' => t('Type the first few characters of the Product you would like to select. You can then select from the available search results. Please note the search results are affected by which Products you can access.'),
+      '#maxlength' => NULL,
+      '#title' => t('Products'),
+      '#description' => t('Type the first few characters of the Product you would like to add then select from the available search results. Multiple products can be added by separating them by a comma. Please note the search results are affected by which Products you can access.'),
     ];
 
     return $form;
@@ -63,8 +66,8 @@ class ChooseProductStep extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state): ?bool {
 
-    if (empty($form_state->getUserInput()['product'])) {
-      $form_state->setErrorByName('product', t('You must select a Product.'));
+    if (empty($form_state->getUserInput()['products'])) {
+      $form_state->setErrorByName('products', t('You must select at least one Product.'));
       return FALSE;
     }
     return NULL;
@@ -76,13 +79,14 @@ class ChooseProductStep extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     $cached_values = $form_state->getTemporaryValue('wizard');
 
-    $product = $form_state->getValue('product');
-
+    $products = $form_state->getValue('products');
     $cached_values['objectType'] = 'product';
-    $cached_values['product'] = $product;
+    $values = [];
+    foreach ($products as $product) {
+      $values[] = $product['target_id'];
+    }
+    $cached_values['products'] = $values;
 
     $form_state->setTemporaryValue('wizard', $cached_values);
-
   }
-
 }

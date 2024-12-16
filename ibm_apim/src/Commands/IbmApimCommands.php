@@ -534,12 +534,15 @@ class IbmApimCommands extends DrushCommands {
    *   Unique ID for the files to process.
    * @aliases contrefresh
    */
-  public function drush_ibm_apim_content_refresh(array $options = [ 'uuid' => self::REQ ]): void {
+  public function drush_ibm_apim_content_refresh(array $options = [ 'uuid' => self::REQ, 'lastTime' => 0.0, 'alias' => '', 'role' => 'parent', 'index' => 0, 'startTime' => 0, 'uStartTime' => 0.0, 'chunkSize' => self::REQ]): void {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
-    $startTime = time();
-    $uStartTime = microtime(true);
     $UUID = $options['uuid'];
-    \Drupal::logger('ibm_apim')->info('Drush ibm_apim_content_refresh start processing');
+    $role = $options['role'];
+    $alias = $options['alias'];
+    $fileIndex = $options['index'];
+    $chunkSize = $options['chunkSize'];
+
+    \Drupal::logger('ibm_apim')->info('Drush ibm_apim_content_refresh start processing role=%role', [ '%role' => $role ]);
 
     // save the current user so we can switch back at the end
     $accountSwitcher = \Drupal::service('account_switcher');
@@ -548,45 +551,90 @@ class IbmApimCommands extends DrushCommands {
       $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
 
-    // Incoming payload is always of the format : { 'type': foo, ... }
-    // where type is the type of incoming object
+    if ($role === 'parent') {
 
-    $handle = @fopen("/tmp/snapshot.$UUID/snapshot.stream.$UUID.file", "r");
+      $startTime = time();
+      $uStartTime = microtime(true);
+      $lastTime = $uStartTime;
 
-    $fileHandles = $this->create_content_refresh_file_handles($UUID);
+      // Turn off direct search index creation for the duration of the snapshot
+      $this->drush_ibm_apim_index_directly(FALSE);
 
-    // Turn off direct search index creation for the duration of the snapshot
-    $this->drush_ibm_apim_index_directly(FALSE);
+      $chunksLeft = true;
+      while ($chunksLeft) {
+        $cmd = sprintf('drush @%s contrefresh --uuid=%s --lastTime=%f --chunkSize=%d --index=%d --role=child --alias=%s --startTime=%d --uStartTime=%f', $alias, $UUID, $lastTime, $chunkSize, $fileIndex, $alias, $startTime, $uStartTime);
+        $result_code = 0;
+        system($cmd, $result_code);
+        if ($result_code !== 0) {
+          throw new \Exception(sprintf('Child process return code was %d', $result_code));
+        }
+        $lastTime = microtime(true);
+        $fileIndex++;
+        $chunksLeft = @file_exists(sprintf("/tmp/snapshot.$UUID/snapshot.stream.$UUID/file.%04d", $fileIndex));
+      }
 
-    $data = [
-      'fileHandles' => $fileHandles,
-      'startTime' => $startTime,
-      'uStartTime' => $uStartTime,
-      'memory_limit' => $this->drush_ibm_apim_convertToBytes(ini_get('memory_limit'))
-    ];
+      $this->drush_ibm_apim_clearup($UUID, $startTime);
 
-    $listener = new CollectionListener([$this, 'processContent'], $UUID, $data);
-    try {
-      $parser = new Parser($handle, $listener);
-      $parser->parse();
-      fclose($handle);
-      $handle = NULL;
+      // assert that the index_directly value of the search_api module's default_index is
+      // set correctly according to the number of nodes in the site
+      $this->drush_ibm_apim_assert_index_directly_value();
+    } else {
+      $startTime = $options['startTime'];
+      $uStartTime = (float)$options['uStartTime'];
+      $lastTime = (float)$options['lastTime'];
 
-      // They should have already been closed by the close_stream code, by just in case
-      $this->close_content_refresh_file_handles($fileHandles);
-    } catch (Throwable $e) {
+      $fileHandles = $this->create_content_refresh_file_handles($UUID, $fileIndex == 0 ? 'w' : 'a+');
+
+      ibm_apim_set_snapshot_debug((boolean) \Drupal::config('ibm_apim.devel_settings')->get('snapshot_debug'));
+      $data = [
+        'fileHandles' => $fileHandles,
+        'startTime' => $startTime,
+        'uStartTime' => $uStartTime,
+        'memory_limit' => $this->drush_ibm_apim_convertToBytes(ini_get('memory_limit')),
+        'chunkSize' => $chunkSize,
+        'lastTime' => $lastTime,
+        'apiCommand' => new ApicApiCommands(),
+        'productCommand' => new ProductCommands(),
+        'appCommand' => new ApicAppCommands(),
+        'consumerOrgCommand' => new ConsumerOrgCommands(),
+      ];
+
+      // Incoming payload is always of the format : { 'type': foo, ... }
+      // where type is the type of incoming object
+      fprintf(STDERR, "Processing snapshot chunk %04d\n",$fileIndex);
+      $data['chunk'] = $fileIndex;
+      $handle = @fopen(sprintf("/tmp/snapshot.$UUID/snapshot.stream.$UUID/file.%04d", $fileIndex), "r");
+
+      $listener = new CollectionListener([$this, 'processContent'], $UUID, $data);
+      try {
+        $parser = new Parser($handle, $listener);
+        $parser->parse();
+        fclose($handle);
+        $handle = NULL;
+
+        // They should have already been closed by the close_stream code, by just in case
+        $this->close_content_refresh_file_handles($fileHandles);
+      } catch (Throwable $e) {
+        if ($handle) {
+          fclose($handle);
+        }
+        $this->close_content_refresh_file_handles($fileHandles);
+        throw $e;
+      }
+
       if ($handle) {
         fclose($handle);
       }
+
+      // They should have already been closed by the close_stream code, by just in case
       $this->close_content_refresh_file_handles($fileHandles);
-      throw $e;
     }
 
     if (isset($originalUser) && (int) $originalUser->id() !== 1) {
       $accountSwitcher->switchBack();
     }
 
-    \Drupal::logger('ibm_apim')->info('Drush ibm_apim_content_refresh exiting');
+    \Drupal::logger('ibm_apim')->info('Drush ibm_apim_content_refresh exiting role=%role', [ '%role' => $role ]);
     ibm_apim_exit_trace(__FUNCTION__, NULL);
     $this->exitClean();
   }
@@ -594,21 +642,23 @@ class IbmApimCommands extends DrushCommands {
    * returns a hashmap of object names -> file handles
    */
 
-  function create_content_refresh_file_handles($UUID) {
+  function create_content_refresh_file_handles($UUID, $mode) {
+    // For debug change $l to 'list2' to get the snapshot to delete everything after it creates it
+    $l = 'list';
     return (object) [
-      'api' => fopen("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.list", 'w'),
-      'product' => fopen("/tmp/snapshot.$UUID/content_refresh_products.$UUID.list", 'w'),
-      'app' => fopen("/tmp/snapshot.$UUID/content_refresh_apps.$UUID.list", 'w'),
-      'consumer_org' => fopen("/tmp/snapshot.$UUID/content_refresh_consumerorgs.$UUID.list", 'w'),
-      'configured_catalog_user_registry' => fopen("/tmp/snapshot.$UUID/content_refresh_user_registries.$UUID.list", 'w'),
-      'extension' => fopen("/tmp/snapshot.$UUID/content_refresh_extensions.$UUID.list", 'w'),
-      'group' => fopen("/tmp/snapshot.$UUID/content_refresh_groups.$UUID.list", 'w'),
-      'subscription' => fopen("/tmp/snapshot.$UUID/content_refresh_subs.$UUID.list", 'w'),
-      'tls_client_profile' => fopen("/tmp/snapshot.$UUID/content_refresh_tlsprofile_objects.$UUID.list", 'w'),
-      'member' => fopen("/tmp/snapshot.$UUID/content_refresh_users.$UUID.list", 'w'),
-      'configured_billing' => fopen("/tmp/snapshot.$UUID/content_refresh_billing_objects.$UUID.list", 'w'),
-      'permission' => fopen("/tmp/snapshot.$UUID/content_refresh_permission_objects.$UUID.list", 'w'),
-      'analytics_service' => fopen("/tmp/snapshot.$UUID/content_refresh_analytics_objects.$UUID.list", 'w')
+      'api' => fopen("/tmp/snapshot.$UUID/content_refresh_apis.$UUID.$l", $mode),
+      'product' => fopen("/tmp/snapshot.$UUID/content_refresh_products.$UUID.$l", $mode),
+      'app' => fopen("/tmp/snapshot.$UUID/content_refresh_apps.$UUID.$l", $mode),
+      'consumer_org' => fopen("/tmp/snapshot.$UUID/content_refresh_consumerorgs.$UUID.$l", $mode),
+      'configured_catalog_user_registry' => fopen("/tmp/snapshot.$UUID/content_refresh_user_registries.$UUID.$l", $mode),
+      'extension' => fopen("/tmp/snapshot.$UUID/content_refresh_extensions.$UUID.$l", $mode),
+      'group' => fopen("/tmp/snapshot.$UUID/content_refresh_groups.$UUID.$l", $mode),
+      'subscription' => fopen("/tmp/snapshot.$UUID/content_refresh_subs.$UUID.$l", $mode),
+      'tls_client_profile' => fopen("/tmp/snapshot.$UUID/content_refresh_tlsprofile_objects.$UUID.$l", $mode),
+      'member' => fopen("/tmp/snapshot.$UUID/content_refresh_users.$UUID.$l", $mode),
+      'configured_billing' => fopen("/tmp/snapshot.$UUID/content_refresh_billing_objects.$UUID.$l", $mode),
+      'permission' => fopen("/tmp/snapshot.$UUID/content_refresh_permission_objects.$UUID.$l", $mode),
+      'analytics_service' => fopen("/tmp/snapshot.$UUID/content_refresh_analytics_objects.$UUID.$l",$mode),
     ];
   }
 
@@ -619,6 +669,15 @@ class IbmApimCommands extends DrushCommands {
     }
   }
 
+  function clear_drupal_cache() {
+    // Only need to do one type of storage here as they all share the same memory cache instance
+    \Drupal::entityTypeManager()->getStorage('node')->memoryCache->deleteAll();
+
+    // As well as the entity cache we also need to clear the type and field caches
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
+    \Drupal::getContainer()->get('entity_field.manager')->clearCachedFieldDefinitions();
+    $cycles = gc_collect_cycles();
+  }
 
   /**
    * @param $content
@@ -635,7 +694,7 @@ class IbmApimCommands extends DrushCommands {
       $type = 'error';
     }
 
-    fprintf(STDERR, "Got type: %s\n", $type);
+    ibm_apim_snapshot_debug("Got type: %type", [ '%type' => $type ]);
 
     $fileHandles = $data['fileHandles'];
     $startTime = $data['startTime'];
@@ -662,9 +721,16 @@ class IbmApimCommands extends DrushCommands {
         ->set('ibm_apim.snapshot_webhook_payloads', $webhookPayloads);
     }
 
+    if ($count == 9) {
+      // We clear the Drupal cache after the first 9 objects are processed as this seems to
+      // make the memory usage climb less quickly in the child processes
+      $this->clear_drupal_cache();
+    }
+
     // checking memory
+    $count = $data['chunkSize'] * $data['chunk'] + $count + 1;
     if ($count % 10 == 0)  {
-      $this->drush_ibm_apim_manage_memory_usage($data['memory_limit'], $data['uStartTime'], $count);
+      $this->drush_ibm_apim_manage_memory_usage($data['memory_limit'], $data['uStartTime'], $data['lastTime'], $count);
     }
 
     try {
@@ -672,16 +738,14 @@ class IbmApimCommands extends DrushCommands {
         switch ($type) {
           case 'api':
             fwrite($fileHandles->api, $content['name'] . ':' . $content['version'] . "\n");
-            $apiCommand = new ApicApiCommands();
-            $apiCommand->drush_apic_api_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
+            $data['apiCommand']->drush_apic_api_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
             break;
           case 'product':
             // we don't care about staged, retired, or whatever other state products might be in. we only want published products in the portal.
             $stateToLower = strtolower($content['state']);
             if ($stateToLower === 'published' || $stateToLower === 'deprecated') {
               fwrite($fileHandles->product, $content['name'] . ':' . $content['version'] . "\n");
-              $productCommand = new ProductCommands();
-              $productCommand->drush_product_createOrUpdate(['product' => $content], 'ContentRefresh', 'content_refresh');
+              $data['productCommand']->drush_product_createOrUpdate(['product' => $content], 'ContentRefresh', 'content_refresh');
             }
             else {
               \Drupal::logger('ibm_apim')->warning('Ignoring product in invalid state %state: %product', [
@@ -692,8 +756,7 @@ class IbmApimCommands extends DrushCommands {
             break;
           case 'app':
             fwrite($fileHandles->app, $content['id']. "\n");
-            $appCommand = new ApicAppCommands();
-            $appCommand->drush_apic_app_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
+            $data['appCommand']->drush_apic_app_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
             break;
           case 'consumer_org':
             if (isset($content['consumer_org']['url'])) {
@@ -708,8 +771,7 @@ class IbmApimCommands extends DrushCommands {
               $userList[] = $member['user_url'] . "\n";
             }
             fwrite($fileHandles->member, implode( "" , $userList ));
-            $consumerOrgCommand = new ConsumerOrgCommands();
-            $consumerOrgCommand->drush_consumerorg_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
+            $data['consumerOrgCommand']->drush_consumerorg_createOrUpdate($content, 'ContentRefresh', 'content_refresh');
             break;
           case 'catalog_setting':
             $this->drush_ibm_apim_updateconfig($content);
@@ -733,8 +795,7 @@ class IbmApimCommands extends DrushCommands {
             break;
           case 'subscription':
             fwrite($fileHandles->subscription, $content['id'] . "\n");
-            $appCommand = new ApicAppCommands();
-            $appCommand->drush_apic_app_createOrUpdatesub($content, 'create_sub', 'snapshot');
+            $data['appCommand']->drush_apic_app_createOrUpdatesub($content, 'create_sub', 'snapshot');
             break;
           case 'tls_client_profile':
             fwrite($fileHandles->tls_client_profile, $content['url'] . "\n");
@@ -743,12 +804,10 @@ class IbmApimCommands extends DrushCommands {
           case 'oauth_provider':
             break;
           case 'role':
-            $consumerOrgCommand = new ConsumerOrgCommands();
-            $consumerOrgCommand->drush_consumerorg_role_create($content);
+            $data['consumerOrgCommand']->drush_consumerorg_role_create($content);
             break;
           case 'member_invitation':
-            $consumerOrgCommand = new ConsumerOrgCommands();
-            $consumerOrgCommand->drush_consumerorg_invitation_createOrUpdate($content, 'ContentRefresh');
+            $data['consumerOrgCommand']->drush_consumerorg_invitation_createOrUpdate($content, 'ContentRefresh');
             break;
           case 'configured_billing':
             fwrite($fileHandles->configured_billing, $content['url'] . "\n");
@@ -765,14 +824,12 @@ class IbmApimCommands extends DrushCommands {
           case 'close_stream':
             // reached the end of the snapshot payload
 
+            // Print the final count
+            if ($count % 10 != 0) {
+              $this->drush_ibm_apim_manage_memory_usage($data['memory_limit'], $data['uStartTime'], $data['lastTime'], $count);
+            }
+
             $this->close_content_refresh_file_handles($fileHandles);
-
-            $this->drush_ibm_apim_clearup($UUID, $startTime);
-
-            // assert that the index_directly value of the search_api module's default_index is
-            // set correctly according to the number of nodes in the site
-            $this->drush_ibm_apim_assert_index_directly_value();
-
             break;
           default:
             \Drupal::logger('ibm_apim')->warning('There is no drush code to handle the payload type @type', ['@type' => $type]);
@@ -930,6 +987,7 @@ class IbmApimCommands extends DrushCommands {
       $query->condition($group);
     }
     $results = $query->accessCheck()->execute();
+
     if ($results !== NULL && !empty($results)) {
       $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
       foreach ($results as $nid) {
@@ -1286,10 +1344,10 @@ class IbmApimCommands extends DrushCommands {
    */
   public function drush_ibm_apim_updateconfig($config): void {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
-    \Drupal::logger('ibm_apim')->info('Updating site config.');
+    ibm_apim_snapshot_debug('Updating site config.');
     $siteConfig = \Drupal::service('ibm_apim.site_config');
     $siteConfig->update($config);
-    \Drupal::logger('ibm_apim')->info('Config updated.');
+    ibm_apim_snapshot_debug('Config updated.');
     ibm_apim_exit_trace(__FUNCTION__, NULL);
   }
 
@@ -1337,11 +1395,12 @@ class IbmApimCommands extends DrushCommands {
   public function drush_ibm_apim_setcreds($clientId, $clientSecret): void {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
 
+    $siteConfig = \Drupal::service('ibm_apim.site_config');
     if (isset($clientId) && !empty($clientId)) {
-      \Drupal::state()->set('ibm_apim.site_client_id', $clientId);
+      $siteConfig->setClientId($clientId);
     }
     if (isset($clientSecret) && !empty($clientSecret)) {
-      \Drupal::state()->set('ibm_apim.site_client_secret', $clientSecret);
+      $siteConfig->setClientSecret($clientSecret);
     }
     \Drupal::logger('ibm_apim')->info('Credentials updated.');
     ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -1578,84 +1637,146 @@ class IbmApimCommands extends DrushCommands {
   }
 
   /**
-   * @param string|null $clientId - Site Client ID
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   *
+   * @command ibm_apim-getclientid
+   * @usage drush ibm_apim-getclientid
+   *   Gets the client id
+   * @aliases getclientid
+   */
+  public function drush_ibm_apim_getclientid(): string {
+    return \Drupal::service('ibm_apim.site_config')->getClientId();
+  }
+
+  /**
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   *
+   * @command ibm_apim-setclientid
+   * @usage drush ibm_apim-setclientid
+   *   Sets the client id
+   * @aliases setclientid
+   */
+  public function drush_ibm_apim_setclientid($client_id): void {
+    \Drupal::service('ibm_apim.site_config')->setClientId($client_id);
+  }
+
+  /**
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   *
+   * @command ibm_apim-getclientsecret
+   * @usage drush ibm_apim-getclientsecret
+   *   Gets the client secret
+   * @aliases getclientsecret
+   */
+  public function drush_ibm_apim_getclientsecret(): string {
+    return \Drupal::service('ibm_apim.site_config')->getClientSecret();
+  }
+
+  /**
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   *
+   * @command ibm_apim-setclientsecret
+   * @usage drush ibm_apim-setclientsecret
+   *   Sets the client secret
+   * @aliases setclientsecret
+   */
+  public function drush_ibm_apim_setclientsecret($client_secret): void {
+    \Drupal::service('ibm_apim.site_config')->setClientSecret($client_secret);
+  }
+
+  /**
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    *
    * @command ibm_apim-createkey
-   * @usage drush ibm_apim-createkey [clientId]
+   * @usage drush ibm_apim-createkey
    *   Create encryption key.
    * @aliases createkey
    */
-  public function drush_ibm_apim_createkey(?string $clientId = NULL): void {
+  public function drush_ibm_apim_createkey(): void {
     if (function_exists('ibm_apim_entry_trace')) {
-      ibm_apim_entry_trace(__FUNCTION__, $clientId);
+      ibm_apim_entry_trace(__FUNCTION__);
     }
-    // if dont pass in a client id then try and get the stored site one
-    if ($clientId === NULL) {
-      Drush::output()->writeln('Using site client ID');
-      $clientId = \Drupal::state()->get('ibm_apim.site_client_id');
+    $profileName = 'socialblock';
+    $ptlEncKey = 'PTLENCKEY';
+    $ptlEncKeyHistory = 'PTLENCKEYHISTORY';
+    $oldPtlEncKey = 'OLDPTLENCKEY';
+
+    if (!getenv($ptlEncKey)) {
+      throw new \Exception(t('Could not find data to use for the encryption key.', []));
     }
 
-    if ($clientId !== NULL) {
-      $keyName = 'client_id';
-      $value = str_replace(['_', '-'], '', $clientId);
+    $moduleHandler = \Drupal::service('module_handler');
+    if (!$moduleHandler->moduleExists('key') || !$moduleHandler->moduleExists('encrypt') || !$moduleHandler->moduleExists('real_aes')) {
+      Drush::output()->writeln('Enabling required encryption modules');
+      $moduleInstaller = \Drupal::service('module_installer');
+      $moduleInstaller->install(['key', 'encrypt', 'real_aes']);
+    }
 
-      // key must be 32bytes/256bits in length for an AES profile
-      $value = str_pad($value, 32, 'x');
+    $keyName = 'enckey';
+    $previouskeyName = 'oldenckey';
+    $clientIdKeyName = 'client_id';
+    $clientIdNewKeyName = 'client_id_new';
 
-      $moduleHandler = \Drupal::service('module_handler');
-      if (!$moduleHandler->moduleExists('key') || !$moduleHandler->moduleExists('encrypt') || !$moduleHandler->moduleExists('real_aes')) {
-        Drush::output()->writeln('Enabling required encryption modules');
-        $moduleInstaller = \Drupal::service('module_installer');
-        $moduleInstaller->install(['key', 'encrypt', 'real_aes']);
-      }
+    $utils = \Drupal::service('ibm_apim.utils');
 
-      $key = \Drupal::service('key.repository')->getKey($keyName);
-      if (isset($key) && !empty($key)) {
-        Drush::output()->writeln('Key already exists, so decrypting existing content and re-encrypting using the new client id');
-        \Drupal::service('ibm_apim.site_config')->updateEncryptionKey($clientId);
-      }
-      else {
-        Drush::output()->writeln('Creating new key');
-        $key = \Drupal\key\Entity\Key::create([
-          'id' => $keyName,
-          'label' => $keyName,
-          'key_type' => 'encryption',
-          'key_type_settings' => ['key_size' => 256],
-          'key_provider' => 'config',
-          'key_provider_settings' => [
-            'base64_encoded' => FALSE,
-            'key_value' => $value,
-          ],
-          'key_input' => 'text_field',
-          'key_input_settings' => ['base64_encoded' => FALSE],
-        ]);
-        $key->save();
-
-        // check there is an encryption profile
-        $profileName = 'socialblock';
-        $profile = \Drupal::service('encrypt.encryption_profile.manager')
-          ->getEncryptionProfile($profileName);
-        if (isset($profile) && !empty($profile)) {
-          Drush::output()->writeln('Encryption profile already exists');
-          // dont think there is anything to do if already exists
+    $clientIdKey = \Drupal::service('key.repository')->getKey($clientIdKeyName);
+    $clientIdNewKey = \Drupal::service('key.repository')->getKey($clientIdNewKeyName);
+    $key = \Drupal::service('key.repository')->getKey($keyName);
+    $success = FALSE;
+    if (!empty($key) || !empty($clientIdKey) || !empty($clientIdNewKey)) {
+      if (!empty($clientIdKey) || !empty($clientIdNewKey)) {
+        Drush::output()->writeln('old client_id/secret Key already exists, so decrypting existing content and re-encrypting using the new enc key');
+        $utils->saveEncKey($keyName, $ptlEncKey);
+        // The existing socialblock profile will be edited by updateEncryptionKey
+        if (\Drupal::service('ibm_apim.site_config')->updateEncryptionKey($keyName, IDAndSecretAreAlreadyEncrypted: false)) {
+          $success = TRUE;
         }
-        else {
-          Drush::output()->writeln('Creating new encryption profile');
-          $profile = \Drupal\encrypt\Entity\EncryptionProfile::create([
-            'id' => $profileName,
-            'label' => $profileName,
-            'encryption_method' => 'real_aes',
-            'encryption_key' => $keyName,
-            'encryption_method_configuration' => [],
-          ]);
-          $profile->save();
+
+        $utils->deleteEncKey($clientIdKeyName);
+        $utils->deleteEncKey($clientIdNewKeyName);
+      } else {
+        Drush::output()->writeln('Enc Key already exists, so decrypting existing content and re-encrypting using the new enc key');
+        $utils->createEncryptionProfile($profileName, $keyName);
+        // Need to loop over all the lines in PTLENCKEYHISTORY and see which one of them works
+        $previousEncKeys = base64_decode(getenv($ptlEncKeyHistory));
+        $previousEncKeysArray = explode(PHP_EOL, $previousEncKeys);
+
+        // Add the current enckey to the end of the array in case it is already in use
+        array_push($previousEncKeysArray, getenv($ptlEncKey));
+        $i = 0;
+        foreach ($previousEncKeysArray as $oldEncKey) {
+          if ($oldEncKey) {
+            putenv($oldPtlEncKey . '=' . $oldEncKey);
+            $utils->saveEncKey($previouskeyName . $i, $oldPtlEncKey);
+            $utils->createEncryptionProfile($profileName . 'previous', $previouskeyName . $i);
+            Drush::output()->writeln('Trying an enc key for decryption, sha256hash: ' . openssl_digest($oldEncKey, 'sha256'));
+            if (\Drupal::service('ibm_apim.site_config')->updateEncryptionKey($keyName, IDAndSecretAreAlreadyEncrypted: true)) {
+              $success = TRUE;
+              break;
+            }
+          }
+          $i++;
         }
+
+        $utils->deletePreviousEncKeys($profileName . 'previous');
+        putenv($oldPtlEncKey);
       }
-    }
-    else {
-      \Drupal::logger('ibm_apim')->error('Client ID not set');
+
+      if (!$success) {
+        \Drupal::service('ibm_apim.site_config')->resetEncryption($keyName, IDAndSecretAreAlreadyEncrypted: true);
+        throw new \Exception(t('Failed to re-encrypt the data.', []));
+      } else {
+        Drush::output()->writeln('Re-encrypton was successful');
+      }
+    } else {
+      Drush::output()->writeln('Creating new Enc profile');
+      $utils->saveEncKey($keyName, $ptlEncKey);
+      $utils->createEncryptionProfile($profileName, $keyName);
     }
 
     if (function_exists('ibm_apim_exit_trace')) {
@@ -3118,17 +3239,17 @@ function drush_ibm_apim_activation_update($activation) {
    * Utility function to reset drupal static cache if memory reaches 70% of max
    *
    */
-  function drush_ibm_apim_manage_memory_usage($memoryLimit, $uStartTime, $count) {
+  function drush_ibm_apim_manage_memory_usage($memoryLimit, $uStartTime, $lastTime, $count) {
     static $last_time = 0;
     if ($last_time == 0) {
-      $last_time = $uStartTime;
+      $last_time = $lastTime;
     }
     $memThreshold = 70;
     $memUsage = memory_get_usage();
     if (isset($memoryLimit) && $memoryLimit > 0) {
-      $pctMem = round($memUsage / $memoryLimit * 100, 1);
-      $memUsageMB = round($memUsage / 1024 / 1024, 1);
-      $memoryLimitMB = round($memoryLimit / 1024 / 1024, 1);
+      $pctMem = round($memUsage / $memoryLimit * 100, 2);
+      $memUsageMB = round($memUsage / 1024 / 1024, 2);
+      $memoryLimitMB = round($memoryLimit / 1024 / 1024, 0);
 
       $time_now = microtime(true);
       $elapsed_time = $time_now - $uStartTime;
@@ -3138,24 +3259,17 @@ function drush_ibm_apim_activation_update($activation) {
       if ($pctMem > $memThreshold) {
         fprintf(STDERR, "Processed %d objects in %f seconds (last 10 in %f seconds). Memory usage %.2f%%/%d%% (%d/%d MB). Resetting Drupal cache.\n", $count, $elapsed_time, $elapsed_time_last_10, $pctMem, $memThreshold, $memUsageMB, $memoryLimitMB);
 
-        // Only need to do one type of storage here as they all share the same memory cache instance
-        \Drupal::entityTypeManager()->getStorage('node')->memoryCache->deleteAll();
-
-        // As well as the entity cache we also need to clear the type and field caches
-        \Drupal::entityTypeManager()->clearCachedDefinitions();
-        \Drupal::getContainer()->get('entity_field.manager')->clearCachedFieldDefinitions();
-        gc_collect_cycles();
+        $this->clear_drupal_cache();
 
         $memUsage = memory_get_usage();
-        $pctMem = round($memUsage / $memoryLimit * 100, 1);
-        $memUsageMB = round($memUsage / 1024 / 1024, 1);
-        $memoryLimitMB = round($memoryLimit / 1024 / 1024, 1);
+        $pctMem = round($memUsage / $memoryLimit * 100, 2);
+        $memUsageMB = round($memUsage / 1024 / 1024, 2);
+        $memoryLimitMB = round($memoryLimit / 1024 / 1024, 0);
 
         $elapsed_time = microtime(true) - $uStartTime;
-        fprintf(STDERR, "After Drupal Cache reset: Processed %d objects in %f seconds (last 10 in %f seconds). Memory usage %.2f%%/%d%% (%d/%d bytes)\n", $count, $elapsed_time, $elapsed_time_last_10, $pctMem, $memThreshold, $memUsageMB, $memoryLimitMB);
+        fprintf(STDERR, "After Drupal Cache reset: cycles found: %d, Processed %d objects in %f seconds (last 10 in %f seconds). Memory usage %.2f%%/%d%% (%d/%d MB)\n", $cycles, $count, $elapsed_time, $elapsed_time_last_10, $pctMem, $memThreshold, $memUsageMB, $memoryLimitMB);
       } else {
-        if ($last_time)
-        fprintf(STDERR, "Processed %d objects in %f seconds (last 10 in %f seconds). Memory usage %.2f%%/%d%% (%d/%d bytes).\n", $count, $elapsed_time, $elapsed_time_last_10, $pctMem, $memThreshold, $memUsageMB, $memoryLimitMB);
+        fprintf(STDERR, "Processed %d objects in %f seconds (last 10 in %f seconds). Memory usage %.2f%%/%d%% (%d/%d MB).\n", $count, $elapsed_time, $elapsed_time_last_10, $pctMem, $memThreshold, $memUsageMB, $memoryLimitMB);
       }
     }
   }

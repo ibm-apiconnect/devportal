@@ -35,7 +35,8 @@ services:
                 '@tempstore.private',
                 '@datetime.time',
                 '@encryption',
-                '@encrypt.encryption_profile.manager'
+                '@encrypt.encryption_profile.manager',
+                '@ibm_apim.site_config'
                 ]
   auth_apic.usermanaged_signup:
     class: Drupal\auth_apic\UserManagement\UserManagedSignUp

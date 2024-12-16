@@ -54,3 +54,8 @@ overflowhandler:
     scripts/overflow.handler/navoverflow.js: { }
   dependencies:
     - core/jquery
+
+drupal.message:
+  version: VERSION
+  js:
+    js/message.js: {}

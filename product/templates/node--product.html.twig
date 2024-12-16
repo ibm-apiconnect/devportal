@@ -243,8 +243,10 @@
           {% if content.product_terms_of_service['#items'][0].value is defined %}
             <div class="field apicProductTermsOfService">
               <h3 class="field__label label">{{ 'Terms of Service'|t }}</h3>
-              <a role="button" class="collapsed fa" data-toggle="collapse" href="#collapseTos" aria-expanded="false"
-                 aria-controls="collapseTos"></a>
+              <a role="button" class="collapsed " data-toggle="collapse" href="#collapseTos" aria-expanded="false"
+                 aria-controls="collapseTos">
+                <svg class="svg-inline--fa fa-angle-down flip" data-twistieheaderid="twistie_header" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="angle-down" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg=""><path fill="currentColor" d="M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z"></path></svg>
+              </a>
               <div class="tosContainer">
                 <div class="collapse termsOfService" id="collapseTos"
                      aria-expanded="false">{{ content.product_terms_of_service }}</div>
@@ -258,6 +260,16 @@
                                           target="_blank"
                                           rel="noopener">{{ content.product_license_name['#items'][0].value }}</a>
               </div>
+            </div>
+          {% endif %}
+          {% if case_study %}
+            <div class="contentInnerWrapper" id="contentWrapper">
+              {{ drupal_block('productcasestudy_block', wrapper=false) }}
+            </div>
+          {% endif %}
+          {% if product_recommendations %}
+            <div class="contentInnerWrapper" id="contentWrapper">
+              {{ drupal_block('productrecommendations_block', wrapper=false) }}
             </div>
           {% endif %}
           <div class="comments">{{ content.comment }}</div>

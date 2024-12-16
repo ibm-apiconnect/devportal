@@ -1,0 +1,24 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the productrecommendations block
+ *
+ * Variables available:
+ * - productRecommendations: the nid of the products to be recommended
+ *
+ * @ingroup themeable
+ */
+#}
+
+{% if productRecommendations|length > 0 %}
+  <div class="productrecommendations">
+    <div class="field product-recommendations">
+      <h3 class="field__label label">{{ 'API Product Recommendations'|t }}</h3>
+        <div class="productrecommendationsCards">
+          {% for nid in productRecommendations %}
+            {{ drupal_entity('node', nid, 'card') }}
+          {% endfor %}
+        </div>
+    </div>
+  </div>
+{% endif %}

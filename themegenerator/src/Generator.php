@@ -64,14 +64,14 @@ class Generator {
 
           // scss mail source file (only for scss themes)
           $srcFile = $srcDir . '/mail-overrides.scss';
-          if (file_exists($srcFile)) {
+          if (file_exists($srcFile)  && $type == 'scss') {
             $tgtFile = $targetDir . '/scss/mail-overrides.scss';
             copy($srcFile, $tgtFile);
           }
 
           // css mail output file (only for css themes)
           $srcFile = $srcDir . '/mail.css';
-          if (file_exists($srcFile)) {
+          if (file_exists($srcFile) && $type == 'css') {
             $tgtFile = $targetDir . '/css/mail.css';
             copy($srcFile, $tgtFile);
           }
@@ -93,6 +93,9 @@ class Generator {
             ]);
         }
       }
+
+      # Copy Error Images files needed for CSS
+      self::recursiveCopy(DRUPAL_ROOT . "/" . \Drupal::service('extension.list.theme')->getPath('connect_theme') . '/images/ibmcarbon/svg/ErrorPages', $targetDir . '/images/ibmcarbon/svg/ErrorPages', $name);
 
       self::editTheme(DRUPAL_ROOT . '/' . $baseDir, $name);
 
@@ -135,7 +138,7 @@ class Generator {
     while (FALSE !== ($file = readdir($dir))) {
       if (($file !== '.') && ($file !== '..')) {
         if (is_dir($src . '/' . $file)) {
-          if (!is_dir($dst . '/' . $file) && !mkdir($concurrentDirectory = $dst . '/' . $file) && !is_dir($concurrentDirectory)) {
+          if (!is_dir($dst . '/' . $file) && !mkdir($concurrentDirectory = $dst . '/' . $file, 0777, TRUE) && !is_dir($concurrentDirectory)) {
             throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
           }
           self::recursiveCopy($src . '/' . $file, $dst . '/' . $file, $name);
@@ -146,6 +149,9 @@ class Generator {
           // remove trailing '.dummy' from the name (purely done to avoid drupal trying to install the stub)
           if ($utils->endsWith($targetFile, '.dummy')) {
             $targetFile = preg_replace('/\.dummy$/', '', $targetFile);
+          }
+          if (!file_exists($dst)) {
+              mkdir($dst, 0777, true);
           }
           copy($src . '/' . $file, $dst . '/' . $targetFile);
         }

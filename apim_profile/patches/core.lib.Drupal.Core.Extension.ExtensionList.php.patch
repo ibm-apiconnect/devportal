@@ -1,16 +1,18 @@
 --- core/lib/Drupal/Core/Extension/ExtensionList.php    2023-07-06 09:25:16
 +++ core/lib/Drupal/Core/Extension/ExtensionList.php       2023-08-02 10:32:29
-@@ -555,7 +555,12 @@
+@@ -555,7 +555,14 @@
 
      // Add the info file modification time, so it becomes available for
      // contributed extensions to use for ordering extension lists.
 -    $info['mtime'] = $extension->getFileInfo()->getMTime();
++    $info['mtime'] = '';
 +    try {
-+      $info['mtime'] = $extension->getFileInfo()->getMTime();
++      if (file_exists($this->root . '/' . $extension->getPathname())) {
++        $info['mtime'] = $extension->getFileInfo()->getMTime();
++      }
 +    } catch (\Throwable $e){
 +      // Catch error as we dont want this to blow up as there's a window on syncing info files and running drush commands
-+      $info['mtime'] = '';
 +    }
 
-     // Merge extension type-specific defaults.
-     $info += $this->defaults;
+     // Merge extension type-specific defaults, making sure to replace NULL
+     // values.

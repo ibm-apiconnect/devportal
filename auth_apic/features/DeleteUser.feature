@@ -1,7 +1,7 @@
+@api
 Feature: Delete user
   As a user of the developer portal i want to be able to delete my account
 
-  @api
   Scenario: View the delete user form as andre
     Given I am not logged in
     Given users:
@@ -20,7 +20,6 @@ Feature: Delete user
     And there are no warnings
     And there are no errors
 
-  @api
   Scenario: Unable to open the form for admin
     Given I am not logged in
     Given users:
@@ -34,12 +33,11 @@ Feature: Delete user
     And I should not see the link "Cancel"
     And I should not see the "Delete" button
     And I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
     And there are no messages
     And there are no warnings
     And there are no errors
 
-  @api
   Scenario: Andre - click cancel
     Given I am not logged in
     Given users:
@@ -57,7 +55,6 @@ Feature: Delete user
     And there are no warnings
     And there are no errors
 
-  @api
   Scenario: Andre - click delete
     Given I am not logged in
     Given users:
@@ -79,7 +76,6 @@ Feature: Delete user
     And there are no errors
     Then clear users
 
-  @api
   Scenario: Andre org owner - click delete
     Given I am not logged in
     Given users:
@@ -102,7 +98,6 @@ Feature: Delete user
     And there are no errors
     Then clear users
 
-  @api
   Scenario: Andre multiple org owner - not allowed
     Given I am not logged in
     Given users:
@@ -123,7 +118,6 @@ Feature: Delete user
     And there are no messages
     And there are no warnings
 
-  @api
   Scenario: Andre org owner with writable LDAP - click delete
     Given I am not logged in
     Given userregistries:

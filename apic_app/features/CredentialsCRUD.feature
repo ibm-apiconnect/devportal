@@ -1,9 +1,9 @@
+@api
 Feature: CredentialsCRUD
   In order to use the developer portal
   I need to be able to add, update and delete credentials to existing applications
 
   # needs to run in zombie driver cos goutte seems to cache the webpage meaning the updated node is not shown
-  @api
   Scenario: As Andre, I can add, update, and delete application credentials
     Given I am not logged in
     Given users:

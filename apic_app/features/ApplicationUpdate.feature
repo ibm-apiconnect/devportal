@@ -1,10 +1,10 @@
+@api
 Feature: ApplicationUpdate
   In order to use the developer portal
   I need to be able to edit existing applications
 
   # needs to run in zombie driver cos goutte seems to cache the webpage meaning the updated node is not shown
 
-  @api
   Scenario: Edit application name
     Given I am not logged in
     Given users:
@@ -41,7 +41,6 @@ Feature: ApplicationUpdate
     And I do not have any applications
 
 
-  @api
   Scenario: Create and update application as Andre
     Given I am not logged in
     Given users:
@@ -93,14 +92,13 @@ Feature: ApplicationUpdate
     Then I delete all applications from the site
 
 
-  @api
   Scenario: Update application as an anonymous user (fail)
     Given I am not logged in
     When I go to "/application"
     Then I should get a "403" HTTP response
     #Note that actual response is to redirect users to login page, but setupbehat is hardcoded to a r4032login response as follows
     And I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
     And there are no errors
 
 
@@ -148,7 +146,6 @@ Feature: ApplicationUpdate
 #    Then I delete all applications from the site
 
 
-  @api
   Scenario: Update application as a user with the role viewer (fail)
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -174,12 +171,11 @@ Feature: ApplicationUpdate
     When I go to "/application/1234567@now/edit"
     Then I should get a "403" HTTP response
     And I should see the text "Access denied"
-    And I should see the text "You are not authorized to access this page."
+    And I should see the text "You are not authorized to access the requested page."
     And there are no errors
     Then I delete all applications from the site
 
 
-  @api
   Scenario: Update application as a user with the role administrator
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -228,7 +224,6 @@ Feature: ApplicationUpdate
 
 
 
-  @api
   Scenario: As Andre I can update the certificate setting of my application
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -268,7 +263,6 @@ Feature: ApplicationUpdate
     Given application certificates are disabled
 
 
-  @api
   Scenario: As Andre I can update the OAuth redirect endpoint of my application
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -311,7 +305,6 @@ Feature: ApplicationUpdate
     Then I delete all applications from the site
 
 
-  @api
   Scenario: As Andre I can update multiple OAuth redirect endpoints of my application
     Given users:
       | name                 | mail                 | pass                     | status |
@@ -427,7 +420,6 @@ Feature: ApplicationUpdate
     Then I delete all applications from the site
     Then I delete the text type custom fields for application entities
 
-  @api
   Scenario: Update application with timestamp custom field
     Given I am not logged in
     Given users:
@@ -467,7 +459,6 @@ Feature: ApplicationUpdate
     Then I delete all applications from the site
     Then I delete the timestamp type custom fields for application entities
 
-  @api
   Scenario: Update application with datetime custom field
     Given I am not logged in
     Given users:

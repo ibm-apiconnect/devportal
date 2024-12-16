@@ -1,14 +1,13 @@
+@api
 Feature: ApplicationCRUD
   In order to use the developer portal
   I need to be able to use applications
 
-  @api
   Scenario: Content type exists
     Given I am at "/"
     Then The "application" content type is present
 
   @mocked
-  @api
   Scenario: Create an application
     Given I am not logged in
     Given users:
@@ -24,7 +23,6 @@ Feature: ApplicationCRUD
     And I do not have any applications
 
   @mocked
-  @api
   Scenario: Update an application
     Given I am not logged in
     Given users:
@@ -42,7 +40,6 @@ Feature: ApplicationCRUD
     And I do not have any applications
 
   @mocked
-  @api
   Scenario: Test createOrUpdate for an application
     Given I am not logged in
     Given users:
@@ -63,7 +60,6 @@ Feature: ApplicationCRUD
     And I do not have any applications
 
   @mocked
-  @api
   Scenario: Delete an application
     Given I am not logged in
     Given users:
@@ -80,7 +76,6 @@ Feature: ApplicationCRUD
     Then I should not have an application named "mynewapp_@now"
     And I do not have any applications
 
-  @api
   Scenario: Admin cannot edit the Application
     Given I am not logged in
     Given users:

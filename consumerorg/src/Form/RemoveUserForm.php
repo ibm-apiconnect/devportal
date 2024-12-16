@@ -209,7 +209,7 @@ class RemoveUserForm extends ConfirmFormBase {
         ]);
     }
     if ($form_state->get('self-remove')) {
-      $form_state->setRedirect('user.logout');
+      $form_state->setRedirectUrl(Url::fromRoute('user.logout', [], [], TRUE));
     } else {
       $form_state->setRedirectUrl($this->getCancelUrl());
     }

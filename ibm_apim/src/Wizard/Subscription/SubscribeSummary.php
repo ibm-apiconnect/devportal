@@ -87,17 +87,7 @@ class SubscribeSummary extends IbmWizardStepBase {
         // Dig out the product icon
         $product_node = Node::load($product_node_id);
         if (isset($product_node)) {
-          $fid = $product_node->apic_image->getValue();
-          $product_image = NULL;
-          if (isset($fid[0]['target_id'])) {
-            $file = File::load($fid[0]['target_id']);
-            if ($file !== NULL) {
-              $product_image = $file->createFileUrl();
-            }
-          }
-          elseif ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('product')) {
-            $product_image = Product::getPlaceholderImageURL($product_node->getTitle());
-          }
+          $product_image = $this->getProductImage($product_node);
         }
 
         $form['#subscriptionDetails'] = [
@@ -121,6 +111,11 @@ class SubscribeSummary extends IbmWizardStepBase {
         if (isset($product_image) && !empty($product_image)) {
           $form['#subscriptionDetails']['productIcon'] = $product_image;
         }
+
+        $form['#productRecommendations'] = FALSE;
+        if((bool) \Drupal::config('ibm_apim.settings')->get('product_recommendations.enabled')) {
+          $form['#productRecommendations'] = TRUE;
+        }
       }
       else {
         // Failed to subscribe for some reason
@@ -134,6 +129,24 @@ class SubscribeSummary extends IbmWizardStepBase {
     }
 
     return $form;
+  }
+
+  protected function getProductImage(Node $product_node): ?string {
+    $moduleHandler = \Drupal::service('module_handler');
+    $ibm_apim_show_placeholder_images = (boolean) \Drupal::config('ibm_apim.settings')->get('show_placeholder_images');
+    $fid = $product_node->apic_image->getValue();
+    $product_image = NULL;
+    if (isset($fid[0]['target_id'])) {
+      $file = File::load($fid[0]['target_id']);
+      if ($file !== NULL) {
+        $product_image = $file->createFileUrl();
+      }
+    }
+    elseif ($ibm_apim_show_placeholder_images && $moduleHandler->moduleExists('product')) {
+      $product_image = Product::getPlaceholderImageURL($product_node->getTitle());
+    }
+
+    return $product_image;
   }
 
   /**

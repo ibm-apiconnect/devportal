@@ -20,6 +20,7 @@ use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\ibm_apim\Controller\IbmApimContentController;
 use Throwable;
 
 /**
@@ -52,6 +53,9 @@ class Product {
     $hostVariable = $siteConfig->getApimHost();
 
     $oldTags = NULL;
+    $oldAttachments = NULL;
+    $oldImage = NULL;
+    $oldPathAlias = NULL;
     $xName = NULL;
     $oldNode = NULL;
 
@@ -102,6 +106,11 @@ class Product {
         }
       }
 
+      $oldAttachments = $oldNode->apic_attachments->getValue();
+      $oldImage = $oldNode->apic_image->getValue();
+      $oldPathAlias = $oldNode->apic_pathalias->getValue();
+      $oldNode->set('apic_pathalias', NULL);
+
       // duplicate node
       $node = $oldNode->createDuplicate();
       $node->save();
@@ -111,6 +120,8 @@ class Product {
 
       // wipe all our fields to ensure they get set to new values
       $node->set('apic_tags', []);
+      $node->set('apic_attachments', NULL);
+      $node->set('apic_image', NULL);
 
       $node->set('uid', 1);
       $node->set('apic_hostname', $hostVariable);
@@ -161,6 +172,24 @@ class Product {
     }
     else {
       \Drupal::logger('product')->error('Create product: initial node not set.', []);
+    }
+
+    if ($node !== NULL && $oldAttachments !== NULL && !empty($oldAttachments)) {
+      foreach ($oldAttachments as $key => $existingAttachment) {
+        $file = \Drupal::entityTypeManager()->getStorage('file')->load($existingAttachment['target_id']);
+        $fullUrl = \Drupal::service('file_system')->realpath($file->getFileUri());
+        IbmApimContentController::addAttachment($node, $fullUrl, $existingAttachment['description']);
+      }
+    }
+
+    if ($node !== NULL && $oldImage !== NULL && !empty($oldImage)) {
+      $file = \Drupal::entityTypeManager()->getStorage('file')->load($oldImage[0]['target_id']);
+      $fullUrl = \Drupal::service('file_system')->realpath($file->getFileUri());
+      IbmApimContentController::setIcon($node, $fullUrl, $oldImage[0]['alt']);
+    }
+
+    if ($node !== NULL && $oldPathAlias !== NULL && !empty($oldPathAlias)) {
+      $node->set('apic_pathalias', $oldPathAlias);
     }
 
     if ($node !== NULL && $oldTags !== NULL && !empty($oldTags)) {
@@ -507,8 +536,8 @@ class Product {
           $node->set('apic_updated_at', strval(strtotime($product['updated_at'])));
         }
 
-        if (isset($product['catalog_product']['info']['x-pathalias'])) {
-          $node->set('apic_pathalias', $product['catalog_product']['info']['x-pathalias']);
+        if (isset($product['catalog_product']['info']['x-pathalias']) && preg_match('/^[A-Za-z0-9:_.\-]+$/', $product['catalog_product']['info']['x-pathalias'])) {
+            $node->set('apic_pathalias', $product['catalog_product']['info']['x-pathalias']);
         }
 
         if (isset($product['billing_url'])) {
@@ -524,7 +553,7 @@ class Product {
                 $sourcePlan = $supersedePlan['source'];
                 $targetPlan = $supersedePlan['target'];
                 if (isset($product['catalog_product']['plans'][$targetPlan])) {
-                  if (!\is_array($product['catalog_product']['plans'][$targetPlan]['supersedes'])) {
+                  if (!array_key_exists('supersedes', $product['catalog_product']['plans'][$targetPlan]) || !\is_array($product['catalog_product']['plans'][$targetPlan]['supersedes'])) {
                     $product['catalog_product']['plans'][$targetPlan]['supersedes'] = [];
                   }
                   $product['catalog_product']['plans'][$targetPlan]['supersedes'][] = [
@@ -587,13 +616,12 @@ class Product {
         }
 
         if ($utils->hashMatch($existingNodeHash, $node, 'new-product')) {
-          if ($event !== 'internal') {
-            \Drupal::logger('apic_api')->notice('Update product: No update required as the hash matched for @productName @version', [
+          ibm_apim_snapshot_debug('Update product: No update required as the hash matched for @productName @version', [
               '@productName' => $product['catalog_product']['info']['name'],
               '@version' => $product['catalog_product']['info']['version'],
             ]);
-          }
         } else {
+          $returnValue = $node;
           if (isset($product['catalog_product']['info']['x-ibm-languages']['termsOfService']) && !empty($product['catalog_product']['info']['x-ibm-languages']['termsOfService'])) {
             foreach ($product['catalog_product']['info']['x-ibm-languages']['termsOfService'] as $lang => $langArray) {
               $lang = $utils->convert_lang_name_to_drupal($lang);
@@ -664,11 +692,11 @@ class Product {
 
           // if invoked from the create code then don't invoke the update event - will be invoked from create instead
           if ($node !== NULL) {
+            ibm_apim_snapshot_debug('Product @product @version updated', [
+              '@product' => $node->getTitle(),
+              '@version' => $node->apic_version->value,
+            ]);
             if ($event !== 'internal') {
-              \Drupal::logger('product')->notice('Product @product @version updated', [
-                '@product' => $node->getTitle(),
-                '@version' => $node->apic_version->value,
-              ]);
               // Calling all modules implementing 'hook_product_update':
               $moduleHandler->invokeAll('product_update', [
                 'node' => $node,
@@ -680,7 +708,6 @@ class Product {
       }
 
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
-      $returnValue = $node;
     } else {
       \Drupal::logger('product')->error('Update product: no node provided.', []);
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -701,7 +728,7 @@ class Product {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function createOrUpdate($product, $event): bool {
+  public function createOrUpdate($product, $event): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'product');
@@ -713,19 +740,19 @@ class Product {
       $nid = array_shift($nids);
       $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
       if ($node !== NULL) {
-        $this->update($node, $product, $event);
-        $createdOrUpdated = FALSE;
+        $node = $this->update($node, $product, $event);
+        $createdOrUpdated = $node ? 'updated' : '';
       }
       else {
         // no existing node for this Product so create one
         $this->create($product, $event);
-        $createdOrUpdated = TRUE;
+        $createdOrUpdated = 'created';
       }
     }
     else {
       // no existing node for this Product so create one
       $this->create($product, $event);
-      $createdOrUpdated = TRUE;
+      $createdOrUpdated = 'created';
     }
     \Drupal::service('cache_tags.invalidator')->invalidateTags(['featuredcontent']);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $createdOrUpdated);
@@ -1807,6 +1834,43 @@ class Product {
     }
 
     return $plans;
+  }
+
+  public static function getProductRecommendations(string $productUrl): array {
+    $currentUser = \Drupal::currentUser();
+    $userUtils = \Drupal::service('ibm_apim.user_utils');
+    $org = $userUtils->getCurrentConsumerOrg();
+
+    $productCount = (int) \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->get('product_recommendations.count');
+    if ($productCount > 20) {
+      $productCount = 20;
+    }
+    $recommendedProducts = [];
+    $productQueries = Database::getConnection()->query("SELECT product_url,COUNT(*) as count FROM {apic_app_application_subs} WHERE app_url IN (SELECT app_url FROM {apic_app_application_subs} WHERE product_url = :product_url) AND product_url != :product_url GROUP BY product_url ORDER BY count DESC", [':product_url' => $productUrl])->fetchAll();
+
+    foreach ($productQueries as $productQuery) {
+        if (count($recommendedProducts) == $productCount) {
+          break;
+        }
+
+        $query = \Drupal::entityQuery('node');
+        $query->condition('type', 'product');
+        $query->condition('apic_url.value', $productQuery->product_url);
+        if ($currentUser->isAnonymous()) {
+          $query->condition('product_visibility_public.value', 1);
+        }
+        $query->orConditionGroup()
+          ->condition('product_visibility_custom_orgs.value', NULL, 'IS NULL')
+          ->condition('product_visibility_custom_orgs.value', $org['url']);
+        $nids = $query->accessCheck()->execute();
+
+        if ($nids !== NULL && !empty($nids)) {
+            $nid = array_shift($nids);
+            $recommendedProducts[] = Node::load($nid);
+        }
+    }
+
+    return $recommendedProducts;
   }
 
 }

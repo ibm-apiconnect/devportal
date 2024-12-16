@@ -1,4 +1,4 @@
 {
     "modules" : [ "domain", "theme_editor", "backup_migrate", "delete_all", "devel_themer", "php", "swiftmailer", "simple_html_mail", "tfa", "content_sync",
-    "advagg", "advagg_mod", "advagg_js_minify", "advagg_css_minify", "advagg_ext_minify", "advagg_validator", "advagg_bundler", "statistics" ]
+    "advagg", "advagg_mod", "advagg_js_minify", "advagg_css_minify", "advagg_ext_minify", "advagg_validator", "advagg_bundler", "statistics", "email_tfa" ]
 }

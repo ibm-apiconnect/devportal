@@ -1,0 +1,6 @@
+<div class="404-content">
+  <h1 class="page-header-error">{{ '↳ Error 404'|t }}</h1>
+  <h1 class="page-header">{{ 'Page not found'|t }}</h1>
+  <p>{{ 'The page you requested has moved or is unavailable, or the specified URL is not valid. Please check the URL or search the site for the requested content.'|t }}</p>
+  <a href="{{ path('user.login', {'redirectto': redirectto })}}">{{ 'Go to login'|t }}</a>
+</div>

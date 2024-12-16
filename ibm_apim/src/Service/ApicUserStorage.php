@@ -139,13 +139,13 @@ class ApicUserStorage implements ApicUserStorageInterface {
       throw new \Exception('Registry url is missing, unable to load user.');
     }
 
-    $this->logger->debug('loading %name in registry %registry', ['%name'=> $user->getUsername(), '%registry' => $user->getApicUserRegistryUrl()]);
+    ibm_apim_snapshot_debug('loading %name in registry %registry', ['%name'=> $user->getUsername(), '%registry' => $user->getApicUserRegistryUrl()]);
 
     $users = $this->userStorage->loadByProperties([
       'name' => $user->getUsername(),
       'registry_url' => $user->getApicUserRegistryUrl()
     ]);
-    $this->logger->debug('loaded %num users', ['%num'=> \sizeof($users)]);
+    ibm_apim_snapshot_debug('loaded %num users', ['%num'=> \sizeof($users)]);
 
 
     if (\sizeof($users) > 1) {
@@ -183,6 +183,31 @@ class ApicUserStorage implements ApicUserStorageInterface {
     if (\function_exists('ibm_apim_exit_trace')) {
       $ret = $returnValue !== NULL ? $user->getUsername() . '(' . $user->getApicUserRegistryUrl() . ')' : NULL;
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $ret);
+    }
+    return $returnValue;
+  }
+
+    /**
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
+   */
+  public function loadMultiple($users, $userRegistryUrl): array {
+    if (\function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
+
+    if ($userRegistryUrl === NULL) {
+      throw new \Exception('Registry url is missing, unable to load user.');
+    }
+
+    $returnValue = $this->userStorage->loadByProperties([
+      'name' => $users,
+      'registry_url' => $userRegistryUrl
+    ]);
+    ibm_apim_snapshot_debug('loaded %num users', ['%num'=> \sizeof($returnValue)]);
+
+    if (\function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, sizeof($returnValue));
     }
     return $returnValue;
   }

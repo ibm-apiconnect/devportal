@@ -153,12 +153,17 @@ class FeaturedContentBlock extends BlockBase {
       '#weight' => 50,
     ];
 
+    $nids = [];
+    foreach ($this->configuration['customNodes'] as $customNode) {
+      $nids[] = $customNode['target_id'];
+    }
+
     $form['customNodes'] = [
       '#type' => 'entity_autocomplete',
       '#target_type' => 'node',
       '#title' => $this->t('Custom nodes'),
       '#description' => $this->t('Manually specify the nodes to feature. \',\' separated. (This field is only used if using \'Custom\' node selection.)'),
-      '#default_value' => $this->configuration['customNodes'],
+      '#default_value' => Node::loadMultiple($nids),
       '#tags' => TRUE,
       '#selection_settings' => [
         'target_bundles' => ['api', 'product'],

@@ -795,7 +795,7 @@ section.block-go-ahead {
     }
   }
   .main-container.container {
-    background-image: url(../images/ibmcarbon/svg/Error_Page_Illustrations_OTHER.svg);
+    background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_OTHER.svg);
     min-height: 600px;
     background-size: contain;
     background-repeat: no-repeat;
@@ -976,35 +976,50 @@ body.bx--global-light-ui.context--user-password {
 }
 // error page
 .route-system404,
-.route-system403 {
+.route-system403,
+.route-system401 {
   .main-container.container {
-    background-image: url(../images/ibmcarbon/svg/Error_Page_Illustrations_403.svg);
+    background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_OTHER.svg);
     min-height: 600px;
-    background-size: contain;
+    background-size: 50%;
     background-repeat: no-repeat;
-
+    background-position: 95% bottom;
     .row {
-      margin: 40px;
+      margin: 24px;
       width: calc(100% - 80px);
 
       .col-sm-12 {
-        width: 100%;
+        width: 50%;
         border: 0;
         background-color: inherit;
-        padding: 100px 2rem 2rem 300px;
 
         h1.page-header {
           border: 0;
           background: inherit;
           margin: 0 -2rem;
           padding: 1rem 2rem;
+          font-size: 3.75em;
+          font-weight: 300;
+        }
+        h1.page-header-error {
+          border: 0;
+          background: inherit;
+          margin: 0 -2rem;
+          padding: 1rem 2rem;
+          font-size: 3.75em;
+          font-weight: 300;
+          color: #DA1E28;
         }
       }
     }
   }
 }
+
+.route-system403 .main-container.container {
+  background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_403.svg);
+}
 .route-system404 .main-container.container {
-  background-image: url(../images/ibmcarbon/svg/Error_Page_Illustrations_404.svg);
+  background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_404.svg);
 }
 /* comments filter format page */
 .path-filter p {
@@ -1069,4 +1084,18 @@ body.bx--global-light-ui.context--user-password {
     padding-right: 0.9375rem;
   }
 
+}
+
+#block-searchiconblock,
+#block-connect-theme-account-menu {
+  .contextual {
+    .trigger, .trigger:focus, .trigger:hover, .trigger:active
+    {
+      display:none
+    }
+  }
+}
+
+.contentInnerWrapper .productrecommendations {
+  background-color: $highlight
 }

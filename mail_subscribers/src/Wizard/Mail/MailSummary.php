@@ -14,6 +14,7 @@ namespace Drupal\mail_subscribers\Wizard\Mail;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\mail_subscribers\Entity\EmailList;
 
 class MailSummary extends FormBase {
 
@@ -62,7 +63,15 @@ class MailSummary extends FormBase {
         '#weight' => 0,
       ];
     }
-
+    //Only show this if the email list wasnt loaded
+    if ($cached_values['objectType'] !== 'all' && (!isset($cached_values['predefined']) || $cached_values['predefined'] !== true)) {
+      $form['name'] = [
+        '#title' => 'Name',
+        '#type' => 'textfield',
+        '#description' => 'If you want to save the list, enter a name. Leave it blank otherwise.',
+        '#weight' => 0
+      ];
+    }
     return $form;
   }
 
@@ -70,8 +79,57 @@ class MailSummary extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
-    $cached_values = $form_state->getTemporaryValue('wizard');
-    $form_state->setTemporaryValue('wizard', $cached_values);
+    $saved = $form_state->getTemporaryValue('wizard');
+    $name = $form_state->getValue('name');
+    if (!empty($name)) {
+      $objectType = $saved['objectType'];
+      $data = [];
+      $data['objectType'] = $objectType;
+      $role = $saved['role'];
+
+      switch ($objectType) {
+        case 'all':
+          $data['role'] = $role;
+          break;
+
+        case 'consumerorg':
+          $consumerorgs = $saved['consumerorgs'];
+          $data['consumerorgs'] = $consumerorgs;
+          $data['role'] = $role;
+          break;
+
+        case 'product':
+          $products = $saved['products'];
+          $data['products'] = $products;
+          $data['role'] = $role;
+          break;
+
+        case 'api':
+          $apis = $saved['apis'];
+          $data['apis'] = $apis;
+          $data['role'] = $role;
+          break;
+
+        case 'plan':
+          $products = $saved['products'];
+          $plans = $saved['plans'];
+
+          $data['products'] = $products;
+          $data['plans'] = $plans;
+          $data['role'] = $role;
+          break;
+        default:
+          \Drupal::logger('mail_subscribers')->error('Whilst saving, failed to match object type: ' . $objectType);
+          break;
+      }
+      $fields = [];
+      $fields['title'] = $name;
+      $fields['data'] = $data;
+
+      $list = EmailList::create($fields);
+      $list->save();
+      \Drupal::messenger()->addMessage('Successfully saved email list: ' . $name);
+    }
 
     $form_state->setRedirect('<front>');
   }

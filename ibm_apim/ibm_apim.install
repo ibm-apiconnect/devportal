@@ -15,6 +15,7 @@
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\views\Views;
 use Drupal\node\Entity\Node;
+use Drupal\block\Entity\Block;
 
 /**
  * @file
@@ -313,6 +314,56 @@ function ibm_apim_update_10002() {
     ->clear("email_as_username")
     ->save();
 }
+
+/**
+* Set default value for new config
+*/
+function ibm_apim_update_10003() {
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('show_anonymous_apis', TRUE)->save();
+}
+
+/**
+* Add Account status message block to the Developer Portal.
+*/
+function ibm_apim_update_10900() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  $values = [
+    'id' => 'accountstatusmessages',
+    'plugin' => 'ibm_apim_account_status_messages',
+    'provider' => NULL,
+    'region' => 'highlighted',
+    'settings' => [
+      'id' => 'ibm_apim_account_status_messages',
+      'label' => 'Account Status Messages',
+      'provider' => 'ibm_apim',
+      'label_display' => '0',
+    ],
+    'theme' => 'connect_theme',
+    'visibility' => [],
+    'weight' => 0,
+  ];
+  $block = Block::create($values);
+  $block->save();
+}
+
+/**
+* Add product_recommendations config to ibm_apim.settings
+*/
+function ibm_apim_update_10901() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->set('product_recommendations', [ 'enabled' => true, 'count' => 3])->save();
+}
+
 
 function ibm_apim_removeConfigDependency($config, $dep) {
   try {

@@ -70,6 +70,9 @@ ibm_apim.settings:
     show_versions:
       type: boolean
       label: 'Show versions'
+    show_anonymous_apis:
+      type: boolean
+      label: 'Show API details to anomymous users'
     enable_api_test:
       type: boolean
       label: 'Allow testing of APIs'
@@ -235,6 +238,17 @@ ibm_apim.settings:
     api_max_depth:
       type: integer
       label: 'The maximum depth in layers for API objects to process examples'
+    product_recommendations:
+      type: mapping
+      label: 'API Product Recommendation Options'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Enable API Product Recommendations'
+        count:
+          type: integer
+          label: 'Number of API Product Recommendations'
+
 
 ibm_apim.devel_settings:
   type: config_object
@@ -246,6 +260,9 @@ ibm_apim.devel_settings:
     webhook_debug:
       type: boolean
       label: 'Enable webhook payload storage for debug purposes (enabling will cause a performance impact)'
+    snapshot_debug:
+      type: boolean
+      label: 'Enable snapshot log messages for debug purposes (enabling will cause a performance impact)'
     entry_exit_trace:
       type: boolean
       label: 'Enable method entry / exit trace (enabling will cause a performance impact)'

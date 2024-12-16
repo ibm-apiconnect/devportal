@@ -43,7 +43,7 @@ class ApicModuleService implements ApicModuleInterface {
   /**
    * @var \Drupal\ibm_apim\Service\SiteConfig
    */
-  private SiteConfig $site_config;
+  private SiteConfig $siteConfig;
 
   /**
    * @var \Psr\Log\LoggerInterface
@@ -93,7 +93,7 @@ class ApicModuleService implements ApicModuleInterface {
       $this->logger->debug('%function: Checking existence of %path', ['%function' => __FUNCTION__, '%path' => $extension_path]);
       if (is_dir($extension_path)) {
         $this->logger->debug('%function: %path found and will be deleted.', ['%function' => __FUNCTION__, '%path' => $extension_path]);
-        $paths[] = $extension_path;
+        $paths[$extension] = $extension_path;
       }
       elseif ($fail_on_no_deletion) {
         $this->logger->error('%function: %path is not found.', ['%function' => __FUNCTION__, '%path' => $extension_path]);
@@ -106,13 +106,19 @@ class ApicModuleService implements ApicModuleInterface {
       $return = FALSE;
     }
     elseif (!empty($paths)) {
-      foreach ($paths as $path) {
+      foreach ($paths as $extension => $path) {
         $this->logger->debug('%function: Recursively deleting %path', ['%function' => __FUNCTION__, '%path' => $path]);
         $this->utils->file_delete_recursive($path);
       }
       $this->utils->clear_empty_extension_folders($extensionType);
       // Rebuild module list after removing the files to remove its also removed from the list
-      $extensionType == 'module' ? \Drupal::service('extension.list.module')->reset() : \Drupal::service('extension.list.theme')->reset();
+      if ($extensionType == 'module') {
+        \Drupal::service('config.factory')->getEditable('core.extension')->clear('module.' . $extension);
+        \Drupal::service('extension.list.module')->reset();
+      } elseif ($extensionType == 'theme') {
+        \Drupal::service('config.factory')->getEditable('core.extension')->clear('theme.' . $extension);
+        \Drupal::service('extension.list.theme')->reset();
+      }
       $return = TRUE;
     }
     else { // nothing found to delete

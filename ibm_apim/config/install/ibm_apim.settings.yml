@@ -2,6 +2,7 @@ autocreate_apiforum: true
 show_placeholder_images: true
 show_register_app: true
 show_versions: true
+show_anonymous_apis: true
 enable_api_test: true
 validate_apis: true
 autotag_with_phase: false
@@ -56,3 +57,6 @@ payment_method_encryption_profile: 'socialblock'
 billing_providers:
 api_max_depth: 9
 example_array_items: 3
+product_recommendations:
+  enabled: true
+  count: 3

@@ -51,6 +51,11 @@ namespace Drupal\Tests\auth_apic\Unit {
      */
     protected $entityTypeManager;
 
+    /**
+     * @var \Drupal\user\UserStorageInterface|\Prophecy\Prophecy\ObjectProphecy
+     */
+    protected $drupalUserStorage;
+
     protected function setup(): void {
       $this->prophet = new Prophet();
       $this->mgmtServer = $this->prophet->prophesize(\Drupal\ibm_apim\Service\APIMServer::class);

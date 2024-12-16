@@ -97,7 +97,7 @@ class ApicAccountService implements ApicAccountInterface {
   /**
    * @inheritDoc
    */
-  public function registerApicUser(ApicUser $user): ?EntityInterface {
+  public function registerApicUser(ApicUser $user, bool $userMightExist = TRUE): ?EntityInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
       $username = $user->getUsername() != NULL ? $user->getUsername() : NULL;
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $username);
@@ -105,7 +105,7 @@ class ApicAccountService implements ApicAccountInterface {
     $returnValue = NULL;
 
     if ($user->getUsername() !== NULL && $user->getApicUserRegistryUrl() !== NULL) {
-      if ($this->userStorage->load($user) === NULL) {
+      if (!$userMightExist || $this->userStorage->load($user) === NULL) {
         $returnValue = $this->userStorage->register($user);
       }
       else {
@@ -184,12 +184,23 @@ class ApicAccountService implements ApicAccountInterface {
 
     }
     else {
-        $account->set('first_name', $user->getFirstname());
-        $account->set('last_name', $user->getLastname());
+      $account->set('first_name', $user->getFirstname());
+      $account->set('last_name', $user->getLastname());
       // some user registries don't have a mail address and we store a known value to
       // identify this case and still be valid in Drupal so don't overwrite it with NULL
       if ($user->getMail() !== NULL && $user->getMail() !== '') {
-        $account->set('mail', $user->getMail());
+        $newEmail = $user->getMail();
+        if ($user->getUsername() === 'admin') {
+          $config = \Drupal::service('config.factory')->getEditable('contact.form.feedback');
+          if ($config) {
+            $oldEmail = [$account->mail->value];
+            $currentConfig = $config->get('recipients');
+            $updatedConfig = array_diff($currentConfig, $oldEmail);
+            $updatedConfig[] = $newEmail;
+            $config->set('recipients', $updatedConfig)->save();
+          }
+        }
+        $account->set('mail', $newEmail);
       }
       else {
         $this->logger->notice('updateLocalAccount - email address not available. Not updating to maintain what is already in the database');

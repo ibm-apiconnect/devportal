@@ -4,10 +4,10 @@
     * {@inheritdoc}
     */
    public function addServer($server_path, $persistent = FALSE) {
--    list($host, $port) = explode(':', $server_path);
+-    [$host, $port] = explode(':', $server_path);
 +    $index = strrpos($server_path, ':');
 +    $host = substr($server_path, 0, $index);
 +    $port = substr($server_path, $index + 1);
- 
+
      if ($host == 'unix') {
        // Memcached expects just the path to the socket without the protocol.

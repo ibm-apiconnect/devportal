@@ -48,7 +48,7 @@ class AnalyticsConfigForm extends ConfigFormBase {
     $config = $this->config('ibm_apim.settings');
     $dashboard = $config->get('analytics_dashboard');
     if (empty($dashboard)) {
-      $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
+      $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'top_products', 'top_apis', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
     }
 
     $form['dashboard'] = array(
@@ -60,6 +60,8 @@ class AnalyticsConfigForm extends ConfigFormBase {
         'avg_response' => t('Average response time'),
         'num_calls' => t('Number of API calls'),
         'status_codes' => t('Status codes'),
+        'top_products' => t('Top products over time'),
+        'top_apis' => t('Top APIs over time'),
         'response_time' => t('Response time'),
         'num_throttled' => t('Number of throttled API calls'),
         'num_errors' => t('Number of errors'),

@@ -219,6 +219,11 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
         '#attributes' => ['autocomplete' => 'off'],
       ];
 
+      $form['account']['name'] = [
+        '#type' => 'hidden',
+        '#value' => $account->getAccountName(),
+      ];
+
       $form['#form_id'] = $this->getFormId();
       $form['account']['roles'] = [];
       if (!isset($form['account']['roles'])) {

@@ -1,8 +1,10 @@
 changes:
-  6.2.10:
-  - velox/devportal#8913 - CIO SonarQube
+  6.2.11:
+  - Check if variable exists first (#1086) (#1088)
+  6.2.10: null
   6.2.9:
-  - change portal-ci-v10-0 to portal-ci-v10-0-8
+  - Php83 v100 (#1084)
+  - velox/devportal#8913 - CIO SonarQube
   6.2.8:
   - add env.GIT_COMMIT_SUMMARY
   6.2.7:

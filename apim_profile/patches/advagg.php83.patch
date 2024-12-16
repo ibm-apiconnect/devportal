@@ -1,0 +1,33 @@
+--- modules/advagg/advagg_bundler/src/Asset/AdvaggCssCollectionGrouper.php      2024-05-24 14:33:15
++++ modules/advagg/advagg_bundler/src/Asset/AdvaggCssCollectionGrouper.php 2024-05-24 14:33:11
+@@ -12,6 +12,13 @@
+ class AdvaggCssCollectionGrouper extends CssCollectionGrouper implements AssetCollectionGrouperInterface {
+
+   /**
++   * A config factory for retrieving required config objects.
++   *
++   * @var \Drupal\Core\Config\ConfigFactoryInterface
++   */
++  protected $config;
++
++  /**
+    * Construct the grouper instance.
+    *
+    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+
+--- modules/advagg/advagg_bundler/src/Asset/AdvaggJsCollectionGrouper.php       2023-01-02 22:11:12
++++ modules/advagg/advagg_bundler/src/Asset/AdvaggJsCollectionGrouper.php  2024-05-24 14:35:40
+@@ -11,6 +11,13 @@
+  */
+ class AdvaggJsCollectionGrouper extends JsCollectionGrouper implements AssetCollectionGrouperInterface {
+
++    /**
++   * A config factory for retrieving required config objects.
++   *
++   * @var \Drupal\Core\Config\ConfigFactoryInterface
++   */
++  protected $config;
++
+   /**
+    * Construct the grouper instance.
+    *

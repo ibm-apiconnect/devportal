@@ -110,7 +110,7 @@ class RefreshTokenSubscriber implements EventSubscriberInterface {
       // this was supposed to be handled by building the redirectresponse from the current request in the subsequent code, however the messages
       // were being lost, possibly because of the extra redirects in user.logout???... but this mechanism works.
       user_cookie_save(['ibm_apim_session_expired_on_token' => 'TRUE']);
-      $logout_url = Url::fromRoute('user.logout');
+      $logout_url = Url::fromRoute('user.logout', [], [], TRUE);
       $response = new RedirectResponse($logout_url->toString());
       $request = \Drupal::request();
       $session_manager = \Drupal::service('session_manager');

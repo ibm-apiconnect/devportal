@@ -1,16 +1,30 @@
 --- modules/workbench/src/Controller/WorkbenchContentController.php	2019-04-25 20:24:46.000000000 +0100
 +++ modules/workbench/src/Controller/WorkbenchContentController.php	2019-04-25 20:25:06.000000000 +0100
-@@ -6,11 +6,12 @@
+@@ -8,9 +8,9 @@
+ use Drupal\Core\Entity\EntityRepositoryInterface;
+ use Drupal\Core\Extension\ModuleHandlerInterface;
+ use Drupal\Core\Render\RendererInterface;
+-use Drupal\node\Controller\NodeController;
  use Drupal\views\Views;
- use Drupal\views\Plugin\Block\ViewsBlock;
- use Drupal\views\Plugin\views\display\Embed;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
 +use Drupal\ibm_apim\Controller\IbmApimNodeController;
 
  /**
   * Generates the pages defined by Workbench.
-  */
--class WorkbenchContentController extends NodeController {
-+class WorkbenchContentController extends IbmApimNodeController {
-
+@@ -20,7 +20,7 @@
    /**
-    * Simple page to show list of content type to create.
+    * The node controller.
+    *
+-   * @var \Drupal\node\Controller\NodeController
++   * @var \Drupal\ibm_apim\Controller\IbmApimNodeController
+    */
+   protected $nodeController;
+
+@@ -44,7 +44,7 @@
+    *   The module handler service.
+    */
+   public function __construct(DateFormatterInterface $date_formatter, RendererInterface $renderer, EntityRepositoryInterface $entity_repository, ModuleHandlerInterface $module_handler) {
+-    $this->nodeController = new NodeController($date_formatter, $renderer, $entity_repository);
++    $this->nodeController = new IbmApimNodeController($date_formatter, $renderer, $entity_repository);
+     $this->moduleHandler = $module_handler;
+   }

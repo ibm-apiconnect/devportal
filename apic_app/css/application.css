@@ -131,6 +131,7 @@
 }
 
 .applicationWrapper .titleSection .leftTitle {
+  width: calc(100% - 3rem);
   margin-bottom: 1rem;
 }
 
@@ -400,31 +401,6 @@
   margin-bottom: 0.7rem;
 
 }
-.field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button {
-  display: inline-block;
-  vertical-align: top;
-  height: auto;
-  background-color: transparent;
-  top: calc(50% - 0.5rem);
-}
-.bx--global-light-ui .field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.active,
-.bx--global-light-ui .field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.focus,
-.bx--global-light-ui .field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.hover,
-.field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.hover,
-.field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.active,
-.field--name-application-redirect-endpoints .field-multiple-table button.multiple-fields-remove-button.focus,
-.bx--global-light-ui .button.apicSecondary.multiple-fields-remove-button:focus,
-.bx--global-light-ui button.apicSecondary.multiple-fields-remove-button:focus,
-.bx--global-light-ui .button.apicSecondary.multiple-fields-remove-button:hover,
-.bx--global-light-ui button.apicSecondary.multiple-fields-remove-button:hover {
-  background-color: transparent;
-}
-.field--name-application-redirect-endpoints .field-multiple-table td.has-multiple-fields-remove-button .form-item input,
-.field--name-application-redirect-endpoints .field-multiple-table td.has-multiple-fields-remove-button .form-item input:active,
-.field--name-application-redirect-endpoints .field-multiple-table td.has-multiple-fields-remove-button .form-item input:focus,
-.field--name-application-redirect-endpoints .field-multiple-table td.has-multiple-fields-remove-button .form-item input:hover {
-  width: 100%;
-}
 
 .field--name-application-redirect-endpoints .form-item .clearfix {
   padding-right: 10px;
@@ -602,4 +578,3 @@ consumeranalytics .App {
 .consumer_analytics_ui .contentInnerWrapper {
   padding-top: 1rem;
 }
-

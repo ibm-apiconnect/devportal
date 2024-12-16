@@ -255,14 +255,19 @@ class UsersFieldDataService implements UsersFieldDataServiceInterface {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function deleteExpiredPendingUsers(): void {
+    $approvalInvitationTTLs =  $this->siteConfig->getSelfServiceOnboardingTTL();
+    if (empty($approvalInvitationTTLs)) {
+      \Drupal::logger('ibm_apim')->info("No SelfServiceOnboardingTTL found. Cannot delete expired pending users. Have you received a snapshot yet?");
+      return;
+    }
+
     $now = $this->time->getCurrentTime();
-    $approvalInvtitationTTLs =  $this->siteConfig->getSelfServiceOnboardingTTL();
     $query = \Drupal::entityQuery('user');
     $group = $query->orConditionGroup()
     ->condition('apic_state', 'pending_approval')
     ->condition('apic_state', 'pending');
     $query->condition($group);
-    $query->condition('created', $now - $approvalInvtitationTTLs, "<=");
+    $query->condition('created', $now - $approvalInvitationTTLs, "<=");
     $uids = $query->accessCheck()->execute();
     if (!empty($uids)) {
       foreach (array_chunk($uids, 50) as $chunk) {

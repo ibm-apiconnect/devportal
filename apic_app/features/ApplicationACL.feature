@@ -1,9 +1,9 @@
+@api
 Feature: ApplicationACL
   In order to use the developer portal
   I need to be able to access Applications I should be allowed to access
 
   @acl
-  @api
   Scenario: Create Applications as a specific user and test that they can be accessed
 # Hard coding these for now.  For full stack testing, substitute with real users/consumerorgs
 # in the And clause below

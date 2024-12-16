@@ -58,7 +58,7 @@ body {
 }
 
 .apicStickyHeader .navbar.container {
-  width: 100%;
+  width: calc(100% - var(--drupal-displace-offset-left, 0px));
 }
 
 .navbar-default .navbar-toggle {
@@ -313,7 +313,7 @@ nav.block-menu ul.nav > li.active > a {
 
 .navbar-nav > li.front {
   display:none;
-  @media (max-width: $grid-float-breakpoint) {
+  @media (max-width: calc($grid-float-breakpoint-1)) {
     display: block;
   }
 }

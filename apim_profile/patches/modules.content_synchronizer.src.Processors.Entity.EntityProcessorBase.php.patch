@@ -42,25 +42,7 @@
        if ($existingEntity) {
          $backup = clone($existingEntity);
        }
-@@ -537,8 +544,16 @@
-         /** @var \Drupal\Core\Entity\ContentEntityType $typeManager */
-         $typeManager = $this->entityTypeManager->getDefinition($typeId);
-         $bundleKey = $typeManager->getKey('bundle');
-+        $bundle = "";
-+        // See cases where the bundle key is inside the data block so if we see the key doesn't exist
-+        // just grab the data from ExportEntityWriter::FIELD_BUNDLE
-+        if (!array_key_exists($bundleKey, $data)) {
-+          $bundle = array_key_exists($bundleKey, $defaultData) ? $defaultData[$bundleKey] : $data[ExportEntityWriter::FIELD_BUNDLE];
-+        } else {
-+          $bundle = $data[$bundleKey];
-+        }
-
--        $baseDefinitions = $this->entityFieldManager->getFieldDefinitions($typeId, $data[$bundleKey]);
-+        $baseDefinitions = $this->entityFieldManager->getFieldDefinitions($typeId, $bundle);
-         $createData = array_intersect_key($defaultData, $baseDefinitions);
-
-         foreach ($propertyIdsNotToImport as $bannedProperty) {
-@@ -666,7 +681,7 @@
+@@ -666,7 +673,7 @@
     *   The entity processor manager service.
     */
    protected function getEntityProcessorManager() {
@@ -69,7 +51,7 @@
    }
 
    /**
-@@ -697,7 +712,6 @@
+@@ -697,7 +704,6 @@
      $this->propertyIdsNotToImport = array_merge(
        $this->propertyIdsNotToExport,
        [

@@ -1,17 +1,16 @@
 --- vendor/drush/drush/src/Commands/pm/PmCommands.php	2021-05-17 13:13:50.834377257 +0000
 +++ vendor/drush/drush/src/Commands/pm/PmCommands.php	2021-05-17 13:14:19.530594643 +0000
-@@ -102,9 +102,7 @@
+@@ -100,9 +100,6 @@
          if (!$this->getModuleInstaller()->install($modules, true)) {
              throw new \Exception('Unable to install modules.');
          }
 -        if (batch_get()) {
 -            drush_backend_batch_process();
 -        }
-+
-         $this->logger()->success(dt('Successfully enabled: !list', $todo_str));
-     }
 
-@@ -221,6 +219,7 @@
+         $moduleData = $this->getExtensionListModule()->getList();
+         foreach ($todo as $moduleName) {
+@@ -234,6 +231,7 @@
      #[CLI\Option(name: 'core', description: 'Only show extensions that are in Drupal core.')]
      #[CLI\Option(name: 'no-core', description: 'Only show extensions that are not provided by Drupal core.')]
      #[CLI\Option(name: 'package', description: 'Only show extensions having a given project packages (e.g. Development).')]
@@ -19,7 +18,7 @@
      #[CLI\FieldLabels(labels: [
          'package' => 'Package',
          'project' => 'Project',
-@@ -233,8 +232,21 @@
+@@ -246,8 +244,21 @@
      ])]
      #[CLI\DefaultTableFields(fields: ['package', 'display_name', 'status', 'version'])]
      #[CLI\FilterDefaultField(field: 'display_name')]
@@ -42,7 +41,7 @@
          $rows = [];
 
          $modules = $this->getExtensionListModule()->getList();
-@@ -245,6 +257,8 @@
+@@ -258,6 +269,8 @@
          $type_filter = StringUtils::csvToArray(strtolower($options['type']));
          $status_filter = StringUtils::csvToArray(strtolower($options['status']));
 
@@ -51,7 +50,7 @@
          foreach ($both as $key => $extension) {
              // Fill in placeholder values as needed.
              $extension->info += ['package' => ''];
-@@ -264,6 +278,22 @@
+@@ -277,6 +290,22 @@
                  continue;
              }
 

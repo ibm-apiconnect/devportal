@@ -156,7 +156,15 @@
         {# Content #}
         {% block content %}
           <a id="main-content"></a>
-          {{ page.content }}
+          {% if path('<current>') == path('system.401') %}
+            {% include 'page--system--401--content.html.twig' %}
+          {% elseif path('<current>') == path('system.403') %}
+            {% include 'page--system--403--content.html.twig' %}
+          {% elseif path('<current>') == path('system.404') %}
+            {% include 'page--system--404--content.html.twig' %}
+          {% else %}
+              {{ page.content }}
+          {% endif %}
         {% endblock %}
       </section>
 

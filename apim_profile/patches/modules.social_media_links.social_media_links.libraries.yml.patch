@@ -1,8 +1,12 @@
 --- modules/social_media_links/social_media_links.libraries.yml    2022-10-27 16:36:42.000000000 +0100
 +++ modules/social_media_links/social_media_links.libraries.yml    2022-10-27 16:37:33.000000000 +0100
-@@ -6,4 +6,4 @@
+@@ -6,7 +6,7 @@
  fontawesome.component:
    css:
      component:
--      //cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css : { type: external }
+-      //cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css : { type: external }
 +      css/font-awesome.min.css: {}
+   license:
+     name: MIT
+     url: https://github.com/FortAwesome/Font-Awesome/blob/6.x/LICENSE.txt
+\ No newline at end of file

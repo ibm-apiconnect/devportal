@@ -1,32 +1,24 @@
 --- modules/perimeter/perimeter.module	2021-07-26 10:47:19.000000000 +0100
 +++ modules/perimeter/perimeter.module	2021-07-26 10:51:02.000000000 +0100
-@@ -9,6 +9,7 @@
+@@ -7,6 +7,7 @@
+
  use Drupal\Component\Utility\Xss;
- use Drupal\Core\Database\Database;
  use Drupal\Core\Routing\RouteMatchInterface;
 +use Drupal\Core\Site\Settings;
 
  /**
   * Implements hook_help().
-@@ -34,18 +35,30 @@
+@@ -32,32 +33,44 @@
  function perimeter_honeypot_reject($form_id, $uid, $type) {
    // Honeypot might remove the uid param at some point later.
    $uid = \Drupal::currentUser()->id();
 -  if ($uid != 1 && ($type == 'honeypot_time' && $form_id != 'user_login_form')) {
 +  $whitelist = Settings::get('reverse_proxy_addresses', []);
 +  if ($uid != 1 && ($type == 'honeypot_time' && $form_id != 'user_login_form') && (bool)\Drupal::state()->get('ibm_apim.ip_ban_enabled', true)) {
-     $ip = \Drupal::request()->getClientIp();
--    $connection = Database::getConnection();
--    $banManager = new BanIpManager($connection);
--    $banManager->banIp($ip);
--    \Drupal::logger('Perimeter')->notice('Banned: %ip for failing %type on %form <br />Source: %source <br /> User Agent: %browser',
--      [
--        '%ip' => $ip,
--        '%type' => $type,
--        '%form' => Xss::filter($form_id),
--        '%source' => isset($_SERVER['HTTP_REFERER']) ? Xss::filter($_SERVER['HTTP_REFERER']) : '',
--        '%browser' => isset($_SERVER['HTTP_USER_AGENT']) ? Xss::filter($_SERVER['HTTP_USER_AGENT']) : '',
--      ]);
+
+-    $config = \Drupal::config('perimeter.settings');
+-    $flood_threshold = $config->get('flood_threshold');
+-    $flood_window = $config->get('flood_window');
 +    if (in_array($ip, $whitelist, TRUE)) {
 +      \Drupal::logger('Perimeter')->notice('Allowlist skipping ban: %ip for failing %type on %form <br />Source: %source <br /> User Agent: %browser',
 +        [
@@ -37,8 +29,41 @@
 +          '%browser' => isset($_SERVER['HTTP_USER_AGENT']) ? Xss::filter($_SERVER['HTTP_USER_AGENT']) : '',
 +        ]);
 +    } else {
-+      $connection = Database::getConnection();
-+      $banManager = new BanIpManager($connection);
++      $config = \Drupal::config('perimeter.settings');
++      $flood_threshold = $config->get('flood_threshold');
++      $flood_window = $config->get('flood_window');
+
+-    // If flood is enabled, allow attempts up to the threshold.
+-    if ($flood_threshold > 0) {
+-      $flood = \Drupal::service('flood');
+-      $flood_key = 'perimeter.honeypot';
+-      if ($flood->isAllowed($flood_key, $flood_threshold, $flood_window)) {
+-        $flood->register($flood_key, $flood_window);
+-        return;
++      // If flood is enabled, allow attempts up to the threshold.
++      if ($flood_threshold > 0) {
++        $flood = \Drupal::service('flood');
++        $flood_key = 'perimeter.honeypot';
++        if ($flood->isAllowed($flood_key, $flood_threshold, $flood_window)) {
++          $flood->register($flood_key, $flood_window);
++          return;
++        }
+       }
+-    }
+
+-    $ip = \Drupal::request()->getClientIp();
+-    $banManager = \Drupal::service('ban.ip_manager');
+-    $banManager->banIp($ip);
+-    \Drupal::logger('Perimeter')->notice('Banned: %ip for failing %type on %form <br />Source: %source <br /> User Agent: %browser',
+-      [
+-        '%ip' => $ip,
+-        '%type' => $type,
+-        '%form' => Xss::filter($form_id),
+-        '%source' => isset($_SERVER['HTTP_REFERER']) ? Xss::filter($_SERVER['HTTP_REFERER']) : '',
+-        '%browser' => isset($_SERVER['HTTP_USER_AGENT']) ? Xss::filter($_SERVER['HTTP_USER_AGENT']) : '',
+-      ]);
++      $ip = \Drupal::request()->getClientIp();
++      $banManager = \Drupal::service('ban.ip_manager');
 +      $banManager->banIp($ip);
 +      \Drupal::logger('Perimeter')->notice('Banned: %ip for failing %type on %form <br />Source: %source <br /> User Agent: %browser',
 +        [
@@ -48,6 +73,6 @@
 +          '%source' => isset($_SERVER['HTTP_REFERER']) ? Xss::filter($_SERVER['HTTP_REFERER']) : '',
 +          '%browser' => isset($_SERVER['HTTP_USER_AGENT']) ? Xss::filter($_SERVER['HTTP_USER_AGENT']) : '',
 +        ]);
-+      }
++    }
    }
  }

@@ -57,7 +57,7 @@
 
 --- core/modules/system/src/Form/ModulesUninstallConfirmForm.php	2019-12-10 19:40:17.000000000 +0000
 +++ core/modules/system/src/Form/ModulesUninstallConfirmForm.php	2019-12-10 19:45:53.000000000 +0000
-@@ -111,14 +111,14 @@
+@@ -106,14 +106,14 @@
     * {@inheritdoc}
     */
    public function getQuestion() {
@@ -74,7 +74,7 @@
    }
 
    /**
-@@ -132,7 +132,7 @@
+@@ -127,7 +127,7 @@
     * {@inheritdoc}
     */
    public function getDescription() {
@@ -83,7 +83,7 @@
    }
 
    /**
-@@ -143,12 +143,12 @@
+@@ -147,12 +147,12 @@
 
      // Prevent this page from showing when the module list is empty.
      if (empty($this->modules)) {
@@ -98,8 +98,16 @@
      $form['modules'] = [
        '#theme' => 'item_list',
        '#items' => array_map(function ($module) use ($data) {
+@@ -161,7 +161,7 @@
+     ];
 
-@@ -182,7 +182,7 @@
+     if (!empty($this->installProfile) && in_array($this->installProfile, $this->modules, TRUE)) {
+-      $form['profile']['#markup'] = '<p>' . $this->t('Once uninstalled, the %install_profile profile cannot be reinstalled.', ['%install_profile' => $data[$this->installProfile]->info['name']]) . '</p>';
++      $form['profile']['#markup'] = '<p>' . $this->t('Once disabled, the %install_profile profile cannot be reinstalled.', ['%install_profile' => $data[$this->installProfile]->info['name']]) . '</p>';
+     }
+
+     // List the dependent entities.
+@@ -181,7 +181,7 @@
      // Uninstall the modules.
      $this->moduleInstaller->uninstall($this->modules);
 

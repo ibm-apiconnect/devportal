@@ -361,7 +361,7 @@ class ApicUserProfileForm extends ProfileForm {
     }
 
     // If the user editing the form has admin permissions, there may be role updates to make
-    if (in_array('administrator', $this->currentUser()->getRoles(), FALSE)) {
+    if (\Drupal::currentUser()->hasPermission('administer permissions')) {
       $this->accountService->updateLocalAccountRoles($editUser, $form_state->getValue('roles'));
     }
 

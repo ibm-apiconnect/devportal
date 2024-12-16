@@ -33,8 +33,10 @@ class EnterContentStep extends FormBase {
     $priority = NULL;
     $receipt = NULL;
     $direct = NULL;
+    $send_unique = NULL;
     $carbon_copy = NULL;
     $send_original = NULL;
+
     // load any saved values in case have gone backwards in the wizard
     $cached_values = $form_state->getTemporaryValue('wizard');
     if (!empty($cached_values) && isset($cached_values['subject'])) {
@@ -51,6 +53,9 @@ class EnterContentStep extends FormBase {
     }
     if (!empty($cached_values) && isset($cached_values['send_original'])) {
       $send_original = $cached_values['send_original'];
+    }
+    if (!empty($cached_values) && isset($cached_values['send_unique'])) {
+      $send_unique = $cached_values['send_unique'];
     }
     if (!empty($cached_values) && isset($cached_values['priority'])) {
       $priority = $cached_values['priority'];
@@ -81,6 +86,9 @@ class EnterContentStep extends FormBase {
     }
     if ($direct === NULL) {
       $direct = 1;
+    }
+    if ($send_unique === NULL) {
+      $send_unique = 0;
     }
     if ($carbon_copy === NULL) {
       $carbon_copy = 0;
@@ -146,7 +154,6 @@ class EnterContentStep extends FormBase {
           $token_types = [];
           break;
       }
-
       // Set which tokens are allowed
       $form['message']['#token_types'] = $token_types;
       $form['subject']['#token_types'] = $token_types;
@@ -194,16 +201,22 @@ class EnterContentStep extends FormBase {
       '#title' => $this->t('Send the message directly using the Batch API.'),
       '#default_value' => $direct,
     ];
+    $form['send_unique'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Only send one email per user.'),
+      '#description' => $this->t("This will ensure each user only receives the email once, even if they're part of multiple selected apis, products, plans or consumer orgs."),
+      '#default_value' => $send_unique,
+    ];
     $form['carbon_copy'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Send a copy of all messages to the sender.'),
-      '#description' => $this->t("This will send a copy of each email that is generated to the sender.  Because the email may contain context specific tokens, new email content is generated for each recipient with the correct token replacement.  This option will send a copy of all generated emails to the sender "),
+      '#title' => $this->t('Send a copy of all messages to the copy recipient.'),
+      '#description' => $this->t("This will send a copy of each email that is generated to the copy recipient. Because the email may contain context specific tokens, new email content is generated for each recipient with the correct token replacement. This option will send a copy of all generated emails to the copy recipient configured in the site settings."),
       '#default_value' => $carbon_copy,
     ];
     $form['send_original'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Send a copy of the original message to the sender.'),
-      '#description' => $this->t("This will send a single copy of the email to the sender without the replacement of any tokens that may have been selected"),
+      '#title' => $this->t('Send a copy of the original message to the copy recipient.'),
+      '#description' => $this->t("This will send a single copy of the email to the copy recipient without the replacement of any tokens that may have been selected."),
       '#default_value' => $send_original,
     ];
 
@@ -240,6 +253,7 @@ class EnterContentStep extends FormBase {
     $direct = $form_state->getUserInput()['direct'];
     $carbon_copy = $form_state->getUserInput()['carbon_copy'];
     $send_original = $form_state->getUserInput()['send_original'];
+    $send_unique = $form_state->getUserInput()['send_unique'];
 
     $cached_values['subject'] = $subject;
     $cached_values['message'] = $message;
@@ -249,6 +263,8 @@ class EnterContentStep extends FormBase {
     $cached_values['direct'] = $direct;
     $cached_values['carbon_copy'] = $carbon_copy;
     $cached_values['send_original'] = $send_original;
+    $cached_values['send_unique'] = $send_unique;
+    $cached_values['instance'] = time();
 
     $form_state->setTemporaryValue('wizard', $cached_values);
 

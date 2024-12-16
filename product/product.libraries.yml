@@ -3,6 +3,18 @@ basic:
   css:
     component:
       css/product.css: { }
+      css/productrecommendations.css: { }
   js:
     js/product.js: { }
+    js/productrecommendations.js: { }
     js/plans.js: { }
+
+productrecommendations:
+  version: 1.x
+  css:
+    base:
+      css/productrecommendations.css: { }
+  js:
+    js/productrecommendations.js: { }
+  dependencies:
+    - 'masonry/masonry.layout'

@@ -71,11 +71,11 @@ class ConsumerOrgCommands extends DrushCommands {
         $time_end = microtime(true);
         $execution_time = (microtime(true) - $time_start);
 
-        if ($createdOrUpdated) {
-          fprintf(STDERR, "Drush %s created Organization '%s' in %f seconds\n", $func, $ref, $execution_time);
+        if ($createdOrUpdated === 'created') {
+          ibm_apim_snapshot_debug("Drush %s created Organization '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
         }
-        else {
-          fprintf(STDERR, "Drush %s updated existing Organization '%s' in %f seconds\n", $func, $ref, $execution_time);
+        else if ($createdOrUpdated === 'updated') {
+          ibm_apim_snapshot_debug("Drush %s updated existing Organization '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
         }
       }
       else {

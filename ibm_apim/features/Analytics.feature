@@ -1,8 +1,8 @@
+@api
 Feature: My Organization Analytics
   In order to use the developer portal
   I need to be able to view my organization analytics page
 
-  @api
   Scenario: Sign in as an organization owner and view my organization analytics page with no errors
     Given I have an analytics service
     Given I am not logged in

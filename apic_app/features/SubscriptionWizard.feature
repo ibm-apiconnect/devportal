@@ -1,8 +1,8 @@
+@api
 Feature: Subscription
   In order to use the developer portal
   I need to be able to subscribe to applications
 
-  @api
   Scenario: Subscription Wizard when logged in and selecting a product plan
     Given users:
       | name              | mail              | pass                  | status |
@@ -43,7 +43,6 @@ Feature: Subscription
     And I should see the link 'myapp_@now'
     And I should see the text 'Default Plan'
 
-  @api
   Scenario: Subscription Wizard when logged in and selecting an API via Get Access button
     Given users:
       | name              | mail              | pass                  | status |
@@ -85,7 +84,6 @@ Feature: Subscription
     And I should see the link 'myapp_@now'
     And I should see the text 'Default Plan'
 
-  @api
   Scenario: Subscription Wizard when not logged in and selecting a product plan
     Given users:
       | name              | mail              | pass                  | status |
@@ -99,7 +97,7 @@ Feature: Subscription
     And I publish a product with the name "product1_@now", id "product1_@now", apis "api1_@now" and visibility "pub" true true
     And I am on "/product/product1_@now"
     When I click "Select"
-    
+
     Then I should be on "/user/login"
     And I should see the text 'Sign in to an existing account or create a new account to subscribe to this Product.'
     When I enter "@data(andre.mail)" for "Username"
@@ -138,7 +136,6 @@ Feature: Subscription
     And I should see the link 'myapp_@now'
     And I should see the text 'Default Plan'
 
-  @api
   Scenario: Subscription Wizard when not logged in and selecting an API via Get Access button
     Given users:
       | name              | mail              | pass                  | status |
@@ -191,7 +188,6 @@ Feature: Subscription
     And I should see the link 'myapp_@now'
     And I should see the text 'Default Plan'
 
-  @api
   Scenario: Subscription Wizard with a paid plan and no payment method
     Given users:
       | name              | mail              | pass                  | status |
@@ -213,7 +209,6 @@ Feature: Subscription
     And I should see the text 'Confirm Subscription'
     And I should see the link 'Click here to add a payment method and try again.'
 
-  @api
   Scenario: Subscription Wizard with a paid plan
     Given users:
       | name              | mail              | pass                  | status |

@@ -32,6 +32,21 @@ use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\menu_link_content\MenuLinkContentInterface;
 
+$ibm_apim_snapshot_debug_on = FALSE;
+
+function ibm_apim_set_snapshot_debug($value) {
+  global $ibm_apim_snapshot_debug_on;
+  $ibm_apim_snapshot_debug_on = $value ? TRUE : FALSE;
+  \Drupal::logger('ibm_apim')->debug('Set snapshot_debug to %val', [ '%val' => $ibm_apim_snapshot_debug_on ? 'true' : 'false']);
+}
+
+function ibm_apim_snapshot_debug($msg, $values = []) {
+  global $ibm_apim_snapshot_debug_on;
+  if ($ibm_apim_snapshot_debug_on) {
+    \Drupal::logger('ibm_apim')->debug($msg, $values);
+  }
+}
+
 /**
  * Implementation of hook_init().
  *
@@ -215,6 +230,12 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
       ],
     ],
     'ibm_apim_status_messages_block' => [
+      'variables' => [
+        'header' => NULL,
+        'messages' => NULL,
+      ],
+    ],
+    'ibm_apim_account_status_messages_block' => [
       'variables' => [
         'header' => NULL,
         'messages' => NULL,
@@ -496,6 +517,10 @@ function ibm_apim_preprocess_html(&$variables) {
  */
 function ibm_apim_page_attachments(array &$attachments) {
   $attachments['#attached']['library'][] = 'ibm_apim/core';
+}
+
+function ibm_apim_preprocess_page(&$variables) {
+  $variables['redirectto'] = \Drupal::request()->get('redirectto');
 }
 
 /**
@@ -1609,7 +1634,7 @@ function ibm_apim_preprocess_form_element(&$variables) {
 }
 
 function ibm_apim_preprocess_form_element_label(&$variables) {
-  if (!empty($variables['element']['#is_widget']) || $variables['element']['#element_type'] === 'item') {
+  if (!empty($variables['element']['#is_widget']) || (array_key_exists('#element_type', $variables['element']) && $variables['element']['#element_type'] === 'item')) {
     unset($variables['element']['#attributes']['for']);
     unset($variables['attributes']['for']);
   }

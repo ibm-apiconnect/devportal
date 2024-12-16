@@ -79,6 +79,13 @@ class DevelForm extends ConfigFormBase {
         '#weight' => 15,
         '#description' => t('WARNING: Not to be used on production servers. It stores all webhook payloads in the database for debug. This does not scale well!'),
       ];
+      $form['debug']['snapshot_debug'] = [
+        '#type' => 'checkbox',
+        '#title' => t('Enable snapshot debug logging'),
+        '#default_value' => $config->get('snapshot_debug'),
+        '#weight' => 15,
+        '#description' => t('WARNING: Not to be used on production servers. It generates a lot of logging when snapshots are processed. This does not scale well!'),
+      ];
       $form['debug']['acl_debug'] = [
         '#type' => 'checkbox',
         '#title' => t('Enable node access control debug'),
@@ -115,6 +122,7 @@ class DevelForm extends ConfigFormBase {
         ->set('entry_exit_trace', (bool) $form_state->getValue('entry_exit_trace'))
         ->set('apim_rest_trace', (bool) $form_state->getValue('apim_rest_trace'))
         ->set('webhook_debug', (bool) $form_state->getValue('webhook_debug'))
+        ->set('snapshot_debug', (bool) $form_state->getValue('snapshot_debug'))
         ->set('acl_debug', (bool) $form_state->getValue('acl_debug'))
         ->save();
       \Drupal::state()->set('ibm_apim.insecure', (bool) $form_state->getValue('insecure'));

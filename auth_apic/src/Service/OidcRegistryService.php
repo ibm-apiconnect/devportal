@@ -20,6 +20,7 @@ use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\Utils;
+use Drupal\ibm_apim\Service\SiteConfig;
 use Psr\Log\LoggerInterface;
 use Drupal\Core\TempStore\PrivateTempStore;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
@@ -81,7 +82,10 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
    */
   protected EncryptionProfileManagerInterface $profileManager;
 
-
+  /**
+   * @var Drupal\ibm_apim\Service\SiteConfig
+   */
+  protected SiteConfig $siteConfig;
 
   public function __construct(StateInterface $state,
                               LoggerInterface $logger,
@@ -92,6 +96,7 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
                               Time $time,
                               EncryptServiceInterface $encryption,
                               EncryptionProfileManagerInterface $profileManager,
+                              SiteConfig $siteConfig
                               ) {
     $this->state = $state;
     $this->state = $state;
@@ -103,6 +108,7 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
     $this->time = $time;
     $this->encryption = $encryption;
     $this->profileManager = $profileManager;
+    $this->siteConfig = $siteConfig;
   }
 
   /**
@@ -147,7 +153,8 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-    $client_id = $this->state->get('ibm_apim.site_client_id');
+
+    $client_id = $this->siteConfig->getClientId();
 
     if ($client_id === NULL) {
       if (function_exists('ibm_apim_exit_trace')) {

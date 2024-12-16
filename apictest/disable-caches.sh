@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CURRENT_USER=$(id | sed 's/.*(\(.*\)).*/\1/')
+CURRENT_USER=$(id | sed 's/uid.*(\(.*\)) gid.*/\1/')
 if [ $CURRENT_USER != 'aegir' ] && [ $CURRENT_USER != 'jenkins' ];
 then
   echo "ERROR: Script must be run as aegir or jenkins."
