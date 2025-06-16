@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2024
+ * (C) Copyright IBM Corporation 2018, 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -20,212 +20,10 @@
 
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\consumerorg\ApicType\Role;
-use Drupal\Core\Access\AccessResultAllowed;
-use Drupal\Core\Access\AccessResultForbidden;
-use Drupal\Core\Access\AccessResultNeutral;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\ibm_apim\ApicType\ApicUser;
-use Drupal\node\NodeInterface;
-use Drupal\user\Entity\User;
 
 /* Define a single permission to be granted */
 define('CONSUMERORG_GRANT', 1);
-
-/**
- * Implements hook_node_access_records().
- *
- * For consumerorg nodes, create a realm named after the orgid for that node,
- * and require a permission of CONSUMERORG_GRANT to view that node
- *
- * @param $node
- *
- * @return array
- *
- * Note: hook is called when rebuilding permissions
- */
-function consumerorg_node_access_records($node): array {
-
-  ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-
-  $config = \Drupal::config('ibm_apim.devel_settings');
-  $acl_debug = (boolean) $config->get('acl_debug');
-
-  $type = is_string($node) ? $node : $node->getType();
-  $grants = [];
-
-  // Only build permissions for consumerorg nodes
-  if ($type === 'consumerorg') {
-    $orgUrl = $node->consumerorg_url->value;
-    $escapedOrgUrl = str_replace('/', '_', $orgUrl);
-    $grants[] = [
-      'realm' => 'consumerorg_' . $escapedOrgUrl,
-      'gid' => CONSUMERORG_GRANT,
-      'grant_view' => 1,
-      'grant_update' => 0,
-      'grant_delete' => 0,
-      'priority' => 0,
-    ];
-    if ($acl_debug === TRUE) {
-      foreach ($grants as $grant) {
-        \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
-          '@realm' => $grant['realm'],
-          '@grant' => 'CONSUMERORG_GRANT',
-        ]);
-      }
-    }
-  }
-  ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $grants);
-  return $grants;
-}
-
-/**
- * Implements hook_node_grants().
- *
- * For the view operation, allow CONSUMERORG_GRANT permission to the
- * consumerorg realm named after the orgid of the user
- *
- * @param $account
- * @param $op
- *
- * @return array
- *
- * Note: hook is not called at all when admin logged in
- * Note: hook is called on every login, logout and page load
- */
-function consumerorg_node_grants($account, $op): array {
-
-  ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-
-  $config = \Drupal::config('ibm_apim.settings');
-  $acl_debug = (boolean) $config->get('acl_debug');
-
-  $grants = [];
-  if ($op === 'view' && \Drupal::currentUser()->isAuthenticated()) {
-    $userOrgs = [];
-
-    $user = User::load(\Drupal::currentUser()->id());
-    if ($user !== NULL) {
-      $userOrgs = $user->consumerorg_url->getValue();
-    }
-    foreach ($userOrgs as $index => $values) {
-      $userOrgUrl = $values['value'];
-      $escapedOrgUrl = str_replace('/', '_', $userOrgUrl);
-      $grants['consumerorg_' . $escapedOrgUrl] = [CONSUMERORG_GRANT];
-    }
-
-    if ($acl_debug !== NULL && $acl_debug === TRUE) {
-      foreach ($grants as $realm => $perms) {
-        foreach ($perms as $grant) {
-          \Drupal::logger('ACLDEBUG')->debug('Realm: @realm granted: @grant', [
-            '@realm' => $realm,
-            '@grant' => 'CONSUMERORG_GRANT',
-          ]);
-        }
-      }
-    }
-  }
-  ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $grants);
-  return $grants;
-}
-
-/**
- * Implements hook_node_access().
- * This is checking if the specified consumerorg is returned from apic, if not it blocks access.
- *
- * @param \Drupal\node\NodeInterface $node
- * @param $operation
- * @param \Drupal\Core\Session\AccountInterface $account
- *
- * @return \Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultForbidden|\Drupal\Core\Access\AccessResultNeutral
- */
-function consumerorg_node_access(NodeInterface $node, $operation, AccountInterface $account) {
-  $type = $node->type;
-  if ($type === 'consumerorg' && $operation === 'view') {
-    $userUtils = \Drupal::service('ibm_apim.user_utils');
-    $org = $userUtils->getCurrentConsumerorg();
-    if ($node->consumerorg_url->value === $org['url']) {
-      $access = new AccessResultAllowed();
-    }
-    else {
-      $access = new AccessResultForbidden();
-    }
-  }
-  else {
-    $access = new AccessResultNeutral();
-  }
-  return $access;
-}
-
-/**
- * Only allows access to the payment_methods for the current consumerorg
- *
- * Implements hook_entity_access().
- */
-function consumerorg_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
-  if ($entity->bundle() === 'consumerorg_payment_method') {
-    $userUtils = \Drupal::service('ibm_apim.user_utils');
-    $org = $userUtils->getCurrentConsumerorg();
-    if ($entity->consumerorg_url->value === $org['url']) {
-      $access = new AccessResultAllowed();
-    }
-    else {
-      $access = new AccessResultForbidden();
-    }
-  }
-}
-
-/**
- * Need to use our custom content type templates
- *
- * @param $variables
- * @param $hook
- * @param $info
- */
-function consumerorg_preprocess(&$variables, $hook, &$info) {
-  if ($hook === 'node') {
-    $contentTypeToShow = $variables['node']->bundle();
-    if ($contentTypeToShow === 'consumerorg') {
-      ibm_apim_entry_trace(__FUNCTION__, NULL);
-      //Load the view mode names.
-      $allViewModes = \Drupal::service('entity_display.repository')->getViewModes('node');
-      //View mode for this request.
-      $viewModeToUse = $variables['view_mode'];
-      //Is the view mode defined for nodes?
-      if (\array_key_exists($viewModeToUse, $allViewModes)) {
-        //Is there a template file for the view modes in the module?
-        if ($viewModeToUse === 'full' || $viewModeToUse === 'default') {
-          $templateFileName = 'node--' . $contentTypeToShow;
-        }
-        else {
-          $templateFileName = 'node--' . $contentTypeToShow . '--' . $viewModeToUse;
-        }
-        $theme_name = \Drupal::theme()->getActiveTheme()->getName();
-        $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
-        if (\file_exists($theme_path . '/templates/node/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = 	\Drupal::service('extension.list.theme')->getPath($theme_name);
-          $info['path'] = 	\Drupal::service('extension.list.theme')->getPath($theme_name) . '/templates/node';
-          $info['template'] = $templateFileName;
-        }
-        elseif (\file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
-          $info['theme path'] = 	\Drupal::service('extension.list.theme')->getPath($theme_name);
-          $info['path'] = 	\Drupal::service('extension.list.theme')->getPath($theme_name) . '/templates';
-          $info['template'] = $templateFileName;
-        }
-        else {
-          $templateFilePath = \Drupal::service('extension.list.module')->getPath('consumerorg') . '/templates/' . $templateFileName . '.html.twig';
-          if (\file_exists($templateFilePath)) {
-            $info['theme path'] = \Drupal::service('extension.list.module')->getPath('consumerorg');
-            $info['path'] = \Drupal::service('extension.list.module')->getPath('consumerorg') . '/templates';
-            $info['template'] = $templateFileName;
-          }
-        }
-      }
-      ibm_apim_exit_trace(__FUNCTION__, NULL);
-    }
-  }
-}
 
 /**
  * Implements hook_preprocess_node().
@@ -445,38 +243,6 @@ function consumerorg_preprocess_node(&$variables): void {
 }
 
 /**
- * Implements hook_form_alter().
- *
- * @param array $form
- * @param \Drupal\Core\Form\FormStateInterface $form_state
- * @param $form_id
- */
-function consumerorg_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
-  switch ($form_id) {
-    // remove link to delete our content type
-    case 'node_type_edit_form' :
-      if (isset($form['type']['#default_value'], $form['actions']['delete']) && $form['type']['#default_value'] === 'consumerorg') {
-        unset($form['actions']['delete']);
-      }
-      break;
-    case 'node_consumerorg_edit_form':
-      // disable fields to stop admin editing applications
-      $currentUser = \Drupal::currentUser();
-      if ((int) $currentUser->id() === 1) {
-        $form['title']['#disabled'] = TRUE;
-      }
-      // if anyone has made our internal fields visible, then lets make them readonly
-      $internal_field_list = \Drupal::service('ibm_apim.consumerorg')->getIBMFields();
-      foreach ($internal_field_list as $fieldName) {
-        if (isset($form[$fieldName])) {
-          $form[$fieldName]['#disabled'] = TRUE;
-        }
-      }
-      break;
-  }
-}
-
-/**
  * We need our module to run last for the user register form so we can remove any other fields
  * other modules might have added - such as the forum notifications.
  *
@@ -492,115 +258,53 @@ function consumerorg_module_implements_alter(&$implementations, $hook) {
 }
 
 /**
- *  Implements hook_menu_links_discovered_alter().
+ * Need to use our custom content type templates
  *
- * @param $links
+ * @param $variables
+ * @param $hook
+ * @param $info
  */
-function consumerorg_menu_links_discovered_alter(&$links) {
-  // remove link to delete our content type
-  if (isset($links['entity.node_type.delete_form.consumerorg'])) {
-    unset($links['entity.node_type.delete_form.consumerorg']);
-  }
-  // remove link to create content of our content type
-  if (isset($links['node.add.consumerorg'])) {
-    unset($links['node.add.consumerorg']);
-  }
-}
-
-/**
- * Add twig template for My Organization page
- *
- * @param $existing
- * @param $type
- * @param $theme
- * @param $path
- *
- * @return array
- */
-function consumerorg_theme($existing, $type, $theme, $path): array {
-  return [
-    'consumerorg_select_block' => [
-      'variables' => [
-        'orgs' => [],
-        'selected_name' => NULL,
-        'selected_id' => NULL,
-        'create_allowed' => FALSE,
-      ],
-    ],
-    'consumerorg_billing' => [
-      'variables' => [
-        'node' => [],
-        'consumerorgId' => NULL,
-        'consumerorgTitle' => NULL,
-        'tabs' => [],
-        'images_path' => \Drupal::service('extension.list.module')->getPath('ibm_apim'),
-        'showPlaceholders' => TRUE,
-      ],
-    ],
-  ];
-}
-
-/**
- * Implements hook_token_info().
- */
-function consumerorg_token_info(): array {
-
-  $type = [
-    'name' => t('Consumer organization'),
-    'description' => t('Tokens related to the individual consumer organization'),
-    'needs-data' => 'consumer-org',
-  ];
-
-  $consumerOrg['name'] = [
-    'name' => t("Name"),
-    'description' => t("The name of the consumer organization"),
-  ];
-  $consumerOrg['title'] = [
-    'name' => t("Title"),
-    'description' => t("The title of the consumer organization"),
-  ];
-  $consumerOrg['id'] = [
-    'name' => t("ID"),
-    'description' => t("The ID of the consumer organization"),
-  ];
-
-  return [
-    'types' => ['consumer-org' => $type],
-    'tokens' => ['consumer-org' => $consumerOrg],
-  ];
-}
-
-/**
- * Implementation hook_tokens().
- *
- * These token replacements are used by Rules.
- *
- * @param $type
- * @param $tokens
- * @param array $data
- * @param array $options
- *
- * @return array
- */
-function consumerorg_tokens($type, $tokens, array $data = [], array $options = []): array {
-
-  $replacements = [];
-  if ($type === 'consumer-org' && !empty($data['consumer-org'])) {
-    $consumerOrg = $data['consumer-org'];
-
-    foreach ($tokens as $name => $original) {
-      switch ($name) {
-        case 'name':
-          $replacements[$original] = $consumerOrg->consumerorg_name->value;
-          break;
-        case 'title':
-          $replacements[$original] = $consumerOrg->getTitle();
-          break;
-        case 'id':
-          $replacements[$original] = $consumerOrg->consumerorg_id->value;
-          break;
+function consumerorg_preprocess(&$variables, $hook, &$info) {
+  if ($hook === 'node') {
+    $contentTypeToShow = $variables['node']->bundle();
+    if ($contentTypeToShow === 'consumerorg') {
+      ibm_apim_entry_trace(__FUNCTION__, NULL);
+      //Load the view mode names.
+      $allViewModes = \Drupal::service('entity_display.repository')->getViewModes('node');
+      //View mode for this request.
+      $viewModeToUse = $variables['view_mode'];
+      //Is the view mode defined for nodes?
+      if (\array_key_exists($viewModeToUse, $allViewModes)) {
+        //Is there a template file for the view modes in the module?
+        if ($viewModeToUse === 'full' || $viewModeToUse === 'default') {
+          $templateFileName = 'node--' . $contentTypeToShow;
+        }
+        else {
+          $templateFileName = 'node--' . $contentTypeToShow . '--' . $viewModeToUse;
+        }
+        $theme_name = \Drupal::theme()->getActiveTheme()->getName();
+        $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
+        if (\file_exists($theme_path . '/templates/node/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = 	\Drupal::service('extension.list.theme')->getPath($theme_name);
+          $info['path'] = 	\Drupal::service('extension.list.theme')->getPath($theme_name) . '/templates/node';
+          $info['template'] = $templateFileName;
+        }
+        elseif (\file_exists($theme_path . '/templates/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = 	\Drupal::service('extension.list.theme')->getPath($theme_name);
+          $info['path'] = 	\Drupal::service('extension.list.theme')->getPath($theme_name) . '/templates';
+          $info['template'] = $templateFileName;
+        }
+        else {
+          $templateFilePath = \Drupal::service('extension.list.module')->getPath('consumerorg') . '/templates/' . $templateFileName . '.html.twig';
+          if (\file_exists($templateFilePath)) {
+            $info['theme path'] = \Drupal::service('extension.list.module')->getPath('consumerorg');
+            $info['path'] = \Drupal::service('extension.list.module')->getPath('consumerorg') . '/templates';
+            $info['template'] = $templateFileName;
+          }
+        }
       }
+      ibm_apim_exit_trace(__FUNCTION__, NULL);
     }
   }
-  return $replacements;
 }
+

@@ -1,0 +1,13 @@
+--- modules/masonry/masonry.info.yml    2023-07-22 10:22:02
++++ modules/masonry/masonry.info.yml       2024-09-02 16:12:22
+@@ -2,4 +2,9 @@
+ type: module
+ description: "Provides an API for integrating the jQuery Masonry plugin with Drupal."
+ package: Masonry
+-core_version_requirement: ^8 || ^9 || ^10
++core_version_requirement: ^8 || ^9 || ^10 || ^11
++
++# Information added by Drupal.org packaging script on 2023-07-22
++version: '4.0.1'
++project: 'masonry'
++datestamp: 1690017722

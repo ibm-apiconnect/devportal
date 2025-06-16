@@ -11045,7 +11045,7 @@ input[type="checkbox"].bx--checkbox {
 .route-change-pwd-pagechange-password-form.pass-reset .main-container .row,
 .route-apic-appdisplay-creds .main-container .row,
 form.user-pass-reset,
-.apic-user-form {
+.apic-user-form{
   background-color: #ffffff;
   border: unset;
 }
@@ -14252,7 +14252,6 @@ a {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 40;
   width: 100%;
 }
 

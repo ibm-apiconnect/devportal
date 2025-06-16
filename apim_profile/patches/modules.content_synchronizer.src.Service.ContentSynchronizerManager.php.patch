@@ -5,12 +5,12 @@
  use Drupal\Core\StringTranslation\StringTranslationTrait;
  use Drupal\file\Entity\File;
 -use Drupal\file\FileInterface;
-
+ 
  /**
   * Content Synchronizer manager service.
 @@ -62,6 +61,13 @@
    protected string $appRoot;
-
+ 
    /**
 +   * The APIs Taxonomy ID.
 +   *
@@ -28,7 +28,7 @@
      $this->appRoot = $appRoot;
 +    $this->apisTaxonomyID = '';
    }
-
+ 
    /**
 @@ -94,13 +101,15 @@
    public function createImportFromTarGzFilePath(string $tarGzFilePath): ?ImportEntityInterface {
@@ -47,7 +47,7 @@
 -          'status' => FileInterface::STATUS_PERMANENT,
 +          'status' => 0,
          ]);
-
+ 
          if ($file) {
 @@ -117,7 +126,7 @@
          }
@@ -58,7 +58,7 @@
        }
      }
      else {
-@@ -171,31 +180,282 @@
+@@ -171,30 +180,281 @@
     *
     * @param string $entityTypeId
     *   The entity type id.
@@ -79,7 +79,7 @@
      if (!$entityTypeManager) {
        throw new \Exception('No entity type "' . $entityTypeId . '" found');
      }
-
+ 
 -    /** @var \Drupal\Core\Entity\EntityInterface $entity */
 -    $entity = $entityTypeManager->load($id);
 -    if (!$entity) {
@@ -104,7 +104,7 @@
 +
 +      $entities[] = $entity;
      }
-
+ 
 -    return $this->createExportFile([$entity], NULL, $destination);
 +    return $this->createExportFile($entities, NULL, $destination);
 +  }
@@ -154,9 +154,9 @@
 +    }
 +
 +    $exportEntity->save();
-   }
-
-   /**
++  }
++
++  /**
 +   * Remove content entities to an export entity
 +   *
 +   * @param string $exportId
@@ -337,18 +337,17 @@
 +      ];
 +      $exportKey++;
 +    }
-+  }
-+
+   }
+ 
 +  public function finishBatchExport(&$processor, $destination, &$data) {
 +    $tempArchive = $this->fileSystem->realpath($processor->closeProcess());
 +    // Deplace archive.
 +    $data['destination'] = $this->setDestination($destination, $tempArchive);
 +  }
 +
-+  /**
+   /**
     * Create a tar.gz file.
     *
-    * @param array $entitiesToExport
 @@ -208,7 +468,7 @@
     * @return array
     *   The data of the export.
@@ -361,7 +360,7 @@
 @@ -228,10 +488,19 @@
          $status = $this->t('Error');
        }
-
+ 
 +      $label = ExportEntityWriter::getEntityLabel($entity);
 +      $type = $entity->getEntityTypeId();
 +      if (empty($label) && ($type == 'file' || $type == 'crop')) {
@@ -379,7 +378,7 @@
          '@status' => $status,
        ];
      }
-@@ -279,19 +548,39 @@
+@@ -279,25 +548,48 @@
      foreach ($rootEntities as $key => $rootEntityData) {
        try {
          $entity = $importProcessor->importEntityFromRootData($rootEntityData);
@@ -401,7 +400,7 @@
          $errorMessage = $error->getMessage();
          $status = $this->t('Error');
        }
-
+ 
 +      $label = $rootEntityData['label'];
 +      $type = $entity->getEntityTypeId();
 +      if (empty($label) && ($type == 'file' || $type == 'crop')) {
@@ -422,9 +421,19 @@
            ->setAbsolute(TRUE)
            ->toString() : '',
          '@errorMessage' => $errorMessage ?? '',
-@@ -342,11 +631,11 @@
+       ];
+     }
+-
++    foreach($rootEntities as $key => $rootEntityData){
++      $importProcessor->importPathAlias($rootEntityData);
++      
++    }
+     // Close process.
+     $import->removeArchive();
+ 
+@@ -342,11 +634,11 @@
        }
-
+ 
        if ($absolutePath) {
 -        if (!is_dir($absolutePath)) {
 -          $this->fileSystem->prepareDirectory($absolutePath, FileSystemInterface::CREATE_DIRECTORY);

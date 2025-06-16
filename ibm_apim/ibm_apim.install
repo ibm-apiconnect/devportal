@@ -333,8 +333,9 @@ function ibm_apim_update_10900() {
     return $equivalent_update->toSkipMessage();
   }
 
+  $block_id = 'accountstatusmessages';
   $values = [
-    'id' => 'accountstatusmessages',
+    'id' => $block_id,
     'plugin' => 'ibm_apim_account_status_messages',
     'provider' => NULL,
     'region' => 'highlighted',
@@ -348,8 +349,11 @@ function ibm_apim_update_10900() {
     'visibility' => [],
     'weight' => 0,
   ];
-  $block = Block::create($values);
-  $block->save();
+
+  if (!Block::load($block_id)) {
+    $block = Block::create($values);
+    $block->save();
+  }
 }
 
 /**
@@ -363,7 +367,6 @@ function ibm_apim_update_10901() {
 
   \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->set('product_recommendations', [ 'enabled' => true, 'count' => 3])->save();
 }
-
 
 function ibm_apim_removeConfigDependency($config, $dep) {
   try {

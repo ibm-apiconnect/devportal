@@ -169,19 +169,19 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
 
     if (isset($invitation_object)) {
       // add invitation information to state object (potentially sensitive)
-      $state_obj['invitation_object'] = serialize($invitation_object);
+      $state_obj['invitation_object'] = json_encode($invitation_object);
       $state_obj['created'] = time();
     }
     $key = $this->time->getCurrentTime() . ':' . $state_obj['registry_url'];
     $encrypted_key = $this->encryption->encrypt($key, $this->profileManager->getEncryptionProfile('socialblock'));
-    $encrypted_data = $this->encryption->encrypt(serialize($state_obj), $this->profileManager->getEncryptionProfile('socialblock'));
+    $encrypted_data = $this->encryption->encrypt(json_encode($state_obj), $this->profileManager->getEncryptionProfile('socialblock'));
 
     $this->authApicSessionStore->set($key, $encrypted_data);
-    $state_param = $this->utils->base64_url_encode(serialize($encrypted_key));
+    $state_param = $this->utils->base64_url_encode(json_encode($encrypted_key));
 
     $host = $this->apimUtils->getHostUrl();
 
-    if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+    if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
       $route = URL::fromRoute('auth_apic.azcode')->toString();
     }
     else {

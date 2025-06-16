@@ -1,5 +1,4 @@
 ul.sf-menu.sf-style-coffee {
-  float: left;
   margin-bottom: 1em;
   padding: 0;
 }
@@ -116,22 +115,22 @@ ul.sf-menu.sf-style-coffee.sf-accordion li li li li li span.nolink {
 }
 ul.sf-menu.sf-style-coffee.rtl.sf-accordion li li a,
 ul.sf-menu.sf-style-coffee.rtl.sf-accordion li li span.nolink {
-  padding-left: auto;
+  padding-left: 0;
   padding-right: 2em;
 }
 ul.sf-menu.sf-style-coffee.rtl.sf-accordion li li li a,
 ul.sf-menu.sf-style-coffee.rtl.sf-accordion li li li span.nolink {
-  padding-left: auto;
+  padding-left: 0;
   padding-right: 3em;
 }
 ul.sf-menu.sf-style-coffee.rtl.sf-accordion li li li li a,
 ul.sf-menu.sf-style-coffee.rtl.sf-accordion li li li li span.nolink {
-  padding-left: auto;
+  padding-left: 0;
   padding-right: 4em;
 }
 ul.sf-menu.sf-style-coffee.rtl.sf-accordion li li li li li a,
 ul.sf-menu.sf-style-coffee.rtl.sf-accordion li li li li li span.nolink {
-  padding-left: auto;
+  padding-left: 0;
   padding-right: 5em;
 }
 ul.sf-menu.sf-style-coffee li.sf-multicolumn-wrapper ol,

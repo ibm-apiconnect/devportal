@@ -81,7 +81,8 @@ class ApicTypeCountController extends ControllerBase {
       t('Number of Users'),
     ];
     $result_final = [];
-    $results = user_role_names();
+    $roles = Role::loadMultiple();
+    $results = array_map(fn(RoleInterface $role) => $role->label(), $roles);
     if (is_array($results)) {
       foreach ($results as $user_role_machine_name => $content_type_title) {
         // Get the value as key and value pair.

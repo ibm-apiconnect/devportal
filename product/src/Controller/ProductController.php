@@ -93,7 +93,7 @@ class ProductController extends ControllerBase {
    */
   public function productTitle(NodeInterface $prodNode): string {
     if ($prodNode !== NULL && $prodNode->bundle() === 'product') {
-      $returnValue = $prodNode->getTitle() . ' - ' . \Drupal::config('system.site')->get('name');
+      $returnValue = $prodNode->getTitle();
     }
     else {
       \Drupal::logger('product')->error('productView: not a valid product.', []);
@@ -249,7 +249,7 @@ class ProductController extends ControllerBase {
    */
   public function productApiTitle(NodeInterface $apiNode = NULL): string {
     if ($apiNode !== NULL && $apiNode->bundle() === 'api') {
-      $returnValue = $apiNode->getTitle() . ' - ' . \Drupal::config('system.site')->get('name');
+      $returnValue = $apiNode->getTitle();
     }
     else {
       \Drupal::logger('product')->error('productApi: not a valid api.', []);

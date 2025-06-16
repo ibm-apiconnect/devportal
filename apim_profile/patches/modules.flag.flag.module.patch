@@ -1,0 +1,44 @@
+--- modules/flag/flag.module	2025-05-16 16:26:48
++++ modules/flag/flag.module	2025-05-16 16:26:23
+@@ -17,8 +17,41 @@
+ use Drupal\flag\Plugin\Flag\EntityFlagType;
+ use Drupal\system\Entity\Action;
+ use Drupal\user\UserInterface;
++use Drupal\Core\Menu\MenuLinkInterface;
+ 
+ /**
++ * Implements hook_menu_links_discovered_alter().
++ */
++function flag_menu_links_discovered_alter(array &$links) {
++    if (\Drupal::moduleHandler()->moduleExists('admin_toolbar_tools')) {
++        $menu_links = [
++            'admin_toolbar_tools.extra_links:entity.flagging.field_ui_fieldsbookmark',
++            'admin_toolbar_tools.extra_links:entity.entity_form_display.flagging.defaultbookmark',
++            'admin_toolbar_tools.extra_links:entity.entity_view_display.flagging.default.bookmark',
++            'admin_toolbar_tools.extra_links:entity.flag.delete_form.bookmark',
++            'admin_toolbar_tools.extra_links:entity.flagging.field_ui_fieldsfollowing',
++            'admin_toolbar_tools.extra_links:entity.entity_form_display.flagging.defaultfollowing',
++            'admin_toolbar_tools.extra_links:entity.entity_view_display.flagging.default.following',
++            'admin_toolbar_tools.extra_links:entity.flag.delete_form.following',
++            'admin_toolbar_tools.extra_links:entity.flagging.field_ui_fieldscount',
++            'admin_toolbar_tools.extra_links:entity.entity_form_display.flagging.defaultcount',
++            'admin_toolbar_tools.extra_links:entity.entity_view_display.flagging.default.count',
++            'admin_toolbar_tools.extra_links:entity.flag.delete_form.count'
++        ];
++
++        foreach ($menu_links as $menu_link) {
++            if (isset($links[$menu_link]) && str_contains($menu_link, 'bookmark')) {
++                $links[$menu_link]['title'] = new \Drupal\Core\StringTranslation\TranslatableMarkup($links[$menu_link]['title'] .' (Bookmark)');
++            } elseif (isset($links[$menu_link]) && str_contains($menu_link, 'following')) {
++                $links[$menu_link]['title'] = new \Drupal\Core\StringTranslation\TranslatableMarkup($links[$menu_link]['title']. ' (Following)');
++            } elseif (isset($links[$menu_link]) && str_contains($menu_link, 'count')) {
++                $links[$menu_link]['title'] = new \Drupal\Core\StringTranslation\TranslatableMarkup($links[$menu_link]['title']. ' (Count)');
++            }
++        }
++    }
++}
++
++/**
+  * Implements hook_help().
+  */
+ function flag_help($route_name, RouteMatchInterface $route_match) {

@@ -1,14 +1,15 @@
-name: 'IBM API Developer Portal'
+name: "IBM API Developer Portal"
 type: profile
-description: 'Provides modules to access the content in an API Manager node and a skeleton site which application developers can use to browse APIs.'
-core_version_requirement: ^8 || ^9 || ^10
+description: "Provides modules to access the content in an API Manager node and a skeleton site which application developers can use to browse APIs."
+core_version_requirement: ^8 || ^9 || ^10 || ^11
+version: VERSION
 
 # Optional: Declare your installation profile as a distribution
 # This will make the installer auto-select this installation profile.
 # The distribution_name property is used in the installer and other places as
 # a label for the software being installed.
 distribution:
-  name: 'IBM API Developer Portal'
+  name: "IBM API Developer Portal"
 
 # Required modules
 install:
@@ -71,7 +72,6 @@ install:
   - password_policy_character_types
   - password_policy_username
   - password_policy_consecutive
-  - bootstrap_layouts
   - views_bootstrap
   - taxonomy_menu
   - social_media_links
@@ -82,7 +82,6 @@ install:
   - crop
   - focal_point
   - dropzonejs
-  - dropzonejs_eb_widget
   - honeypot
   - twig_tweak
   - masonry
@@ -131,12 +130,18 @@ install:
   - jquery_ui_resizable
   - navigation
   - navigation_top_bar
+  - jquery_ui
   - jquery_ui_draggable
+  - jquery_ui_accordion
+  - jquery_ui_droppable
+  - bootstrap_layouts
   - jquery_ui_effects
   - maxlength
   - expand_collapse_formatter
+  - file_upload_secure_validator
 
 themes:
   - olivero
   - claro
+  - stable9
   - connect_theme

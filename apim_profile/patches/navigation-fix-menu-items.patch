@@ -12,42 +12,26 @@
 # ---------
 # Will probably still need the remove local tasks patch line once the menu items problem has been fixed!
 # ---------
---- core/modules/navigation/navigation.module   2024-07-04 12:33:45
-+++ core/modules/navigation/navigation.module      2024-08-15 11:51:29
-@@ -148,8 +148,8 @@
-   $navigation_links = \Drupal::classResolver(NavigationContentLinks::class);
-   assert($navigation_links instanceof NavigationContentLinks);
-   $navigation_links->addMenuLinks($links);
--  $navigation_links->removeAdminContentLink($links);
--  $navigation_links->removeHelpLink($links);
-+  //$navigation_links->removeAdminContentLink($links);
-+  //$navigation_links->removeHelpLink($links);
- }
+--- core/modules/navigation/src/Hook/NavigationHooks.php        2025-01-08 12:19:40
++++ core/modules/navigation/src/Hook/NavigationHooks copy.php   2025-01-08 12:19:32
+@@ -110,8 +110,8 @@
+     $navigation_links = \Drupal::classResolver(NavigationContentLinks::class);
+     assert($navigation_links instanceof NavigationContentLinks);
+     $navigation_links->addMenuLinks($links);
+-    $navigation_links->removeAdminContentLink($links);
+-    $navigation_links->removeHelpLink($links);
++    //$navigation_links->removeAdminContentLink($links);
++    //$navigation_links->removeHelpLink($links);
+   }
 
- /**
-@@ -158,7 +158,7 @@
- function navigation_block_build_local_tasks_block_alter(array &$build, BlockPluginInterface $block) {
-   $navigation_renderer = \Drupal::service('navigation.renderer');
-   assert($navigation_renderer instanceof NavigationRenderer);
--  $navigation_renderer->removeLocalTasks($build, $block);
-+  //$navigation_renderer->removeLocalTasks($build, $block);
- }
-
- /**
+   /**
 
 --- core/modules/navigation/navigation.services.yml     2024-07-04 12:33:45
 +++ core/modules/navigation/navigation.services.yml        2024-08-15 11:54:28
-@@ -1,4 +1,6 @@
- services:
-+  _defaults:
-+    autoconfigure: true
-   navigation.renderer:
-     class: Drupal\navigation\NavigationRenderer
-     arguments:
-@@ -31,3 +33,11 @@
-     class: Drupal\navigation\UserLazyBuilder
-     arguments: ['@module_handler', '@current_user']
-   Drupal\navigation\UserLazyBuilders: '@navigation.user_lazy_builder'
+@@ -39,3 +39,12 @@
+     class: Drupal\navigation\TopBarItemManager
+     parent: default_plugin_manager
+   Drupal\navigation\TopBarItemManagerInterface: '@plugin.manager.top_bar_item'
 +
 +  navigation.navigation_tree_manipulators:
 +    class: Drupal\navigation\NavigationMenuLinkTreeManipulators
@@ -56,3 +40,4 @@
 +
 +  navigation.event_subscriber:
 +    class: Drupal\navigation\EventSubscriber\NavigationMenuLinkTreeSubscriber
++

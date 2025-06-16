@@ -53,7 +53,7 @@ class Stdout implements LoggerInterface {
     }
 
     $request_uri = $context['request_uri'];
-    $referrer_uri = $context['referer'];
+    $referrer_uri = empty($context['referer']) ? 'N/A' : $context['referer'];
     $variables = $this->parser->parseMessagePlaceholders($message, $context);
     $message = empty($variables) ? $message : strtr($message, $variables);
     $input_message = strip_tags($message);

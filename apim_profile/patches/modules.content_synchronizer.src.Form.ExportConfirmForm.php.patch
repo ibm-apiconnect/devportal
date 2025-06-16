@@ -32,7 +32,7 @@
 +    }
 
 +    if (!empty($blocked)) {
-+      \Drupal::messenger()->addWarning(t('You have selected entities that been blocked. Please try again. Blocked entities @entities', [ '@entities' => print_r(implode(", ", $blocked), TRUE) ]));
++      \Drupal::messenger()->addWarning(t('You have selected entities that been blocked. Please try again. Blocked entities @entities', [ '@entities' => print_r(implode(", ", array_unique($blocked)), TRUE) ]));
 +      $formState->setRedirect('system.admin_content');
 +      return;
 +    }
@@ -60,7 +60,7 @@
 +    }
 +
 +    if (!empty($blocked)) {
-+      \Drupal::messenger()->addWarning(t('You have selected entities that been blocked. Please try again. Blocked entities @entities', [ '@entities' => print_r(implode(", ", $blocked), TRUE) ]));
++      \Drupal::messenger()->addWarning(t('You have selected entities that been blocked. Please try again. Blocked entities @entities', [ '@entities' => print_r(implode(", ", array_unique($blocked)), TRUE) ]));
 +      $formState->setRedirect('system.admin_content');
 +      return;
 +    }

@@ -10,8 +10,8 @@
   "license": "GPL-2.0+",
   "minimum-stability": "dev",
   "require": {
-    "phpunit/phpunit": "^6.5 || ^7.0 || ^8.0 || ^9.0",
-    "phpspec/prophecy": "~1.0",
+    "phpunit/phpunit": "^6.5 || ^7.0 || ^8.0 || ^9.0 || ^10.0",
+    "phpspec/prophecy-phpunit": "^2",
     "drupal/drupal-extension": "^5.0"
   },
   "autoload": {

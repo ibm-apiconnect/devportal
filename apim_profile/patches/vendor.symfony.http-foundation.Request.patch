@@ -1,13 +1,12 @@
---- vendor/symfony/http-foundation/Request.php	2022-02-21 13:35:47.000000000 +0000
-+++ vendor/symfony/http-foundation/Request.php	2022-03-09 11:24:19.226050197 +0000
-@@ -1150,9 +1150,16 @@
+--- vendor/symfony/http-foundation/Request.php  2024-07-26 13:41:01
++++ vendor/symfony/http-foundation/Request.php     2024-09-03 15:07:38
+@@ -1063,9 +1063,15 @@
       */
-     public function getHost()
+     public function getHost(): string
      {
 -        if ($this->isFromTrustedProxy() && $host = $this->getTrustedValues(self::HEADER_X_FORWARDED_HOST)) {
 -            $host = $host[0];
 -        } elseif (!$host = $this->headers->get('HOST')) {
-+
 +        // velox/devportal#7594 - we have commented the code related to X_FORWARDED_HOST and trusted proxies here
 +        // as this creates issues in OCP environments where sometimes getTrustedValues() returns values which
 +        // cause us to use the wrong hostname to search for a cookie which won't exist. This then means authorize.php

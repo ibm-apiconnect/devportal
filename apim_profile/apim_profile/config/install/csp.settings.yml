@@ -1,3 +1,14 @@
-enforce: false
-report:
-  handler: csp-module
+report-only:
+  enable: false
+  directives:
+    default-src:
+      base: self
+  reporting:
+    plugin: none
+enforce:
+  enable: false
+  directives:
+    default-src:
+      base: self
+  reporting:
+    plugin: none

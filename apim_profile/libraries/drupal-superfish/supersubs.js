@@ -18,44 +18,46 @@
 
 (function($){ // $ will refer to jQuery within this closure
   $.fn.supersubs = function(options){
-    var opts = $.extend({}, $.fn.supersubs.defaults, options);
-    // return original object to support chaining
+    const superfish_options = $.extend({}, $.fn.supersubs.defaults, options);
+    let size;
+    let o;
+
+    // return an original object to support chaining,
     // Although this is unnecessary due to the way the module uses these plugins.
-    for (var a = 0; a < this.length; a++) {
+    for (let a = 0; a < this.length; a++) {
       // cache selections
-      var $$ = $(this).eq(a),
+      let $$ = $(this).eq(a);
       // support metadata
-      o = $.meta ? $.extend({}, opts, $$.data()) : opts;
+      o = $.meta ? $.extend({}, superfish_options, $$.data()) : superfish_options;
       // Jump one level if it's a "NavBar"
       if ($$.hasClass('sf-navbar')) {
         $$ = $$.children('li').children('ul');
       }
       // cache all ul elements
-      var $ULs = $$.find('ul');
+      let $ULs = $$.find('ul');
       if ($ULs.length) {
         // get the font size of menu.
         // .css('fontSize') returns various results cross-browser, so measure an em dash instead
-        var fontsize = $('<li id="menu-fontsize">&#8212;</li>'),
+        let fontsize = $('<li id="menu-fontsize">&#8212;</li>');
         size = fontsize.attr('style','padding:0;position:absolute;top:-99999em;width:auto;')
         .appendTo($$)[0].clientWidth; //clientWidth is faster than width()
         // remove em dash
         fontsize.remove();
 
-        // loop through each ul in menu
-        for (var b = 0; b < $ULs.length; b++) {
-          var
+        // loop through each ul in a menu
+        for (let b = 0; b < $ULs.length; b++) {
           // cache this ul
-          $ul = $ULs.eq(b);
+          let $ul = $ULs.eq(b);
           // If a multi-column sub-menu, and only if correctly configured.
           if (o.multicolumn && $ul.hasClass('sf-multicolumn') && $ul.find('.sf-multicolumn-column').length > 0){
             // Look through each column.
-            var $column = $ul.find('div.sf-multicolumn-column > ol'),
+            let $column = $ul.find('div.sf-multicolumn-column > ol');
             // Overall width.
-            mwWidth = 0;
-            for (var d = 0; d < $column.length; d++){
+            let mwWidth = 0;
+            for (let d = 0; d < $column.length; d++){
               resize($column.eq(d));
               // New column width, in pixels.
-              var colWidth = Math.ceil($column.width());
+              let colWidth = Math.ceil($column.width());
               // Just a trick to convert em unit to px.
               $column.css({width:colWidth})
               // Making column parents the same size.
@@ -63,7 +65,7 @@
               // Overall width.
               mwWidth += colWidth;
             }
-            // Resizing the columns container too.
+            // Resizing the columns' container too.
             $ul.add($ul.find('li.sf-multicolumn-wrapper, li.sf-multicolumn-wrapper > ol')).css({width:mwWidth});
           }
           else {
@@ -73,23 +75,26 @@
       }
     }
     function resize($ul){
-      var
       // get all (li) children of this ul
-      $LIs = $ul.children(),
+      const $LIs = $ul.children();
       // get all anchor grand-children
-      $As = $LIs.children('a');
+      const $As = $LIs.children('a');
       // force content to one line and save current float property
       $LIs.css('white-space','nowrap');
       // remove width restrictions and floats so elements remain vertically stacked
       $ul.add($LIs).add($As).css({float:'none',width:'auto'});
-      // this ul will now be shrink-wrapped to longest li due to position:absolute
+      // this ul will now be shrink-wrapped to the longest li due to position:absolute
       // so save its width as ems.
-      var emWidth = $ul.get(0).clientWidth / size;
+      let emWidth = $ul.get(0).clientWidth / size;
       // add more width to ensure lines don't turn over at certain sizes in various browsers
       emWidth += o.extraWidth;
       // restrict to at least minWidth and at most maxWidth
-      if (emWidth > o.maxWidth) {emWidth = o.maxWidth;}
-      else if (emWidth < o.minWidth) {emWidth = o.minWidth;}
+      if (emWidth > o.maxWidth) {
+        emWidth = o.maxWidth;
+      }
+      else if (emWidth < o.minWidth) {
+        emWidth = o.minWidth;
+      }
       emWidth += 'em';
       // set ul to width in ems
       $ul.css({width:emWidth});
@@ -99,14 +104,15 @@
       $LIs.add($As).css({float:'',width:'',whiteSpace:''});
       // update offset position of descendant ul to reflect new width of parent.
       // set it to 100% in case it isn't already set to this in the CSS
-      for (var c = 0; c < $LIs.length; c++) {
-        var $childUl = $LIs.eq(c).children('ul');
-        var offsetDirection = $childUl.css('left') !== undefined ? 'left' : 'right';
+      for (let c = 0; c < $LIs.length; c++) {
+        let $childUl = $LIs.eq(c).children('ul');
+        let offsetDirection = $childUl.css('left') !== undefined ? 'left' : 'right';
         $childUl.css(offsetDirection,'100%');
       }
     }
     return this;
   };
+
   // expose defaults
   $.fn.supersubs.defaults = {
     multicolumn: true, // define width for multi-column sub-menus and their columns.

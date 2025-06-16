@@ -20,6 +20,7 @@ use Drupal\Core\Session\UserSession;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 
 /**
  * Class AdminForm
@@ -37,10 +38,11 @@ class AdminForm extends ConfigFormBase {
    * AdminForm constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
    * @param \Drupal\ibm_apim\Service\SiteConfig $config
    */
-  public function __construct(ConfigFactoryInterface $config_factory, SiteConfig $config) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, protected TypedConfigManagerInterface $typedConfigManager, SiteConfig $config) {
+    parent::__construct($config_factory, $typedConfigManager);
     $this->siteConfig = $config;
   }
 
@@ -51,7 +53,11 @@ class AdminForm extends ConfigFormBase {
    */
   public static function create(ContainerInterface $container) {
     /** @noinspection PhpParamsInspection */
-    return new static($container->get('config.factory'), $container->get('ibm_apim.site_config'));
+    return new static(
+      $container->get('config.factory'),
+      $container->get('config.typed'),
+      $container->get('ibm_apim.site_config')
+    );
   }
 
   /**
@@ -488,6 +494,16 @@ class AdminForm extends ConfigFormBase {
       '#required' => TRUE,
       '#weight' => 30,
     ];
+    $form['explorer']['api_max_depth'] = [
+      '#type' => 'number',
+      '#min' => 9,
+      '#max' => 25,
+      '#title' => t('Example Max Depth'),
+      '#description' => t('Set the max depth of example items'),
+      '#default_value' => (int) $config->get('api_max_depth') ?: 9,
+      '#required' => TRUE,
+      '#weight' => 30,
+    ];
     $form['explorer']['router_type'] = [
       '#type' => 'select',
       '#options' => [
@@ -669,6 +685,7 @@ class AdminForm extends ConfigFormBase {
       ->set('codesnippets', $codesnippets)
       ->set('router_type', $form_state->getValue('router_type'))
       ->set('example_array_items', (int) $form_state->getValue('example_array_items'))
+      ->set('api_max_depth', (int) $form_state->getValue('api_max_depth'))
       ->set('product_recommendations.enabled', (bool) $form_state->getValue(['product_recommendations', 'enabled']))
       ->set('product_recommendations.count', (int) $form_state->getValue(['product_recommendations', 'count']))
       ->save();

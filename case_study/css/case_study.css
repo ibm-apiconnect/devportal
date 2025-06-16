@@ -40,6 +40,7 @@
 .apicCardMain .apicCaseStudyImage img {
   justify-self: center;
   max-height: 150px;
+  width: auto;
 }
 
 .apicCaseStudyCard .apicCardMain .apicCaseStudyImage .field {
@@ -52,7 +53,7 @@
   max-height: 19rem;
   }
 
-.apicCaseStudyCard a::before {
+.apicCaseStudyCard a.apicCaseStudyLink::before {
     content: "";
     position: absolute;
     top: 0px;

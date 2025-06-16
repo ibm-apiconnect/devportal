@@ -147,7 +147,7 @@ class SiteConfig {
    *
    * @return array empty if an error occurs otherwise an array of the apim config.
    */
-  protected function get(): array {
+  public function get(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $catalog_config = $this->state->get('ibm_apim.site_config');

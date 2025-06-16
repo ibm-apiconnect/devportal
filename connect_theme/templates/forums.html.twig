@@ -26,7 +26,7 @@
     </div>
     <div class="forumSidebar">
       {{ drupal_entity('block', 'forumsidebar') }}
-      {{ drupal_entity('block', 'socialmedialinks') }}
+      {{ drupal_entity('block', current_theme == 'connect_theme' ? 'socialmedialinks' : current_theme ~ '_socialmedialinks') }}
     </div>
   </div>
 {% endif %}

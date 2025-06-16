@@ -1,0 +1,13 @@
+diff --git core/lib/Drupal/Component/Render/FormattableMarkup.php core/lib/Drupal/Component/Render/FormattableMarkup.php
+index 26fbc0b47c..2c0256a829 100644
+--- core/lib/Drupal/Component/Render/FormattableMarkup.php
++++ core/lib/Drupal/Component/Render/FormattableMarkup.php
+@@ -235,7 +235,7 @@ protected static function placeholderFormat($string, array $args) {
+    *   The properly escaped replacement value.
+    */
+   protected static function placeholderEscape($value) {
+-    return $value instanceof MarkupInterface ? (string) $value : Html::escape($value);
++    return $value instanceof MarkupInterface ? (string) $value : Html::escape($value ?? "");
+   }
+ 
+ }

@@ -941,7 +941,7 @@ class APIMServer implements ManagementServerInterface {
   public function postSignOut(): RestResponse {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
-    if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+    if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
       $response = $this->restResponseReader->read(ApicRest::post('/me/sign-out', ''));
     }
     else {

@@ -1,0 +1,23 @@
+When changing the base theme Drush tries to load the active theme before upgrade function are ran.
+So that means when adding a new theme as a base its not enabled at this point.
+So instead of making Drupal error it now attempts to enable the theme first if not found.
+--- core/lib/Drupal/Core/Theme/ThemeInitialization.php   2024-09-10 13:01:48
++++ core/lib/Drupal/Core/Theme/ThemeInitialization.php      2024-09-10 13:01:38
+@@ -112,7 +112,16 @@
+     while ($ancestor && isset($themes[$ancestor]->base_theme)) {
+       $ancestor = $themes[$ancestor]->base_theme;
+       if (!$this->themeHandler->themeExists($ancestor)) {
+-        throw new MissingThemeDependencyException(sprintf('Base theme %s has not been installed.', $ancestor), $ancestor);
++        $theme_installer = \Drupal::service('theme_installer');
++        try {
++          if(!$theme_installer->install([$ancestor])) {
++            throw new MissingThemeDependencyException(sprintf('Base theme %s has not been installed.', $ancestor), $ancestor);
++          }
++          $themes = $this->themeHandler->listInfo();
++        } catch(\Exception $e) {
++          throw new MissingThemeDependencyException(sprintf('Base theme %s has not been installed.', $ancestor), $ancestor);
++        }
++
+       }
+       $base_themes[] = $themes[$ancestor];
+     }

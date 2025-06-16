@@ -2,7 +2,7 @@ name: Featured Content
 type: module
 description: Block for featured Products or APIs
 package: IBM API Developer Portal
-core_version_requirement: ^8 || ^9 || ^10
+core_version_requirement: ^8 || ^9 || ^10 || ^11
 version: 6.2.4
 project: featuredcontent
 dependencies:

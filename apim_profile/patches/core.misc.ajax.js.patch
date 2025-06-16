@@ -1,10 +1,10 @@
---- core/misc/ajax.js	2019-02-06 11:48:09.000000000 +0000
-+++ core/misc/ajax.js	2019-02-06 11:49:04.000000000 +0000
-@@ -438,6 +438,7 @@
-
+--- core/misc/ajax.js    2025-04-29 21:50:38
++++ core/misc/ajax.js    2025-04-29 21:51:05
+@@ -465,6 +465,7 @@
+ 
      // If no Ajax callback URL was given, use the link href or form action.
      if (!this.url) {
 +      this.url = '';
        const $element = $(this.element);
-       if ($element.is('a')) {
+       if (this.element.tagName === 'A') {
          this.url = $element.attr('href');

@@ -378,11 +378,11 @@ Feature: Edit Profile
     When I press the "Save" button
     Then I should see the text "Your account has been updated."
     When I am at "/user/@uid"
-    Then I should see the text "12/12/2003"
+    Then I should see the text "Fri, 12 Dec 2003"
     And I should see the text "13:13"
-    And I should see the text "12/24/2022"
+    And I should see the text "Sat, 24 Dec 2022"
     And I should see the text "12:20"
-    And I should see the text "01/19/2013"
+    And I should see the text "Sat, 19 Jan 2013"
     And I should see the text "00:00"
     Then I delete the timestamp type custom fields for user entities
 
@@ -415,10 +415,10 @@ Feature: Edit Profile
     When I press the "Save" button
     Then I should see the text "Your account has been updated."
     When I am at "/user/@uid"
-    Then I should see the text "12/12/2003"
+    Then I should see the text "Fri, 12 Dec 2003"
     And I should see the text "13:13"
-    And I should see the text "12/24/2022"
+    And I should see the text "Sat, 24 Dec 2022"
     And I should see the text "12:20"
-    And I should see the text "01/19/2013"
+    And I should see the text "Sat, 19 Jan 2013"
     And I should see the text "00:00"
     Then I delete the datetime type custom fields for user entities

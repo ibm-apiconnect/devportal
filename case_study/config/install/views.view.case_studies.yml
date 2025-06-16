@@ -128,6 +128,22 @@ display:
         options: {  }
       empty: {  }
       sorts:
+        created:
+          id: created
+          table: node_field_data
+          field: created
+          relationship: none
+          group_type: group
+          admin_label: ''
+          order: DESC
+          exposed: false
+          expose:
+            label: Created
+            field_identifier: created
+          granularity: minute
+          entity_type: node
+          entity_field: created
+          plugin_id: date
         title:
           id: title
           table: node_field_data

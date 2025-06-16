@@ -450,11 +450,11 @@ Feature: ApplicationUpdate
     When I press the "Save" button
     Then there are no errors
     And I click "Dashboard"
-    Then I should see the text "12/12/2003"
+    Then I should see the text "Fri, 12 Dec 2003"
     Then I should see the text "13:13"
-    Then I should see the text "12/24/2022"
+    Then I should see the text "Sat, 24 Dec 2022"
     Then I should see the text "12:20"
-    Then I should see the text "01/19/2013"
+    Then I should see the text "Sat, 19 Jan 2013"
     Then I should see the text "00:00"
     Then I delete all applications from the site
     Then I delete the timestamp type custom fields for application entities
@@ -489,11 +489,11 @@ Feature: ApplicationUpdate
     When I press the "Save" button
     Then there are no errors
     And I click "Dashboard"
-    Then I should see the text "12/12/2003"
+    Then I should see the text "Fri, 12 Dec 2003"
     Then I should see the text "13:13"
-    Then I should see the text "12/24/2022"
+    Then I should see the text "Sat, 24 Dec 2022"
     Then I should see the text "12:20"
-    Then I should see the text "01/19/2013"
+    Then I should see the text "Sat, 19 Jan 2013"
     Then I should see the text "00:00"
     Then I delete all applications from the site
     Then I delete the datetime type custom fields for application entities

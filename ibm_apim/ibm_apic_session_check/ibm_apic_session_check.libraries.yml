@@ -1,0 +1,6 @@
+ibm_apic_session_check:
+  version: 1.x
+  js:
+    js/ibm_apic_session_check.js: {}
+  dependencies:
+    - core/drupal

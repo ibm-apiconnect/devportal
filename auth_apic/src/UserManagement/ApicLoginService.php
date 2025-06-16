@@ -272,7 +272,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
           $refresh_expires_in = $token_retrieved->getRefreshExpiresIn();
 
           $this->tempStore->set('auth', $token_retrieved->getBearerToken());
-          if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+          if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
             $this->tempStore->set('expires_in', (int) $token_retrieved->getExpiresIn());
           }
           if (isset($refresh)) {
@@ -342,7 +342,6 @@ class ApicLoginService implements ApicLoginServiceInterface {
 
       $this->userUtils->setCurrentConsumerorg();
       $this->userUtils->setOrgSessionData();
-
     }
 
     if (\function_exists('ibm_apim_exit_trace')) {

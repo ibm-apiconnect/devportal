@@ -19,6 +19,7 @@
 namespace Drupal\socialblock\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
@@ -36,10 +37,11 @@ class SocialBlockForm extends ConfigFormBase {
    * SocialBlockForm constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typed_config_manager
    * @param \Drupal\Core\Messenger\Messenger $messenger
    */
-  public function __construct(ConfigFactoryInterface $config_factory, Messenger $messenger) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManagerInterface $typed_config_manager, Messenger $messenger) {
+    parent::__construct($config_factory, $typed_config_manager);
     $this->messenger = $messenger;
   }
 
@@ -48,7 +50,7 @@ class SocialBlockForm extends ConfigFormBase {
    */
   public static function create(ContainerInterface $container) {
     // Load the service required to construct this class
-    return new static($container->get('config.factory'), $container->get('messenger'));
+    return new static($container->get('config.factory'), $container->get('config.typed'), $container->get('messenger'));
   }
 
   /**

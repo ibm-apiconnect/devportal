@@ -1,0 +1,11 @@
+--- core/modules/update/update.install  2024-11-28 11:19:19
++++ core/modules/update/update.install     2024-11-28 11:19:16
+@@ -119,7 +119,7 @@
+   $status = $project['status'];
+   if ($status != UpdateManagerInterface::CURRENT) {
+     $requirement['reason'] = $status;
+-    $requirement['severity'] = REQUIREMENT_ERROR;
++    $requirement['severity'] = REQUIREMENT_WARNING;
+     // When updates are available, append the available updates link to the
+     // message from _update_message_text(), and format the two translated
+     // strings together in a single paragraph.

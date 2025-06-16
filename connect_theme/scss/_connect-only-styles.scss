@@ -119,3 +119,11 @@
   background-position: -2px -1px !important;
   background-size: 17px !important;
 }
+
+[data-admin-toolbar="collapsed"] .bx--global-light-ui .node-preview-backlink.btn.btn-info.pull-left {
+  margin-left: 5rem;
+}
+
+[data-admin-toolbar="expanded"] .bx--global-light-ui .node-preview-backlink.btn.btn-info.pull-left {
+  margin-left: 17rem;
+}

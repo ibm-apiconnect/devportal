@@ -102,7 +102,7 @@ class MockApicAccountService implements ApicAccountInterface {
     try {
 
       // The code inside this if statement isn't valid in the unit test environment where we have no Drupal instance
-      if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
         $returnValue = $this->loadUserFromDatabase($user);
       }
       if ($returnValue === NULL) {

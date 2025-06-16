@@ -1,17 +1,14 @@
---- core/lib/Drupal/Core/Render/MetadataBubblingUrlGenerator.php        2024-07-08 14:20:31
-+++ core/lib/Drupal/Core/Render/MetadataBubblingUrlGenerator.php   2024-07-08 14:20:06
-@@ -113,6 +113,14 @@
+--- core/lib/Drupal/Core/Render/MetadataBubblingUrlGenerator.php        2024-09-03 14:15:15
++++ core/lib/Drupal/Core/Render/MetadataBubblingUrlGenerator.php   2024-09-03 14:14:58
+@@ -109,4 +109,11 @@
+     return $collect_bubbleable_metadata ? $generated_url : $generated_url->getGeneratedUrl();
    }
 
-   /**
++  /**
 +   * {@inheritdoc}
 +   */
 +  public function generateActualFromRoute($name, $parameters = [], $options = []) {
-+    $generated_url = $this->urlGenerator->generateFromRoute($name, $parameters, $options, FALSE);
-+    return $generated_url;
++    return $this->urlGenerator->generateFromRoute($name, $parameters, $options, FALSE);
 +  }
 +
-+  /**
-    * Checks if route name is a string or route object.
-    *
-    * @param string|\Symfony\Component\Routing\Route $name
+ }

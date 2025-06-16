@@ -37,7 +37,7 @@
                 href="{{ path('consumerorg.create') }}" class="elipsis-names">{{ 'Create organization'| t }}</a></li>
         {% endif %}
         <li class="selectorg" disabled>{{ 'Select organization'|t }}</li>
-        {% for org in orgs %}
+        {% for org in orgs | sort((a, b) => a.title <=> b.title) %}
           <li class="elipsis-names consumerorg" {% if org.id == selected_id %}selected=true{% endif %}
               title="{{ org.title }}">{{ org.link_object }}</li>
         {% endfor %}

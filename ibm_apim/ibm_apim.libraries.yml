@@ -56,3 +56,11 @@ modal:
       css/modal.css: { }
   js:
     js/modal.js: {}
+
+disable_forum_topic_api:
+  version: 1.x
+  js:
+    js/disable_forum_topic_api.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal

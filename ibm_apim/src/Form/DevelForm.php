@@ -86,6 +86,28 @@ class DevelForm extends ConfigFormBase {
         '#weight' => 15,
         '#description' => t('WARNING: Not to be used on production servers. It generates a lot of logging when snapshots are processed. This does not scale well!'),
       ];
+      $form['debug']['audit_log_backtrace'] = [
+        '#type' => 'checkbox',
+        '#title' => t('Enable audit log backtrace member in CADF request'),
+        '#default_value' => $config->get('audit_log_backtrace'),
+        '#weight' => 15,
+        '#description' => t('WARNING: Not to be used on production servers. Adds unsupported backtrace member to CADF output.'),
+      ];
+      $form['debug']['audit_debug_endpoint'] = [
+        '#type' => 'textfield',
+        '#title' => t('Use this debug audit endpoint to send audit data to, instead of apim.'),
+        '#default_value' => $config->get('audit_debug_endpoint'),
+        '#weight' => 15,
+        '#description' => t('WARNING: Should not to be used on production servers.'),
+      ];
+      $form['debug']['audit_log_level'] = [
+        '#type' => 'select',
+        '#options' => [ 'error' => 'Error', 'warning' => 'Warning', 'info' => 'Info', 'debug' => 'Debug'],
+        '#title' => t('Log level for audit'),
+        '#default_value' => $config->get('audit_log_level'),
+        '#weight' => 15,
+        '#description' => t('WARNING: debug should not to be used on production servers.'),
+      ];
       $form['debug']['acl_debug'] = [
         '#type' => 'checkbox',
         '#title' => t('Enable node access control debug'),
@@ -123,6 +145,9 @@ class DevelForm extends ConfigFormBase {
         ->set('apim_rest_trace', (bool) $form_state->getValue('apim_rest_trace'))
         ->set('webhook_debug', (bool) $form_state->getValue('webhook_debug'))
         ->set('snapshot_debug', (bool) $form_state->getValue('snapshot_debug'))
+        ->set('audit_log_level', (string) $form_state->getValue('audit_log_level'))
+        ->set('audit_debug_endpoint', (string) $form_state->getValue('audit_debug_endpoint'))
+        ->set('audit_log_backtrace', (bool) $form_state->getValue('audit_log_backtrace'))
         ->set('acl_debug', (bool) $form_state->getValue('acl_debug'))
         ->save();
       \Drupal::state()->set('ibm_apim.insecure', (bool) $form_state->getValue('insecure'));

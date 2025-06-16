@@ -1,0 +1,12 @@
+--- modules/token/src/Element/TokenTreeTable.php 2025-04-22 09:36:56
++++ modules/token/src/Element/TokenTreeTable.php 2025-04-22 09:36:20
+@@ -125,6 +125,9 @@
+         case 'token':
+           $row['data'][$col]['data'] = $token;
+           $row['data'][$col]['class'][] = 'token-key';
++          if ($is_group) {
++            $row['data'][$col]['class'][] = 'header-col';
++          }
+           break;
+ 
+         case 'description':

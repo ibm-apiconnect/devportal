@@ -207,7 +207,7 @@ article footer {
   width: calc(100% - 350px);
   min-width: 300px;
 }
-.forumPost [typeof="schema:Person"] {
+.forumPost article[typeof="schema:Person"] {
   float: left;
 }
 .forumPost .quickedit-field [typeof="schema:Person"] {

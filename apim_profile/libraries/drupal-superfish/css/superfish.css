@@ -23,7 +23,10 @@ ul.sf-menu ol,
 ul.sf-menu li,
 ul.sf-menu a,
 ul.sf-menu span,
-ul.sf-menu div {
+ul.sf-menu div,
+ul.sf-menu.menu,
+ul.sf-menu.menu ul,
+ul.sf-menu.menu li {
   margin: 0;
   padding: 0;
 }
@@ -74,12 +77,6 @@ ul.sf-menu li li.sfHover > ul {
   left: 12em;
   top: 0;
 }
-ul.sf-menu.menu,
-ul.sf-menu.menu ul,
-ul.sf-menu.menu li {
-  margin: 0;
-  padding: 0;
-}
 /**
  * Arrows.
  */
@@ -104,7 +101,7 @@ ul.sf-menu .sf-sub-indicator {
   width: 1em;
 }
 ul.sf-menu .sf-sub-indicator:after {
-  content: "▼";
+  content: "\25BC";
   left: 0;
   line-height: 1;
   position: absolute;
@@ -112,7 +109,7 @@ ul.sf-menu .sf-sub-indicator:after {
   top: 0;
 }
 ul.sf-menu ul .sf-sub-indicator:after {
-  content: "►";
+  content: "\25BA";
 }
 ul.sf-menu a:focus > .sf-sub-indicator,
 ul.sf-menu a:hover > .sf-sub-indicator,
@@ -213,9 +210,7 @@ ul.sf-menu li.sf-multicolumn-column:nth-child(3):nth-last-child(5),
 ul.sf-menu li.sf-multicolumn-column:nth-child(4):nth-last-child(4),
 ul.sf-menu li.sf-multicolumn-column:nth-child(5):nth-last-child(3),
 ul.sf-menu li.sf-multicolumn-column:nth-child(6):nth-last-child(2),
-ul.sf-menu li.sf-multicolumn-column:nth-child(7):nth-last-child(1) {
-  width: 14.2855%;
-}
+ul.sf-menu li.sf-multicolumn-column:nth-child(7):nth-last-child(1),
 ul.sf-menu li.sf-multicolumn-column:nth-child(1):nth-last-child(8),
 ul.sf-menu li.sf-multicolumn-column:nth-child(2):nth-last-child(7),
 ul.sf-menu li.sf-multicolumn-column:nth-child(3):nth-last-child(6),
@@ -264,7 +259,7 @@ ul.sf-menu.sf-vertical li.sfHover > ul {
   top: 0;
 }
 ul.sf-menu.sf-vertical .sf-sub-indicator:after {
-  content: "►";
+  content: "\25BA";
 }
 /**
  * "Navbar" type.
@@ -298,10 +293,10 @@ ul.sf-menu.sf-navbar li li li.sfHover > ul {
   top: 0;
 }
 ul.sf-menu.sf-navbar ul .sf-sub-indicator:after {
-  content: "▼";
+  content: "\25BC";
 }
 ul.sf-menu.sf-navbar ul ul .sf-sub-indicator:after {
-  content: "►";
+  content: "\25BA";
 }
 /**
  * sfSmallscreen.
@@ -327,14 +322,14 @@ ul.sf-menu.sf-accordion li.sf-expanded > ul {
   top: auto !important;
 }
 ul.sf-menu.sf-accordion .sf-sub-indicator:after {
-  content: "▼";
+  content: "\25BC";
 }
 ul.sf-menu.sf-accordion.sf-accordion-with-buttons .sf-accordion-button:after {
-  content: "▼";
+  content: "\25BC";
   margin: 0 0 0 1em;
 }
 ul.sf-menu.sf-accordion.sf-accordion-with-buttons li.sf-expanded > .sf-accordion-button:after {
-  content: "▲";
+  content: "\25B2";
 }
 /**
  * RTL support.
@@ -343,26 +338,15 @@ ul.sf-menu.rtl,
 ul.sf-menu.rtl li {
   float: right;
 }
+ul.sf-menu.rtl ul,
 ul.sf-menu.rtl li:hover > ul,
 ul.sf-menu.rtl li.sfHover > ul {
-  left: auto;
-  right: 0;
-}
-ul.sf-menu.rtl li li:hover > ul,
-ul.sf-menu.rtl li li.sfHover > ul {
-  left: auto;
-  right: 12em;
-}
-ul.sf-menu.rtl ul {
   left: auto;
   right: 0;
 }
 ul.sf-menu.rtl .sf-sub-indicator {
   left: 0.75em;
   right: auto;
-}
-ul.sf-menu.rtl.sf-horizontal ul .sf-sub-indicator:after {
-  content: "◄";
 }
 ul.sf-menu.rtl.sf-horizontal.sf-shadow ul,
 ul.sf-menu.rtl.sf-vertical.sf-shadow ul,
@@ -371,28 +355,24 @@ ul.sf-menu.rtl.sf-navbar.sf-shadow ul ul {
   -moz-box-shadow: -2px 2px 10px rgba(0,0,0,0.5);
   box-shadow: -2px 2px 10px rgba(0,0,0,0.5);
 }
-ul.sf-menu.rtl li.sf-multicolumn-column {
-  float: right;
-}
-ul.sf-menu.rtl.sf-vertical li:hover > ul,
-ul.sf-menu.rtl.sf-vertical li.sfHover > ul {
-  left: auto;
-  right: 12em;
-}
+ul.sf-menu.rtl.sf-horizontal ul .sf-sub-indicator:after,
+ul.sf-menu.rtl.sf-navbar ul ul .sf-sub-indicator:after,
 ul.sf-menu.rtl.sf-vertical .sf-sub-indicator:after {
-  content: "◄";
+  content: "\25C4";
 }
+ul.sf-menu.rtl li.sf-multicolumn-column,
 ul.sf-menu.rtl.sf-navbar li li {
   float: right;
-}
-ul.sf-menu.rtl.sf-navbar ul ul .sf-sub-indicator:after {
-  content: "◄";
 }
 ul.sf-menu.rtl.sf-navbar li li:hover > ul,
 ul.sf-menu.rtl.sf-navbar li li.sfHover > ul {
   left: auto;
   right: 0;
 }
+ul.sf-menu.rtl li li:hover > ul,
+ul.sf-menu.rtl li li.sfHover > ul,
+ul.sf-menu.rtl.sf-vertical li:hover > ul,
+ul.sf-menu.rtl.sf-vertical li.sfHover > ul,
 ul.sf-menu.rtl.sf-navbar li li li:hover > ul,
 ul.sf-menu.rtl.sf-navbar li li li.sfHover > ul {
   left: auto;

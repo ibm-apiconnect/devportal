@@ -1,0 +1,27 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+use Drupal\Core\Url;
+
+function ibm_apic_session_check_preprocess_html(&$variables) {
+  $variables['#attached']['drupalSettings']['ibm_apic_session_check'] = [
+    'basePath' => Url::fromRoute('<front>', [], ['absolute' => FALSE])->toString(),
+  ];
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function ibm_apic_session_check_page_attachments(array &$attachments) {
+  $attachments['#attached']['library'][] = 'ibm_apic_session_check/ibm_apic_session_check';
+}

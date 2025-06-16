@@ -16,7 +16,9 @@
  * Provides APIC integration.
  */
 
+if(!defined('STDERR')) define('STDERR', fopen('php://stderr', 'wb'));
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
@@ -31,21 +33,10 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\menu_link_content\MenuLinkContentInterface;
-
-$ibm_apim_snapshot_debug_on = FALSE;
-
-function ibm_apim_set_snapshot_debug($value) {
-  global $ibm_apim_snapshot_debug_on;
-  $ibm_apim_snapshot_debug_on = $value ? TRUE : FALSE;
-  \Drupal::logger('ibm_apim')->debug('Set snapshot_debug to %val', [ '%val' => $ibm_apim_snapshot_debug_on ? 'true' : 'false']);
-}
-
-function ibm_apim_snapshot_debug($msg, $values = []) {
-  global $ibm_apim_snapshot_debug_on;
-  if ($ibm_apim_snapshot_debug_on) {
-    \Drupal::logger('ibm_apim')->debug($msg, $values);
-  }
-}
+use Drupal\Core\StreamWrapper\PublicStream;
+use Drupal\Core\StreamWrapper\PrivateStream;
+use Drupal\Core\StreamWrapper\TemporaryStream;
+use Drupal\views\Views;
 
 /**
  * Implementation of hook_init().
@@ -66,6 +57,302 @@ function ibm_apim_init() {
     }
   }
 }
+
+/* Start Hooks for Audit functions */
+
+function ibm_apim_dump_stderr($name, $obj) {
+  ob_start();
+  var_dump($obj);
+  fprintf(STDERR, "%s: %s\n",$name, ob_get_clean());
+}
+
+// Themes
+function ibm_apim_themes_installed($themes) {
+  foreach($themes as $theme) {
+
+    $requestData = \Drupal::service('extension.list.theme')->getExtensionInfo($theme);
+
+    // Remove https://
+    \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_ENABLE_SITE_THEME', 'success', 'data/drupal/theme', substr( $GLOBALS['real_base_url'], 8) . ':data/drupal/theme/' . $theme, $requestData);
+  }
+}
+
+function ibm_apim_themes_uninstalled($themes) {
+  foreach($themes as $theme) {
+    // Remove https://
+    \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_DISABLE_SITE_THEME', 'success', 'data/drupal/theme', substr( $GLOBALS['real_base_url'], 8) . ':data/drupal/theme/' . $theme);
+  }
+}
+
+// Modules
+function ibm_apim_modules_installed($modules, $is_syncing) {
+  foreach($modules as $module) {
+
+    $requestData = \Drupal::service('extension.list.module')->getExtensionInfo($module);
+
+    // Remove https://
+    \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_ENABLE_SITE_MODULE', 'success', 'data/drupal/module', substr( $GLOBALS['real_base_url'], 8) . ':data/drupal/module/' . $module, $requestData);
+  }
+}
+
+// This hook is called after a module is uninstalled
+function ibm_apim_modules_uninstalled($modules, $is_syncing) {
+
+  // Check if forum module is uninstalled
+  if(in_array('forum', $modules)) {
+
+    // Defining an array to add views
+    $re_add_views = array(
+      'applications' => [
+          'view_id' => 'views.view.applications',
+          'get_path' => 'apic_app',
+          'config_path' => '/config/install',
+      ],
+      'products' => [
+          'view_id' => 'views.view.products',
+          'get_path' => 'product',
+          'config_path' => '/config/install',
+      ],
+      'apis' => [
+          'view_id' => 'views.view.apis',
+          'get_path' => 'apic_api', 
+          'config_path' => '/config/install',
+      ],
+      'product_content' => [
+          'view_id' => 'views.view.product_content',
+          'get_path' => 'apic_api', 
+          'config_path' => '/config/install',
+      ],
+      'notifications' => [
+          'view_id' => 'views.view.notifications',
+          'get_path' => 'ibm_apim', 
+          'config_path' => '/ibm_event_log/config/install',
+      ]
+    );
+
+    // Configs/Views array to store missing views
+    $missing_views = [];
+
+    // Loop through the views and check if they exist
+    foreach ($re_add_views as $view_id => $view_data) {
+      // Check if the view exists
+      $view = Views::getView($view_id);
+      if ($view === NULL) {
+          // Add the missing view to the configs array for later writing
+          $missing_views[] = $view_data;
+      }
+    }
+    
+    // If any views are missing
+    if (!empty($missing_views)){
+      $config_storage = \Drupal::service('config.storage');
+
+      foreach ($missing_views as $missing_view) {  
+        // Get the config path for the respective view
+        $config_path = \Drupal::service('extension.list.module')->getPath($missing_view['get_path']) . $missing_view['config_path'];
+        $source = new FileStorage($config_path);
+        $name = $missing_view['view_id'];
+        // Add view
+        $config_storage->write($name, $source->read($name));
+
+        \Drupal::logger('ibm_apim')->info('Config added: @config', [
+            '@config' => $name,
+        ]);
+      }
+    }
+  }
+
+  // Audit Log
+  foreach($modules as $module) {
+    // Remove https://
+    \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_DISABLE_SITE_MODULE', 'success', 'data/drupal/module', substr( $GLOBALS['real_base_url'], 8) . ':data/drupal/module/' . $module);
+  }
+}
+
+// Login/Logout
+// Failed logins get audit logged inside ApicUserLoginForm.php:validateApicAuthentication
+function ibm_apim_user_login_audit(AccountInterface $account) {
+  if ($account->id() == 1) {
+    \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_AUTHENTICATE', 'success', 'service/security/account/user', $GLOBALS['real_base_url'] . '/user/' . $account->id());
+  }
+}
+
+function ibm_apim_user_logout_audit(AccountInterface $account) {
+  if ($account->id() == 1) {
+    \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_REVOKE', 'success', 'service/security/account/user', $GLOBALS['real_base_url'] . '/user/' . $account->id());
+  }
+}
+
+// Nodes
+function ibm_apim_getNodeTypeURI(\Drupal\node\NodeInterface $node) {
+  return 'data/drupal/node/' . $node->getType();
+}
+
+function ibm_apim_getNodeID(\Drupal\node\NodeInterface $node) {
+  return $GLOBALS['real_base_url'] . '/node/' . $node->id();
+}
+
+function ibm_apim_node_insert(\Drupal\node\NodeInterface $node) {
+  \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_CREATE_SITE_NODE_' . strtoupper($node->getType()), 'success', ibm_apim_getNodeTypeURI($node), ibm_apim_getNodeID($node), $node->toArray());
+}
+
+function ibm_apim_node_update(\Drupal\node\NodeInterface $node) {
+  \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_UPDATE_SITE_NODE_' . strtoupper($node->getType()), 'success', ibm_apim_getNodeTypeURI($node), ibm_apim_getNodeID($node), $node->toArray());
+}
+
+function ibm_apim_node_delete(\Drupal\node\NodeInterface $node) {
+  \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_DELETE_SITE_NODE_' . strtoupper($node->getType()), 'success', ibm_apim_getNodeTypeURI($node), ibm_apim_getNodeID($node), $node->toArray());
+}
+
+// Entities
+function ibm_apim_getEntityTypeURI(\Drupal\Core\Entity\EntityInterface $entity) {
+  switch($entity->getEntityTypeId()) {
+    case 'user':
+      return 'service/security/account/user';
+    default:
+      return 'data/drupal/entity/' . $entity->getEntityTypeId();
+  }
+}
+
+function ibm_apim_getFullEntityId(\Drupal\Core\Entity\EntityInterface $entity, $path, $suffix = '') {
+  return $GLOBALS['real_base_url'] . '/' . $path . $entity->id() . $suffix;
+}
+
+function ibm_apim_getFullEntityIdFromBundle(\Drupal\Core\Entity\EntityInterface $entity, $path, $suffix = '') {
+  return $GLOBALS['real_base_url'] . '/' . $path . $entity->bundle() . $suffix;
+}
+
+function ibm_apim_getNonGUIFullEntityId(\Drupal\Core\Entity\EntityInterface $entity, $typeURI) {
+  // Remove https://
+  $url = substr( $GLOBALS['real_base_url'], 8);
+
+  return $url . ':' . $typeURI . '/' . $entity->id();
+}
+
+function ibm_apim_getEntityID(\Drupal\Core\Entity\EntityInterface $entity, $typeURI) {
+  switch($typeURI) {
+    case 'data/drupal/entity/vote_type':
+      return ibm_apim_getFullEntityId($entity, 'admin/structure/vote-types/');
+    case 'data/drupal/entity/entity_view_display':
+      $targetEntityType = $entity->get('targetEntityType');
+      switch ($targetEntityType) {
+        case 'taxonomy_term':
+          return ibm_apim_getFullEntityIdFromBundle($entity, 'admin/structure/taxonomy/manage/', '/overview/display');
+        default:
+          return ibm_apim_getNonGUIFullEntityId($entity, $typeURI);
+      }
+    case 'data/drupal/entity/entity_form_display':
+      $targetEntityType = $entity->get('targetEntityType');
+      switch ($targetEntityType) {
+        case 'taxonomy_term':
+          return ibm_apim_getFullEntityIdFromBundle($entity, 'admin/structure/taxonomy/manage/', '/overview/form-display');
+        default:
+          return ibm_apim_getNonGUIFullEntityId($entity, $typeURI);
+      }
+    case 'data/drupal/entity/taxonomy_vocabulary':
+      return ibm_apim_getFullEntityId($entity, 'admin/structure/taxonomy/manage/');
+    case 'data/drupal/entity/taxonomy_menu':
+      return ibm_apim_getFullEntityId($entity, 'admin/structure/taxonomy_menu/');
+    case 'data/drupal/entity/page':
+      return ibm_apim_getFullEntityId($entity, 'admin/structure/page_manager/manage/', '/general');
+    case 'data/drupal/entity/page_variant':
+      return ibm_apim_getFullEntityId($entity, 'admin/structure/page_manager/manage/' . $entity->get('page') . '/page_variant__', '__general');
+    case 'data/drupal/entity/menu':
+      return ibm_apim_getFullEntityId($entity, 'admin/structure/menu/manage/');
+    case 'data/drupal/entity/file':
+      return $entity->createFileUrl();
+    case 'data/drupal/entity/block_content':
+      return ibm_apim_getFullEntityId($entity, 'admin/content/block/');
+    case 'data/drupal/entity/encryption_profile':
+      return ibm_apim_getFullEntityId($entity, 'config/system/encryption/profiles/manage/');
+    case 'data/drupal/entity/media_type':
+      return ibm_apim_getFullEntityId($entity, 'admin/structure/media/manage/');
+    case 'data/drupal/entity/field_config':
+      $entityType = $entity->get('entity_type');
+      switch ($entityType) {
+        case 'taxonomy_term':
+          return ibm_apim_getFullEntityId($entity, 'admin/structure/taxonomy/manage/' .$entity->get('bundle') . '/overview/fields/');
+        default:
+          return ibm_apim_getFullEntityId($entity, 'admin/structure/media/manage/' . $entity->get('bundle') . '/fields/');
+      }
+    case 'data/drupal/entity/key':
+      return ibm_apim_getFullEntityId($entity, 'devel/config/edit/');
+    case 'data/drupal/entity/taxonomy_term':
+      $target_id = $entity->get('vid')->getValue()[0]['target_id'];
+      switch ($target_id) {
+        case 'forums':
+          return ibm_apim_getFullEntityId($entity, 'forums/');
+        default:
+          return ibm_apim_getFullEntityId($entity, 'taxonomy/term/');
+      }
+    case 'service/security/account/user':
+      return ibm_apim_getFullEntityId($entity, 'user/');
+    default:
+      return ibm_apim_getNonGUIFullEntityId($entity, $typeURI);
+  }
+}
+
+function ibm_apim_entity_translation_insert(\Drupal\Core\Entity\EntityInterface $entity) {
+  $typeURI = ibm_apim_getEntityTypeURI($entity);
+  $id = ibm_apim_getEntityID($entity, $typeURI);
+  $data = $entity->toArray();
+
+  \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_CREATE_SITE_ENTITY_' . strtoupper($entity->getEntityTypeId()), 'success', $typeURI, $id, $data);
+}
+
+function ibm_apim_entity_translation_delete(\Drupal\Core\Entity\EntityInterface $entity) {
+  $typeURI = ibm_apim_getEntityTypeURI($entity);
+  $id = ibm_apim_getEntityID($entity, $typeURI);
+  $data = $entity->toArray();
+
+  \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_CREATE_DELETE_ENTITY_' . strtoupper($entity->getEntityTypeId()), 'success', $typeURI, $id, $data);
+}
+
+function ibm_apim_entity_insert(\Drupal\Core\Entity\EntityInterface $entity) {
+  // Ignore node entities as they are dealt with by the ibm_apim_node_ functions
+  if ($entity->getEntityTypeId() === 'node') {
+    return;
+  }
+
+  $typeURI = ibm_apim_getEntityTypeURI($entity);
+  $id = ibm_apim_getEntityID($entity, $typeURI);
+  $data = $entity->toArray();
+
+  \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_CREATE_SITE_ENTITY_' . strtoupper($entity->getEntityTypeId()), 'success', $typeURI, $id, $data);
+}
+
+function ibm_apim_entity_update(\Drupal\Core\Entity\EntityInterface $entity) {
+  // Ignore node entities as they are dealt with by the ibm_apim_node_ functions
+  if ($entity->getEntityTypeId() === 'node') {
+    return;
+  }
+
+  $typeURI = ibm_apim_getEntityTypeURI($entity);
+  $id = ibm_apim_getEntityID($entity, $typeURI);
+  $data = $entity->toArray();
+
+  if ($entity->getEntityTypeId() === 'file') {
+    $eventName = 'PORTAL_CREATE_SITE_ENTITY_' . strtoupper($entity->getEntityTypeId());
+  } else {
+    $eventName = 'PORTAL_UPDATE_SITE_ENTITY_' . strtoupper($entity->getEntityTypeId());
+  }
+
+  \Drupal::service('ibm_apim.utils')->logAuditEvent($eventName, 'success', $typeURI, $id, $data);
+}
+
+function ibm_apim_entity_delete(\Drupal\Core\Entity\EntityInterface $entity) {
+  // Ignore node entities as they are dealt with by the ibm_apim_node_ functions
+  if ($entity->getEntityTypeId() === 'node') {
+    return;
+  }
+
+  $typeURI = ibm_apim_getEntityTypeURI($entity);
+  $id = ibm_apim_getEntityID($entity, $typeURI);
+
+  \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_DELETE_SITE_ENTITY_' . strtoupper($entity->getEntityTypeId()), 'success', $typeURI, $id);
+}
+
+/* End Hooks for Audit functions */
 
 /**
  * We need our module to run last for the user register form so we can remove any other fields
@@ -511,16 +798,34 @@ function ibm_apim_preprocess_html(&$variables) {
 }
 
 /**
- * Add core library to all pages
+ * Add core library to all pages and display info message for module/theme update 
  *
  * @param array $attachments
  */
 function ibm_apim_page_attachments(array &$attachments) {
   $attachments['#attached']['library'][] = 'ibm_apim/core';
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  $update_routes = [
+    'update.report_update',
+    'update.module_update',
+    'update.theme_update',
+  ];
+
+  if (in_array($route_name, $update_routes)) {
+    \Drupal::messenger()->addMessage(t('Only enabled modules and themes are listed for updates. To update a module or theme, please ensure it is enabled.'), 'status');
+  }
 }
 
 function ibm_apim_preprocess_page(&$variables) {
   $variables['redirectto'] = \Drupal::request()->get('redirectto');
+}
+
+function ibm_apim_preprocess_forums(&$variables) {
+  $variables['current_theme'] = \Drupal::theme()->getActiveTheme()->getName();
+}
+
+function ibm_apim_preprocess_ibm_apim_support(array &$variables) {
+  $variables['current_theme'] = \Drupal::theme()->getActiveTheme()->getName();
 }
 
 /**
@@ -574,8 +879,25 @@ function ibm_apim_updater_info_alter(&$updaters) {
  */
 function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   switch ($form_id) {
+    case 'node_forum_form':
     case 'node_forum_edit_form':
-      if (!\Drupal::currentUser()->hasPermission('view forum revisions')) {
+      $form['#attached']['library'][] = 'ibm_apim/disable_forum_topic_api';
+      // Query terms with forum_container = 1
+      $container_tids = \Drupal::entityTypeManager()
+        ->getStorage('taxonomy_term')
+        ->getQuery()
+        ->condition('vid', 'forums')
+        ->condition('forum_container', 1)
+        ->accessCheck(TRUE)
+        ->execute();
+
+      if (!empty($container_tids)) {
+        $form['#attached']['drupalSettings']['forum_container'] = [
+        'disableTerms' => array_values($container_tids),
+        ];
+      } 
+
+      if ($form_id === 'node_forum_edit_form' && (!\Drupal::currentUser()->hasPermission('view forum revisions'))) {
         if (isset($form['revision'])) {
           unset($form['revision']);
         }
@@ -1458,15 +1780,15 @@ function ibm_apim_library_info_alter(&$libraries, $extension) {
   if (array_key_exists('analytics', $libraries) && file_exists(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/asset-manifest.json')) {
     $string = file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/asset-manifest.json');
     $json = json_decode($string, TRUE)["files"];
-    if (isset($json['main.js']) && file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/' . $json['main.js'])) {
-      $libraries['analytics']['js']['analytics/' . $json['main.js']] = [
+    if (isset($json['main.js']) && file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/' .  ltrim($json['main.js'],'/'))) {
+      $libraries['analytics']['js']['analytics/' . ltrim($json['main.js'],'/')] = [
         'weight' => -1,
         'minified' => TRUE,
         'preprocess' => FALSE,
       ];
     }
-    if (isset($json['main.css']) && file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/' . $json['main.css'])) {
-      $libraries['analytics']['css']['component']['analytics/' . $json['main.css']] = [
+    if (isset($json['main.css']) && file_get_contents(\Drupal::service('extension.list.module')->getPath('ibm_apim') . '/analytics/' .  ltrim($json['main.css'],'/'))) {
+      $libraries['analytics']['css']['component']['analytics/' .  ltrim($json['main.css'],'/')] = [
         'weight' => -20,
       ];
     }
@@ -1479,6 +1801,7 @@ function ibm_apim_library_info_alter(&$libraries, $extension) {
  * @param AccountInterface $account
  */
 function ibm_apim_user_login($account) {
+  ibm_apim_user_login_audit($account);
   if (isset($account)) {
     ibm_apim_entry_trace(__FUNCTION__, $account->id());
   }
@@ -1487,11 +1810,17 @@ function ibm_apim_user_login($account) {
   }
 
   // trigger avatar generation
+  $utils = \Drupal::service('ibm_apim.utils');
+  $intAudit = $utils->setInternalAuditFlag();
+
   $moduleHandler = \Drupal::service('module_handler');
   if ($moduleHandler->moduleExists('avatars')) {
     $avatarManager = \Drupal::service('avatars.avatar_manager');
     $avatarManager->syncAvatar($account);
   }
+
+  $utils->resetInternalAuditFlag($intAudit);
+
   ibm_apim_exit_trace(__FUNCTION__, NULL);
 }
 
@@ -1541,6 +1870,7 @@ function ibm_apim_entity_base_field_info(EntityTypeInterface $entity_type) {
 }
 
 function ibm_apim_user_logout($account) {
+  ibm_apim_user_logout_audit($account);
   if ((int) $account->id() !== 1) {
     $user = User::load($account->id());
     if ($user !== NULL) {

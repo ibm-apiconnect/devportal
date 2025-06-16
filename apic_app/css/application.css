@@ -549,6 +549,11 @@ button.clipboardjs-button:hover {
   background-color: #e5e5e5;
 }
 
+span.clipboardjs-tooltip {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
 button.clipboardjs-button:focus {
   outline: 2px solid #0f62fe;
   outline-offset: -2px;

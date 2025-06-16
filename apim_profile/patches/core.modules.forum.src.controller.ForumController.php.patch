@@ -1,5 +1,5 @@
---- core/modules/forum/src/Controller/ForumController.php	2018-01-24 14:25:02.000000000 +0000
-+++ core/modules/forum/src/Controller/ForumController.php	2018-01-24 14:28:41.000000000 +0000
+--- modules/forum/src/Controller/ForumController.php	2018-01-24 14:25:02.000000000 +0000
++++ modules/forum/src/Controller/ForumController.php	2018-01-24 14:28:41.000000000 +0000
 @@ -328,19 +328,16 @@
              'title' => $this->t('Log in to post new content in the forum.'),
              'url' => Url::fromRoute('user.login', [], ['query' => $this->getDestinationArray()]),

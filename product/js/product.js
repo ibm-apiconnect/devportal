@@ -80,8 +80,10 @@
             selector: "[data-ratelimits]", html: true, title: function() {
               let element = $(this);
               if (element.is("[data-ratelimits]")) {
-                let data = $.parseJSON(element[0].dataset.ratelimits);
+                let data = JSON.parse(element[0].dataset.ratelimits);
                 let output = '<div class="ratePopup">';
+
+                 // General Rate Limits
                 if (data['#rates'] && data['#rates'].length > 0) {
                   if (data['#rateLabel']) {
                     output += '<span class="rateLabel">' + data['#rateLabel'] + ":" + '</span><br/>';
@@ -92,6 +94,8 @@
                     output += rate + '<br/>';
                   });
                 }
+
+                // General Burst Limits
                 if (data['#bursts'] && data['#bursts'].length > 0) {
                   if (data['#burstLabel']) {
                     output += '<br/><span class="burstLabel">' + data['#burstLabel'] + ":" + '</span><br/>';
@@ -102,6 +106,27 @@
                     output += rate + '<br/>';
                   });
                 }
+
+                // Assembly Rate Limits (with key and value on the same line)
+                if (data['#assemblyRateLimits'] && Object.keys(data['#assemblyRateLimits']).length > 0) {
+                  output += '<br/><span class="assemblyLabel">' + data['#assemblyRateLimitLabel'] + ':</span><br/>';
+                  for (let key in data['#assemblyRateLimits']) {
+                    if (data['#assemblyRateLimits'].hasOwnProperty(key)) {
+                      output += key + ': ' + data['#assemblyRateLimits'][key].join(', ') + '<br/>';
+                    }
+                  }
+                }
+
+                // Assembly Burst Limits (with key and value on the same line)
+                if (data['#assemblyBurstLimits'] && Object.keys(data['#assemblyBurstLimits']).length > 0) {
+                  output += '<br/><span class="assemblyLabel">' + data['#assemblyBurstLimitLabel'] + ':</span><br/>';
+                  for (let key in data['#assemblyBurstLimits']) {
+                    if (data['#assemblyBurstLimits'].hasOwnProperty(key)) {
+                      output += key + ': ' + data['#assemblyBurstLimits'][key].join(', ') + '<br/>';
+                    }
+                  }
+                }
+
                 output += '</div>';
                 return output;
               }

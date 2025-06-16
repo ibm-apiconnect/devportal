@@ -70,12 +70,13 @@ class ConsumerOrgCommands extends DrushCommands {
 
         $time_end = microtime(true);
         $execution_time = (microtime(true) - $time_start);
+        $utils = \Drupal::service('ibm_apim.utils');
 
         if ($createdOrUpdated === 'created') {
-          ibm_apim_snapshot_debug("Drush %s created Organization '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
+          $utils->snapshotDebug("Drush %s created Organization '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
         }
         else if ($createdOrUpdated === 'updated') {
-          ibm_apim_snapshot_debug("Drush %s updated existing Organization '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
+          $utils->snapshotDebug("Drush %s updated existing Organization '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
         }
       }
       else {

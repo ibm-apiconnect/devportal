@@ -8,6 +8,7 @@
 namespace Drupal\Tests\ghmarkdown\Unit;
 
 use Drupal\ghmarkdown\cebe\markdown\GithubMarkdown;
+use Drupal\Tests\ghmarkdown\Unit\Base\BaseMarkdownBaseClass;
 
 /**
  * Test case for the github flavored markdown.
@@ -15,13 +16,13 @@ use Drupal\ghmarkdown\cebe\markdown\GithubMarkdown;
  * @author Carsten Brandt <mail@cebe.cc>
  * @group ghmarkdown
  */
-class GithubMarkdownTest extends BaseMarkdownTest {
+class GithubMarkdownTest extends BaseMarkdownBaseClass {
 
-  public function createMarkdown(): GithubMarkdown {
+  public static function createMarkdown(): GithubMarkdown {
     return new GithubMarkdown();
   }
 
-  public function getDataPaths(): array {
+  public static function getDataPaths(): array {
     return [
       'markdown-data' => __DIR__ . '/markdown-data',
       'github-data' => __DIR__ . '/github-data',
@@ -40,7 +41,7 @@ class GithubMarkdownTest extends BaseMarkdownTest {
   /**
    * @throws \Exception
    */
-  public function dataFiles(): array {
+  public static function dataFiles(): array {
     $files = parent::dataFiles();
     foreach ($files as $i => $f) {
       // skip files that are different in github MD

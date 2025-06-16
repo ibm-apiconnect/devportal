@@ -1,0 +1,11 @@
+--- modules/drush_language/drush_language.info.yml      2022-12-13 18:48:24
++++ modules/drush_language/drush_language.info.yml 2024-09-03 11:35:48
+@@ -1,7 +1,7 @@
+ name: 'Drush Language commands'
+ type: module
+ description: 'Provides Drush commands for language manipulation'
+-core_version_requirement: ^8.7.7 || ^9 || ^10
++core_version_requirement: ^8.7.7 || ^9 || ^10 || ^11
+ package: Multilingual
+ dependencies:
+   - drupal:language

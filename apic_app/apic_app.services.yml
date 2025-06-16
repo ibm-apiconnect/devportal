@@ -61,7 +61,7 @@ services:
                  '@config.factory' ]
   apic_app.credentials:
     class: Drupal\apic_app\Service\CredentialsService
-    arguments: [ '@ibm_apim.user_utils', '@module_handler' ]
+    arguments: [ '@ibm_apim.user_utils', '@ibm_apim.utils', '@module_handler' ]
   apic_app.subscriptions:
     class: Drupal\apic_app\Service\SubscriptionService
     arguments: [ '@ibm_apim.user_utils', '@ibm_apim.apim_utils', '@module_handler' ]

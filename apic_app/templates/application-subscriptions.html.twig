@@ -54,7 +54,7 @@
                   <style type="text/css">.st0 {
                       fill: none;
                     }</style>
-                  <title>overflow-menu--vertical</title>
+                  <title>{{ 'Manage application'|t }}</title>
                   <circle cx="16" cy="8" r="2"/>
                   <circle cx="16" cy="16" r="2"/>
                   <circle cx="16" cy="24" r="2"/>
@@ -82,16 +82,16 @@
         {% endif %}
       </div>
       <div class="applicationTabs">
-        <ul>
+        <ul role="tablist">
           {% if analytics_access %}
-            <li><a class="dashboardApplication"
+            <li role="tab" aria-selected="false" tabindex="0"><a class="dashboardApplication"
                    href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Dashboard'|t }}</a></li>
-            <li class="selected"><a href="#">{{ 'Subscriptions'|t }}</a></li>
+            <li role="tab" class="selected" aria-selected="true" tabindex="0"><a href="#">{{ 'Subscriptions'|t }}</a></li>
           {% else %}
-            <li class="selected"><a href="{{- path('entity.node.canonical', {'node': node.id}) -}}"">{{ 'Subscriptions'|t }}</a></li>
+            <li role="tab" class="selected" aria-selected="true" tabindex="-1"><a href="{{- path('entity.node.canonical', {'node': node.id}) -}}"">{{ 'Subscriptions'|t }}</a></li>
           {% endif %}
           {% if notifications_access %}
-              <li><a class="activityApplication"
+              <li role="tab" aria-selected="false" tabindex="0"><a class="activityApplication"
                      href="{{- path('apic_app.activity', {'node': node.id}) -}}">{{ 'Notifications'|t }}</a></li>
           {% endif %}
         </ul>

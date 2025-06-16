@@ -83,17 +83,17 @@
         {% endif %}
       </div>
       <div class="applicationTabs">
-        <ul>
+        <ul role="tablist">
           {% if analytics_access %}
-            <li><a class="dashboardApplication"
+            <li role="tab" aria-selected="false" tabindex="0"><a class="dashboardApplication"
                    href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Dashboard'|t }}</a></li>
-            <li><a class="subscriptionsApplication"
+            <li role="tab" aria-selected="false" tabindex="0"><a class="subscriptionsApplication"
                  href="{{- path('apic_app.subscriptions', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
           {% else %}
-            <li><a class="subscriptionsApplication"
+            <li role="tab" aria-selected="false" tabindex="0"><a class="subscriptionsApplication"
                   href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
           {% endif %}
-          <li class="selected activityApplication"><a href="#">{{ 'Notifications'|t }}</a></li>
+          <li role="tab" class="selected activityApplication" aria-selected="true" tabindex="-1"><a href="#">{{ 'Notifications'|t }}</a></li>
         </ul>
       </div>
     </div>

@@ -1,6 +1,146 @@
 @@ This patch file combines patches taken from https://www.drupal.org/node/2583799#comment-10572256
 @@ with a small patch of our own (the change to UpdateManagerInstall) to allow modules and themes
-@@ to be installed in the Drupal 8 portal.
+@@ to be installed in the Drupal portal as the functionality was removed.
+--- core/lib/Drupal/Core/Updater/Module.php     2025-01-06 22:41:17
++++ core/lib/Drupal/Core/Updater/Module.php        2025-01-08 10:14:55
+@@ -2,6 +2,8 @@
+
+ namespace Drupal\Core\Updater;
+
++use Drupal\Core\Url;
++
+ /**
+  * Defines a class for updating modules.
+  *
+@@ -35,6 +37,34 @@
+     }
+   }
+
++  public function postInstallTasks() {
++    // Since this is being called outside of the primary front controller,
++    // the base_url needs to be set explicitly to ensure that links are
++    // relative to the site root.
++    // @todo Simplify with https://www.drupal.org/node/2548095
++    $default_options = [
++      '#type' => 'link',
++      '#options' => [
++        'absolute' => TRUE,
++        'base_url' => $GLOBALS['base_url'],
++      ],
++    ];
++    return [
++      $default_options + [
++        '#url' => Url::fromRoute('update.module_install'),
++        '#title' => t('Add another module'),
++      ],
++      $default_options + [
++        '#url' => Url::fromRoute('system.modules_list'),
++        '#title' => t('Install newly added modules'),
++      ],
++      $default_options + [
++        '#url' => Url::fromRoute('system.admin'),
++        '#title' => t('Administration pages'),
++      ],
++    ];
++  }
++
+   /**
+    * {@inheritdoc}
+    */
+
+--- core/lib/Drupal/Core/Updater/Theme.php      2025-01-08 10:15:40
++++ core/lib/Drupal/Core/Updater/Theme.php 2025-01-08 10:15:36
+@@ -2,6 +2,8 @@
+
+ namespace Drupal\Core\Updater;
+
++use Drupal\Core\Url;
++
+ /**
+  * Defines a class for updating themes.
+  *
+@@ -37,9 +39,42 @@
+     }
+   }
+
++  public function postInstall() {
++    // Update the theme info.
++    clearstatcache();
++    \Drupal::service('extension.list.theme')->reset();
++  }
++
+   /**
+    * {@inheritdoc}
+    */
++  public function postInstallTasks() {
++    // Since this is being called outside of the primary front controller,
++    // the base_url needs to be set explicitly to ensure that links are
++    // relative to the site root.
++    // @todo Simplify with https://www.drupal.org/node/2548095
++    $default_options = [
++      '#type' => 'link',
++      '#options' => [
++        'absolute' => TRUE,
++        'base_url' => $GLOBALS['base_url'],
++      ],
++    ];
++    return [
++      $default_options + [
++        '#url' => Url::fromRoute('system.themes_page'),
++        '#title' => t('Install newly added themes'),
++      ],
++      $default_options + [
++        '#url' => Url::fromRoute('system.admin'),
++        '#title' => t('Administration pages'),
++      ],
++    ];
++  }
++
++  /**
++   * {@inheritdoc}
++   */
+   public static function getRootDirectoryRelativePath() {
+     return 'themes';
+   }
+
+--- core/lib/Drupal/Core/Updater/Updater.php    2025-01-06 22:41:17
++++ core/lib/Drupal/Core/Updater/Updater.php       2025-01-08 10:16:34
+@@ -290,7 +290,6 @@
+    * @throws \Drupal\Core\Updater\UpdaterFileTransferException
+    */
+   public function install(&$filetransfer, $overrides = []) {
+-    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.1.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3461934', E_USER_DEPRECATED);
+     try {
+       // Establish arguments with possible overrides.
+       $args = $this->getInstallArgs($overrides);
+@@ -404,7 +403,6 @@
+    * Performs actions after installation.
+    */
+   public function postInstall() {
+-    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.1.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3461934', E_USER_DEPRECATED);
+   }
+
+   /**
+@@ -414,7 +412,6 @@
+    *   Links which provide actions to take after the install is finished.
+    */
+   public function postInstallTasks() {
+-    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.1.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3461934', E_USER_DEPRECATED);
+     return [];
+   }
+
+--- core/lib/Drupal/Core/Updater/UpdaterInterface.php   2025-01-06 22:41:17
++++ core/lib/Drupal/Core/Updater/UpdaterInterface.php      2025-01-08 10:16:58
+@@ -59,8 +59,6 @@
+   /**
+    * Actions to run after an install has occurred.
+    *
+-   * @deprecated in drupal:11.1.0 and is removed from drupal:12.0.0. There is no
+-   *   replacement.
+    *
+    * @see https://www.drupal.org/node/3461934
+    */
+
 --- core/core.services.yml      2022-12-09 13:01:05
 +++ core/core.services.yml 2022-12-09 16:50:46
 @@ -1016,7 +1016,7 @@
@@ -167,15 +307,528 @@
    return $url;
  }
 
---- core/modules/update/src/Form/UpdateManagerInstall.php	2017-09-01 10:57:05.195182741 +0000
-+++ core/modules/update/src/Form/UpdateManagerInstall.php	2017-09-01 10:58:38.740282279 +0000
-@@ -229,7 +229,8 @@
-     // install the code, there's no need to prompt for FTP/SSH credentials.
-     // Instead, we instantiate a Drupal\Core\FileTransfer\Local and invoke
-     // update_authorize_run_install() directly.
--    if (fileowner($project_real_location) == fileowner($this->sitePath) && !$test_authorize) {
-+    // Modified by IBM APIC - removed fileowner check as www-data != aegir
+--- /dev/null   2025-01-08 10:24:31
++++ core/modules/update/src/Form/UpdateManagerInstall.php       2025-01-08 10:24:30
+@@ -0,0 +1,291 @@
++<?php
++
++namespace Drupal\update\Form;
++
++use Drupal\Core\Archiver\ArchiverManager;
++use Drupal\Core\Extension\ModuleHandlerInterface;
++use Drupal\Core\File\FileExists;
++use Drupal\Core\FileTransfer\Local;
++use Drupal\Core\Form\FormBase;
++use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\Updater\Updater;
++use Symfony\Component\DependencyInjection\ContainerInterface;
++use Symfony\Component\HttpFoundation\Response;
++
++/**
++ * Configure update settings for this site.
++ *
++ * @internal
++ */
++class UpdateManagerInstall extends FormBase {
++
++  /**
++   * The module handler.
++   *
++   * @var \Drupal\Core\Extension\ModuleHandlerInterface
++   */
++  protected $moduleHandler;
++
++  /**
++   * The root location under which installed projects will be saved.
++   *
++   * @var string
++   */
++  protected $root;
++
++  /**
++   * The site path.
++   *
++   * @var string
++   */
++  protected $sitePath;
++
++  /**
++   * The archiver plugin manager service.
++   *
++   * @var \Drupal\Core\Archiver\ArchiverManager
++   */
++  protected $archiverManager;
++
++  /**
++   * Constructs a new UpdateManagerInstall.
++   *
++   * @param string $root
++   *   The root location under which installed projects will be saved.
++   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
++   *   The module handler.
++   * @param string $site_path
++   *   The site path.
++   * @param \Drupal\Core\Archiver\ArchiverManager $archiver_manager
++   *   The archiver plugin manager service.
++   */
++  public function __construct($root, ModuleHandlerInterface $module_handler, $site_path, ArchiverManager $archiver_manager) {
++    $this->root = $root;
++    $this->moduleHandler = $module_handler;
++    $this->sitePath = $site_path;
++    $this->archiverManager = $archiver_manager;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getFormId() {
++    return 'update_manager_install_form';
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function create(ContainerInterface $container) {
++    return new static(
++      $container->get('update.root'),
++      $container->get('module_handler'),
++      $container->getParameter('site.path'),
++      $container->get('plugin.manager.archiver')
++    );
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function buildForm(array $form, FormStateInterface $form_state) {
++    $this->moduleHandler->loadInclude('update', 'inc', 'update.manager');
++    if (!_update_manager_check_backends($form, 'install')) {
++      return $form;
++    }
++
++    $form['help_text'] = [
++      '#prefix' => '<p>',
++      '#markup' => $this->t('You can find <a href=":module_url">modules</a> and <a href=":theme_url">themes</a> on <a href=":drupal_org_url">drupal.org</a>. The following file extensions are supported: %extensions.', [
++        ':module_url' => 'https://www.drupal.org/project/modules',
++        ':theme_url' => 'https://www.drupal.org/project/themes',
++        ':drupal_org_url' => 'https://www.drupal.org',
++        '%extensions' => $this->archiverManager->getExtensions(),
++      ]),
++      '#suffix' => '</p>',
++    ];
++
++    $form['project_url'] = [
++      '#type' => 'url',
++      '#title' => $this->t('Add from a URL'),
++      '#description' => $this->t('For example: %url', ['%url' => 'https://ftp.drupal.org/files/projects/name.tar.gz']),
++    ];
++
++    // Provide upload option only if file module exists.
++    if ($this->moduleHandler->moduleExists('file')) {
++      $form['information'] = [
++        '#prefix' => '<strong>',
++        '#markup' => $this->t('Or'),
++        '#suffix' => '</strong>',
++      ];
++
++      $form['project_upload'] = [
++        '#type' => 'file',
++        '#title' => $this->t('Upload a module or theme archive'),
++        '#description' => $this->t('For example: %filename from your local computer', ['%filename' => 'name.tar.gz']),
++      ];
++    }
++
++    $form['actions'] = ['#type' => 'actions'];
++    $form['actions']['submit'] = [
++      '#type' => 'submit',
++      '#button_type' => 'primary',
++      '#value' => $this->t('Continue'),
++    ];
++
++    return $form;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function validateForm(array &$form, FormStateInterface $form_state) {
++    $all_files = $this->getRequest()->files->get('files', []);
++    if ($this->moduleHandler->moduleExists('file')) {
++      if (!($form_state->getValue('project_url') xor !empty($all_files['project_upload']))) {
++        $form_state->setErrorByName('project_url', $this->t('You must either provide a URL or upload an archive file.'));
++      }
++    }
++    else {
++      if (!($form_state->getValue('project_url'))) {
++        $form_state->setErrorByName('project_url', $this->t('You must provide a URL to install.'));
++      }
++    }
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function submitForm(array &$form, FormStateInterface $form_state) {
++    $local_cache = NULL;
++    $all_files = $this->getRequest()->files->get('files', []);
++    if ($form_state->getValue('project_url')) {
++      $local_cache = update_manager_file_get($form_state->getValue('project_url'));
++      if (!$local_cache) {
++        $this->messenger()->addError($this->t('Unable to retrieve Drupal project from %url.', ['%url' => $form_state->getValue('project_url')]));
++        return;
++      }
++    }
++    elseif (!empty($all_files['project_upload']) && $this->moduleHandler->moduleExists('file')) {
++      $validators = ['FileExtension' => ['extensions' => $this->archiverManager->getExtensions()]];
++      if (!($finfo = file_save_upload('project_upload', $validators, NULL, 0, FileExists::Replace))) {
++        // Failed to upload the file. file_save_upload() calls
++        // \Drupal\Core\Messenger\MessengerInterface::addError() on failure.
++        return;
++      }
++      $local_cache = $finfo->getFileUri();
++    }
++
++    $directory = _update_manager_extract_directory();
++    try {
++      $archive = update_manager_archive_extract($local_cache, $directory);
++    }
++    catch (\Exception $e) {
++      $this->messenger()->addError($e->getMessage());
++      return;
++    }
++
++    $files = $archive->listContents();
++    if (!$files) {
++      $this->messenger()->addError($this->t('Provided archive contains no files.'));
++      return;
++    }
++   
++    $seen = NULL;
++    foreach ($files as $file_path) {
++      $top = strtok(str_replace('\\', '/', $file_path), '/');
++      if ($top && $top !== $seen) {
++        if ($seen !== NULL) {
++          $this->messenger()->addError($this->t('Invalid archive structure: The archive must contain exactly one top-level folder.'));
++          return;
++        }
++        $seen = $top;
++      }
++    }
++
++    // Unfortunately, we can only use the directory name to determine the
++    // project name. Some archivers list the first file as the directory (i.e.,
++    // MODULE/) and others list an actual file (i.e., MODULE/README.TXT).
++    $project = strtok($files[0], '/\\');
++
++    $archive_errors = $this->moduleHandler->invokeAll('verify_update_archive', [$project, $local_cache, $directory]);
++    if (!empty($archive_errors)) {
++      $this->messenger()->addError(array_shift($archive_errors));
++      // @todo Fix me in D8: We need a way to set multiple errors on the same
++      //   form element and have all of them appear!
++      if (!empty($archive_errors)) {
++        foreach ($archive_errors as $error) {
++          $this->messenger()->addError($error);
++        }
++      }
++      return;
++    }
++
++    // Make sure the Updater registry is loaded.
++    drupal_get_updaters();
++
++    $project_location = $directory . '/' . $project;
++    try {
++      $updater = Updater::factory($project_location, $this->root);
++    }
++    catch (\Exception $e) {
++      $this->messenger()->addError($e->getMessage());
++      return;
++    }
++
++    try {
++      $project_title = Updater::getProjectTitle($project_location);
++    }
++    catch (\Exception $e) {
++      $this->messenger()->addError($e->getMessage());
++      return;
++    }
++
++    if (!$project_title) {
++      $this->messenger()->addError($this->t('Unable to determine %project name.', ['%project' => $project]));
++    }
++
++    if ($updater->isInstalled()) {
++      $this->messenger()->addError($this->t('%project is already present.', ['%project' => $project_title]));
++      return;
++    }
++
++    $project_real_location = \Drupal::service('file_system')->realpath($project_location);
++    $arguments = [
++      'project' => $project,
++      'updater_name' => get_class($updater),
++      'local_url' => $project_real_location,
++    ];
++
++    // This process is inherently difficult to test therefore use a state flag.
++    $test_authorize = FALSE;
++    if (drupal_valid_test_ua()) {
++      $test_authorize = \Drupal::state()->get('test_uploaders_via_prompt', FALSE);
++    }
++    // If the owner of the directory we extracted is the same as the owner of
++    // our configuration directory (e.g. sites/default) where we're trying to
++    // install the code, there's no need to prompt for FTP/SSH credentials.
++    // Instead, we instantiate a Drupal\Core\FileTransfer\Local and invoke
++    // update_authorize_run_install() directly.
 +    if (!$test_authorize) {
-       $this->moduleHandler->loadInclude('update', 'inc', 'update.authorize');
-       $filetransfer = new Local($this->root);
-       $response = call_user_func_array('update_authorize_run_install', array_merge([$filetransfer], $arguments));
++      $this->moduleHandler->loadInclude('update', 'inc', 'update.authorize');
++      $filetransfer = new Local($this->root, \Drupal::service('file_system'));
++      $response = call_user_func_array('update_authorize_run_install', array_merge([$filetransfer], $arguments));
++      if ($response instanceof Response) {
++        $form_state->setResponse($response);
++      }
++    }
++
++    // Otherwise, go through the regular workflow to prompt for FTP/SSH
++    // credentials and invoke update_authorize_run_install() indirectly with
++    // whatever FileTransfer object authorize.php creates for us.
++    else {
++      // The page title must be passed here to ensure it is initially used when
++      // authorize.php loads for the first time with the FTP/SSH credentials
++      // form.
++      system_authorized_init('update_authorize_run_install', __DIR__ . '/../../update.authorize.inc', $arguments, $this->t('Update manager'));
++      $form_state->setRedirectUrl(system_authorized_get_url());
++    }
++  }
++
++}
+
+--- core/modules/update/src/Routing/UpdateRouteSubscriber.php   2025-01-08 10:26:27
++++ core/modules/update/src/Routing/UpdateRouteSubscriber.php      2025-01-08 10:26:23
+@@ -29,9 +29,12 @@
+       return;
+     }
+     $routes = [
++      'update.report_install',
+       'update.report_update',
+       'update.module_update',
++      'update.module_install',
+       'update.theme_update',
++      'update.theme_install',
+       'update.confirmation_page',
+     ];
+     foreach ($routes as $route) {
+
+--- core/modules/update/src/UpdateManager.php   2025-01-08 10:27:41
++++ core/modules/update/src/UpdateManager.php      2025-01-08 10:27:38
+@@ -182,8 +182,10 @@
+       'system.modules_list',
+       'system.theme_install',
+       'update.module_update',
++      'update.module_install',
+       'update.status',
+       'update.report_update',
++      'update.report_install',
+       'update.settings',
+       'system.status',
+       'update.manual_status',
+
+--- core/modules/update/update.authorize.inc    2025-01-06 22:41:17
++++ core/modules/update/update.authorize.inc       2025-01-08 10:30:20
+@@ -57,6 +57,54 @@
+ }
+
+ /**
++ * Installs a new project when invoked by authorize.php.
++ *
++ * Callback for system_authorized_init() in
++ * update_manager_install_form_submit().
++ *
++ * @param \Drupal\Core\FileTransfer\FileTransfer $filetransfer
++ *   The FileTransfer object created by authorize.php for use during this
++ *   operation.
++ * @param string $project
++ *   The canonical project short name; i.e., the name of the module, theme, or
++ *   profile.
++ * @param string $updater_name
++ *   The name of the Drupal\Core\Updater\Updater class to use for installing
++ *   this project.
++ * @param string $local_url
++ *   The URL to the locally installed temp directory where the project has
++ *   already been downloaded and extracted into.
++ *
++ * @return \Symfony\Component\HttpFoundation\Response|null
++ *   The result of processing the batch that installs the project. If this is
++ *   an instance of \Symfony\Component\HttpFoundation\Response the calling code
++ *   should use that response for the current page request.
++ */
++function update_authorize_run_install($filetransfer, $project, $updater_name, $local_url) {
++  // @todo Instantiate our Updater to set the human-readable title?
++  $batch_builder = (new BatchBuilder())
++    ->setFile(\Drupal::service('extension.list.module')->getPath('update') . '/update.authorize.inc')
++    ->setInitMessage(t('Preparing to install'))
++    ->addOperation('update_authorize_batch_copy_project', [
++      $project,
++      $updater_name,
++      $local_url,
++      $filetransfer,
++    ])
++    // @todo Use a different finished callback for different messages?
++    ->setFinishCallback('update_authorize_install_batch_finished');
++  batch_set($batch_builder->toArray());
++
++  // Since authorize.php has its own method for setting the page title, set it
++  // manually here rather than passing it in to batch_set() as would normally
++  // be done.
++  \Drupal::request()->getSession()->set('authorize_page_title', t('Adding %project', ['%project' => $project]));
++
++  // Invoke the batch via authorize.php.
++  return system_authorized_batch_process();
++}
++
++/**
+  * Implements callback_batch_operation().
+  *
+  * Copies project to its proper place when authorized to do so.
+@@ -215,6 +263,69 @@
+ }
+
+ /**
++ * Implements callback_batch_finished().
++ *
++ * Performs actions when the authorized install batch is done.
++ *
++ * This processes the results and stashes them into SESSION such that
++ * authorize.php will render a report. Also responsible for putting the site
++ * back online after a successful install if necessary.
++ *
++ * @param $success
++ *   TRUE if the batch operation was a success; FALSE if there were errors.
++ * @param $results
++ *   An associative array of results from the batch operation.
++ */
++function update_authorize_install_batch_finished($success, $results) {
++  foreach ($results['log'] as $messages) {
++    if (!empty($messages['#abort'])) {
++      $success = FALSE;
++    }
++  }
++  $offline = \Drupal::state()->get('system.maintenance_mode');
++  $session = \Drupal::request()->getSession();
++  // Unset the variable since it is no longer needed.
++  $maintenance_mode = $session->remove('maintenance_mode');
++  if ($success) {
++    // Take the site out of maintenance mode if it was previously that way.
++    if ($offline && $maintenance_mode === FALSE) {
++      \Drupal::state()->set('system.maintenance_mode', FALSE);
++      $page_message = [
++        'message' => t('Files were added successfully. Your site has been taken out of maintenance mode.'),
++        'type' => 'status',
++      ];
++    }
++    else {
++      $page_message = [
++        'message' => t('Files were added successfully.'),
++        'type' => 'status',
++      ];
++    }
++  }
++  elseif (!$success && !$offline) {
++    $page_message = [
++      'message' => t('File add failed! See the log below for more information.'),
++      'type' => 'error',
++    ];
++  }
++  else {
++    $page_message = [
++      'message' => t('File add failed! See the log below for more information. Your site is still in maintenance mode.'),
++      'type' => 'error',
++    ];
++  }
++
++  // Set all these values into the SESSION so authorize.php can display them.
++  $session->set('authorize_results', [
++    'success' => $success,
++    'page_message' => $page_message,
++    'messages' => $results['log'],
++    'tasks' => $results['tasks'],
++  ]);
++  $session->set('authorize_page_title', t('Update manager'));
++}
++
++/**
+  * Creates a structure of log messages.
+  *
+  * @param array $project_results
+
+--- /dev/null   2025-01-08 10:39:00
++++ core/modules/update/update.links.action.yml 2025-01-08 10:38:59
+@@ -0,0 +1,20 @@
++update.report_install:
++  route_name: update.report_install
++  title: 'Add new module or theme'
++  weight: 25
++  appears_on:
++    - update.status
++
++update.module_install:
++  route_name: update.module_install
++  title: 'Add new module'
++  weight: 25
++  appears_on:
++    - system.modules_list
++
++update.theme_install:
++  route_name: update.theme_install
++  title: 'Add new theme'
++  weight: 25
++  appears_on:
++    - system.themes_page
+
+--- core/modules/update/update.routing.yml      2025-01-06 22:41:17
++++ core/modules/update/update.routing.yml 2025-01-08 11:06:47
+@@ -23,6 +23,14 @@
+     _permission: 'administer site configuration'
+     _csrf_token: 'TRUE'
+
++update.report_install:
++  path: '/admin/reports/updates/install'
++  defaults:
++    _form: '\Drupal\update\Form\UpdateManagerInstall'
++    _title: 'Add new module or theme'
++  requirements:
++    _permission: 'administer software updates'
++
+ update.report_update:
+   path: '/admin/reports/updates/update'
+   defaults:
+@@ -31,6 +39,14 @@
+   requirements:
+     _permission: 'administer software updates'
+
++update.module_install:
++  path: '/admin/modules/install'
++  defaults:
++    _form: '\Drupal\update\Form\UpdateManagerInstall'
++    _title: 'Add new module'
++  requirements:
++    _permission: 'administer software updates'
++
+ update.module_update:
+   path: '/admin/modules/update'
+   defaults:
+@@ -39,6 +55,15 @@
+   requirements:
+     _permission: 'administer software updates'
+
++update.theme_install:
++  path: '/admin/theme/install'
++  defaults:
++    _form: '\Drupal\update\Form\UpdateManagerInstall'
++    _title: 'Add new theme'
++  requirements:
++    _permission: 'administer software updates'
++
++
+ update.theme_update:
+   path: '/admin/appearance/update'
+   defaults:

@@ -226,16 +226,16 @@ class CaseStudyBlock extends BlockBase {
 
       switch (strtoupper($this->configuration['selectionType'])) {
         case static::CONST_UPDATED:
-          $query->sort('changed', 'ASC');
+          $query->sort('changed', 'DESC');
           break;
         case static::CONST_CREATED:
-          $query->sort('created', 'ASC');
-          break;
-        case static::CONST_OLDEST:
           $query->sort('created', 'DESC');
           break;
+        case static::CONST_OLDEST:
+          $query->sort('created', 'ASC');
+          break;
         case static::CONST_STALEST:
-          $query->sort('changed', 'DESC');
+          $query->sort('changed', 'ASC');
           break;
         case static::CONST_TITLE:
           $query->sort('title', 'ASC');
@@ -249,7 +249,7 @@ class CaseStudyBlock extends BlockBase {
           break;
         default:
           // equates to CONST_UPDATED
-          $query->sort('changed', 'ASC');
+          $query->sort('changed', 'DESC');
           break;
       }
 
@@ -273,17 +273,34 @@ class CaseStudyBlock extends BlockBase {
         if ($hasTranslation === TRUE) {
           $rawNode = $rawNode->getTranslation($lang_code);
         }
+
+        $title = isset($rawNode->title) ? $rawNode->getTitle() : '';
+        $summary = isset($rawNode->body) && isset($rawNode->body->summary) ? $rawNode->body->summary : '';
+
+        if ($summary === '') {
+          $rawBody = isset($rawNode->body) && isset($rawNode->body->value) ? strip_tags($rawNode->body->value) : '';
+          if ($rawBody !== '') {
+            $ellipses = strlen($rawBody) > 100 ? '...' : '';
+            $summary = substr($rawBody, 0, 100) . $ellipses;
+          }
+        } else {
+          $ellipses = strlen($summary) > 100 ? '...' : '';
+          $summary = isset($rawNode->body) && isset($rawNode->body->summary) ? substr(strip_tags($rawNode->body->summary), 0, 100) . $ellipses : '';
+        }
+
         $data = [
-          'title' => $rawNode->getTitle(),
+          'title' => $title,
           'nid' => $rawNode->id(),
-          'summary' => $rawNode->body->summary
+          'summary' => $summary
         ];
 
-        $fid = $rawNode->field_case_image->getValue();
-        if (isset($fid[0]['target_id'])) {
-          $file = File::load($fid[0]['target_id']);
-          if (isset($file)) {
-            $data['image'] = $file->createFileUrl();
+        if (isset($rawNode->field_case_image)) {
+          $fid = $rawNode->field_case_image->getValue();
+          if (isset($fid[0]['target_id'])) {
+            $file = File::load($fid[0]['target_id']);
+            if (isset($file)) {
+              $data['image'] = $file->createFileUrl();
+            }
           }
         }
         $caseStudies[] = $data;

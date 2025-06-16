@@ -1,0 +1,43 @@
+--- core/modules/update/src/Hook/UpdateHooks.php 2025-01-06 22:41:17
++++ core/modules/update/src/Hook/UpdateHooks.php    2025-01-15 09:50:48
+@@ -44,6 +44,8 @@
+             ':themes_page' => Url::fromRoute('system.themes_page')->toString(),
+             ':update-page' => Url::fromRoute('update.report_update')->toString(),
+           ]) . '</dd>';
++          $output .= '<dt>' . t('Adding new modules and themes through the Add new pages') . '</dt>';
++          $output .= '<dd>' . t('You can also add new modules and themes in the same fashion, through the <a href=":install">Add new modules and themes page</a>, or by clicking the <em>Add new module/theme</em> links at the top of the <a href=":modules_page">Extend page</a> and the <a href=":themes_page">Appearance page</a>. In this case, you are prompted to provide either the URL to the download, or to upload a packaged release file from your local computer.', [':modules_page' => Url::fromRoute('system.modules_list')->toString(), ':themes_page' => Url::fromRoute('system.themes_page')->toString(), ':install' => Url::fromRoute('update.report_install')->toString()]) . '</dd>';
+         }
+         $output .= '</dl>';
+         return $output;
+@@ -52,10 +54,7 @@
+         return '<p>' . t('Here you can find information about available updates for your installed modules and themes. Note that each module or theme is part of a "project", which may or may not have the same name, and might include multiple modules or themes within it.') . '</p>';
+
+       case 'system.modules_list':
+-        return '<p>' . t('Regularly review <a href=":updates">available updates</a> and update as required to maintain a secure and current site. Always run the <a href=":update-php">update script</a> each time you update software.', [
+-          ':update-php' => Url::fromRoute('system.db_update')->toString(),
+-          ':updates' => Url::fromRoute('update.status')->toString(),
+-        ]) . '</p>';
++        return '<p>' . t('Regularly review and install <a href=":updates">available updates</a> to maintain a secure and current site.', [':updates' => Url::fromRoute('update.status')->toString()]) . '</p>';
+     }
+   }
+
+@@ -73,8 +72,10 @@
+         // These pages don't need additional nagging.
+         case 'update.theme_update':
+         case 'update.module_update':
++        case 'update.module_install':
+         case 'update.status':
+         case 'update.report_update':
++        case 'update.report_install':
+         case 'update.settings':
+         case 'system.status':
+         case 'system.theme_install':
+@@ -188,7 +189,7 @@
+       // If configured time between notifications elapsed, send email about
+       // updates possibly available.
+       \Drupal::moduleHandler()->loadInclude('update', 'inc', 'update.fetch');
+-      _update_cron_notify();
++      //_update_cron_notify();
+     }
+     // Clear garbage from disk.
+     update_clear_update_disk_cache();

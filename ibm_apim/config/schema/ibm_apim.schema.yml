@@ -58,6 +58,12 @@ ibm_apim.settings:
   type: config_object
   label: 'IBM API Developer Portal configuration settings'
   mapping:
+    audit_endpoint:
+      type: string
+      label: 'Audit endpoint'
+    audit_blocking:
+      type: boolean
+      label: 'Enable fire and forget mechanism for audit logging'  
     autocreate_apiforum:
       type: boolean
       label: 'Automatically create a forum for each API'
@@ -260,6 +266,15 @@ ibm_apim.devel_settings:
     webhook_debug:
       type: boolean
       label: 'Enable webhook payload storage for debug purposes (enabling will cause a performance impact)'
+    audit_log_level:
+      type: string
+      label: 'Audit logging level (error, warning, info or debug)'
+    audit_log_backtrace:
+      type: boolean
+      label: 'Add backtrace to CADF request'
+    audit_debug_endpoint:
+      type: string
+      label: 'Debug endpoint to send CADF data to'
     snapshot_debug:
       type: boolean
       label: 'Enable snapshot log messages for debug purposes (enabling will cause a performance impact)'

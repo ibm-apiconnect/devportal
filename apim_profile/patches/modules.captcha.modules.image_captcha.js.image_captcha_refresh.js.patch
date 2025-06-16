@@ -1,0 +1,11 @@
+--- modules/captcha/modules/image_captcha/js/image_captcha_refresh.js	2025-04-22 15:38:41
++++ modules/captcha/modules/image_captcha/js/image_captcha_refresh.js	2025-04-22 15:43:56
+@@ -41,7 +41,7 @@
+           },
+           'json'
+         );
+-        return FALSE;
++        return false;
+       });
+     }
+   };

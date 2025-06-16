@@ -174,7 +174,7 @@ class ApicAccountService implements ApicAccountInterface {
         '@username' => $user->getUsername(),
       ]);
 
-      if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
         $this->messenger->addError(t('Failed to update your account data. Contact your site administrator.'));
       }
 
@@ -261,8 +261,6 @@ class ApicAccountService implements ApicAccountInterface {
       }
     }
 
-    $account->save();
-
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -282,7 +280,7 @@ class ApicAccountService implements ApicAccountInterface {
     if ((int) $apic_me->getCode() !== 200) {
 
       // The management server rejected our update. Log the error.
-      if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
         $this->messenger->addError(t('There was an error while saving your account data. Contact your site administrator.'));
       }
 

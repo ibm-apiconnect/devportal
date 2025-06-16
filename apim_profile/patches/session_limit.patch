@@ -1,0 +1,53 @@
+--- modules/session_limit/src/Services/SessionLimit.php	2024-07-14 11:28:20.000000000 +0000
++++ modules/session_limit/src/Services/SessionLimit.php	2025-06-03 14:43:13.175311822 +0000
+@@ -278,7 +278,14 @@
+       '/user/logout',
+     ];
+ 
+-    if (in_array($current_path, $bypass_paths)) {
++    $current_route = $route->getRouteName();
++    $bypass_routes = [
++      'system.css_asset',
++      'system.js_asset',
++      'image.style_public',
++    ];
++
++    if (in_array($current_path, $bypass_paths) || in_array($current_route, $bypass_routes)) {
+       // Don't session check on these routes.
+       $event->setBypass(TRUE);
+       return;
+
+--- modules/session_limit/src/Form/SettingsForm.php	2024-07-14 11:28:20.000000000 +0000
++++ modules/session_limit/src/Form/SettingsForm.php	2025-06-03 14:43:13.175311822 +0000
+@@ -3,6 +3,7 @@
+ namespace Drupal\session_limit\Form;
+ 
+ use Drupal\Core\Config\ConfigFactoryInterface;
++use Drupal\Core\Config\TypedConfigManagerInterface;
+ use Drupal\Core\Extension\ModuleHandlerInterface;
+ use Drupal\Core\Form\ConfigFormBase;
+ use Drupal\Core\Form\FormStateInterface;
+@@ -28,11 +29,13 @@ class SettingsForm extends ConfigFormBase {
+    *
+    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+    *   The factory for configuration objects.
++   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typed_config_manager
++   *   The typed config manager.
+    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+    *   The module handler instance to use.
+    */
+-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler) {
+-    parent::__construct($config_factory);
++  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManagerInterface $typed_config_manager, ModuleHandlerInterface $module_handler) {
++    parent::__construct($config_factory, $typed_config_manager);
+     $this->moduleHandler = $module_handler;
+   }
+ 
+@@ -42,6 +45,7 @@ class SettingsForm extends ConfigFormBase {
+   public static function create(ContainerInterface $container) {
+     return new static(
+       $container->get('config.factory'),
++      $container->get('config.typed'),
+       $container->get('module_handler')
+     );
+   }

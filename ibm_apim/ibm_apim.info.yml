@@ -2,35 +2,35 @@ name: IBM APIC
 type: module
 description: Core IBM API Management integration
 package: IBM API Developer Portal
-core_version_requirement: ^8 || ^9 || ^10
+core_version_requirement: ^8 || ^9 || ^10 || ^11
 version: 6.2.12
 project: ibm_apim
 dependencies:
-- telephone
-- options
-- user
-- image
-- externalauth
-- comment
-- menu_ui
-- taxonomy
-- masonry
-- ctools
-- path
-- views
-- faqfield
-- better_exposed_filters
-- twig_tweak
-- block_content
-- views_autocomplete_filters
-- ibm_log_stdout
-- content_translation
-- ibm_create_payment_method
-- ibm_event_log
-- search_api
-- search_api_db
-- search_api_autocomplete
+  - telephone
+  - options
+  - user
+  - image
+  - externalauth
+  - comment
+  - menu_ui
+  - taxonomy
+  - masonry
+  - ctools
+  - path
+  - views
+  - faqfield
+  - better_exposed_filters
+  - twig_tweak
+  - block_content
+  - views_autocomplete_filters
+  - ibm_log_stdout
+  - content_translation
+  - ibm_create_payment_method
+  - ibm_event_log
+  - search_api
+  - search_api_db
+  - search_api_autocomplete
 libraries:
-- ibm_apim/core
-- core/drupal.dialog
+  - ibm_apim/core
+  - core/drupal.dialog
 interface translation project: ibm_apim

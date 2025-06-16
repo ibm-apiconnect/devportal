@@ -131,11 +131,16 @@ class AnalyticsController extends ControllerBase {
     if (empty($dashboard)) {
       $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'top_products', 'top_apis', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
     }
+    $filters = \Drupal::config('ibm_apim.settings')->get('analytics_filters');
+    if (empty($filters)) {
+      $filters = ['api_name', 'api_version', 'product_name', 'product_version', 'plan_name', 'app_name'];
+    }
     $drupalSettings = [
       'analytics' => [
         'proxyURL' => \Drupal::service('ibm_apim.apim_utils')->getHostUrl() . $url,
         'locale' => $this->utils->convert_lang_name(\Drupal::languageManager()->getCurrentLanguage()->getId()),
-        'dashboard' => $dashboard
+        'dashboard' => $dashboard,
+        'filters' => $filters
       ],
     ];
 
@@ -209,13 +214,13 @@ class AnalyticsController extends ControllerBase {
       $response = new Response('User is not part of a valid consumer organization.', 401, []);
     }
 
+    $queryParams = ['limit', 'offset', 'api_name', 'api_version', 'product_name', 'product_version', 'plan_name', 'app_name'];
     if (!isset($response)) {
-      $app = $this->requestStack->getCurrentRequest()->query->get('app');
-      $start = $this->requestStack->getCurrentRequest()->query->get('start');
-      $end = $this->requestStack->getCurrentRequest()->query->get('end');
-      $limit = $this->requestStack->getCurrentRequest()->query->get('limit');
-      $offset = $this->requestStack->getCurrentRequest()->query->get('offset');
-      $timeframe = $this->requestStack->getCurrentRequest()->query->get('timeframe');
+      $currentRequest = $this->requestStack->getCurrentRequest();
+      $app = $currentRequest->query->get('app');
+      $start = $currentRequest->query->get('start');
+      $end = $currentRequest->query->get('end');
+      $timeframe = $currentRequest->query->get('timeframe');
       if (empty($app)) {
         $url = "/consumer-analytics/orgs/" . $consumerOrgId . "/dashboard";
       } else {
@@ -232,11 +237,11 @@ class AnalyticsController extends ControllerBase {
       if (!empty($end)) {
         $parameters['end'] = $end;
       }
-      if (isset($limit)) {
-        $parameters['limit'] = $limit;
-      }
-      if (isset($offset)) {
-        $parameters['offset'] = $offset;
+      foreach ($queryParams as $key) {
+        $value = $currentRequest->query->get($key);
+        if (isset($value)) {
+            $parameters[$key] = $value;
+        }
       }
       if (!empty($parameters)) {
         $url .= '?' . http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);

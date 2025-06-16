@@ -32,6 +32,11 @@ class PermissionsService implements PermissionsServiceInterface {
   private LoggerInterface $logger;
 
   /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
+  private Utils $utils;
+
+  /**
    * PermissionsService constructor.
    *
    * @param \Drupal\Core\State\StateInterface $state
@@ -40,6 +45,7 @@ class PermissionsService implements PermissionsServiceInterface {
   public function __construct(StateInterface $state, LoggerInterface $logger) {
     $this->state = $state;
     $this->logger = $logger;
+    $this->utils = \Drupal::service('ibm_apim.utils');
   }
 
   /**
@@ -121,7 +127,7 @@ class PermissionsService implements PermissionsServiceInterface {
         $current_data[$key] = $data;
         $this->state->set('ibm_apim.permissions_objects', $current_data);
       } else {
-        ibm_apim_snapshot_debug('Skipped updating permission @key as it already had the correct value',[ '@key' => $key ]);
+        $this->utils->snapshotDebug('Skipped updating permission @key as it already had the correct value',[ '@key' => $key ]);
       }
     }
 

@@ -185,7 +185,7 @@ class OidcFirstTimeLoginForm extends FormBase {
       $form['#parents'] = [];
       $registerForm = \Drupal::formBuilder()->getForm($formObject, $form_state);
       $entity_form = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load('user.user.register');
-
+      $form['#attributes']['class'][] = 'apic-change-pwd-form';
       $definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('user', 'user');
       if ($this->entity !== NULL && $entity_form !== NULL) {
         foreach ($entity_form->getComponents() as $name => $options) {

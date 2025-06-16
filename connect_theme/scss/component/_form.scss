@@ -879,6 +879,14 @@ input[type="checkbox"].bx--checkbox {
   font-size: 14px;
   line-height: 14px;
 }
+
+.apic-user-form-inner-wrapper input.form-control,
+.apic-user-form-inner-wrapper input.form-control:hover,
+.apic-user-form-inner-wrapper input.form-control:focus {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .user-register-form .apic-user-form-wrapper,
 .user-register-form .apic-user-form-inner-wrapper {
   margin-left: 1rem;
@@ -930,7 +938,8 @@ input[type="checkbox"].bx--checkbox {
 .route-change-pwd-pagechange-password-form.pass-reset .main-container .row,
 .route-apic-appdisplay-creds .main-container .row,
 form.user-pass-reset,
-.apic-user-form {
+.apic-user-form, 
+.route-consumerorgdelete-invite .main-container .row {
   background-color: $default-bg-light;
   border: unset;
 

@@ -1,0 +1,11 @@
+--- modules/graphql_twig/graphql_twig.info.yml  2023-10-20 14:17:26
++++ modules/graphql_twig/graphql_twig.info.yml     2024-09-02 15:50:46
+@@ -2,7 +2,7 @@
+ type: module
+ description: 'Render twig templates with graphql data.'
+ package: GraphQL
+-core_version_requirement: ^9 || ^10
++core_version_requirement: ^9 || ^10 || ^11
+ dependencies:
+   - graphql:graphql (>= 4.0)
+   - drupal:system (>= 9.0)

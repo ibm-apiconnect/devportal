@@ -291,16 +291,16 @@ class FeaturedContentBlock extends BlockBase {
       }
       switch (strtoupper($this->configuration['selectionType'])) {
         case static::CONST_UPDATED:
-          $query->sort('changed', 'ASC');
+          $query->sort('changed', 'DESC');
           break;
         case static::CONST_CREATED:
-          $query->sort('created', 'ASC');
-          break;
-        case static::CONST_OLDEST:
           $query->sort('created', 'DESC');
           break;
+        case static::CONST_OLDEST:
+          $query->sort('created', 'ASC');
+          break;
         case static::CONST_STALEST:
-          $query->sort('changed', 'DESC');
+          $query->sort('changed', 'ASC');
           break;
         case static::CONST_TITLE:
           $query->sort('title', 'ASC');
@@ -314,7 +314,7 @@ class FeaturedContentBlock extends BlockBase {
           break;
         default:
           // equates to CONST_UPDATED
-          $query->sort('changed', 'ASC');
+          $query->sort('changed', 'DESC');
           break;
       }
 

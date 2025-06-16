@@ -1,0 +1,36 @@
+diff --git modules/trusted_reverse_proxy/src/StackMiddleware/TrustedReverseProxyMiddleware.php modules/trusted_reverse_proxy/src/StackMiddleware/TrustedReverseProxyMiddleware.php
+index b6142a8..4cae940 100644
+--- modules/trusted_reverse_proxy/src/StackMiddleware/TrustedReverseProxyMiddleware.php
++++ modules/trusted_reverse_proxy/src/StackMiddleware/TrustedReverseProxyMiddleware.php
+@@ -44,7 +44,7 @@ class TrustedReverseProxyMiddleware implements HttpKernelInterface {
+   /**
+    * {@inheritDoc}
+    */
+-  public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = TRUE): Response {
++  public function handle(Request $request, $type = self::MAIN_REQUEST, $catch = TRUE): Response {
+     if (
+       // Reverse proxy is not explicitly disabled (is unset/NULL otherwise)
+       $this->settings->get('reverse_proxy') !== FALSE
+diff --git modules/trusted_reverse_proxy/tests/src/Unit/TrustedReverseProxyMiddlewareTest.php modules/trusted_reverse_proxy/tests/src/Unit/TrustedReverseProxyMiddlewareTest.php
+index d903c92..96df779 100644
+--- modules/trusted_reverse_proxy/tests/src/Unit/TrustedReverseProxyMiddlewareTest.php
++++ modules/trusted_reverse_proxy/tests/src/Unit/TrustedReverseProxyMiddlewareTest.php
+@@ -36,6 +36,7 @@ class TrustedReverseProxyMiddlewareTest extends UnitTestCase {
+    * {@inheritdoc}
+    */
+   protected function setUp(): void {
++    parent::setUp();
+     $this->mockHttpKernel = $this->createMock(HttpKernelInterface::class);
+     $this->mockReverseProxyMiddleware = $this->createMock(ReverseProxyMiddleware::class);
+   }
+
+diff --git modules/trusted_reverse_proxy/trusted_reverse_proxy.info.yml modules/trusted_reverse_proxy/trusted_reverse_proxy.info.yml
+index fb3427a..a09ece8 100644
+--- modules/trusted_reverse_proxy/trusted_reverse_proxy.info.yml
++++ modules/trusted_reverse_proxy/trusted_reverse_proxy.info.yml
+@@ -1,4 +1,4 @@
+ name: Trusted Reverse Proxy Support
+ type: module
+ description: 'Provides sensible defaults for sites running behind known trusted reverse proxies.'
+-core_version_requirement: ^9 || ^10
++core_version_requirement: ^10.1 || ^11

@@ -12,22 +12,32 @@
 
 namespace Drupal\ibm_apim\Service;
 
-use DirectoryIterator;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
 use Drupal\Component\Datetime\DateTimePlus;
-use Drupal\user\Entity\User;
-use Drupal\node\Entity\Node;
 use Exception;
 use Throwable;
+use Psr\Log\LoggerInterface;
+use \Drupal\ibm_apim\ApicRest;
+
+if(!defined('STDERR')) define('STDERR', fopen('php://stderr', 'wb'));
 
 /**
  * Miscellaneous utility functions.
  */
 class Utils {
+  private LoggerInterface $logger;
 
-  public function __construct() {
+  /**
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  private ConfigFactoryInterface $configFactory;
+
+  public function __construct(LoggerInterface $logger, ConfigFactoryInterface $config_factory) {
+    $this->logger = $logger;
+    $this->configFactory = $config_factory;
   }
 
 
@@ -831,5 +841,102 @@ class Utils {
       }
     }
     return $value;
+  }
+
+  public function snapshotDebug($msg, $values = []) {
+    if (isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) || (boolean) $this->configFactory->get('ibm_apim.devel_settings')->get('snapshot_debug')) {
+      $this->logger->debug($msg, $values);
+    }
+  }
+
+  private function flattenDrupalValues($inputData) {
+    $data = [];
+    if (is_array($inputData)) {
+      if (array_is_list($inputData) && count($inputData) === 1 && isset($inputData[0]['value']) ) {
+        $data = $inputData[0]['value'];
+      } elseif ( isset($inputData['value']) && count($inputData) === 1) {
+        $data = $inputData['value'];
+      } elseif (array_is_list($inputData)) {
+        foreach($inputData as $value) {
+          if (isset($value['value'])) {
+            array_push($data, $value['value']);
+          } else {
+            array_push($data, $value);
+          }
+        }
+        if (count($data) === 1) {
+          $data = $data[0];
+        }
+      } else {
+        $data = [];
+        foreach($inputData as $key => $value) {
+          $data[$key] = $this->flattenDrupalvalues($value);
+
+          switch($key) {
+            case 'access':
+            case 'apic_created_at':
+            case 'apic_updated_at':
+            case 'changed':
+            case 'content_translation_created':
+            case 'created':
+            case 'datestamp':
+            case '_info_file_ctime':
+            case 'login':
+            case 'mtime':
+            case 'revision_created':
+            case 'revision_timestamp':
+            case 'timestamp':
+              if (is_int($data[$key]) || preg_match('/^\d+$/', $data[$key])) {
+                $ts=new \DateTime( 'NOW', new \DateTimeZone('UTC'));
+                $ts->setTimestamp($data[$key]);
+                $data[$key] = $ts->format('Y-m-d\Th-i-s.vP');
+              }
+          }
+        }
+      }
+    } else {
+      $data = $inputData;
+    }
+
+    return $data;
+  }
+
+  public function logAuditEvent($eventName, $outcome, $targetType, $targetId, $requestData = NULL, $responseData = NULL) {
+    // The code for this function is included from the container image so that we can share the code between Drupal code and the scripts
+    try {
+      $site_config = \Drupal::service('ibm_apim.site_config');
+      $platformApiEndpoint = $site_config->getPlatformApimEndpoint();
+      if (isset($platformApiEndpoint)) {
+        $auditUrl = substr($platformApiEndpoint, 0, -4);
+      }else{
+        return;
+      }
+        // getting the platform token stored under ibm_apic_mail.token
+      $apiToken = \Drupal::state()->get('ibm_apic_mail.token');
+      if ($apiToken === NULL || !isset($apiToken['access_token'], $apiToken['expires_in']) || $apiToken['expires_in'] < time()) {
+        $clientId = $site_config->getClientId() ?? '';
+        $clientSecret = $site_config->getClientSecret() ?? '';
+        if(empty($clientId) || empty($clientSecret)) {
+          return;
+        }
+        $apiToken = ApicRest::getPlatformToken();
+      }
+      if (isset($apiToken['access_token'])) {
+        $bearerToken=$apiToken['access_token'];
+      }
+      require '/etc/devportal/audit.php';
+    } catch (Throwable $e) {
+      fprintf(STDERR, $e->getMessage());
+    }
+  }
+
+  public function setInternalAuditFlag(): bool {
+    $value = $GLOBALS['ibmApimAuditInternalEvent'] ?? FALSE;
+    $GLOBALS['ibmApimAuditInternalEvent'] = TRUE;
+    return $value;
+  }
+
+  public function resetInternalAuditFlag(bool $value): void {
+    $GLOBALS['ibmApimAuditInternalEvent'] = $value;
   }
 }

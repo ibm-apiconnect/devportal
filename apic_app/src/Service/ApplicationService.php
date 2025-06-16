@@ -369,7 +369,7 @@ class ApplicationService {
       $node->set('application_subscription_refs', $newArray);
 
       if ($this->utils->hashMatch($existingNodeHash, $node, 'new-app')) {
-        ibm_apim_snapshot_debug('App @app not updated as the hash matched', ['@app' => $node->getTitle()]);
+        $this->utils->snapshotDebug('App @app not updated as the hash matched', ['@app' => $node->getTitle()]);
       } else {
         $node->save();
 
@@ -377,11 +377,11 @@ class ApplicationService {
           // we have support for calling create hook here as well because of timing issues with webhooks coming in and sending us down
           // the update path in createOrUpdate even when the initial user action was create
           if ($event === 'create' || $event === 'app_create') {
-            ibm_apim_snapshot_debug('Application @app created (update path)', ['@app' => $node->getTitle()]);
+            $this->utils->snapshotDebug('Application @app created (update path)', ['@app' => $node->getTitle()]);
 
             $this->invokeAppCreateHook($create_hook_app, $node);
           } else {
-            ibm_apim_snapshot_debug('Application @app updated', ['@app' => $node->getTitle()]);
+            $this->utils->snapshotDebug('Application @app updated', ['@app' => $node->getTitle()]);
 
             // Calling all modules implementing 'hook_apic_app_update':
             $this->moduleHandler->invokeAll('apic_app_update', [$node, $app]);

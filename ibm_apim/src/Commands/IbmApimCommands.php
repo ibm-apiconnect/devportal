@@ -176,6 +176,10 @@ class IbmApimCommands extends DrushCommands {
       $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
 
+    // Turn off audit logging for the webhooks so we do not spam the audit endpoint with internal changes
+    $utils = \Drupal::service('ibm_apim.utils');
+    $utils->setInternalAuditFlag();
+
     // Incoming payload is always of the format : <event> {content}
     // where <event> is an argument we were called with and {content} a json object
     // read from stdin
@@ -551,6 +555,10 @@ class IbmApimCommands extends DrushCommands {
       $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
 
+    // Turn off audit logging for the webhooks so we do not spam the audit endpoint with internal changes
+    $utils = \Drupal::service('ibm_apim.utils');
+    $utils->setInternalAuditFlag();
+
     if ($role === 'parent') {
 
       $startTime = time();
@@ -584,8 +592,6 @@ class IbmApimCommands extends DrushCommands {
       $lastTime = (float)$options['lastTime'];
 
       $fileHandles = $this->create_content_refresh_file_handles($UUID, $fileIndex == 0 ? 'w' : 'a+');
-
-      ibm_apim_set_snapshot_debug((boolean) \Drupal::config('ibm_apim.devel_settings')->get('snapshot_debug'));
       $data = [
         'fileHandles' => $fileHandles,
         'startTime' => $startTime,
@@ -693,8 +699,8 @@ class IbmApimCommands extends DrushCommands {
     if (!isset($type)) {
       $type = 'error';
     }
-
-    ibm_apim_snapshot_debug("Got type: %type", [ '%type' => $type ]);
+    $utils = \Drupal::service('ibm_apim.utils');
+    $utils->snapshotDebug("Got type: %type", [ '%type' => $type ]);
 
     $fileHandles = $data['fileHandles'];
     $startTime = $data['startTime'];
@@ -1344,10 +1350,11 @@ class IbmApimCommands extends DrushCommands {
    */
   public function drush_ibm_apim_updateconfig($config): void {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
-    ibm_apim_snapshot_debug('Updating site config.');
+    $utils = \Drupal::service('ibm_apim.utils');
+    $utils->snapshotDebug('Updating site config.');
     $siteConfig = \Drupal::service('ibm_apim.site_config');
     $siteConfig->update($config);
-    ibm_apim_snapshot_debug('Config updated.');
+    $utils->snapshotDebug('Config updated.');
     ibm_apim_exit_trace(__FUNCTION__, NULL);
   }
 

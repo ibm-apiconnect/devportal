@@ -2,7 +2,7 @@ name: 'APIC Email Provider'
 type: module
 description: 'Send all Drupal emails via API Manager'
 package: 'IBM API Developer Portal'
-core_version_requirement: ^8 || ^9 || ^10
+core_version_requirement: ^8 || ^9 || ^10 || ^11
 version: 8.x-1.0.1
 project: ibm_apic_mail
 dependencies:

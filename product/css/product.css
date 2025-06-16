@@ -826,6 +826,8 @@ div[class*="planColumn"]:not(:last-of-type) {
   display: grid;
   -ms-grid-columns: 50px auto;
   grid-template-columns: 50px auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .bx--card .apicProductCard .bx--about__icon {
@@ -859,6 +861,11 @@ div[class*="planColumn"]:not(:last-of-type) {
 .bx--card .apicProductCardMain .apicProductName {
   padding-right: 0.625rem;
   max-width: 10rem;
+}
+
+.bx--card .apicProductCardMain .apicProductName span {
+  white-space:break-spaces;
+  max-width: unset;
 }
 
 .bx--card .apicProductCardVersion {

@@ -20,6 +20,9 @@ namespace Drupal\Tests\auth_apic\Unit {
   use Prophecy\Argument;
   use Prophecy\Prophet;
   use Drupal\user\UserStorageInterface;
+  use Drupal\user\UserDataInterface;
+  use Drupal\Core\DependencyInjection\ContainerBuilder;
+  use Drupal\Core\File\FileSystemInterface;
 
   /**
    * @group auth_apic
@@ -67,6 +70,12 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->entityTypeManager->getStorage('user')->willReturn($this->drupalUserStorage->reveal());
       $user = $this->prophet->prophesize(ApicUser::class);
       $this->drupalUserStorage->load(Argument::any())->willReturn($user->reveal());
+      $userDataMock = $this->createMock(UserDataInterface::class);
+      $fileSystemMock = $this->createmock(FileSystemInterface::class);
+      $container = new ContainerBuilder();
+      $container->set('user.data', $userDataMock);
+      $container->set('file_system', $fileSystemMock);
+      \Drupal::setContainer($container);
     }
 
     protected function tearDown(): void {

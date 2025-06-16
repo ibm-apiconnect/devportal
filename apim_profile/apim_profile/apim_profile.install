@@ -92,7 +92,6 @@ function apim_profile_install() {
 
   $module_dependencies = [
     'acl',
-    'bootstrap_layouts',
     'blazy',
     'blazy_ui',
     'blog',
@@ -151,7 +150,6 @@ function apim_profile_install() {
     'crop',
     'focal_point',
     'dropzonejs',
-    'dropzonejs_eb_widget',
     'honeypot',
     'memcache',
     'masonry',
@@ -199,10 +197,15 @@ function apim_profile_install() {
     'layout_builder',
     'navigation',
     'navigation_top_bar',
+    'jquery_ui',
     'jquery_ui_draggable',
+    'jquery_ui_accordion',
+    'jquery_ui_droppable',
+    'bootstrap_layouts',
     'jquery_ui_effects',
     'maxlength',
     'expand_collapse_formatter',
+    'file_upload_secure_validator',
   ];
 
   $our_modules = [
@@ -226,6 +229,7 @@ function apim_profile_install() {
     'drushadmin',
     'ibm_event_log',
     'case_study',
+    'ibm_apic_session_check',
   ];
   // enable our modules
   $module_installer = \Drupal::service('module_installer');
@@ -245,7 +249,7 @@ function apim_profile_install() {
     ->set('page.front', '/home')
     ->save(TRUE);
 
-  $themes = ['olivero', 'claro', 'connect_theme'];
+  $themes = ['olivero', 'claro', 'stable9', 'connect_theme'];
   $theme_installer = \Drupal::service('theme_installer');
   foreach ($themes as $theme) {
     $theme_installer->install([$theme]);
@@ -441,6 +445,8 @@ function apim_profile_default_apic_config() {
     ->set('payment_method_encryption_profile', 'socialblock')
     ->set('api_max_depth', 9)
     ->set('example_array_items', 3)
+    ->set('audit_endpoint', '')
+    ->set('audit_blocking',FALSE)
     ->save();
 
   \Drupal::service('config.factory')
@@ -449,6 +455,9 @@ function apim_profile_default_apic_config() {
     ->set('apim_rest_trace', FALSE)
     ->set('acl_debug', FALSE)
     ->set('snapshot_debug', FALSE)
+    ->set('audit_log_backtrace', FALSE)
+    ->set('audit_debug_endpoint', '')
+    ->set('audit_log_level', 'info')
     ->set('webhook_debug', FALSE)->save();
 
   \Drupal::service('config.factory')
@@ -546,9 +555,10 @@ function apim_profile_place_blocks() {
   $block = Block::create($values);
   $block->save();
 
+  $accountstatusmessages_block_id = 'accountstatusmessages';
   // add account status messages block
   $values = [
-    'id' => 'accountstatusmessages',
+    'id' => $accountstatusmessages_block_id,
     'plugin' => 'ibm_apim_account_status_messages',
     'provider' => NULL,
     'region' => 'highlighted',
@@ -562,9 +572,12 @@ function apim_profile_place_blocks() {
     'visibility' => [],
     'weight' => 0,
   ];
-  $block = Block::create($values);
-  $block->save();
-
+  
+  // Check if the block exists and create if does not exist
+  if (!Block::load($accountstatusmessages_block_id)) {
+    $block = Block::create($values);
+    $block->save();
+  }
   // add subscription wizard title block
   $values = [
     'id' => 'subwizardtitle',
@@ -3527,7 +3540,7 @@ function apim_profile_update_10901() {
   $config = \Drupal::service('config.factory')->getEditable('contact.form.feedback');
   if ($config && $account) {
     $adminEmail = $account->mail->value;
-    $currentConfig = $config->get('recipients');
+    $currentConfig = (array) $config->get('recipients');
     if (!in_array($adminEmail, $currentConfig)) {
       $currentConfig[] = $adminEmail;
       $config->set('recipients', $currentConfig)->save();
@@ -3599,6 +3612,101 @@ function apim_profile_update_10905() {
   \Drupal::service('config.factory')
     ->getEditable('ibm_apim.devel_settings')
     ->set('snapshot_debug', FALSE)->save();
+}
+
+/*
+ * Need to make sure new audit settings and devel_settings are set
+ */
+function apim_profile_update_10906() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.devel_settings')
+    ->set('audit_log_backtrace', FALSE)
+    ->set('audit_log_level', 'info')
+    ->set('audit_debug_endpoint', '');
+
+  \Drupal::service('config.factory')
+    ->getEditable('ibm_apim.settings')
+    ->set('audit_endpoint', '')
+    ->set('audit_blocking',FALSE);
+}
+
+/**
+* Drupal 11 Upgrade
+*/
+function apim_profile_update_11000() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  module_install(['jquery_ui', 'jquery_ui_accordion', 'jquery_ui_droppable']);
+
+  $config = \Drupal::service('config.factory')->getEditable('view_password.settings');
+  if (empty($config->get('span_classes'))) {
+    $config->set('span_classes', '')->save(TRUE);
+  }
+  if (empty($config->get('icon_hidden'))) {
+    $config->set('icon_hidden', '')->save(TRUE);
+  }
+  if (empty($config->get('icon_exposed'))) {
+    $config->set('icon_exposed', '')->save(TRUE);
+  }
+
+  delete_config(['block.block.bootstrap_account_menu', 'block.block.bootstrap_branding', 'block.block.bootstrap_breadcrumbs',
+    'block.block.bootstrap_content', 'block.block.bootstrap_footer', 'block.block.bootstrap_help',
+    'block.block.bootstrap_local_actions', 'block.block.bootstrap_local_tasks', 'block.block.bootstrap_main_menu',
+    'block.block.bootstrap_messages', 'block.block.bootstrap_page_title', 'block.block.bootstrap_powered',
+    'block.block.bootstrap_tools', 'bootstrap.settings']);
+}
+
+/**
+* Uninstall dropzonejs_eb_widget as it installs problematic module entity_browser
+*/
+function apim_profile_update_11001() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  module_uninstall(['dropzonejs_eb_widget', 'entity_browser']);
+  delete_config(['dropzonejs_eb_widget.schema']);
+}
+
+/**
+ * Enable file_upload_secure_validator module
+ */
+function apim_profile_update_11002() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  module_install(['file_upload_secure_validator']);
+}
+
+/*
+ * update default permissions for content_author, forum_moderator
+ */
+function apim_profile_update_10909() {
+  \Drupal::service('update.update_hook_registry')->markFutureUpdateEquivalent(11003, '10.99.99.99');
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  foreach (['content_author', 'forum_moderator'] as $role_id) {
+    $role = Role::load($role_id);
+
+    if ($role !== NULL) {
+      $role->grantPermission('access navigation');
+      $role->save();
+    }
+  }
 }
 
 function delete_config(array $configs) {
@@ -3694,6 +3802,21 @@ function theme_uninstall(array $themes) {
   }
 }
 
+function theme_install(array $themes) {
+  foreach ($themes as $theme) {
+    $theme_installer = \Drupal::service('theme_installer');
+    $themeHandler = \Drupal::service('theme_handler');
+    if ($themeHandler->themeExists($theme)) {
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', FALSE)->save();
+      $theme_installer->install([$theme]);
+      \Drupal::logger('apim_profile')->info('Installed theme: @theme', [
+        '@theme' => $theme,
+      ]);
+      \Drupal::configFactory()->getEditable('locale.settings')->set('translation.import_enabled', TRUE)->save();
+    }
+  }
+}
+
 /**
  * Implements hook_update_dependencies().
  */
@@ -3724,4 +3847,26 @@ function apim_profile_update_dependencies(): array {
       ],
     ],
   ];
+}
+
+/**
+ * Enable ibm_apic_session_check module on upgrade.
+ */
+function apim_profile_update_11004() {
+  $module_installer = \Drupal::service('module_installer');
+  $module_installer->install(['ibm_apic_session_check']);
+}
+
+/**
+ * Disable jsDelivery in CDN fo rbootstrap lib (entreprise7pro-bootstrap).
+ */
+function apim_profile_update_11005() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+  \Drupal::service('config.factory')
+    ->getEditable('connect_theme.settings')
+    ->set('cdn_provider', '')
+    ->save();
 }

@@ -15,6 +15,6 @@ mail_subscribers.startWizard:
 mail_subscribers.startWizardContent:
   title: 'Email subscribers'
   route_name: mail_subscribers.startWizard
-  parent: system.admin_content
+  parent: system.admin_config
   description: 'Email subscribers of a product, plan or API.'
   weight: 20

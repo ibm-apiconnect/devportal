@@ -1,0 +1,14 @@
+--- modules/file_upload_secure_validator/file_upload_secure_validator.services.yml      2025-02-20 09:42:00.721934059 +0000
++++ modules/file_upload_secure_validator/file_upload_secure_validator.services.yml       2025-02-20 09:41:54.685835614 +0000
+@@ -4,4 +4,9 @@
+     arguments: ['file_upload_secure_validator']
+   file_upload_secure_validator:
+     class: Drupal\file_upload_secure_validator\Service\FileUploadSecureValidator
+-    arguments: ['@logger.factory', '@string_translation', '@config.factory']
+\ No newline at end of file
++    arguments: ['@logger.factory', '@string_translation', '@config.factory']
++  file_upload_secure_validator.file_validation_subscriber:
++    class: Drupal\file_upload_secure_validator\EventSubscriber\FileValidationSubscriber
++    arguments: ['@logger.factory', '@config.factory']
++    tags:
++      - { name: event_subscriber }

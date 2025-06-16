@@ -20,6 +20,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\TempStore\TempStoreException;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_apim\Service\Utils;
 use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\user\Entity\User;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -30,6 +31,11 @@ use Throwable;
  * IBM API Connect and updates / creates subscriptions as needed
  */
 class SubscriptionService {
+
+  /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
+  protected Utils $utils;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
@@ -58,6 +64,7 @@ class SubscriptionService {
     $this->userUtils = $userUtils;
     $this->apimUtils = $apimUtils;
     $this->moduleHandler = $moduleHandler;
+    $this->utils = \Drupal::service('ibm_apim.utils');
   }
 
   /**
@@ -152,7 +159,7 @@ class SubscriptionService {
       $this->addEventLog('update', $updated_at, $appEntityId, $fields, $updated_by);
       $returnValue = 'updated';
     } else {
-      ibm_apim_snapshot_debug('Subscription @subid already existed and had not changed. No update was carried out', [
+      $this->utils->snapshotDebug('Subscription @subid already existed and had not changed. No update was carried out', [
         '@subid' => $subId,
       ]);
       $returnValue = 'hashMatch';

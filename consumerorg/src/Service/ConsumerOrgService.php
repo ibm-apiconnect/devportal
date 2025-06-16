@@ -613,7 +613,7 @@ class ConsumerOrgService {
               $userAccount = $userId === NULL ? NULL : $userAccounts[$userId];
               // if there isn't an account for this user then we have enough information to create and use it at this point.
               if ($userAccount === NULL) {
-                ibm_apim_snapshot_debug('registering new account for %username based on member data.', ['%username' => $user->getUsername()]);
+                $this->utils->snapshotDebug('registering new account for %username based on member data.', ['%username' => $user->getUsername()]);
                 try {
                   $userAccount = $this->accountService->registerApicUser($user, userMightExist: FALSE);
                 } catch (Throwable $e) {
@@ -655,7 +655,7 @@ class ConsumerOrgService {
                 }
 
                 if ($this->utils->hashMatch($existingUserAccountHash, $userAccount, 'new-account')) {
-                  ibm_apim_snapshot_debug('UserAccount @user not updated as the hash matched', ['@user' => $userAccount->id()]);
+                  $this->utils->snapshotDebug('UserAccount @user not updated as the hash matched', ['@user' => $userAccount->id()]);
                 } else {
                   // Add Activity Feed Event Log
                   $eventEntity = new ApicEvent();
@@ -684,7 +684,7 @@ class ConsumerOrgService {
                     $this->eventLogService->createIfNotExist($updateEventEntity);
                   }
 
-                  ibm_apim_snapshot_debug('UserAccount @user updated', ['@user' => $userAccount->id()]);
+                  $this->utils->snapshotDebug('UserAccount @user updated', ['@user' => $userAccount->id()]);
                   $userAccount->save();
                 }
               }
@@ -711,9 +711,9 @@ class ConsumerOrgService {
       }
 
       if ($this->utils->hashMatch($existingNodeHash, $node, 'new-consumer_org')) {
-        ibm_apim_snapshot_debug('Consumer organization @consumerorg not updated as the hash matched', ['@consumerorg' => $node->getTitle()]);
+        $this->utils->snapshotDebug('Consumer organization @consumerorg not updated as the hash matched', ['@consumerorg' => $node->getTitle()]);
       } else {
-        ibm_apim_snapshot_debug('Consumer organization @consumerorg saved', ['@consumerorg' => $node->getTitle()]);
+        $this->utils->snapshotDebug('Consumer organization @consumerorg saved', ['@consumerorg' => $node->getTitle()]);
         $node->save();
         $returnValue = $node;
 
@@ -798,7 +798,7 @@ class ConsumerOrgService {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $consumer->getUrl());
     }
 
-    if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+    if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'consumerorg');
       $query->condition('consumerorg_url.value', $consumer->getUrl());
@@ -1070,6 +1070,15 @@ class ConsumerOrgService {
                 if (empty($consumerorg_urls) && (!isset($uidToIgnore) || $account->id() !== $uidToIgnore)) {
                   user_cancel([], $account->id(), 'user_cancel_reassign');
                   $performBatch = TRUE;
+
+                  //DELETE USER AVATAR
+                  $avatar = \Drupal::service('user.data')->get('avatar_kit', $account->id(), 'avatar_name');
+                  if ($avatar) {
+                    $directory = 'public://avatar_kit/ak_letter';
+                    $path = $directory . '/' . $avatar . '.png';
+                    $file_system = \Drupal::service('file_system');
+                    $file_system->delete($path);
+                  }
                 } else {
                   $account->set('consumerorg_url', $consumerorg_urls);
                   $account->save();
@@ -1079,7 +1088,7 @@ class ConsumerOrgService {
           }
         }
       }
-      if ($performBatch && !isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      if ($performBatch && !isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
         $batch = &batch_get();
         $batch['progressive'] = FALSE;
         batch_process();

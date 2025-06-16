@@ -1,0 +1,27 @@
+--- modules/csp/src/Form/CspSettingsForm.php	2025-05-07 20:29:22
++++ modules/csp/src/Form/CspSettingsForm.php	2025-05-07 20:38:06
+@@ -694,9 +694,22 @@
+    */
+   public function submitClearPolicy(array &$form, FormStateInterface $form_state): void {
+     $submitElement = $form_state->getTriggeringElement();
+-
++    $policy_type = $submitElement['#cspPolicyType'];
++  
++    $default_policy = [
++      'enable' => FALSE,
++      'directives' => [
++        'default-src' => [
++          'base' => 'self',
++        ],
++      ],
++      'reporting' => [
++        'plugin' => 'none',
++      ],
++    ];
++  
+     $this->config('csp.settings')
+-      ->clear($submitElement['#cspPolicyType'])
++      ->set($policy_type, $default_policy)
+       ->save();
+   }
+ 

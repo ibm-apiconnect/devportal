@@ -1,0 +1,11 @@
+--- modules/masonry_views/masonry_views.info.yml        2023-07-21 12:06:45
++++ modules/masonry_views/masonry_views.info.yml   2024-09-02 16:15:14
+@@ -2,7 +2,7 @@
+ type: module
+ description: "Provides a Views plugin for displaying content in a Masonry layout."
+ package: Masonry
+-core_version_requirement: ^8 || ^9 || ^10
++core_version_requirement: ^8 || ^9 || ^10 || ^11
+ dependencies:
+   - masonry:masonry (>=4.x)
+   - drupal:views

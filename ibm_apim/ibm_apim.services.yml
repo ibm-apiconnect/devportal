@@ -190,6 +190,9 @@ services:
       - { name: ibm_apim }
   ibm_apim.utils:
     class: Drupal\ibm_apim\Service\Utils
+    arguments: [ '@logger.channel.ibm_apim',
+                 '@config.factory'
+    ]
     tags:
       - { name: ibm_apim }
   ibm_apim.myorgsvc:
@@ -233,7 +236,8 @@ services:
     arguments: [ '@entity_type.manager',
                  '@ibm_apim.user_registry',
                  '@ibm_apim.apicuser',
-                 '@logger.channel.ibm_apim' ]
+                 '@logger.channel.ibm_apim',
+                 '@ibm_apim.utils' ]
   ibm_apim.account:
     class: Drupal\ibm_apim\UserManagement\ApicAccountService
     arguments: [ '@logger.channel.ibm_apim',
@@ -268,3 +272,9 @@ services:
   ibm_apim.product_plan:
     class: Drupal\ibm_apim\Service\ProductPlan
     arguments: [ '@language_manager', '@string_translation', '@ibm_apim.utils' ]
+  config_events_subscriber:
+    # Event subscriber class that will listen for the events.
+    class: '\Drupal\ibm_apim\EventSubscriber\ConfigEventsSubscriber'
+    # Tagged as an event_subscriber to register this subscriber with the event_dispatch service.
+    tags:
+      - { name: 'event_subscriber' }

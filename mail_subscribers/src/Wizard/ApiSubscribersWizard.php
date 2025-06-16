@@ -89,6 +89,9 @@ class ApiSubscribersWizard extends FormWizardBase {
     $cached_values = $form_state->getTemporaryValue('wizard');
 
     $data = \Drupal::service('tempstore.private')->get('mail_subscribers')->get('data');
+    if ($this->getStep($cached_values) === 'chooseitem' && \Drupal::request()->get('start') === '1') {
+      $cached_values = [];
+    }
     $cached_values['objectType'] = 'api';
 
     if (isset($cached_values['products'])) {

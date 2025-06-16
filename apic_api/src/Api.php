@@ -21,7 +21,7 @@ use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\product\Product;
-use Exception;
+use Drupal\ibm_apim\Controller\IbmApimContentController;
 use Throwable;
 
 /**
@@ -57,6 +57,9 @@ class Api {
 
     $oldNode = NULL;
     $oldTags = [];
+    $oldAttachments = NULL;
+    $oldImage = NULL;
+    $oldPathAlias = NULL;
     $xIbmName = NULL;
 
     if (\is_string($api)) {
@@ -104,6 +107,11 @@ class Api {
         }
       }
 
+      $oldAttachments = $oldNode->apic_attachments->getValue();
+      $oldImage = $oldNode->apic_image->getValue();
+      $oldPathAlias = $oldNode->apic_pathalias->getValue();
+      $oldNode->set('apic_pathalias', NULL);
+
       // duplicate node
       $node = $oldNode->createDuplicate();
       $node->save();
@@ -123,6 +131,8 @@ class Api {
       $node->set('apic_ref', NULL);
       $node->set('apic_version', NULL);
       $node->set('apic_pathalias', NULL);
+      $node->set('apic_attachments', NULL);
+      $node->set('apic_image', NULL);
       $node->set('api_id', NULL);
       $node->set('api_xibmname', NULL);
       $node->set('api_protocol', NULL);
@@ -149,6 +159,24 @@ class Api {
 
     // get the update method to do the update for us
     $node = $this->update($node, $api, 'internal');
+
+    if ($node !== NULL && $oldAttachments !== NULL && !empty($oldAttachments)) {
+      foreach ($oldAttachments as $key => $existingAttachment) {
+        $file = \Drupal::entityTypeManager()->getStorage('file')->load($existingAttachment['target_id']);
+        $fullUrl = \Drupal::service('file_system')->realpath($file->getFileUri());
+        IbmApimContentController::addAttachment($node, $fullUrl, $existingAttachment['description']);
+      }
+    }
+
+    if ($node !== NULL && $oldImage !== NULL && !empty($oldImage)) {
+      $file = \Drupal::entityTypeManager()->getStorage('file')->load($oldImage[0]['target_id']);
+      $fullUrl = \Drupal::service('file_system')->realpath($file->getFileUri());
+      IbmApimContentController::setIcon($node, $fullUrl, $oldImage[0]['alt']);
+    }
+
+    if ($node !== NULL && $oldPathAlias !== NULL && !empty($oldPathAlias)) {
+      $node->set('apic_pathalias', $oldPathAlias);
+    }
 
     if ($node !== NULL && $oldTags !== NULL && !empty($oldTags)) {
       $currentTags = $node->get('apic_tags')->getValue();
@@ -518,7 +546,7 @@ class Api {
 
         if ($this->utils->hashMatch($existingNodeHash, $node, 'new-api')) {
           if ($event !== 'internal') {
-            ibm_apim_snapshot_debug('Update api: No update required as the hash matched for @apiName @version', [
+            $this->utils->snapshotDebug('Update api: No update required as the hash matched for @apiName @version', [
               '@apiName' => $api['name'],
               '@version' => $api['consumer_api']['info']['version'],
             ]);
@@ -608,7 +636,7 @@ class Api {
             // Calling all modules implementing 'hook_apic_api_update':
             $moduleHandler->invokeAll('apic_api_update', ['node' => $node, 'data' => $api]);
 
-            ibm_apim_snapshot_debug('API @api @version updated', [
+            $this->utils->snapshotDebug('API @api @version updated', [
               '@api' => $node->getTitle(),
               '@version' => $node->apic_version->value,
             ]);

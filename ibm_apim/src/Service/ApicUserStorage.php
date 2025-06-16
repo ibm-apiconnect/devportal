@@ -47,18 +47,25 @@ class ApicUserStorage implements ApicUserStorageInterface {
   private LoggerInterface $logger;
 
   /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
+  private Utils $utils;
+
+  /**
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager,
                               UserRegistryServiceInterface $registry_service,
                               ApicUserService $user_service,
-                              LoggerInterface $logger) {
+                              LoggerInterface $logger,
+                              Utils $utils) {
 
     $this->userStorage = $entity_type_manager->getStorage('user');
     $this->registryService = $registry_service;
     $this->userService = $user_service;
     $this->logger = $logger;
+    $this->utils = $utils;
   }
 
   /**
@@ -139,13 +146,13 @@ class ApicUserStorage implements ApicUserStorageInterface {
       throw new \Exception('Registry url is missing, unable to load user.');
     }
 
-    ibm_apim_snapshot_debug('loading %name in registry %registry', ['%name'=> $user->getUsername(), '%registry' => $user->getApicUserRegistryUrl()]);
+    $this->utils->snapshotDebug('loading %name in registry %registry', ['%name'=> $user->getUsername(), '%registry' => $user->getApicUserRegistryUrl()]);
 
     $users = $this->userStorage->loadByProperties([
       'name' => $user->getUsername(),
       'registry_url' => $user->getApicUserRegistryUrl()
     ]);
-    ibm_apim_snapshot_debug('loaded %num users', ['%num'=> \sizeof($users)]);
+    $this->utils->snapshotDebug('loaded %num users', ['%num'=> \sizeof($users)]);
 
 
     if (\sizeof($users) > 1) {
@@ -204,7 +211,7 @@ class ApicUserStorage implements ApicUserStorageInterface {
       'name' => $users,
       'registry_url' => $userRegistryUrl
     ]);
-    ibm_apim_snapshot_debug('loaded %num users', ['%num'=> \sizeof($returnValue)]);
+    $this->utils->snapshotDebug('loaded %num users', ['%num'=> \sizeof($returnValue)]);
 
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, sizeof($returnValue));

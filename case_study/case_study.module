@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2024
+ * (C) Copyright IBM Corporation 2024, 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -16,67 +16,6 @@
  * Provides APIC integration.
  */
 
- use Drupal\Core\Render\Markup;
- use Drupal\page_manager\Entity\Page;
- use Drupal\Core\Url;
-
-/**
- * Add twig templates
- *
- * @param $existing
- * @param $type
- * @param $theme
- * @param $path
- *
- * @return array
- */
-function case_study_theme($existing, $type, $theme, $path): array {
-  return [
-    'productcasestudy_block' => [
-      'variables' => [
-        'productCaseStudies' => NULL,
-      ],
-    ],
-    'casestudy_block' => [
-      'variables' => [
-        'caseStudies' => NULL,
-      ],
-    ],
-  ];
-}
-
-/**
-* Implements hook_module_preuninstall().
-*/
-function case_study_module_preuninstall($module, bool $is_syncing) {
-  if ($module == 'case_study') {
-    $storage_handler = \Drupal::entityTypeManager()->getStorage("node");
-    $entities = $storage_handler->loadByProperties(["type" => "case_study"]);
-    // Delete all case_study entities
-    $storage_handler->delete($entities);
-
-    $page = Page::load('welcome');
-    // should only be one page variant, so we'll just grab the first one
-    if ($page !== NULL) {
-        $page_variants = $page->getVariants();
-        reset($page_variants);
-        $page_variant = array_values($page_variants)[0];
-        $blocks = $page_variant->get('variant_settings')['blocks'];
-        $blockUUID = '';
-        foreach ($blocks as $blockKey => $blockValue) {
-          if ($blockValue['id'] == 'casestudy_block') {
-             $blockUUID = $blockKey;
-             break;
-          }
-        }
-        if (!empty($blockUUID)) {
-          $variant_plugin = $page_variant->getVariantPlugin();
-          $variant_plugin->removeBlock($blockUUID);
-          $page_variant->save();
-        }
-    }
-  }
-}
 
 /**
  * Need to use our custom content type templates

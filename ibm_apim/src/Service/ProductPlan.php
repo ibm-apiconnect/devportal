@@ -447,9 +447,13 @@ class ProductPlan {
   public function parseRateLimits($plan, $componentRateLimits = NULL): array {
     $planRateLimit = $this->parseRateLimit('unlimited');
     $tooltip = NULL;
-    if (isset($plan['rate-limits']) || isset($plan['burst-limits'])) {
+    if (isset($plan['rate-limits']) || isset($plan['burst-limits']) || isset($plan['assembly-rate-limits']) || isset($plan['assembly-burst-limits'])) {
       $rateLimitCount = 0;
       $burstLimitCount = 0;
+      $assemblyRateLimitCount = 0;
+      $assemblyBurstLimitCount = 0;
+
+      // Count rate limits
       if (array_key_exists('rate-limits', $plan) && $plan['rate-limits'] !== NULL) {
         $rateLimitCount = count($plan['rate-limits']);
       }
@@ -457,18 +461,38 @@ class ProductPlan {
         // handle having burst-limits but rate-limit (mix of v5 and v4 schemas)
         $rateLimitCount = 1;
       }
+
+      // Count burst limits
       if (array_key_exists('burst-limits', $plan) && $plan['burst-limits'] !== NULL) {
         $burstLimitCount = count($plan['burst-limits']);
       }
+
+      // Count assembly rate limits
+      if (array_key_exists('assembly-rate-limits', $plan) && $plan['assembly-rate-limits'] !== NULL) {
+          $assemblyRateLimitCount = count($plan['assembly-rate-limits']);
+      }
+
+      // Count assembly burst limits
+      if (array_key_exists('assembly-burst-limits', $plan) && $plan['assembly-burst-limits'] !== NULL) {
+          $assemblyBurstLimitCount = count($plan['assembly-burst-limits']);
+      }
+
       if ($rateLimitCount === 0) {
         // if no rate limits but there is a burst limit then rate limit assumed to be unlimited
         $plan['rate-limits'][] = ['value' => 'unlimited'];
         $rateLimitCount = count($plan['rate-limits']);
       }
-      if (($rateLimitCount + $burstLimitCount) > 1) {
+      if (($rateLimitCount + $burstLimitCount + $assemblyRateLimitCount + $assemblyBurstLimitCount) > 1) {
         $tooltip = ['#rates' => [], '#bursts' => []];
         $tooltip['#rateLabel'] = $this->translationManager->translate('Rate limits');
         $tooltip['#burstLabel'] = $this->translationManager->translate('Burst limits');
+        if ($assemblyRateLimitCount > 0){
+          $tooltip['#assemblyRateLimitLabel'] = $this->translationManager->translate('GraphQL Rate limits');
+        }
+        if ($assemblyBurstLimitCount > 0){
+          $tooltip['#assemblyBurstLimitLabel'] = $this->translationManager->translate('Assembly Burst limits');
+        }
+        // Process rate limits
         if (array_key_exists('rate-limits', $plan) && !empty($plan['rate-limits'])) {
           foreach ($plan['rate-limits'] as $rateLimit) {
             $tooltip['#rates'][] = $this->parseRateLimit($rateLimit['value']);
@@ -478,24 +502,57 @@ class ProductPlan {
           // handle having burst-limits but rate-limit (mix of v5 and v4 schemas)
           $tooltip['#rates'][] = $this->parseRateLimit($plan['rate-limit']['value']);
         }
+
+         // Process burst limits
         if (array_key_exists('burst-limits', $plan) && !empty($plan['burst-limits'])) {
           foreach ($plan['burst-limits'] as $rateLimit) {
             $tooltip['#bursts'][] = $this->parseRateLimit($rateLimit['value']);
           }
         }
-        $planRateLimit = $this->translationManager->translate('@count rate limits *', ['@count' => $rateLimitCount + $burstLimitCount]);
+
+         // Process assembly rate limits
+         if (array_key_exists('assembly-rate-limits', $plan) && !empty($plan['assembly-rate-limits'])) {
+          foreach ($plan['assembly-rate-limits'] as $key => $limits) {
+            foreach ($limits as $limit) {
+              $tooltip['#assemblyRateLimits'][$key][] = $this->parseRateLimit($limit['value']);
+            }
+          }
+        }
+
+        // Process assembly burst limits
+        if (array_key_exists('assembly-burst-limits', $plan) && !empty($plan['assembly-burst-limits'])) {
+            foreach ($plan['assembly-burst-limits'] as $key => $limits) {
+                foreach ($limits as $limit) {
+                  $tooltip['#assemblyBurstLimits'][$key][] = $this->parseRateLimit($limit['value']);
+              }
+            }
+        }
+
+        $planRateLimit = $this->translationManager->translate('@count rate limits *', ['@count' => $rateLimitCount + $burstLimitCount + $assemblyRateLimitCount + $assemblyBurstLimitCount]);
       }
       elseif ($rateLimitCount > 0) {
         if (!isset($plan['rate-limits']) && $plan['rate-limit'] !== NULL) {
-          // handle having burst-limits but no rate-limit (mix of v5 and v4 schemas)
+          // Handle having burst-limits but no rate-limit (mix of v5 and v4 schemas)
           $planRateLimit = $this->parseRateLimit($plan['rate-limit']['value']);
         }
         else {
           $planRateLimit = $this->parseRateLimit(current($plan['rate-limits'])['value']);
         }
       }
-      else {
+      elseif ($burstLimitCount > 0) {
         $planRateLimit = $this->parseRateLimit(current($plan['burst-limits'])['value']);
+      }
+      elseif ($assemblyRateLimitCount > 0) {
+        $group = current($plan['assembly-rate-limits']);
+        if (!empty($group)) {
+            $planRateLimit = $this->parseRateLimit(current($group)['value']);
+        }
+      }
+      elseif ($assemblyBurstLimitCount > 0) {
+        $group = current($plan['assembly-burst-limits']);
+        if (!empty($group)) {
+            $planRateLimit = $this->parseRateLimit(current($group)['value']);
+        }
       }
     }
     elseif (isset($plan['rate-limit']) && $plan['rate-limit']['value'] !== NULL) {

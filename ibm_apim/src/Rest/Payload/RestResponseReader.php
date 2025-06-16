@@ -83,7 +83,7 @@ class RestResponseReader {
         $response_object->setErrors($this->parseErrors($response));
       }
     } catch (RestResponseParseException $exception) {
-      if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
         if ($this->moduleHandler->moduleExists('contact')) {
           $contact_link = Link::fromTextAndUrl(t('contact'), Url::fromRoute('contact.site_page'));
         }

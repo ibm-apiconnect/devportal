@@ -34,6 +34,13 @@ ibm_apim.support:
   menu_name: main
 
 # override link from from admin_toolbar module
+update.module_install:
+  title: 'Add new module'
+  route_name: update.module_install
+  menu_name: admin
+  parent: system.modules_list
+  weight: 100
+
 system.modules_uninstall:
   title: 'Disable module'
   route_name: system.modules_uninstall

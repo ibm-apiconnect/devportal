@@ -29,7 +29,7 @@ use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\user\Form\UserPasswordForm;
 use Drupal\user\UserInterface;
 use Drupal\user\UserStorageInterface;
-use Drupal\Core\TypedData\TypedDataManagerInterface;
+use Drupal\user\UserNameValidator;
 use Drupal\Component\Utility\EmailValidatorInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -105,7 +105,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
    * @param \Drupal\Core\Messenger\Messenger $messenger
    * @param \Drupal\auth_apic\Service\Interfaces\OidcRegistryServiceInterface $oidc_service
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $session_store_factory
-   * @param \Drupal\Core\TypedData\TypedDataManagerInterface $typed_data_manager
+   * @param \Drupal\user\UserNameValidator $userNameValidator
    * @param \Drupal\Component\Utility\EmailValidatorInterface $email_validator
    */
   public function __construct(UserStorageInterface $user_storage,
@@ -120,9 +120,9 @@ class ApicUserPasswordForm extends UserPasswordForm {
                               Messenger $messenger,
                               OidcRegistryServiceInterface $oidc_service,
                               PrivateTempStoreFactory $session_store_factory,
-                              TypedDataManagerInterface $typed_data_manager,
+                              protected UserNameValidator $userNameValidator,
                               EmailValidatorInterface $email_validator) {
-    parent::__construct($user_storage, $language_manager, $config_factory, $flood, $typed_data_manager, $email_validator);
+    parent::__construct($user_storage, $language_manager, $config_factory, $flood, $userNameValidator, $email_validator);
     $this->mgmtServer = $mgmtServer;
     $this->logger = $logger;
     $this->registryService = $registry_service;
@@ -153,7 +153,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
       $container->get('messenger'),
       $container->get('auth_apic.oidc'),
       $container->get('tempstore.private'),
-      $container->get('typed_data_manager'),
+      $container->get('user.name_validator'),
       $container->get('email.validator')
     );
   }
@@ -197,7 +197,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
       '#value' => $chosen_registry,
     ];
     // store the name for the template
-    $form['#registry_title']['registry_title'] = $chosen_registry->getTitle();
+    $form['#registry_title']['registry_title'] = $chosen_registry->getTitle() ?: '';
 
     if ($chosen_registry->isUserManaged()) {
       $form[$chosen_registry->getName()][$chosen_registry->getName() . '_name'] = [
