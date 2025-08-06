@@ -1,0 +1,74 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2024, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ * Provides APIC integration.
+ */
+
+
+/**
+ * Need to use our custom content type templates
+ *
+ * @param $variables
+ * @param $hook
+ * @param $info
+ */
+function case_study_preprocess(&$variables, $hook, &$info) {
+  if ($hook === 'node') {
+    $contentTypeToShow = $variables['node']->bundle();
+    if ($contentTypeToShow === 'case_study') {
+      ibm_apim_entry_trace(__FUNCTION__, NULL);
+
+      //Load the view mode names.
+      $allViewModes = \Drupal::service('entity_display.repository')->getViewModes('node');
+      //View mode for this request.
+      $viewModeToUse = $variables['view_mode'];
+      //Is the view mode defined for nodes?
+      if (array_key_exists($viewModeToUse, $allViewModes)) {
+        //Is there a template file for the view modes in the module?
+        if ($viewModeToUse === 'full') {
+          $templateFileName = 'node--' . $contentTypeToShow;
+        }
+        else {
+          $templateFileName = 'node--' . $contentTypeToShow . '--' . $viewModeToUse;
+        }
+
+        $themeName = \Drupal::theme()->getActiveTheme()->getName();
+        $themePath = \Drupal::theme()->getActiveTheme()->getPath();
+        if (file_exists($themePath . '/templates/node/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates/node';
+          $info['template'] = $templateFileName;
+        }
+        elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
+          $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+          $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates';
+          $info['template'] = $templateFileName;
+        }
+        else {
+          $templateFilePath = \Drupal::service('extension.list.module')->getPath('case_study') . '/templates/' . $templateFileName . '.html.twig';
+          if (file_exists($templateFilePath)) {
+            $info['theme path'] = \Drupal::service('extension.list.module')->getPath('case_study');
+            $info['path'] = \Drupal::service('extension.list.module')->getPath('case_study') . '/templates';
+            $info['template'] = $templateFileName;
+          }
+        }
+      }
+      $variables['images_path'] = base_path() . \Drupal::service('extension.list.module')->getPath('case_study');
+      $variables['#attached']['library'][] = 'case_study/basic';
+
+      ibm_apim_exit_trace(__FUNCTION__, NULL);
+    }
+  }
+}

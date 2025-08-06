@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2024
+ * (C) Copyright IBM Corporation 2018, 2024, 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -26,7 +26,9 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 /**
  * Controller routines for product routes.
  */
@@ -76,6 +78,7 @@ class ProductController extends ControllerBase {
     if ($prodNode !== NULL && $prodNode->bundle() === 'product') {
       $viewBuilder = \Drupal::entityTypeManager()->getViewBuilder('node');
       $returnValue = $viewBuilder->view($prodNode, 'full');
+      
     }
     else {
       \Drupal::logger('product')->error('productView: not a valid product.', []);
@@ -93,7 +96,7 @@ class ProductController extends ControllerBase {
    */
   public function productTitle(NodeInterface $prodNode): string {
     if ($prodNode !== NULL && $prodNode->bundle() === 'product') {
-      $returnValue = $prodNode->getTitle() . ' - ' . \Drupal::config('system.site')->get('name');
+      $returnValue = $prodNode->getTitle();
     }
     else {
       \Drupal::logger('product')->error('productView: not a valid product.', []);
@@ -249,7 +252,7 @@ class ProductController extends ControllerBase {
    */
   public function productApiTitle(NodeInterface $apiNode = NULL): string {
     if ($apiNode !== NULL && $apiNode->bundle() === 'api') {
-      $returnValue = $apiNode->getTitle() . ' - ' . \Drupal::config('system.site')->get('name');
+      $returnValue = $apiNode->getTitle();
     }
     else {
       \Drupal::logger('product')->error('productApi: not a valid api.', []);
@@ -319,5 +322,115 @@ class ProductController extends ControllerBase {
       '#attached' => $attached,
     ];
   }
+  protected function checkAccessToProduct(?\Drupal\node\NodeInterface $product): bool {
+    if (!$product || $product->bundle() !== 'product') {
+      \Drupal::messenger()->addWarning('Product not found or invalid.');
+      return false;
+    }
 
+    if (!$product->access('view')) {
+      \Drupal::messenger()->addWarning('You do not have permission to access this product.');
+      return false;
+    }
+
+    return true;
+  }
+
+
+  /**
+   * Downloads a ZIP file containing all API specifications associated with a given product
+   *
+   * @param int $product_id
+   *
+   * @return \Symfony\Component\HttpFoundation\StreamedResponse
+   * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+   * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
+   */
+  public function downloadSpecs($product_id) {
+    // load the product entity
+    $product = \Drupal::entityTypeManager()->getStorage('node')->load($product_id);
+    // dpm($product);
+    if (!$this->checkAccessToProduct($product)) {
+      return $this->redirect('<front>');
+    }
+
+    // create a streamed response that builds the zip in memory
+    $response = new StreamedResponse(function () use ($product) {
+      // remove x-ibm fields
+      $removeSensitiveKeys = function (array $data) use (&$removeSensitiveKeys) {
+        foreach ($data as $key => &$value) {
+          if (is_array($value)) {
+            $value = $removeSensitiveKeys($value);
+          }
+          if (is_string($key) && preg_match('/^x-(ibm|key-type)/i', $key)) {
+            unset($data[$key]);
+          }
+        }
+        return $data;
+      };
+
+      $zip = new \ZipArchive();
+      $tmpFile = tempnam(sys_get_temp_dir(), 'specs_');
+
+      if ($zip->open($tmpFile, \ZipArchive::CREATE) === TRUE) {
+
+        $api_ids = array_map(fn($item) => $item['value'], $product->get('product_api_nids')->getValue());
+
+        $apis = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($api_ids);
+
+        foreach ($apis as $api) {
+          $api_title = $api->label();
+          $api_id = $api->id();
+        
+          // determine protocol
+          $protocol = strtolower($api->get('api_protocol')->value ?? '');
+
+          if ($protocol === 'soap' || $protocol === 'wsdl') {
+            if ($api->hasField('apic_attachments') && !$api->get('apic_attachments')->isEmpty()) {
+              $attachments = $api->get('apic_attachments')->referencedEntities();
+          
+              foreach ($attachments as $attachment) {
+                if ($attachment instanceof \Drupal\file\FileInterface) {
+                  $uri = $attachment->getFileUri();
+                  $filename = $attachment->getFilename();
+                  $contents = file_get_contents($uri);
+          
+                    $zip->addFromString($filename, $contents);
+                  
+                }
+              }
+            }
+          }
+          else {
+            $encoded = $api->get('api_encodedswagger')->value ?? null;
+          
+            if ($encoded && in_array($protocol, ['rest', 'graphql'])) {
+              $decoded = base64_decode($encoded);
+              $spec = json_decode($decoded, true);
+          
+              if (json_last_error() === JSON_ERROR_NONE) {
+                $cleaned = $removeSensitiveKeys($spec);
+                $sanitized = json_encode($cleaned, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                $filename = str_replace(':', '_', $api->get('apic_ref')->value) . '.json';
+                $zip->addFromString($filename, $sanitized);
+              }
+            }
+          }
+        }
+        
+        $zip->close();
+
+        // send zip contents to browser
+        readfile($tmpFile);
+        unlink($tmpFile);
+      }
+    });
+
+    $filename = $product->label() . '.zip';
+
+    $response->headers->set('Content-Type', 'application/zip');
+    $response->headers->set('Content-Disposition', ResponseHeaderBag::DISPOSITION_ATTACHMENT . '; filename="' . $filename . '"');
+
+    return $response;
+  }
 }

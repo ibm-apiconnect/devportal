@@ -25,7 +25,7 @@ interface ApicAccountInterface {
    *
    * @return EntityInterface
    */
-  public function registerApicUser(ApicUser $user): ?EntityInterface;
+  public function registerApicUser(ApicUser $user, bool $userMightExist): ?EntityInterface;
 
   /**
    * Checks to see if the user details provided match with an account in the drupal database.

@@ -1,7 +1,8 @@
 .apicTruncate {
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .apicFade {
@@ -11,7 +12,10 @@
 }
 
 .apicFade p {
-  line-height: 1.3rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .apicTeaserIcon {
@@ -1426,6 +1430,19 @@ span.cron-description__run-cron a {
   font-size: 21px;
 }
 
+.registry-button .fa-facebook,
+.registry-button .fa-facebook-f,
+.registry-button .fa-slack,
+.registry-button .fa-twitter,
+.registry-button .fa-windows,
+.registry-button .fa-linkedin-square,
+.registry-button .fa-linkedin,
+.registry-button .fa-google,
+.registry-button .fa-github {
+  width: 18px;
+  height: 18px;
+}
+
 .apicConcepts {
   background-color: white;
   padding: 12px;
@@ -1445,3 +1462,30 @@ span.cron-description__run-cron a {
   line-height: 25px;
   display: block;
 }
+
+.apicNoContent .noContentImage svg .cls-1 { opacity: 0.15; }
+.apicNoContent .noContentImage svg .cls-2 { mask: url(#mask); }
+.apicNoContent .noContentImage svg .cls-3 { fill: #dcdcdc; }
+.apicNoContent .noContentImage svg .cls-4 { fill: #f3f3f3; }
+.apicNoContent .noContentImage svg .cls-5 { fill: #6f6f6f; }
+.apicNoContent .noContentImage svg .cls-6 { fill: #3d3d3d; }
+.apicNoContent .noContentImage svg .cls-7, .cls-13 { fill: none; }
+.apicNoContent .noContentImage svg.cls-8 { fill: #565656; }
+.apicNoContent .noContentImage svg .cls-9 { fill: #a4a4a4; }
+.apicNoContent .noContentImage svg .cls-10 { opacity: 0.3; }
+.apicNoContent .noContentImage svg .cls-11 { fill: #0062ff; }
+.apicNoContent .noContentImage svg .cls-12 { fill: #fff; }
+.apicNoContent .noContentImage svg .cls-13 {
+  stroke: #565656;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 0.17px;
+}
+.apicNoContent .noContentImage svg .cls-14 { fill: #a3a3a3; }
+.apicNoContent .noContentImage svg .cls-15 { fill: url(#linear-gradient); }
+.apicNoContent .noContentImage svg .cls-16 { fill: #bdbdbd; }
+.apicNoContent .noContentImage svg .cls-17 { fill: #8b8b8b; }
+.apicNoContent .noContentImage svg .cls-18 { fill: url(#linear-gradient-2); }
+.apicNoContent .noContentImage svg .cls-19 { fill: url(#linear-gradient-3); }
+.apicNoContent .noContentImage svg .cls-20 { fill: #dbdbdb; }
+.apicNoContent .noContentImage svg .cls-21 { filter: url(#luminosity-noclip); }

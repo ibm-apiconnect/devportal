@@ -122,6 +122,14 @@ class ApicUserDeleteService implements ApicUserDeleteInterface {
       //The user was deleted when the consumer org was deleted
       $response = TRUE;
     } else {
+      //DELETE USER AVATAR
+      $avatar = \Drupal::service('user.data')->get('avatar_kit', $id, 'avatar_name');
+      if ($avatar) {
+        $directory = 'public://avatar_kit/ak_letter';
+        $path = $directory . '/' . $avatar . '.png';
+        $file_system = \Drupal::service('file_system');
+        $file_system->delete($path);
+      }
       $this->logger->notice('Deleting user - id = @id', ['@id' => $id]);
       // DO NOT DELETE THE ADMIN USER!
       $performBatch = FALSE;
@@ -129,7 +137,7 @@ class ApicUserDeleteService implements ApicUserDeleteInterface {
         user_cancel([], $id, 'user_cancel_reassign');
         $performBatch = TRUE;
       }
-      if ($performBatch && !isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      if ($performBatch && !isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
        $this->logger->notice('Processing batch delete of users...');
         $batch = &batch_get();
         $batch['progressive'] = FALSE;

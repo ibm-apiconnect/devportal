@@ -94,7 +94,7 @@ class MockApicAccountService implements ApicAccountInterface {
    * @inheritDoc
    * @throws \Exception
    */
-  public function registerApicUser(ApicUser $user): ?EntityInterface {
+  public function registerApicUser(ApicUser $user, bool $userMightExist = TRUE): ?EntityInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $user->getUsername());
     }
@@ -102,7 +102,7 @@ class MockApicAccountService implements ApicAccountInterface {
     try {
 
       // The code inside this if statement isn't valid in the unit test environment where we have no Drupal instance
-      if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
         $returnValue = $this->loadUserFromDatabase($user);
       }
       if ($returnValue === NULL) {

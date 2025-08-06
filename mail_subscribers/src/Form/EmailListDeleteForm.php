@@ -123,7 +123,7 @@ class EmailListDeleteForm extends ConfirmFormBase {
       $this->emailList->delete();
 
       \Drupal::messenger()->addMessage($this->t('%title has been deleted.', ['%title' => $this->emailList->title->value]));
-
+      \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_MAIL_SUBSCRIBERS_LIST_DELETED' , 'success', 'mail_subscribers_email_list' , 'email_list' . $this->emailList->id(),$this->emailList->toArray());
       // Redirect or perform additional actions if needed.
       $form_state->setRedirect('mail_subscribers.settings');
     }

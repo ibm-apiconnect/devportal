@@ -1,6 +1,14 @@
 --- modules/content_synchronizer/src/Processors/Entity/EntityProcessorBase.php  2023-07-12 16:00:08
 +++ modules/content_synchronizer/src/Processors/Entity/EntityProcessorBase.php     2023-07-12 16:00:35
-@@ -233,6 +233,7 @@
+@@ -20,6 +20,7 @@
+ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+ use Drupal\Core\Plugin\PluginBase;
+ use Drupal\Core\Entity\ContentEntityType;
++use Drupal\Core\Entity\ContentEntityInterface;
+ use Drupal\content_synchronizer\Processors\Type\TypeProcessorPluginManager;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+@@ -233,6 +234,7 @@
        if (!empty($dataToExport)) {
          $entityToExport->contentSynchronizerGid = $dataToExport[ExportEntityWriter::FIELD_GID] = $gid;
          $dataToExport[ExportEntityWriter::FIELD_UUID] = $entityToExport->uuid();
@@ -8,7 +16,7 @@
          ExportProcessor::getCurrentExportProcessor()
            ->getWriter()
            ->write($entityToExport, $dataToExport);
-@@ -269,6 +270,11 @@
+@@ -269,6 +271,11 @@
            ->getDefinition($entityTypeId);
        $bundleKey = $entityDefinition->getKey('bundle');
        $bundle = $defaultData[$bundleKey];
@@ -17,21 +25,21 @@
 +      if (is_array($bundle)) {
 +        $bundle = isset($bundle[0]->value) ? $bundle[0]->value : $data[ExportEntityWriter::FIELD_BUNDLE];
 +      }
-
+ 
        // Get field definitions.
        $fieldDefinitions = $this->entityFieldManager
-@@ -347,6 +353,7 @@
+@@ -347,6 +354,7 @@
    final public function import(array $dataToImport) {
      $gid = $dataToImport[ExportEntityWriter::FIELD_GID];
      $uuid = $dataToImport[ExportEntityWriter::FIELD_UUID];
 +    $bundle = $dataToImport[ExportEntityWriter::FIELD_BUNDLE];
-
+ 
      // If the entity has already been imported, we don't have to do it again.
      $import = ImportProcessor::getCurrentImportProcessor()->getImport();
-@@ -359,10 +366,10 @@
+@@ -359,10 +367,10 @@
        ->getImport()
        ->tagHasImporting($gid);
-
+ 
 +    $existingEntity = $this->getGlobalReferenceManager()->getExistingEntityByGidAndUuid($gid, $uuid, $bundle);
      // Get the previous entity by gid.
 -    if ($existingEntity = $this->getGlobalReferenceManager()
@@ -42,16 +50,32 @@
        if ($existingEntity) {
          $backup = clone($existingEntity);
        }
-@@ -666,7 +673,7 @@
+@@ -545,6 +553,15 @@
+           unset($createData[$bannedProperty]);
+         }
+ 
++        // Unset any field that is of type entity_reference_revisions as we can't create the entity with the reference data in.
++        $fieldDefinitions = array_filter($baseDefinitions, function($v) {
++          return $v->getType() === 'entity_reference_revisions';
++        });
++  
++        foreach ($fieldDefinitions as $name => $value) {
++          unset($createData[$name]);
++        }
++
+         $entityToImport = $this->entityTypeManager
+           ->getStorage($typeId)
+           ->create($createData);
+@@ -666,7 +683,7 @@
     *   The entity processor manager service.
     */
    protected function getEntityProcessorManager() {
 -    return $this->entityProcessorManager;
 +    return $this->entityProcessorPluginManager;
    }
-
+ 
    /**
-@@ -697,7 +704,6 @@
+@@ -697,7 +714,6 @@
      $this->propertyIdsNotToImport = array_merge(
        $this->propertyIdsNotToExport,
        [
@@ -59,3 +83,42 @@
          $definition->getKey('default_langcode'),
          $definition->getKey('revision_translation_affected'),
        ]
+@@ -725,6 +741,38 @@
+    */
+   public function canExportEntity(EntityInterface $entity) {
+     return $entity->getEntityType() instanceof ContentEntityType;
++  }
++
++  public function importPathAlias(array $dataToImport){
++    $gid = $dataToImport[ExportEntityWriter::FIELD_GID];
++    $uuid = $dataToImport[ExportEntityWriter::FIELD_UUID];
++    $bundle = $dataToImport[ExportEntityWriter::FIELD_BUNDLE];
++    $existingEntity = $this->getGlobalReferenceManager()->getExistingEntityByGidAndUuid($gid, $uuid, $bundle);
++    if(!empty($existingEntity) && $existingEntity[0]) {
++      $existingEntity = $existingEntity[0];
++      $translationData=$dataToImport[self::KEY_TRANSLATIONS][$existingEntity ->language()->getId()];
++        if($translationData && array_key_exists('path', $translationData) && $existingEntity instanceof ContentEntityInterface && $existingEntity->hasField('path')){
++          $pathInfo=$translationData['path'];
++          $url=$existingEntity->toUrl()->toString();
++          if(isset($pathInfo[0]['alias'])){
++            if(!empty($url) &&  strpos($url, 'node')!=false){
++              $alreadyExistingEntityTranslations = $this->getEntityTranslations($existingEntity); 
++              if(count($alreadyExistingEntityTranslations)>1){
++                $lid='und';
++              }else{
++                $lid=$existingEntity ->language()->getId();
++              }
++              $path_alias = $this->entityTypeManager->getStorage('path_alias')->create([
++                'path' =>$url,
++                 'alias' =>$pathInfo[0]['alias'],
++                 'langcode'=>$lid,
++               ]);
++                $path_alias->save();
++            }
++          }
++        }
++    }
+   }
+ 
++
+ }

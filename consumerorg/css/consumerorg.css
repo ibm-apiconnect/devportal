@@ -99,3 +99,11 @@
     max-width: 500px;
   }
 }
+
+.dropit-icon #icon {
+  enable-background: new 0 0 32 32;
+}
+
+.dropit-icon #icon .st0 {
+  fill: none;
+}

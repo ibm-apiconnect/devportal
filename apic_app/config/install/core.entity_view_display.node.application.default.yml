@@ -73,11 +73,17 @@ content:
     type: string
     region: content
   apic_summary:
-    weight: 105
+    type: expand_collapse_formatter
     label: above
-    type: basic_string
-    settings: {  }
+    settings:
+      trim_length: 1200
+      default_state: collapsed
+      link_text_open: 'Show more'
+      link_text_close: 'Show less'
+      link_class_open: ecf-open
+      link_class_close: ecf-close
     third_party_settings: {  }
+    weight: 105
     region: content
   apic_url:
     weight: 110

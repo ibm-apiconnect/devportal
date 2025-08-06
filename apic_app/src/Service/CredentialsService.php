@@ -20,6 +20,7 @@ use Drupal\Core\TempStore\TempStoreException;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\node\NodeInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\ibm_apim\Service\Utils;
 
 class CredentialsService {
 
@@ -28,6 +29,11 @@ class CredentialsService {
    * @var \Drupal\ibm_apim\Service\UserUtils
    */
   protected UserUtils $userUtils;
+
+    /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
+  protected Utils $utils;
 
   /**
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
@@ -40,8 +46,10 @@ class CredentialsService {
    * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
    */
   public function __construct(UserUtils $userUtils,
+                              Utils $utils,
                               ModuleHandlerInterface $moduleHandler) {
     $this->moduleHandler = $moduleHandler;
+    $this->utils = $utils;
     $this->userUtils = $userUtils;
   }
 
@@ -126,6 +134,7 @@ class CredentialsService {
       if (isset($entityIds) && !empty($entityIds)) {
         $credEntities = ApplicationCredentials::loadMultiple($entityIds);
         $credEntity = array_shift($credEntities);
+        $existingCredHash = $this->utils->generateNodeHash($credEntity, 'old-cred');
         $credEntity->set('name', $cred['name']);
         $credEntity->set('title', $cred['title']);
         $credEntity->set('consumerorg_url', $cred['consumerorg_url']);
@@ -155,7 +164,14 @@ class CredentialsService {
         } else {
           $credEntity->set('updated_at', strval(time()));
         }
-        $credEntity->save();
+
+        if ($this->utils->hashMatch($existingCredHash, $credEntity, 'new-credential')) {
+          $this->utils->snapshotDebug('Credential @cred not updated as the hash matched', ['@cred' => $cred['title']]);
+        } else {
+          $credEntity->save();
+          $this->utils->snapshotDebug('Credential @cred updated', ['@cred' => $cred['title']]);
+        }
+
         $newEntityId = array_shift($entityIds);
         if (sizeof($credEntities) > 1) {
           // if there is more than one credential with this ID then something's gone wrong - delete any others
@@ -183,6 +199,7 @@ class CredentialsService {
         }
         $newCred->enforceIsNew();
         $newCred->save();
+        $this->utils->snapshotDebug('Credential @cred created', ['@cred' => $cred['title']]);
         $query = \Drupal::entityQuery('apic_app_application_creds');
         $query->condition('uuid', $cred['id']);
         $entityIds = $query->accessCheck()->execute();

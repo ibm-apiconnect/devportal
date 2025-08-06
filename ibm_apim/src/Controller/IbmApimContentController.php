@@ -16,6 +16,7 @@ namespace Drupal\ibm_apim\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\apic_type_count\Controller\ApicNodeListController;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Session\UserSession;
 
 class IbmApimContentController extends ControllerBase {
 
@@ -119,17 +120,29 @@ class IbmApimContentController extends ControllerBase {
    * @return string A success message
    */
   public static function setApiIcon(string $apiRef, string $iconPath, string $iconAltText): string {
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
     $node = ApicNodeListController::getEntityofType($apiRef, 'api');
 
     $validIcon = self::validIconArgs($iconPath, $iconAltText);
+    $message = '';
     if (!$validIcon) {
-      return '';
+      return $message;
     }
 
     if ($node !== NULL) {
-      return self::setIcon($node, $iconPath, $iconAltText);
+      $message = self::setIcon($node, $iconPath, $iconAltText);
     }
-    return '';
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+
+    return $message;
   }
 
   /**
@@ -140,17 +153,29 @@ class IbmApimContentController extends ControllerBase {
    * @return string A success message
    */
   public static function setProductIcon(string $productRef, string $iconPath, string $iconAltText): string {
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
     $node = ApicNodeListController::getEntityofType($productRef, 'product');
 
     $validIcon = self::validIconArgs($iconPath, $iconAltText);
+    $message = '';
     if (!$validIcon) {
-      return '';
+      return $message;
     }
 
     if ($node !== NULL) {
-      return self::setIcon($node, $iconPath, $iconAltText);
+      $message = self::setIcon($node, $iconPath, $iconAltText);
     }
-    return '';
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+
+    return $message;
   }
 
   /**
@@ -161,6 +186,13 @@ class IbmApimContentController extends ControllerBase {
    */
   public static function addApiCategory(string $apiRef, string $category): string {
     $responseMessage = '';
+
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
     $node = ApicNodeListController::getEntityofType($apiRef, 'api');
 
     $api['consumer_api']['x-ibm-configuration']['categories'] = [ $category ];
@@ -176,6 +208,10 @@ class IbmApimContentController extends ControllerBase {
     $node->save();
     $responseMessage = sprintf("Successfully set taxonomy tag %s for api %s", $category, $node->apic_ref->value);
 
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+
     return $responseMessage;
   }
 
@@ -187,6 +223,13 @@ class IbmApimContentController extends ControllerBase {
    */
   public static function addProductCategory(string $productRef, string $category): string {
     $responseMessage = '';
+
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
     $node = ApicNodeListController::getEntityofType($productRef, 'product');
 
     $product['catalog_product']['info']['categories'] = [ $category ];
@@ -201,6 +244,10 @@ class IbmApimContentController extends ControllerBase {
     $apicTaxonomy->process_product_categories($product, $node);
     $node->save();
     $responseMessage = sprintf("Successfully set taxonomy tag %s for product %s", $category, $node->apic_ref->value);
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
 
     return $responseMessage;
   }
@@ -281,6 +328,12 @@ class IbmApimContentController extends ControllerBase {
    * @return string A success message
    */
   public static function addApiAttachment(string $apiRef, string $attachmentPath, string $description = ''): string {
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
     $node = ApicNodeListController::getEntityofType($apiRef, 'api');
 
     $validAttachment = self::validAttachmentArgs($attachmentPath, $description);
@@ -288,7 +341,13 @@ class IbmApimContentController extends ControllerBase {
       return '';
     }
 
-    return self::addAttachment($node, $attachmentPath, $description);
+    $message = self::addAttachment($node, $attachmentPath, $description);
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+
+    return $message;
   }
 
   /**
@@ -298,6 +357,12 @@ class IbmApimContentController extends ControllerBase {
    * @return string A success message
    */
   public static function addProductAttachment(string $productRef, string $attachmentPath, string $description = ''): string {
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
     $node = ApicNodeListController::getEntityofType($productRef, 'product');
 
     $validAttachment = self::validAttachmentArgs($attachmentPath, $description);
@@ -305,6 +370,12 @@ class IbmApimContentController extends ControllerBase {
       return '';
     }
 
-    return self::addAttachment($node, $attachmentPath, $description);
+    $message = self::addAttachment($node, $attachmentPath, $description);
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+
+    return $message;
   }
 }

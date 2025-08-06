@@ -24,6 +24,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
+use Drupal\Component\Uuid\Php as PhpUuid;
+use Drupal\encrypt\Entity\EncryptionProfile;
+
 
 /**
  * Provides the IBM Social Block
@@ -48,6 +51,7 @@ class SocialBlock extends BlockBase {
       'forumsList' => [],
       'twitterSearchBy' => 0,
       'twitterSearchParameter' => 'ibmcloud',
+      'blueskySearchParameter' => '',
       'twitterTweetTypes' => 0,
     ];
 
@@ -59,7 +63,7 @@ class SocialBlock extends BlockBase {
    */
 
   public function blockForm($form, FormStateInterface $form_state): array {
-
+    $form = parent::blockForm($form, $form_state);
     // For the forums display, we need to do some processing
     // The 'tableselect' form type, needs a header element
     $header = [
@@ -129,7 +133,7 @@ class SocialBlock extends BlockBase {
         }
         $options[$forumVocabulary->tid] = [
           'forum' => $forumVocabulary->name,
-          'description' => strip_tags($forumVocabulary->description__value),
+          'description' => strip_tags($forumVocabulary->description__value ?? ""),
           'topics' => sizeof($forumTopics['topics']),
           'posts' => $numPosts,
         ];
@@ -142,10 +146,15 @@ class SocialBlock extends BlockBase {
 
     // Start laying out the form
     $form['numberOfTiles'] = [
-      '#type' => 'textfield',
+      '#type' => 'number',
+      '#min' => 5,
+      '#max' => 100,
       '#title' => $this->t('Number of tiles to display'),
       '#default_value' => $this->configuration['numberOfTiles'],
       '#required' => TRUE,
+      '#attributes' => [
+        'style' => 'width: 200px;',
+      ],
     ];
 
     if ($moduleHandler->moduleExists('forum')) {
@@ -181,7 +190,14 @@ class SocialBlock extends BlockBase {
       '#type' => 'textfield',
       '#title' => $this->t('Twitter search parameter'),
       '#default_value' => $this->configuration['twitterSearchParameter'],
-      '#required' => TRUE,
+      '#required' => $this->isTwitterDefined(),
+    ];
+
+    $form['twitterConfig']['blueskySearchParameter'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Bluesky search parameter'),
+      '#default_value' => $this->configuration['blueskySearchParameter'],
+      '#required' => $this->isBlueSkyDefined(),
     ];
 
     $form['twitterConfig']['twitterTweetTypes'] = [
@@ -204,13 +220,16 @@ class SocialBlock extends BlockBase {
    * This function runs when the config / edit form is submitted
    */
   public function blockSubmit($form, FormStateInterface $form_state): void {
-
+    $uuid_service = new PhpUuid();
+    parent::blockSubmit($form, $form_state);
     $this->configuration['numberOfTiles'] = $form_state->getValue('numberOfTiles');
     $this->configuration['forumsList'] = $form_state->getValue('forumsList');
     $this->configuration['twitterSearchBy'] = $form_state->getValue(['twitterConfig', 'twitterSearchBy']);
     $this->configuration['twitterSearchParameter'] = $form_state->getValue(['twitterConfig', 'twitterSearchParameter']);
+    $this->configuration['blueskySearchParameter'] = $form_state->getValue(['twitterConfig', 'blueskySearchParameter']);
     $this->configuration['twitterTweetTypes'] = $form_state->getValue(['twitterConfig', 'twitterTweetTypes']);
-    $uuid = $this->getConfiguration()['uuid'];
+    $uuid = $uuid_service->generate();
+    $this->configuration['uuid'] = $uuid;
     $configInstances = \Drupal::state()->get('socialblock.config');
     if ($configInstances === NULL) {
       $configInstances = [];
@@ -220,6 +239,7 @@ class SocialBlock extends BlockBase {
       'forumsList' => $this->configuration['forumsList'],
       'twitterSearchBy' => $this->configuration['twitterSearchBy'],
       'twitterSearchParameter' => $this->configuration['twitterSearchParameter'],
+      'blueskySearchParameter' => $this->configuration['blueskySearchParameter'],
       'twitterTweetTypes' => $this->configuration['twitterTweetTypes'],
     ];
     \Drupal::state()->set('socialblock.config', $configInstances);
@@ -245,6 +265,7 @@ class SocialBlock extends BlockBase {
         'forumsList' => $this->configuration['forumsList'],
         'twitterSearchBy' => $this->configuration['twitterSearchBy'],
         'twitterSearchParameter' => $this->configuration['twitterSearchParameter'],
+        'blueskySearchParameter'=> $this->configuration['blueskySearchParameter'],
         'twitterTweetTypes' => $this->configuration['twitterTweetTypes'],
       ];
       \Drupal::state()->set('socialblock.config', $configInstances);
@@ -294,47 +315,40 @@ class SocialBlock extends BlockBase {
     if ($posts !== NULL && !empty($posts)) {
       // Sort array by time of forum topic or tweet and then chop of the top X
       // where X is the number of tiles to be displayed in this block
-      uasort($posts, 'socialblock_sort_by_created');
-      $posts = \array_slice($posts, 0, $this->configuration['numberOfTiles']);
-
       foreach ($posts as $post) {
-
         if ($post->tweet) {
-
           if (isset($post->retweeted_status)) {
             $post = $post->retweeted_status;
           }
-          $tweetId = $post->id_str;
-          $profileImg = $post->user->profile_image_url_https;
-          $name = $post->user->name;
-          $handle = $post->user->screen_name;
-          $timestamp = date_diff(date_create('@' . strtotime($post->created_at)), date_create('@' . time()));
-          $rawContent = $post->text;
-          $hashtags = $post->entities->hashtags;
-          $userMentions = $post->entities->user_mentions;
-
-          $hashtagsReplace = [];
-          foreach ($hashtags as $hashtag) {
-            $hashtagReplace = mb_substr($rawContent, $hashtag->indices[0], $hashtag->indices[1] - $hashtag->indices[0]);
-            $hashtagsReplace[] = $hashtagReplace;
+          $tweetId = $post->id_str ?? '';
+          if (isset($post?->post?->uri)) {
+            $parts = explode('/', $post->post->uri);
+            $tweetId = end($parts);
           }
+          $profileImg = $post->user->profile_image_url_https ?? $post?->post->author->avatar ?? '';
+          $name = $post->user->name ?? $post?->post?->author?->displayName ?? '';
+          $handle = $post->user->screen_name ?? $post?->post?->author?->handle ?? '';
+          $timestamp = date_diff(date_create('@' . strtotime($post->created_at ?? $post?->post?->record?->createdAt ?? time())), date_create('@' . time()));
+          $rawContent = $post->text ?? mb_convert_encoding($post?->post?->record?->text, 'UTF-8', 'UTF-8') ?? '';
+          $hashtags = $post->entities->hashtags ?? [];
+          $userMentions = $post->entities->user_mentions ?? [];
 
-          $userMentionsReplace = [];
-          foreach ($userMentions as $userMention) {
-            $userMentionReplace = mb_substr($rawContent, $userMention->indices[0], $userMention->indices[1] - $userMention->indices[0]);
-            $userMentionsReplace[] = $userMentionReplace;
+          if (isset($post->entities->hashtags)) {
+            //Modity hashtag for twitter
+            foreach ($hashtags as $hashtag) {
+              $hashtagReplace = mb_substr($rawContent, $hashtag->indices[0], $hashtag->indices[1] - $hashtag->indices[0]);
+              $rawContent = str_replace($hashtagReplace, '<a href="https://twitter.com/hashtag/' . ltrim($hashtagReplace, '#') . '" target="_blank" rel="noopener" title="' . $hashtagReplace . '" class="hashtag">' . $hashtagReplace . '</a>', $rawContent);
+            }
           }
-
-          foreach ($hashtagsReplace as $hashtagReplace) {
-            $rawContent = str_replace($hashtagReplace, '<a href="https://twitter.com/hashtag/' . ltrim($hashtagReplace, '#') . '" target="_blank" rel="noopener" title="' . $hashtagReplace . '" class="hashtag">' . $hashtagReplace . '</a>', $rawContent);
+          
+          if (isset($post->entities->user_mentions)) {
+            foreach ($userMentions as $userMention) {
+              $userMentionReplace = mb_substr($rawContent, $userMention->indices[0], $userMention->indices[1] - $userMention->indices[0]);
+              $rawContent = str_replace($userMentionReplace, '<a href="https://twitter.com/' . ltrim($userMentionReplace, '@') . '" target="_blank" rel="noopener" title="' . $userMentionReplace . '" class="user_mention">' . $userMentionReplace . '</a>', $rawContent);
+            }
           }
-
-          foreach ($userMentionsReplace as $userMentionReplace) {
-            $rawContent = str_replace($userMentionReplace, '<a href="https://twitter.com/' . ltrim($userMentionReplace, '@') . '" target="_blank" rel="noopener" title="' . $userMentionReplace . '" class="user_mention">' . $userMentionReplace . '</a>', $rawContent);
-          }
-
-          $media = $post->entities->media ?? [];
-          $extendedMedia = $post->extended_entities->media ?? [];
+          $media = $post->entities->media ?? $post?->post?->embed?->images ?? $post?->post?->embed?->media?->images ?? [];
+          $extendedMedia = $post->extended_entities->media ?? $post?->post?->embed?->video ?? [];
           $photos = [];
           $gifs = [];
 
@@ -342,16 +356,19 @@ class SocialBlock extends BlockBase {
 
           $videoIds = [];
           foreach ($media as $medium) {
-            if ($medium->type === 'photo') {
+            if (isset($medium->type) && $medium->type === 'photo') {
               $photos[] = $medium;
               // remove photo urls from the content if we're displaying the image
               if (strpos($rawContent, $medium->url) !== FALSE) {
                 $rawContent = str_replace($medium->url, '', $rawContent);
               }
             }
+            else {
+              $photos[] = $medium;
+            }
           }
           foreach ($extendedMedia as $extMedium) {
-            if ($extMedium->type === 'animated_gif') {
+            if ($extMedium->type === 'animated_gif' || $extMedium->mimeType === 'video/mp4') {
               $gifs[] = $extMedium;
               // remove gif urls from the content if we're displaying the image
               if (strpos($rawContent, $extMedium->url) !== FALSE) {
@@ -384,6 +401,38 @@ class SocialBlock extends BlockBase {
             }
 
           }
+
+          if (isset($post?->post?->record?->facets)) {
+            $offset = 0;
+            foreach ($post->post->record->facets as $urlIndex) {
+              $type = $urlIndex->features[0]->{'$type'};
+              $start = $urlIndex->index->byteStart + $offset;
+              $end = $urlIndex->index->byteEnd + $offset;
+              $needReplace = substr($rawContent, $start, $end - $start);
+              $replaced = "";
+              switch($type) {
+                case 'app.bsky.richtext.facet#link':
+                  $url = $urlIndex->features[0]->uri;
+                  $replaced = str_replace($needReplace, '<a href="' . $url . '" target="_blank" rel="noopener" class="url">' . $needReplace . '</a>', $rawContent);
+                  break;
+                case 'app.bsky.richtext.facet#tag':
+                  $tag = $urlIndex->features[0]->tag;
+                  $replacement = '<a href="https://bsky.app/hashtag/' . ltrim($tag, '#') . '" target="_blank" rel="noopener" title="' . $tag . '" class="hashtag">#' . $tag . '</a>';
+                  $replaced = substr_replace($rawContent, $replacement, $start, strlen($tag)+1);
+                  break;
+                case 'app.bsky.richtext.facet#mention':
+                  $mention = $urlIndex->features[0]->did;
+                  $replacement = '<a href="https://bsky.app/profile/' . ltrim($mention, '@') . '" target="_blank" rel="noopener" title="' . $needReplace . '" class="user_mention">' . $needReplace . '</a>';
+                  $replaced = substr_replace($rawContent, $replacement, $start, strlen($needReplace));
+                  break;
+                default:
+                  break;
+              }
+              $offset += strlen($replaced) - strlen($rawContent);
+              $rawContent = $replaced;
+            }
+          }
+
           $blockPost = [
             'type' => 'tweet',
             'profile_img' => $profileImg,
@@ -391,18 +440,47 @@ class SocialBlock extends BlockBase {
             'tweet_id' => $tweetId,
             'timestamp' => socialblock_get_tweet_timediff($timestamp),
             'name' => $name,
+            'isTwitter' => !isset($post->post),
           ];
           // sanity check existing content
           $rawContent = Xss::filter($rawContent);
 
-          // extended media, embedded gifs etc
+          // extended media, embedded gifs etc Twitter
           if (!empty($gifs)) {
             foreach ($gifs as $gif) {
               if (isset($gif->video_info->variants[0]->url)) {
                 $rawContent = '<div class="centerContainer"><video class="tweet_video" autoplay="true" loop="true" preload="none"><source src="' . $gif->video_info->variants[0]->url . '" type="video/mp4"/></video></div>' . $rawContent;
               }
+              elseif (isset($gif->ref->link)) {
+                $rawContent = '<div class="centerContainer"><video class="tweet_video" autoplay="true" loop="true" preload="none"><source src="' . $gif->ref->link . '" type="video/mp4"/></video></div>' . $rawContent;
+              }
             }
           }
+          
+          //Render video and gifs for BlueSky. Goes on same condition. Can render only one element
+          if (isset($post?->post?->embed) && $post?->post?->embed->{'$type'} === 'app.bsky.embed.recordWithMedia#view') {
+            $playlistUrl = $post->post?->embed?->media?->playlist ?? $post->post?->embed?->media?->external?->uri ?? '';
+            $posterUrl = $post->post->embed?->media?->thumbnail ?? $post->post->embed?->media?->external?->thumb ?? '';
+            $rawContent = '<div class="centerContainer"><video class="tweet_video" autoplay="true" poster="' . $posterUrl . '" loop="true" preload="none"><source src="' . $playlistUrl . '" type="video/mp4"/></video></div>' . $rawContent;
+          }
+          elseif (isset($post?->post?->embed) && $post?->post?->embed->{'$type'} === 'app.bsky.embed.video#view') {
+            $playlistUrl = $post->post->embed->uri ?? '';
+            $posterUrl = $post->post->embed->thumbnail ?? '';
+            $rawContent = '<div class="centerContainer"><video class="tweet_video" autoplay="true" poster="' . $posterUrl . '" loop="true" preload="none"><source src="' . $playlistUrl . '" type="video/mp4"/></video></div>' . $rawContent;
+          }
+          //Render youtube or vide from external link fro Blue Sky
+          elseif (isset($post?->post?->embed) && $post?->post?->embed->{'$type'} === 'app.bsky.embed.external#view') {
+            $externalUrl = $post->post->embed->external->uri ?? '';
+            if (preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([0-9A-Za-z_-]{11})/', $externalUrl, $matches)) {
+              $videoId = $matches[1];
+              $embedUrl = 'https://www.youtube.com/embed/' . $videoId;
+              $rawContent .= '<iframe class="yt_embed" title="' . t('Watch on YouTube') . '" src="' . $embedUrl . '?rel=0&amp;controls=1&amp;showinfo=0" frameborder="0" allowfullscreen></iframe>';
+            } elseif (isset($post->post->embed->external->thumb)) {
+              $thumb = $post->post->embed->external->thumb;
+              $rawContent = '<div class="centerContainer"><video class="tweet_video" autoplay="true" poster="' . $thumb . '" loop="true" preload="none"><source src="' . $externalUrl . '" type="video/mp4"/></video></div>' . $rawContent;
+            }
+          }
+
           // only display photos that aren't also in the extended_media listing
           if (!empty($photos)) {
             $photo_out = [];
@@ -416,7 +494,7 @@ class SocialBlock extends BlockBase {
                 }
               }
               if ($found !== TRUE) {
-                $photo_out[] = ['url' => $photo->media_url_https];
+                $photo_out[] = ['url' => $photo->media_url_https ?? $photo?->fullsize ?? ''];
               }
             }
             $blockPost['photos'] = $photo_out;
@@ -477,4 +555,41 @@ class SocialBlock extends BlockBase {
     ];
   }
 
+  public function isTwitterDefined(): bool {
+    $config = \Drupal::config('socialblock.settings');
+    $data = $config->get('credentials');
+    if ($data === NULL || empty($data)) {
+      return FALSE;
+    }
+    $encryptionProfile = EncryptionProfile::load('socialblock');
+    if ($encryptionProfile === NULL) {
+      return FALSE;
+    }
+    $settings = unserialize(\Drupal::service('encryption')->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
+    if (!isset($settings['consumerKey']) || empty($settings['consumerKey'])
+    || !isset($settings['consumerSecret']) || empty($settings['consumerSecret'])
+    || !isset($settings['accessToken']) || empty($settings['accessToken'])
+    || !isset($settings['accessTokenSecret']) || empty($settings['accessTokenSecret'])) {
+      return FALSE;
+    }
+    return TRUE;
+  }
+
+  public function isBlueSkyDefined(): bool {
+    $config = \Drupal::config('socialblock.settings');
+    $data = $config->get('credentials');
+    if ($data === NULL || empty($data)) {
+      return FALSE;
+    }
+    $encryptionProfile = EncryptionProfile::load('socialblock');
+    if ($encryptionProfile === NULL) {
+      return FALSE;
+    }
+    $settings = unserialize(\Drupal::service('encryption')->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
+    if (!isset($settings['blueSkyUserName']) || empty($settings['blueSkyUserName'])
+    || !isset($settings['blueSkyAppPassword']) || empty($settings['blueSkyAppPassword'])) {
+      return FALSE;
+    }
+    return TRUE;
+  }
 }

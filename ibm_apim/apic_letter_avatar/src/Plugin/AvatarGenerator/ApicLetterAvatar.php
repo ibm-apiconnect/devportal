@@ -38,7 +38,12 @@ class ApicLetterAvatar extends AvatarGeneratorBase {
       /** @var \Drupal\Core\File\FileSystemInterface $file_system */
       $file_system = \Drupal::service('file_system');
 
-      $path = $directory . '/' . $account->id() . '.png';
+      $avatar = \Drupal::service('user.data')->get('avatar_kit', $account->id(), 'avatar_name');
+      if ($avatar === NULL) {
+        $avatar = $this->generateAvatarName();
+        \Drupal::service('user.data')->set('avatar_kit', $account->id(), 'avatar_name', $avatar);
+      }
+      $path = $directory . '/' . $avatar . '.png';
 
       // todo: update existing file entity
       // if you update a file on the file system directly, page caches and image
@@ -73,6 +78,7 @@ class ApicLetterAvatar extends AvatarGeneratorBase {
       $file->setFileUri($path);
       $file->setFileName(basename($path));
       $file->setOwnerId($account->id());
+      $file->setMimeType('image/png');
       // Temporary until AvatarPreview adds usage.
       $file->setTemporary();
       return $file;
@@ -81,4 +87,13 @@ class ApicLetterAvatar extends AvatarGeneratorBase {
     return NULL;
   }
 
+  public static function generateAvatarName($length = 10) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $charactersLength = strlen($characters);
+    $avatarName = '';
+    for ($i = 0; $i < $length; $i++) {
+        $avatarName .= $characters[rand(0, $charactersLength - 1)];
+    }
+    return $avatarName;
+  }
 }

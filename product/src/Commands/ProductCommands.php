@@ -100,12 +100,13 @@ class ProductCommands extends DrushCommands {
 
           $time_end = microtime(true);
           $execution_time = (microtime(true) - $time_start);
+          $utils = \Drupal::service('ibm_apim.utils');
 
-          if ($createdOrUpdated) {
-            fprintf(STDERR, "Drush %s created Product '%s' in %f seconds\n", $func, $ref, $execution_time);
+          if ($createdOrUpdated === 'created') {
+            $utils->snapshotDebug("Drush %s created Product '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
           }
-          else {
-            fprintf(STDERR, "Drush %s updated existing Product '%s' in %f seconds\n", $func, $ref, $execution_time);
+          else if ($createdOrUpdated === 'updated') {
+            $utils->snapshotDebug("Drush %s updated existing Product '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
           }
         }
         $moduleHandler = \Drupal::service('module_handler');

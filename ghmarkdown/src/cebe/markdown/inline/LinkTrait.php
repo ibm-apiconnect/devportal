@@ -172,7 +172,7 @@ REGEXP;
   protected function parseLt($text) {
     if (strpos($text, '>') !== FALSE) {
       if (!in_array('parseLink', $this->context)) { // do not allow links in links
-        if (preg_match('/^<([^\s>]*?@[^\s]*?\.\w+?)>/', $text, $matches)) {
+        if (preg_match('/^<([a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>/', $text, $matches)) {
           // email address
           return [
             ['email', $this->replaceEscape($matches[1])],

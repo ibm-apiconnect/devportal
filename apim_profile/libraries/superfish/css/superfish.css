@@ -8,10 +8,16 @@
   clip: rect(1px, 1px, 1px, 1px);
   position: absolute !important;
   height: 1px !important;
-  margin:  !important;
+  margin: 0 !important;
   overflow: hidden !important;
   padding: 0 !important;
   width: 1px !important;
+}
+.sf-font-size-test {
+  padding: 0;
+  position: absolute;
+  top: -99999em;
+  width: auto;
 }
 ul.sf-menu,
 ul.sf-menu li {

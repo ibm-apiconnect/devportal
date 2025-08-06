@@ -171,9 +171,9 @@ class UploadImageForm extends FormBase {
     $appImgDir = 'private://application';
     \Drupal::service('file_system')->prepareDirectory($appImgDir, FileSystemInterface::CREATE_DIRECTORY);
     $fileTemp = file_save_upload('image', [
-      'file_validate_is_image' => [], // Validates file is really an image.
-      'file_validate_size' => [2 * 1024 * 1024], // file size less than 2mb
-      'file_validate_extensions' => ['png gif jpg jpeg'],
+      'FileIsImage' => [],
+      'FileSizeLimit' => 2 * 1024 * 1024, // file size less than 2mb
+      'FileExtension' => ['png gif jpg jpeg'],
     ], $appImgDir, FileSystemInterface::EXISTS_RENAME); // Validate extensions.
 
     if (empty($fileTemp)) {

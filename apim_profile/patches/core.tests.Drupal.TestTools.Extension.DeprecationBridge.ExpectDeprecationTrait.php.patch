@@ -1,0 +1,15 @@
+--- core/tests/Drupal/TestTools/Extension/DeprecationBridge/ExpectDeprecationTrait.php     2025-01-06 22:41:17
++++ core/tests/Drupal/TestTools/Extension/DeprecationBridge/ExpectDeprecationTrait.php        2025-01-28 15:41:02
+@@ -41,7 +41,11 @@
+     }
+
+     DeprecationHandler::reset();
+-    set_error_handler(new TestErrorHandler(Error::currentErrorHandler(), $this));
++    $error_handler = Error::currentErrorHandler();
++    if (!$error_handler instanceof TestErrorHandler) {
++      $error_handler = new TestErrorHandler($error_handler, $this);
++    }
++    set_error_handler($error_handler);
+   }
+
+   /**

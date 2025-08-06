@@ -464,7 +464,7 @@ class ApiContext extends RawDrupalContext {
       $accountSwitcher->switchBack();
     }
 
-    if ($created) {
+    if ($created === 'created') {
       print("Api with the name $name and id $id was created successfully. ");
     }
     else {
@@ -483,7 +483,7 @@ class ApiContext extends RawDrupalContext {
     $api = new Api();
     $created = $api->createOrUpdate($object, 'internal');
 
-    if ($created) {
+    if ($created !== 'updated') {
       throw new \Exception('A new api was created when the existing api with the name ' . $object['consumer_api']['info']['name'] . ' should have been updated. ');
     }
     else {
@@ -534,7 +534,7 @@ class ApiContext extends RawDrupalContext {
       $accountSwitcher->switchBack();
     }
 
-    if ($created) {
+    if ($created === 'created') {
       print("Api with the name $name was created successfully. ");
     }
     else {

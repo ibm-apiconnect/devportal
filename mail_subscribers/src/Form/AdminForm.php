@@ -157,26 +157,33 @@ class AdminForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
-
+    $settings=[];
+   
     // Set the submitted configuration setting
     $this->config('mail_subscribers.settings')
       ->set('throttle', (int) $form_state->getValue('throttle'))
       ->set('spool_expire', (int) $form_state->getValue('spool_expire'))
       ->set('debug', (bool) $form_state->getValue('debug'))
       ->save();
-
+      $settings['throttle'] = $form_state->getValue('throttle');
+      $settings['spool_expire'] = $form_state->getValue('spool_expire');
+      $settings['debug'] = $form_state->getValue('debug');
+    
     // only save the from details if differ from site defaults
     $siteConfig = \Drupal::config('system.site');
     if ($form_state->getValue('from_name') !== $siteConfig->get('name')) {
       $this->config('mail_subscribers.settings')
         ->set('from_name', $form_state->getValue('from_name'))
         ->save();
+        $settings['from_name'] = $form_state->getValue('from_name');
     }
     if ($form_state->getValue('from_mail') !== $siteConfig->get('mail')) {
       $this->config('mail_subscribers.settings')
         ->set('from_mail', $form_state->getValue('from_mail'))
         ->save();
+        $settings['from_mail'] = $form_state->getValue('from_mail');
     }
+    \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_MAIL_SUBSCRIBERS_SETTINGS_UPDATE' , 'success', 'admin/config/system/mail_subscribers' , 'data/drupal/mail_subscribers',$settings);
 
     parent::submitForm($form, $form_state);
   }

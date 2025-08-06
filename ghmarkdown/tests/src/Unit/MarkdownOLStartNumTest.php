@@ -8,6 +8,7 @@
 namespace Drupal\Tests\ghmarkdown\Unit;
 
 use Drupal\ghmarkdown\cebe\markdown\Markdown;
+use Drupal\Tests\ghmarkdown\Unit\Base\BaseMarkdownBaseClass;
 
 /**
  * Test support ordered lists at arbitrary number(`start` html attribute)
@@ -15,15 +16,15 @@ use Drupal\ghmarkdown\cebe\markdown\Markdown;
  * @author Maxim Hodyrew <maximkou@gmail.com>
  * @group ghmarkdown
  */
-class MarkdownOLStartNumTest extends BaseMarkdownTest {
+class MarkdownOLStartNumTest extends BaseMarkdownBaseClass {
 
-  public function createMarkdown(): Markdown {
+  public static function createMarkdown(): Markdown {
     $markdown = new Markdown();
     $markdown->keepListStartNumber = TRUE;
     return $markdown;
   }
 
-  public function getDataPaths(): array {
+  public static function getDataPaths(): array {
     return [
       'markdown-data' => __DIR__ . '/markdown-ol-start-num-data',
     ];

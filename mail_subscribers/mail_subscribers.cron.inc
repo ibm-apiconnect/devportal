@@ -88,6 +88,17 @@ function mail_subscribers_send_from_spool() {
     \Drupal::logger('mail_subscribers')->notice('%ok messages sent in %sec seconds, %fail failed sending.',
       ['%ok' => $ok, '%sec' => Timer::read('mail_subscribers') / 1000, '%fail' => $fail]
     );
+    \Drupal::service('ibm_apim.utils')->logAuditEvent(
+      'PORTAL_MAIL_SUBSCRIBERS_EMAIL_SENT_VIA_CRON',
+      'success',
+      'data/drupal/mail_subscribers:cronjob',
+      'mail_subscribers:cronjob',
+      [
+        'sent_email_count' => $ok,
+        'failed_email_count' => $fail,
+        'execution_time' => Timer::read('mail_subscribers') / 1000,
+      ]
+    );
   }
 }
 

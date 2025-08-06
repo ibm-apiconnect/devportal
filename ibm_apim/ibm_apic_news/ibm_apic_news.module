@@ -1,0 +1,50 @@
+<?php
+
+ use Drupal\Core\Render\Markup;
+ use Drupal\page_manager\Entity\Page;
+ use Drupal\Core\Url;
+ use Drupal\Core\Form\FormStateInterface;
+
+function ibm_apic_news_preprocess(&$variables, $hook, &$info) : void {
+    if ($hook === 'node' && isset($variables['node']) && $variables['node'] instanceof \Drupal\node\NodeInterface) {
+        $contentTypeToShow = $variables['node']->bundle();
+        if ($contentTypeToShow === 'article') {
+            //Load the view mode names.
+            $allViewModes = \Drupal::service('entity_display.repository')->getViewModes('node');
+            //View mode for this request.
+            $viewModeToUse = $variables['view_mode'];
+            //Is the view mode defined for nodes?
+            if (array_key_exists($viewModeToUse, $allViewModes)) {
+                //Is there a template file for the view modes in the module?
+                if ($viewModeToUse === 'full') {
+                    $templateFileName = 'node--news';
+                }
+                else {
+                    $templateFileName = 'node--news' . '--' . $viewModeToUse;
+                }
+                $themeName = \Drupal::theme()->getActiveTheme()->getName();
+                $themePath = \Drupal::theme()->getActiveTheme()->getPath();
+                if (file_exists($themePath . '/templates/node/' . $templateFileName . '.html.twig')) {
+                    $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+                    $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates/node';
+                    $info['template'] = $templateFileName;
+                }
+                elseif (file_exists($themePath . '/templates/' . $templateFileName . '.html.twig')) {
+                    $info['theme path'] = \Drupal::service('extension.list.theme')->getPath($themeName);
+                    $info['path'] = \Drupal::service('extension.list.theme')->getPath($themeName) . '/templates';
+                    $info['template'] = $templateFileName;
+                }
+                else {
+                    $templateFilePath = \Drupal::service('extension.list.module')->getPath('ibm_apic_news') . '/templates/' . $templateFileName . '.html.twig';
+                    if (file_exists($templateFilePath)) {
+                        $info['theme path'] = \Drupal::service('extension.list.module')->getPath('ibm_apic_news');
+                        $info['path'] = \Drupal::service('extension.list.module')->getPath('ibm_apic_news') . '/templates';
+                        $info['template'] = $templateFileName;
+                    }
+                }
+            }
+            $variables['images_path'] = base_path() . \Drupal::service('extension.list.module')->getPath('ibm_apic_news');
+            $variables['#attached']['library'][] = 'ibm_apic_news/news_style';
+        }
+    }
+}

@@ -109,6 +109,7 @@ class ApicModuleService implements ApicModuleInterface {
       foreach ($paths as $extension => $path) {
         $this->logger->debug('%function: Recursively deleting %path', ['%function' => __FUNCTION__, '%path' => $path]);
         $this->utils->file_delete_recursive($path);
+        \Drupal::service('ibm_apim.utils')->logAuditEvent($extensionType == 'module' ? 'PORTAL_DELETE_SITE_MODULE' : 'PORTAL_DELETE_SITE_THEME', 'success', 'data/drupal/' . $extensionType, substr($GLOBALS['real_base_url'], 8) . ':data/drupal/' . $extensionType . '/' . $extension);
       }
       $this->utils->clear_empty_extension_folders($extensionType);
       // Rebuild module list after removing the files to remove its also removed from the list

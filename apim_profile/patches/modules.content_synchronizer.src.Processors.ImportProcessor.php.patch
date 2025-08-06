@@ -6,6 +6,22 @@
    const UPDATE_NO_UPDATE = 'update_no_update';
 -  const DEFAULT_UPDATE_TYPE = 'update_if_recent';
 +  const DEFAULT_UPDATE_TYPE = 'update_systematic';
-
+ 
    /**
     * The current import processor.
+@@ -141,4 +141,15 @@
+     $this->updateType = $updateType;
+   }
+ 
++  public function importPathAlias(array $rootData){
++    self::$currentImportProcessor = $this;
++    $entity = NULL;
++    // Get the plugin of the entity :
++    /** @var \Drupal\content_synchronizer\Processors\Entity\EntityProcessorBase $plugin */
++    $plugin = $this->entityProcessorPluginManager->getInstanceByEntityType($rootData[ExportEntityWriter::FIELD_ENTITY_TYPE_ID]);
++    if ($entityData = $this->import->getEntityDataFromGid($rootData[ExportEntityWriter::FIELD_GID])) {
++      $entity = $plugin->importPathAlias($entityData);
++    }
++  }
++
+ }

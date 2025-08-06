@@ -1,0 +1,24 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the productcasestudy block
+ *
+ * Variables available:
+ * - productCaseStudies: the nid of the case studies related to the product
+ *
+ * @ingroup themeable
+ */
+#}
+
+{% if productCaseStudies|length > 0 %}
+  <div class="productcasestudy">
+    <div class="field product-case-study">
+      <h3 class="field__label label">{{ 'Case Studies'|t }}</h3>
+        <div class="productcasestudyCards">
+          {% for nid in productCaseStudies %}
+            {{ drupal_entity('node', nid, 'card') }}
+          {% endfor %}
+        </div>
+    </div>
+  </div>
+{% endif %}

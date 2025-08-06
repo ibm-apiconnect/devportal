@@ -1,0 +1,13 @@
+--- modules/file_upload_secure_validator/src/Service/FileUploadSecureValidator.php	2024-08-30 10:07:23
++++ modules/file_upload_secure_validator/src/Service/FileUploadSecureValidator.php	2025-04-25 16:12:28
+@@ -65,6 +65,10 @@
+   public function validate(File $file) {
+     // Get mime type from filename.
+     $mimeByFilename = $file->getMimeType();
++    if (empty($mimeByFilename)) {
++      $mimeByFilename = \Drupal::service('file.mime_type.guesser.extension')->guessMimeType($file->getFileUri());
++      $file->setMimeType($mimeByFilename);
++    }
+     // Get mime type from fileinfo.
+     try {
+       $mimeByFileinfo = (new FileinfoMimeTypeGuesser())->guessMimeType($file->getFileUri());

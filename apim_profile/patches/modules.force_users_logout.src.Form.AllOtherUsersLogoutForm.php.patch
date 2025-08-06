@@ -1,0 +1,124 @@
+--- modules/force_users_logout/src/Form/AllOtherUsersLogoutForm.php	2025-05-15 22:07:41
++++ modules/force_users_logout/src/Form/AllOtherUsersLogoutForm.php	2025-05-15 22:02:48
+@@ -54,57 +54,89 @@
+   public function getFormId() {
+     return 'allotherusers_force_logout_form';
+   }
+-
+   /**
+    * {@inheritdoc}
+    */
+   public function buildForm(array $form, FormStateInterface $form_state) {
+-    $config = $this->config('force_users_logout.allotherusers_logout_form');
+-    $form = [];
+-    $roles = Role::loadMultiple();
+-    $optionarray[] = '';
+-    foreach ($roles as $rolekey => $roleval) {
+-      if ($rolekey != 'administrator' && $rolekey != 'authenticated' && $rolekey != 'anonymous') {
+-        $optionsarray[$rolekey] = $roleval->label();
+-      }
+-    }
+-    $form['input_fields']['selectallogout'] = [
++    $form['confirm_logout'] = [
+       '#type' => 'checkbox',
+-      '#options' => ["otherusers" => "Logout users other than admin"],
+-      '#title' => $this->t('This setting will force logout all users except admin'),
+-      '#default_value' => $config->get('selectallogout'),
+-      '#required' => TRUE,
++      '#title' => $this->t('Log out all non-admin users'),
++      '#default_value' => 0,
+     ];
++
+     $form['submit'] = [
+       '#type' => 'submit',
+       '#value' => $this->t('Force Logout'),
+     ];
++
+     return $form;
+   }
+ 
++
+   /**
+    * {@inheritdoc}
+    */
+-  public function submitForm(array &$form, FormStateInterface $form_state) {
+-    parent::submitForm($form, $form_state);
+-    $selectedroles = $form_state->getValue('selectallogout');
+-    if (!empty($selectedroles)) {
+-      $query = \Drupal::entityQuery('user')
+-        ->condition('status', 1)
+-        ->condition('roles', 'administrator', '<>')
+-        ->condition('roles', 'anonymous', '<>');
+-      $uids = $query->accessCheck()->execute();
+-      $result = \Drupal::entityTypeManager()->getStorage('user')->loadMultiple($uids);
+-      /** @var \Drupal\user\UserInterface $user */
+-      foreach ($result as $user) {
+-        \Drupal::currentUser()->setAccount($user);
+-        if (\Drupal::currentUser()->isAuthenticated()) {
+-          $session_manager = \Drupal::service('session_manager');
+-          $session_manager->delete(\Drupal::currentUser()->id());
++  public function submitForm(array &$form, FormStateInterface $form_state){
++   // parent::submitForm($form, $form_state);
++
++    if (!$form_state->getValue('confirm_logout')) {
++      $this->messenger()->addWarning($this->t('Please check the box to confirm logout.'));
++      return;
++    }
++
++    $uids = \Drupal::entityQuery('user')
++      ->condition('status', 1)
++      ->accessCheck()
++      ->execute();
++
++    // Create batch operations.
++    $operations = [];
++    $chunks = array_chunk($uids, 500);
++    foreach ($chunks as $chunk) {
++      $operations[] = [
++        [static::class, 'logoutUsersBatch'],
++        [$chunk],
++      ];
++    }
++    $batch = [
++      'title' => $this->t('Logging out users...'),
++      'operations' => $operations,
++      'finished' => [static::class, 'batchFinished'],
++      'init_message' => $this->t('Starting user logout process...'),
++      'progress_message' => $this->t('Logging out non admin users.'),
++      'error_message' => $this->t('An error occurred during logout.'),
++    ];
++    \Drupal::logger('FORCE_LOGOUT')->notice('All other users logout initiated');
++    batch_set($batch);
++  }
++
++  /**
++   * Batch operation callback: logs out a batch of users.
++   */
++  public static function logoutUsersBatch(array $uids, array &$context){
++    $result = \Drupal::entityTypeManager()->getStorage('user')->loadMultiple($uids);
++    $session_manager = \Drupal::service('session_manager');
++    /** @var \Drupal\user\UserInterface $user */
++    foreach ($result as $user) {
++      if ($user->id() != 1 || !in_array('administrator', $user->getRoles())) {
++        if ($user->isAuthenticated()) {
++          $session_manager->delete($user->id());
+         }
+       }
+-      $this->messenger()->addStatus('All the users except admin role are logged out');
+     }
++    $context['message'] = t('Logged out a batch of users.');
+   }
+ 
++  /**
++   * Batch finished callback.
++   */
++  public static function batchFinished($success, array $results, array $operations) {
++    if ($success) {
++      \Drupal::messenger()->addStatus(t('All non-admin users have been logged out.'));
++      \Drupal::logger('FORCE_LOGOUT')->notice('All non-admin users have been force logged out');
++    }
++    else {
++      \Drupal::messenger()->addError(t('Some errors occurred while logging out users.'));
++    }
++  }
+ }

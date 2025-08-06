@@ -25,6 +25,7 @@
 @import "component/overflow-menu";
 @import "component/panel";
 @import "component/progress-bar";
+@import "component/table";
 @import "component/table-drag";
 @import "component/tabs";
 @import "component/toolbar";
@@ -795,7 +796,7 @@ section.block-go-ahead {
     }
   }
   .main-container.container {
-    background-image: url(../images/ibmcarbon/svg/Error_Page_Illustrations_OTHER.svg);
+    background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_OTHER.svg);
     min-height: 600px;
     background-size: contain;
     background-repeat: no-repeat;
@@ -979,7 +980,7 @@ body.bx--global-light-ui.context--user-password {
 .route-system403,
 .route-system401 {
   .main-container.container {
-    background-image: url(../images/ibmcarbon/svg/Error_Page_Illustrations_OTHER.svg);
+    background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_OTHER.svg);
     min-height: 600px;
     background-size: 50%;
     background-repeat: no-repeat;
@@ -1016,10 +1017,10 @@ body.bx--global-light-ui.context--user-password {
 }
 
 .route-system403 .main-container.container {
-  background-image: url(../images/ibmcarbon/svg/Error_Page_Illustrations_403.svg);
+  background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_403.svg);
 }
 .route-system404 .main-container.container {
-  background-image: url(../images/ibmcarbon/svg/Error_Page_Illustrations_404.svg);
+  background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_404.svg);
 }
 /* comments filter format page */
 .path-filter p {
@@ -1094,4 +1095,8 @@ body.bx--global-light-ui.context--user-password {
       display:none
     }
   }
+}
+
+.contentInnerWrapper .productrecommendations {
+  background-color: $highlight
 }

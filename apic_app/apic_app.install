@@ -749,6 +749,33 @@ function apic_app_update_10004() {
   }
 }
 
+/**
+ * Update description to be a expand_collapse_formatter field to default view
+ */
+function apic_app_update_10800() {
+  \Drupal::service('update.update_hook_registry')->markFutureUpdateEquivalent(10900, '10.0.9.0');
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  $view = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load('node.application.default');
+  if ($view !== NULL) {
+    $summary = $view->getComponent('apic_summary');
+    $summary['settings'] = [
+      'trim_length' => 1200,
+      'default_state' => 'collapsed',
+      'link_text_open' => 'Show more',
+      'link_text_close' => 'Show less',
+      'link_class_open' => 'ecf-open',
+      'link_class_close' => 'ecf-close'
+    ];
+    $summary['type'] = 'expand_collapse_formatter';
+    $view->setComponent('apic_summary', $summary);
+    $view->save();
+  }
+}
+
 function apic_app_removeConfigDependency($config, $dep) {
   \Drupal::logger('apic_app')->notice('Checking @config for @dep.', ['@config' => $config, '@dep' => $dep]);
   try {
@@ -806,4 +833,34 @@ function apic_app_update_dependencies(): array {
       ],
     ],
   ];
+}
+
+/**
+ * Update hook to import or update the 'application_subscriptions' view using module handler.
+ */
+function apic_app_update_11001() {
+  // Get the module path using the module handler service.
+  $module_handler = \Drupal::service('module_handler');
+  $module_path = $module_handler->getModule('apic_app')->getPath();
+
+  // Path to the YAML config file in the module.
+  $config_path = DRUPAL_ROOT . '/' . $module_path . '/config/install/views.view.application_subscriptions.yml';
+
+  if (!file_exists($config_path)) {
+    throw new \Exception('View YAML not found at: ' . $config_path);
+  }
+
+  // Read and decode the YAML file.
+  $yaml_content = file_get_contents($config_path);
+  $data = \Drupal\Component\Serialization\Yaml::decode($yaml_content);
+
+  if (empty($data)) {
+    throw new \Exception('Invalid or empty YAML content for application_subscriptions.');
+  }
+
+  // Import as configuration.
+  $config = \Drupal::configFactory()->getEditable('views.view.application_subscriptions');
+  $config->setData($data)->save();
+  // Invalidate render cache to reflect config changes.
+  \Drupal::service('cache.render')->invalidateAll();
 }

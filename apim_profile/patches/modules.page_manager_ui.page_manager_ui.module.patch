@@ -1,0 +1,23 @@
+--- modules/page_manager/page_manager_ui/page_manager_ui.module 2024-11-27 15:18:45
++++ modules/page_manager/page_manager_ui/page_manager_ui.module    2024-11-27 15:18:37
+@@ -54,6 +54,20 @@
+     $entity_types['page']->setLinkTemplate('config-translation-overview', str_replace('manage/{machine_name}/{step}', '{page}', $entity_types['page']->getLinkTemplate('config-translation-overview')));
+   }
+
++  // Devel tries to build it's URL based on the edit link and
++  // Page entities have a custom edit link template which is
++  // not compatible with Devel's assumptions.
++  // @see https://www.drupal.org/project/page_manager/issues/3438993
++  if ($entity_types['page']->hasLinkTemplate('devel-load')) {
++    $entity_types['page']->setLinkTemplate('devel-load', '/devel/page/{page}');
++  }
++  if ($entity_types['page']->hasLinkTemplate('devel-definition')) {
++    $entity_types['page']->setLinkTemplate('devel-definition', '/devel/page/{page}');
++  }
++  if ($entity_types['page']->hasLinkTemplate('devel-load-with-references')) {
++    $entity_types['page']->setLinkTemplate('devel-load-with-references', '/devel/page/{page}');
++  }
++
+   // Change the URL for page variant config translation overview to outside the
+   // wizard.
+   if ($entity_types['page_variant']->hasLinkTemplate('config-translation-overview')) {

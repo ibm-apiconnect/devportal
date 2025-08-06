@@ -20,6 +20,8 @@ use Drupal\apic_type_count\Controller\ApicTypeCountController;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Session\UserSession;
 use Drupal\node\NodeInterface;
+use Drupal\user\RoleInterface;
+use Drupal\user\Entity\Role;
 use Throwable;
 
 /**
@@ -85,7 +87,8 @@ class ApicTypeCountCommands extends DrushCommands {
       $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
     }
     $result_final = [];
-    $results = user_role_names();
+    $roles = Role::loadMultiple();
+    $results = array_map(fn(RoleInterface $role) => $role->label(), $roles);
     if (is_array($results)) {
       foreach ($results as $user_role_machine_name => $content_type_title) {
         // Get the value as key and value pair.

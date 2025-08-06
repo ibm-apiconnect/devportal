@@ -30,9 +30,11 @@ use Throwable;
 class Product {
 
   protected $apicTaxonomy;
+  protected $utils;
 
   public function __construct() {
     $this->apicTaxonomy = \Drupal::service('ibm_apim.taxonomy');
+    $this->utils = \Drupal::service('ibm_apim.utils');
   }
 
   /**
@@ -259,8 +261,8 @@ class Product {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $returnValue = NULL;
     if ($node !== NULL) {
-      $utils = \Drupal::service('ibm_apim.utils');
-      $existingNodeHash = $utils->generateNodeHash($node, 'old-product');
+
+      $existingNodeHash =  $this->utils->generateNodeHash($node, 'old-product');
       $siteConfig = \Drupal::service('ibm_apim.site_config');
       $moduleHandler = \Drupal::service('module_handler');
       $hostVariable = $siteConfig->getApimHost();
@@ -290,7 +292,7 @@ class Product {
         $returnValue = NULL;
       }
       else {
-        $truncated_title = $utils->truncate_string($product['catalog_product']['info']['title']);
+        $truncated_title = $this->utils->truncate_string($product['catalog_product']['info']['title']);
         // title must be set, if not fall back on name
         if (isset($truncated_title) && !empty($truncated_title)) {
           $node->setTitle($truncated_title);
@@ -300,11 +302,11 @@ class Product {
         }
         if (isset($product['catalog_product']['info']['x-ibm-languages']['title']) && !empty($product['catalog_product']['info']['x-ibm-languages']['title'])) {
           foreach ($product['catalog_product']['info']['x-ibm-languages']['title'] as $lang => $langArray) {
-            $lang = $utils->convert_lang_name_to_drupal($lang);
+            $lang = $this->utils->convert_lang_name_to_drupal($lang);
             // if its one of our locales or the root of one of our locales
             foreach ($languageList as $langListKey => $langListValue) {
               if (\in_array($lang, $languageList, FALSE)) {
-                $truncated_title = $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['title'][$lang]);
+                $truncated_title = $this->utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['title'][$lang]);
                 // title needs to actually have a value
                 if (isset($truncated_title) && !empty($truncated_title)) {
                   if (!$node->hasTranslation($lang)) {
@@ -371,7 +373,7 @@ class Product {
         }
         if (isset($product['catalog_product']['info']['x-ibm-languages']['description']) && !empty($product['catalog_product']['info']['x-ibm-languages']['description'])) {
           foreach ($product['catalog_product']['info']['x-ibm-languages']['description'] as $lang => $langArray) {
-            $lang = $utils->convert_lang_name_to_drupal($lang);
+            $lang = $this->utils->convert_lang_name_to_drupal($lang);
             // if its one of our locales or the root of one of our locales
             foreach ($languageList as $langListKey => $langListValue) {
               if (\in_array($lang, $languageList, FALSE)) {
@@ -406,7 +408,7 @@ class Product {
         }
         if (isset($product['catalog_product']['info']['x-ibm-languages']['summary']) && !empty($product['catalog_product']['info']['x-ibm-languages']['summary'])) {
           foreach ($product['catalog_product']['info']['x-ibm-languages']['summary'] as $lang => $langArray) {
-            $lang = $utils->convert_lang_name_to_drupal($lang);
+            $lang = $this->utils->convert_lang_name_to_drupal($lang);
             // if its one of our locales or the root of one of our locales
             foreach ($languageList as $langListKey => $langListValue) {
               if (\in_array($lang, $languageList, FALSE)) {
@@ -414,7 +416,7 @@ class Product {
                   // ensure the translation has a title as its a required field
                   $translation = $node->addTranslation($lang, [
                     'title' => $truncated_title,
-                    'apic_summary' => $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['summary'][$lang]),
+                    'apic_summary' => $this->utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['summary'][$lang]),
                     1000,
                   ]);
                   $translation->save();
@@ -425,14 +427,14 @@ class Product {
                   if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
                     $translation->setTitle($truncated_title);
                   }
-                  $translation->set('apic_summary', $utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['summary'][$lang]), 1000)
+                  $translation->set('apic_summary', $this->utils->truncate_string($product['catalog_product']['info']['x-ibm-languages']['summary'][$lang]), 1000)
                     ->save();
                 }
               }
             }
           }
         }
-        $summary = $utils->truncate_string($product['catalog_product']['info']['summary'], 1000);
+        $summary = $this->utils->truncate_string($product['catalog_product']['info']['summary'], 1000);
         if ($summary != '') {
           $node->set('apic_summary', [
             'value' => $summary,
@@ -458,17 +460,17 @@ class Product {
         if (!isset($product['catalog_product']['info']['contact']['url'])) {
           $product['catalog_product']['info']['contact']['url'] = '';
         }
-        $utils->setNodeValue($node, 'product_contact_name', $product['catalog_product']['info']['contact']['name']);
-        $utils->setNodeValue($node, 'product_contact_email', $product['catalog_product']['info']['contact']['email']);
-        $utils->setNodeValue($node, 'product_contact_url', $product['catalog_product']['info']['contact']['url']);
+        $this->utils->setNodeValue($node, 'product_contact_name', $product['catalog_product']['info']['contact']['name']);
+        $this->utils->setNodeValue($node, 'product_contact_email', $product['catalog_product']['info']['contact']['email']);
+        $this->utils->setNodeValue($node, 'product_contact_url', $product['catalog_product']['info']['contact']['url']);
         if (!isset($product['catalog_product']['info']['license'])) {
           $product['catalog_product']['info']['license'] = [
             'name' => '',
             'url' => '',
           ];
         }
-        $utils->setNodeValue($node, 'product_license_name', $product['catalog_product']['info']['license']['name']);
-        $utils->setNodeValue($node, 'product_license_url', $product['catalog_product']['info']['license']['url']);
+        $this->utils->setNodeValue($node, 'product_license_name', $product['catalog_product']['info']['license']['name']);
+        $this->utils->setNodeValue($node, 'product_license_url', $product['catalog_product']['info']['license']['url']);
         $node->set('product_visibility', []);
         // If there is a 'visibility' block in the product use that to determine visibility,
         // otherwise use the one inside catalog_product
@@ -615,17 +617,16 @@ class Product {
           $node->set('product_terms_of_service', []);
         }
 
-        if ($utils->hashMatch($existingNodeHash, $node, 'new-product')) {
-          if ($event !== 'internal') {
-            \Drupal::logger('apic_api')->notice('Update product: No update required as the hash matched for @productName @version', [
+        if ($this->utils->hashMatch($existingNodeHash, $node, 'new-product')) {
+          $this->utils->snapshotDebug('Update product: No update required as the hash matched for @productName @version', [
               '@productName' => $product['catalog_product']['info']['name'],
               '@version' => $product['catalog_product']['info']['version'],
             ]);
-          }
         } else {
+          $returnValue = $node;
           if (isset($product['catalog_product']['info']['x-ibm-languages']['termsOfService']) && !empty($product['catalog_product']['info']['x-ibm-languages']['termsOfService'])) {
             foreach ($product['catalog_product']['info']['x-ibm-languages']['termsOfService'] as $lang => $langArray) {
-              $lang = $utils->convert_lang_name_to_drupal($lang);
+              $lang = $this->utils->convert_lang_name_to_drupal($lang);
               // if its one of our locales or the root of one of our locales
               foreach ($languageList as $langListKey => $langListValue) {
                 if (\in_array($lang, $languageList, FALSE)) {
@@ -693,11 +694,11 @@ class Product {
 
           // if invoked from the create code then don't invoke the update event - will be invoked from create instead
           if ($node !== NULL) {
+            $this->utils->snapshotDebug('Product @product @version updated', [
+              '@product' => $node->getTitle(),
+              '@version' => $node->apic_version->value,
+            ]);
             if ($event !== 'internal') {
-              \Drupal::logger('product')->notice('Product @product @version updated', [
-                '@product' => $node->getTitle(),
-                '@version' => $node->apic_version->value,
-              ]);
               // Calling all modules implementing 'hook_product_update':
               $moduleHandler->invokeAll('product_update', [
                 'node' => $node,
@@ -709,7 +710,6 @@ class Product {
       }
 
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
-      $returnValue = $node;
     } else {
       \Drupal::logger('product')->error('Update product: no node provided.', []);
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -730,7 +730,7 @@ class Product {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function createOrUpdate($product, $event): bool {
+  public function createOrUpdate($product, $event): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'product');
@@ -742,19 +742,19 @@ class Product {
       $nid = array_shift($nids);
       $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
       if ($node !== NULL) {
-        $this->update($node, $product, $event);
-        $createdOrUpdated = FALSE;
+        $node = $this->update($node, $product, $event);
+        $createdOrUpdated = $node ? 'updated' : '';
       }
       else {
         // no existing node for this Product so create one
         $this->create($product, $event);
-        $createdOrUpdated = TRUE;
+        $createdOrUpdated = 'created';
       }
     }
     else {
       // no existing node for this Product so create one
       $this->create($product, $event);
-      $createdOrUpdated = TRUE;
+      $createdOrUpdated = 'created';
     }
     \Drupal::service('cache_tags.invalidator')->invalidateTags(['featuredcontent']);
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $createdOrUpdated);
@@ -1836,6 +1836,43 @@ class Product {
     }
 
     return $plans;
+  }
+
+  public static function getProductRecommendations(string $productUrl): array {
+    $currentUser = \Drupal::currentUser();
+    $userUtils = \Drupal::service('ibm_apim.user_utils');
+    $org = $userUtils->getCurrentConsumerOrg();
+
+    $productCount = (int) \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->get('product_recommendations.count');
+    if ($productCount > 20) {
+      $productCount = 20;
+    }
+    $recommendedProducts = [];
+    $productQueries = Database::getConnection()->query("SELECT product_url,COUNT(*) as count FROM {apic_app_application_subs} WHERE app_url IN (SELECT app_url FROM {apic_app_application_subs} WHERE product_url = :product_url) AND product_url != :product_url GROUP BY product_url ORDER BY count DESC", [':product_url' => $productUrl])->fetchAll();
+
+    foreach ($productQueries as $productQuery) {
+        if (count($recommendedProducts) == $productCount) {
+          break;
+        }
+
+        $query = \Drupal::entityQuery('node');
+        $query->condition('type', 'product');
+        $query->condition('apic_url.value', $productQuery->product_url);
+        if ($currentUser->isAnonymous()) {
+          $query->condition('product_visibility_public.value', 1);
+        }
+        $query->orConditionGroup()
+          ->condition('product_visibility_custom_orgs.value', NULL, 'IS NULL')
+          ->condition('product_visibility_custom_orgs.value', $org['url']);
+        $nids = $query->accessCheck()->execute();
+
+        if ($nids !== NULL && !empty($nids)) {
+            $nid = array_shift($nids);
+            $recommendedProducts[] = Node::load($nid);
+        }
+    }
+
+    return $recommendedProducts;
   }
 
 }

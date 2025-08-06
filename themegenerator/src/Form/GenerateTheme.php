@@ -163,6 +163,14 @@ class GenerateTheme extends FormBase {
       $this->messenger->addMessage(t('Success. Your sub-theme can be downloaded here: @htmlLink. This download will be available for 24 hours.', [
         '@htmlLink' => $messageHtml,
       ]));
+
+      \Drupal::service('ibm_apim.utils')->logAuditEvent(
+        'PORTAL_GENERATE_THEME',
+        'success',
+        '/admin/theme/generate',
+        $url,
+        [ 'theme_name' => $name, 'template' => $template, 'type' => $type ]
+      );
     }
     else {
       $this->messenger->addError(t('An error has occurred.'));

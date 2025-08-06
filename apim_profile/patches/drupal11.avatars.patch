@@ -1,0 +1,208 @@
+--- modules/avatars/avatars.info.yml    2022-12-24 16:53:15
++++ modules/avatars/avatars.info.yml       2024-09-06 09:51:08
+@@ -2,7 +2,7 @@
+ type: module
+ description: 'Provides a selection of generated avatars for users.'
+ package: Avatars
+-core_version_requirement: ^9.5 || ^10
++core_version_requirement: ^9.5 || ^10 || ^11
+ php: 7.4
+ dependencies:
+   - drupal:user
+
+--- modules/avatars/avatars_robohash/avatars_robohash.info.yml  2022-12-24 16:53:15
++++ modules/avatars/avatars_robohash/avatars_robohash.info.yml     2024-09-06 09:52:42
+@@ -2,7 +2,7 @@
+ type: module
+ description: 'Adds Robohash avatar generators for Avatar Kit.'
+ package: Avatars
+-core_version_requirement: ^9.5 || ^10
++core_version_requirement: ^9.5 || ^10 || ^11
+ dependencies:
+   - avatars:avatars
+
+--- modules/avatars/avatars_gravatar/avatars_gravatar.info.yml  2022-12-24 16:53:15
++++ modules/avatars/avatars_gravatar/avatars_gravatar.info.yml     2024-09-06 09:53:34
+@@ -2,7 +2,7 @@
+ type: module
+ description: 'Adds Gravatar.com avatar generators for Avatar Kit.'
+ package: Avatars
+-core_version_requirement: ^9.5 || ^10
++core_version_requirement: ^9.5 || ^10 || ^11
+ dependencies:
+   - avatars:avatars
+
+--- modules/avatars/avatars_adorable/avatars_adorable.info.yml  2022-12-24 16:53:15
++++ modules/avatars/avatars_adorable/avatars_adorable.info.yml     2024-09-06 09:54:38
+@@ -2,7 +2,7 @@
+ type: module
+ description: 'Adds an Adorable.io avatar generator for Avatar Kit.'
+ package: Avatars
+-core_version_requirement: ^9.5 || ^10
++core_version_requirement: ^9.5 || ^10 || ^11
+ dependencies:
+   - avatars:avatars
+
+--- modules/avatars/src/AvatarManager.php       2024-09-06 10:23:06
++++ modules/avatars/src/AvatarManager.php  2024-09-06 10:23:07
+@@ -14,14 +14,14 @@
+ use Drupal\user\UserInterface;
+ use GuzzleHttp\ClientInterface;
+ use GuzzleHttp\Exception\ClientException;
+-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
++use Symfony\Component\DependencyInjection\ContainerInterface;
++use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+
+ /**
+  * Provides an avatar manager service.
+  */
+-class AvatarManager implements AvatarManagerInterface {
++class AvatarManager implements AvatarManagerInterface, ContainerInjectionInterface {
+
+-  use ContainerAwareTrait;
+   use StringTranslationTrait;
+
+   /**
+@@ -96,10 +96,24 @@
+     $this->httpClient = $http_client;
+     $this->cacheTagInvalidator = $cache_tag_invalidator;
+     $this->loggerFactory = $logger_factory;
+-    $this->avatarGeneratorStorage = $entity_type_manager
+-      ->getStorage('avatar_generator');
++    $this->avatarGeneratorStorage = $entity_type_manager->getStorage('avatar_generator');
+     $this->fileUsage = $file_usage;
+     $this->avatarGenerator = $avatar_generator;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function create(ContainerInterface $container) {
++    return new static(
++          $container->get('config.factory'),
++          $container->get('http_client'),
++          $container->get('cache_tags.invalidator'),
++          $container->get('logger.factory'),
++          $container->get('entity_type.manager'),
++          $container->get('file.usage'),
++          $container->get('plugin.manager.avatar_generator')
++      );
+   }
+
+   /**
+
+--- modules/avatars/avatars.services.yml        2024-09-06 10:28:24
++++ modules/avatars/avatars.services.yml   2024-09-06 16:42:37
+@@ -9,7 +9,6 @@
+       - '@entity_type.manager'
+       - '@file.usage'
+       - '@plugin.manager.avatar_generator'
+-    parent: container.trait
+   plugin.manager.avatar_generator:
+     class: Drupal\avatars\AvatarGeneratorPluginManager
+     parent: default_plugin_manager
+
+--- modules/avatars/avatars.install	2025-04-20 20:14:22.730976252 +0000
++++ modules/avatars/avatars.install	2025-04-22 09:06:57.298984867 +0000
+@@ -152,3 +152,34 @@
+     ])
+     ->save();
+ }
++
++
++function avatars_update_8004() {
++  $file_system = \Drupal::service('file_system');
++  $user_ids = \Drupal::entityQuery('user')->sort('uid')->accessCheck(FALSE)->execute();
++  $users = \Drupal::entityTypeManager()->getStorage('user')->loadMultiple($user_ids);
++  $avatarGeneratorStorage = \Drupal::entityTypeManager()->getStorage('avatar_generator');
++  foreach ($users as $user) {
++    foreach ($avatarGeneratorStorage->getEnabledAvatarGenerators() as $avatarGenerator) {
++      if ($avatarGenerator instanceof \Drupal\avatars\AvatarGeneratorInterface) {
++        $avatar_preview = \Drupal\avatars\Entity\AvatarPreview::getAvatarPreview($avatarGenerator, $user);
++        if ($avatar_preview && $avatar = $avatar_preview->getAvatar()) {
++          if ($avatar->getFileName() === $user->id(). '.png') {
++            $oldPath = $avatar->getFileUri();
++            $dirName = dirname ($avatar->getFileUri());
++            $randomName = \Drupal\apic_letter_avatar\Plugin\AvatarGenerator\ApicLetterAvatar::generateAvatarName(); 
++            $newName =  $randomName . '.png';
++            $newPath = $dirName . '/' . $newName;
++            $avatar->setFileName($newName);
++            $avatar->setFileUri($newPath);
++            $avatar->save();
++            $avatar_preview->setAvatar($avatar);
++            $avatar_preview->save();
++            $file_system->move($oldPath, $newPath, \Drupal\Core\File\FileSystemInterface::EXISTS_REPLACE);
++            \Drupal::service('user.data')->set('avatar_kit', $user->id(), 'avatar_name', $randomName);
++          }
++        }
++      }
++    }
++  }
++}
+\ No newline at end of file
+
+--- modules/avatars/src/AvatarManager.php	2025-04-22 14:25:02.444996229 +0000
+--- modules/avatars/src/AvatarManager.php	2025-04-22 14:24:53.512996263 +0000
+@@ -200,8 +200,10 @@
+       if ($fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY)) {
+         try {
+           if (($result = $this->httpClient->get($url)) && ($result->getStatusCode() == 200)) {
+-            $file_path = $directory . '/' . $user->id() . '.jpg';
++            $randomName = \Drupal\apic_letter_avatar\Plugin\AvatarGenerator\ApicLetterAvatar::generateAvatarName();
++            $file_path = $directory . '/' . $randomName . '.png';
+             $file = \Drupal::service('file.repository')->writeData($result->getBody(), $file_path, FileSystemInterface::EXISTS_REPLACE);
++            \Drupal::service('user.data')->set('avatar_kit', $user->id(), 'avatar_name', $randomName);
+           }
+         }
+         catch (ClientException $e) {
+
+--- modules/avatars/avatars_robohash/src/Plugin/AvatarGenerator/Robohash.php     2025-05-06 13:47:34
++++ modules/avatars/avatars_robohash/src/Plugin/AvatarGenerator/Robohash.php     2025-05-06 13:58:12
+@@ -73,7 +73,7 @@
+         'robot_heads' => $this->t('Robot Heads'),
+         'monsters' => $this->t('Monsters'),
+       ],
+-      '#default_value' => $this->configuration['type'],
++      '#default_value' => $this->configuration['type'] ?? '',
+     ];
+     $form['background'] = [
+       '#type' => 'radios',
+@@ -84,7 +84,7 @@
+         'background_2' => $this->t('Patterns'),
+       ],
+       '#empty_value' => '',
+-      '#default_value' => $this->configuration['background'],
++      '#default_value' => $this->configuration['background'] ?? '',
+     ];
+     return $form;
+   }
+
+--- modules/avatars/src/Form/Settings.php        2025-05-06 10:37:50
++++ modules/avatars/src/Form/Settings.php        2025-05-06 14:04:11
+@@ -10,6 +10,7 @@
+ use Drupal\unlimited_number\Element\UnlimitedNumber;
+ use Drupal\Core\Cache\Cache;
+ use Drupal\avatars\Entity\AvatarGenerator;
++use Drupal\Core\Config\TypedConfigManagerInterface;
+ 
+ /**
+  * Configure avatar kit settings.
+@@ -31,8 +32,8 @@
+    * @param \Drupal\avatars\AvatarGeneratorPluginManagerInterface $avatar_generator
+    *   The avatar generator plugin manager.
+    */
+-  public function __construct(ConfigFactoryInterface $config_factory, AvatarGeneratorPluginManagerInterface $avatar_generator) {
+-    parent::__construct($config_factory);
++  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManagerInterface $typedConfigManager,  AvatarGeneratorPluginManagerInterface $avatar_generator) {
++    parent::__construct($config_factory,$typedConfigManager);
+     $this->avatarGenerator = $avatar_generator;
+   }
+ 
+@@ -42,6 +43,7 @@
+   public static function create(ContainerInterface $container) {
+     return new static(
+       $container->get('config.factory'),
++      $container->get('config.typed'),
+       $container->get('plugin.manager.avatar_generator')
+     );
+   }

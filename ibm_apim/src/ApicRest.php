@@ -797,7 +797,7 @@ class ApicRest implements ApicRestInterface {
    * @return array
    * @throws \Exception
    */
-  private static function getPlatformToken(): array {
+  public static function getPlatformToken(): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $token = [];
     $site_config = \Drupal::service('ibm_apim.site_config');

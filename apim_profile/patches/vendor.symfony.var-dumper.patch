@@ -1,0 +1,222 @@
+--- vendor/symfony/var-dumper/Dumper/HtmlDumper.php	2025-07-27 18:19:17
++++ vendor/symfony/var-dumper/Dumper/HtmlDumper.php	2025-07-27 21:23:19
+@@ -24,45 +24,8 @@
+     /** @var callable|resource|string|null */
+     public static $defaultOutput = 'php://output';
+ 
+-    protected static $themes = [
+-        'dark' => [
+-            'default' => 'background-color:#18171B; color:#FF8400; line-height:1.2em; font:12px Menlo, Monaco, Consolas, monospace; word-wrap: break-word; white-space: pre-wrap; position:relative; z-index:99999; word-break: break-all',
+-            'num' => 'font-weight:bold; color:#1299DA',
+-            'const' => 'font-weight:bold',
+-            'virtual' => 'font-style:italic',
+-            'str' => 'font-weight:bold; color:#56DB3A',
+-            'note' => 'color:#1299DA',
+-            'ref' => 'color:#A0A0A0',
+-            'public' => 'color:#FFFFFF',
+-            'protected' => 'color:#FFFFFF',
+-            'private' => 'color:#FFFFFF',
+-            'meta' => 'color:#B729D9',
+-            'key' => 'color:#56DB3A',
+-            'index' => 'color:#1299DA',
+-            'ellipsis' => 'color:#FF8400',
+-            'ns' => 'user-select:none;',
+-        ],
+-        'light' => [
+-            'default' => 'background:none; color:#CC7832; line-height:1.2em; font:12px Menlo, Monaco, Consolas, monospace; word-wrap: break-word; white-space: pre-wrap; position:relative; z-index:99999; word-break: break-all',
+-            'num' => 'font-weight:bold; color:#1299DA',
+-            'const' => 'font-weight:bold',
+-            'virtual' => 'font-style:italic',
+-            'str' => 'font-weight:bold; color:#629755;',
+-            'note' => 'color:#6897BB',
+-            'ref' => 'color:#6E6E6E',
+-            'public' => 'color:#262626',
+-            'protected' => 'color:#262626',
+-            'private' => 'color:#262626',
+-            'meta' => 'color:#B729D9',
+-            'key' => 'color:#789339',
+-            'index' => 'color:#1299DA',
+-            'ellipsis' => 'color:#CC7832',
+-            'ns' => 'user-select:none;',
+-        ],
+-    ];
+-
+     protected ?string $dumpHeader = null;
+-    protected string $dumpPrefix = '<pre class=sf-dump id=%s data-indent-pad="%s">';
++    protected string $dumpPrefix = '<pre class="sf-dump theme-class-dark" id=%s data-indent-pad="%s">';
+     protected string $dumpSuffix = '</pre><script>Sfdump(%s)</script>';
+     protected string $dumpId;
+     protected bool $colors = true;
+@@ -81,22 +44,15 @@
+         AbstractDumper::__construct($output, $charset, $flags);
+         $this->dumpId = 'sf-dump-'.mt_rand();
+         $this->displayOptions['fileLinkFormat'] = \ini_get('xdebug.file_link_format') ?: get_cfg_var('xdebug.file_link_format');
+-        $this->styles = static::$themes['dark'] ?? self::$themes['dark'];
+     }
+ 
+-    public function setStyles(array $styles): void
+-    {
+-        $this->headerIsDumped = false;
+-        $this->styles = $styles + $this->styles;
+-    }
+-
+     public function setTheme(string $themeName): void
+     {
+         if (!isset(static::$themes[$themeName])) {
+             throw new \InvalidArgumentException(\sprintf('Theme "%s" does not exist in class "%s".', $themeName, static::class));
+         }
+ 
+-        $this->setStyles(static::$themes[$themeName]);
++        $this->dumpPrefix = '<pre class="sf-dump theme-class-'.$themeName.'" id=%s data-indent-pad="%s"';
+     }
+ 
+     /**
+@@ -625,146 +581,11 @@
+ };
+ 
+ })(document);
+-</script><style>
+-.sf-js-enabled pre.sf-dump .sf-dump-compact,
+-.sf-js-enabled .sf-dump-str-collapse .sf-dump-str-collapse,
+-.sf-js-enabled .sf-dump-str-expand .sf-dump-str-expand {
+-    display: none;
+-}
+-.sf-dump-hover:hover {
+-    background-color: #B729D9;
+-    color: #FFF !important;
+-    border-radius: 2px;
+-}
+-pre.sf-dump {
+-    display: block;
+-    white-space: pre;
+-    padding: 5px;
+-    overflow: initial !important;
+-}
+-pre.sf-dump:after {
+-   content: "";
+-   visibility: hidden;
+-   display: block;
+-   height: 0;
+-   clear: both;
+-}
+-pre.sf-dump .sf-dump-ellipsization {
+-    display: inline-flex;
+-}
+-pre.sf-dump a {
+-    text-decoration: none;
+-    cursor: pointer;
+-    border: 0;
+-    outline: none;
+-    color: inherit;
+-}
+-pre.sf-dump img {
+-    max-width: 50em;
+-    max-height: 50em;
+-    margin: .5em 0 0 0;
+-    padding: 0;
+-    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAAAAAA6mKC9AAAAHUlEQVQY02O8zAABilCaiQEN0EeA8QuUcX9g3QEAAjcC5piyhyEAAAAASUVORK5CYII=) #D3D3D3;
+-}
+-pre.sf-dump .sf-dump-ellipsis {
+-    text-overflow: ellipsis;
+-    white-space: nowrap;
+-    overflow: hidden;
+-}
+-pre.sf-dump .sf-dump-ellipsis-tail {
+-    flex-shrink: 0;
+-}
+-pre.sf-dump code {
+-    display:inline;
+-    padding:0;
+-    background:none;
+-}
+-.sf-dump-public.sf-dump-highlight,
+-.sf-dump-protected.sf-dump-highlight,
+-.sf-dump-private.sf-dump-highlight,
+-.sf-dump-str.sf-dump-highlight,
+-.sf-dump-key.sf-dump-highlight {
+-    background: rgba(111, 172, 204, 0.3);
+-    border: 1px solid #7DA0B1;
+-    border-radius: 3px;
+-}
+-.sf-dump-public.sf-dump-highlight-active,
+-.sf-dump-protected.sf-dump-highlight-active,
+-.sf-dump-private.sf-dump-highlight-active,
+-.sf-dump-str.sf-dump-highlight-active,
+-.sf-dump-key.sf-dump-highlight-active {
+-    background: rgba(253, 175, 0, 0.4);
+-    border: 1px solid #ffa500;
+-    border-radius: 3px;
+-}
+-pre.sf-dump .sf-dump-search-hidden {
+-    display: none !important;
+-}
+-pre.sf-dump .sf-dump-search-wrapper {
+-    font-size: 0;
+-    white-space: nowrap;
+-    margin-bottom: 5px;
+-    display: flex;
+-    position: -webkit-sticky;
+-    position: sticky;
+-    top: 5px;
+-}
+-pre.sf-dump .sf-dump-search-wrapper > * {
+-    vertical-align: top;
+-    box-sizing: border-box;
+-    height: 21px;
+-    font-weight: normal;
+-    border-radius: 0;
+-    background: #FFF;
+-    color: #757575;
+-    border: 1px solid #BBB;
+-}
+-pre.sf-dump .sf-dump-search-wrapper > input.sf-dump-search-input {
+-    padding: 3px;
+-    height: 21px;
+-    font-size: 12px;
+-    border-right: none;
+-    border-top-left-radius: 3px;
+-    border-bottom-left-radius: 3px;
+-    color: #000;
+-    min-width: 15px;
+-    width: 100%;
+-}
+-pre.sf-dump .sf-dump-search-wrapper > .sf-dump-search-input-next,
+-pre.sf-dump .sf-dump-search-wrapper > .sf-dump-search-input-previous {
+-    background: #F2F2F2;
+-    outline: none;
+-    border-left: none;
+-    font-size: 0;
+-    line-height: 0;
+-}
+-pre.sf-dump .sf-dump-search-wrapper > .sf-dump-search-input-next {
+-    border-top-right-radius: 3px;
+-    border-bottom-right-radius: 3px;
+-}
+-pre.sf-dump .sf-dump-search-wrapper > .sf-dump-search-input-next > svg,
+-pre.sf-dump .sf-dump-search-wrapper > .sf-dump-search-input-previous > svg {
+-    pointer-events: none;
+-    width: 12px;
+-    height: 12px;
+-}
+-pre.sf-dump .sf-dump-search-wrapper > .sf-dump-search-count {
+-    display: inline-block;
+-    padding: 0 5px;
+-    margin: 0;
+-    border-left: none;
+-    line-height: 21px;
+-    font-size: 12px;
+-}
++</script>
+ EOHTML
+         );
+ 
+-        foreach ($this->styles as $class => $style) {
+-            $line .= 'pre.sf-dump'.('default' === $class ? ', pre.sf-dump' : '').' .sf-dump-'.$class.'{'.$style.'}';
+-        }
+-        $line .= 'pre.sf-dump .sf-dump-ellipsis-note{'.$this->styles['note'].'}';
+-
+-        return $this->dumpHeader = preg_replace('/\s+/', ' ', $line).'</style>'.$this->dumpHeader;
++        return $this->dumpHeader = preg_replace('/\s+/', ' ', $line).$this->dumpHeader;
+     }
+ 
+     public function dumpString(Cursor $cursor, string $str, bool $bin, int $cut): void

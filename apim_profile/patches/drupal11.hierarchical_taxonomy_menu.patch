@@ -1,0 +1,11 @@
+--- modules/hierarchical_taxonomy_menu/hierarchical_taxonomy_menu.info.yml      2024-04-03 20:28:00
++++ modules/hierarchical_taxonomy_menu/hierarchical_taxonomy_menu.info.yml 2024-09-02 15:55:31
+@@ -1,7 +1,7 @@
+ name: 'Hierarchical Taxonomy Menu'
+ type: module
+ description: 'Create menus from taxonomy terms.'
+-core_version_requirement: ^9 || ^10
++core_version_requirement: ^9 || ^10 || ^11
+ package: Menu
+ dependencies:
+   - drupal:taxonomy

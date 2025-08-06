@@ -1,5 +1,5 @@
---- core/modules/book/book.module	2018-04-27 11:37:55.000000000 +0100
-+++ core/modules/book/book.module	2018-04-27 11:47:02.000000000 +0100
+--- modules/book/book.module	2018-04-27 11:37:55.000000000 +0100
++++ modules/book/book.module	2018-04-27 11:47:02.000000000 +0100
 @@ -137,11 +137,14 @@
  function book_form_node_form_alter(&$form, FormStateInterface $form_state, $form_id) {
    $node = $form_state->getFormObject()->getEntity();
@@ -19,4 +19,3 @@
 +      }
      }
    }
- 

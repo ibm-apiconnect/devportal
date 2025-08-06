@@ -88,6 +88,9 @@ class ConsumerOrganizationWizard extends FormWizardBase {
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $cached_values = $form_state->getTemporaryValue('wizard');
     $data = \Drupal::service('tempstore.private')->get('mail_subscribers')->get('data');
+    if ($this->getStep($cached_values) === 'chooseconsumerorgs' && \Drupal::request()->get('start') === '1') {
+      $cached_values = [];
+    }
     $cached_values['objectType'] = 'consumerorg';
     if (isset($cached_values['products'])) {
       unset($cached_values['products']);

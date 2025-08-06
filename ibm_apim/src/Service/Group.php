@@ -121,8 +121,8 @@ class Group {
       if (isset($current_data[$key]['org_urls'])) {
         foreach ($current_data[$key]['org_urls'] as $org_url) {
           $org = $corgService->get($org_url);
-          if (isset($org) && $org->removeTag($data['url'])) {
-            $corgService->createOrUpdateNode($org, 'internal');
+          if (isset($org) && !in_array($org_url, $data['org_urls']) && $org->removeTag($data['url'])) {
+            $corgService->createOrUpdateNode($org, 'internal-group');
           }
         }
       }
@@ -133,7 +133,7 @@ class Group {
       foreach ($data['org_urls'] as $org_url) {
         $org = $corgService->get($org_url);
         if (isset($org) && $org->addTag($data['url'])) {
-          $corgService->createOrUpdateNode($org, 'internal');
+          $corgService->createOrUpdateNode($org, 'internal-group');
         }
       }
 

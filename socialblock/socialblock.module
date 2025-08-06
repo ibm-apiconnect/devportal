@@ -21,26 +21,6 @@ use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\encrypt\Entity\EncryptionProfile;
 
 /**
- * Add twig template
- *
- * @param $existing
- * @param $type
- * @param $theme
- * @param $path
- *
- * @return array
- */
-function socialblock_theme($existing, $type, $theme, $path): array {
-  return [
-    'socialblock_block' => [
-      'variables' => [
-        'posts' => NULL,
-      ],
-    ],
-  ];
-}
-
-/**
  * @return array
  */
 function socialblock_get_forum_vocabularies(): array {
@@ -136,12 +116,15 @@ function socialblock_get_tweet_timediff(DateInterval $di): ?string {
 function socialblock_cron() {
 
   $configInstances = \Drupal::state()->get('socialblock.config');
+  $configInstances = array_slice($configInstances, -1);
   if ($configInstances !== NULL && !empty($configInstances)) {
     foreach ($configInstances as $blockUuid => $settings) {
-
       $numberOfTiles = (int) $settings['numberOfTiles'];
       $twitterSearchBy = (int) $settings['twitterSearchBy'];      // In the form of 0 = userid, 1 = search;
-      $twitterSearchParameter = $settings['twitterSearchParameter'];
+      $twitterSearchParameter = $settings['twitterSearchParameter'] ?? '';
+      $twitterSearchParameter = preg_replace('/[^\x20-\x7E]/', '', $twitterSearchParameter);
+      $blueskySearchParameter = $settings['blueskySearchParameter'] ?? '';
+      $blueskySearchParameter = preg_replace('/[^\x20-\x7E]/', '', $blueskySearchParameter);
       $twitterTweetTypes = (int) $settings['twitterTweetTypes'];  // In the form of 0 = tweets, 1 = tweets and replies
 
       // These are the settings for the twitter oauth
@@ -172,30 +155,35 @@ function socialblock_cron() {
       if (!isset($settings['accessTokenSecret'])) {
         $settings['accessTokenSecret'] = '';
       }
+      if (!isset($settings['blueSkyUserName'])) {
+        $settings['blueSkyUserName'] = '';
+      }
+      if (!isset($settings['blueSkyAppPassword'])) {
+        $settings['blueSkyAppPassword'] = '';
+      }
+
+      $tweets = [];
 
       if ($settings['consumerKey'] !== NULL && !empty($settings['consumerKey']) && $settings['consumerSecret'] !== NULL && !empty($settings['consumerSecret']) && $settings['accessToken'] !== NULL && !empty($settings['accessToken']) && $settings['accessTokenSecret'] !== NULL && !empty($settings['accessTokenSecret'])) {
         $api = '';
         $apiParam = '';
 
         switch ($twitterSearchBy) {
-
           // Show tweets for a given user id
           case 0;
-            $api = 'statuses/user_timeline';
-            $apiParam = 'screen_name';
-            break;
+          $api = 'statuses/user_timeline';
+          $apiParam = 'screen_name';
+          break;
 
           // Show tweets matching a search term
           case 1;
-            $api = 'search/tweets';
-            $apiParam = 'q';
-            break;
+              $api = 'search/tweets';
+              $apiParam = 'q';
+              break;
         }
 
         $tweets = [];
-
         switch ($twitterTweetTypes) {
-
           // Displaying just tweets
           case 0:
             $remainingCalls = socialblock_not_rate_limited($settings);
@@ -247,7 +235,7 @@ function socialblock_cron() {
               $tweets = socialblock_call_twitter_api($settings, $api, [
                 $apiParam => $twitterSearchParameter,
                 'count' => $numberOfTiles,
-              ]);
+              ]) ?? [];
             }
             else {
               \Drupal::logger('socialblock')
@@ -257,25 +245,48 @@ function socialblock_cron() {
           default:
             $tweets = [];
         }
-
-        // Store tweets as state config so that we can use it when rendering the socialblock
-        $dataInstances = \Drupal::state()->get('socialblock.data');
-        if ($dataInstances === NULL) {
-          $dataInstances = [];
-        }
-        $dataInstances[$blockUuid] = $tweets;
-
-        \Drupal::state()->set('socialblock.data', $dataInstances);
-
-        \Drupal::logger('socialblock')
-          ->info('Social Block : Retrieved %num_tweets tweets for block with uuid [%uuid]', [
-            '%num_tweets' => sizeof($tweets),
-            '%uuid' => $blockUuid,
-          ]);
-
       } // we had complete twitter credentials
 
-    } // foreach($blocks as $blockid)
+      $tweets = \array_slice($tweets ?? [], 0, $numberOfTiles);
+      $blueskyTweets = [];
+      if ($settings['blueSkyUserName'] !== NULL && !empty($settings['blueSkyUserName']) && $settings['blueSkyAppPassword'] !== NULL && !empty($settings['blueSkyAppPassword'])) {
+        switch ($twitterSearchBy) {
+          // Show tweets for a given user id
+          case 0;
+            $blueskyTweets = socialblock_call_bluesky_api($settings, 'app.bsky.feed.getAuthorFeed', [
+              'actor' => $blueskySearchParameter,
+              'limit' => $numberOfTiles,
+              'filter' => $twitterTweetTypes === 0 ? 'posts_with_replies' : 'posts_no_replies',
+            ]);
+            break;
+          // Show tweets matching a search term (tag)
+          case 1;
+            $blueskyTweets = socialblock_call_bluesky_api($settings, 'app.bsky.feed.searchPosts', [
+              'q' => $blueskySearchParameter,
+              'limit' => $numberOfTiles,
+              'filter' => $twitterTweetTypes === 0 ? 'posts_with_replies' : 'posts_no_replies',
+            ]);
+            break;
+          default:
+            break;
+        }
+      }
+      $tweets = array_merge($tweets ?? [], $blueskyTweets ?? []);
+      // Store tweets as state config so that we can use it when rendering the socialblock
+      $dataInstances = \Drupal::state()->get('socialblock.data');
+      if ($dataInstances === NULL) {
+        $dataInstances = [];
+      }
+      $dataInstances[$blockUuid] = $tweets;
+      
+      \Drupal::state()->set('socialblock.data', $dataInstances);
+      
+      \Drupal::logger('socialblock')
+        ->info('Social Block : Retrieved %num_tweets tweets for block with uuid [%uuid]', [
+                '%num_tweets' => sizeof($tweets),
+                '%uuid' => $blockUuid,
+              ]);
+    }
   }
 }
 
@@ -321,6 +332,77 @@ function socialblock_not_rate_limited($cred): int {
   }
   return $remaining;
 }
+/**
+ * Calls the Bluesky API and returns the feed or posts.
+ *
+ * @param array $credentials
+ *   The credentials for Bluesky API.
+ * @param string $api
+ *   The API endpoint to call.
+ * @param array $params
+ *   The parameters for the API call.
+ *
+ * @return array
+ *   The response from the API call, or an empty array on failure.
+ */
+function socialblock_call_bluesky_api($credentials, $api, $params) {
+  $userName =  $credentials['blueSkyUserName'];
+  $appPassword = $credentials['blueSkyAppPassword'];
+  try {
+    $loginUrl = 'https://bsky.social/xrpc/com.atproto.server.createSession';
+    $loginPayload = json_encode([
+        'identifier' => $userName,
+        'password' => $appPassword,
+    ]);
+
+    $ch = curl_init($loginUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $loginPayload);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+    ]);
+    $authResponse = curl_exec($ch);
+    curl_close($ch);
+
+    $authData = json_decode($authResponse);
+    if (!isset($authData->accessJwt)) {
+        return [];
+    }
+
+    $accessToken = $authData->accessJwt;
+
+    $apiUrl = 'https://bsky.social/xrpc/' . $api;
+    $queryString = http_build_query($params);
+    $fullUrl = $apiUrl . ($queryString ? "?$queryString" : '');
+
+    $ch = curl_init($fullUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: Bearer ' . $accessToken,
+    ]);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    $data = json_decode($response);
+    if (isset($data->error)) {
+        return [];
+    } elseif ($api === 'app.bsky.feed.getAuthorFeed') {
+        return $data->feed ?? [];
+    } elseif ($api === 'app.bsky.feed.searchPosts') {
+        $normalizedFeed = [];
+        foreach ($data->posts ?? [] as $post) {
+            $normalizedFeed[] = (object)[
+                'post' => $post,
+            ];
+        }
+        return $normalizedFeed;
+    }
+
+    return (array)$data;
+
+    } catch (Exception $e) {
+        return [];
+    }
+}
 
 /**
  * @param $a
@@ -362,4 +444,14 @@ function socialblock_expand_url($url): string {
     $returnValue = $url;
   }
   return $returnValue;
+}
+
+function socialblock_preprocess_page(&$variables) {
+  $current_user = \Drupal::currentUser();
+  $is_admin = $current_user->hasPermission('administer site configuration');
+
+  $variables['#attached']['library'][] = 'socialblock/socialblock';
+  $variables['#attached']['drupalSettings']['csp_error_handler'] = [
+    'isAdmin' => $is_admin,
+  ];
 }

@@ -48,6 +48,11 @@ class MailService {
   protected array $operations;
 
   /**
+   * @var array
+   */
+  protected array $sentArr;
+
+  /**
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
   protected EntityStorageInterface $subscriptionStorage;
@@ -94,21 +99,36 @@ class MailService {
     if (isset($mailParams['plans'])) {
       $plans = $mailParams['plans'];
     }
+     $total=0;
+     $recipients=[];
     $products = Node::loadMultiple($productNids);
-
+    $this->sentArr = [];
     foreach ($products as $product) {
       $productNid = $product->id();
       $planName = $plans[$productNid]['name'] ?? NULL;
+      $recipients[]= $productNid. ($planName? ":".$planName:'');
+      $this->operations = [];
       $toList = $this->getProductSubscribingOwners($product->apic_url->value . ':' . $planName);
-
+      if ($mailParams['send_unique'] !== NULL && (bool) $mailParams['send_unique'] === TRUE) {
+        $toList = $this->removeDupes($toList);
+      }
       $mailParams['langcode'] = $langcode;
 
       $rc = $this->sendEmail($mailParams, $toList, $from, $productNid);
-
       \Drupal::logger('mail_subscribers')
         ->info('Sent email to owners subscribing to product %product', [
           '%product' => $productNid,
         ]);
+         $total=$rc +$total;
+    }
+
+    if ($total > 0) {
+      if (isset($mailParams['plans'])) {
+        $recipients = 'owners:product_id(s):plan::' . implode(', ', $recipients);
+      } else {
+        $recipients = 'owners:product_id(s)::' . implode(',', $recipients);
+      }
+      $this->logEmailAuditEvent($total, $mailParams, $from, $recipients, (isset($mailParams['plans']) ? 'subscribers/product/plan' : 'subscribers/product'));
     }
 
     if (\function_exists('ibm_apim_exit_trace')) {
@@ -136,14 +156,19 @@ class MailService {
     if (isset($mailParams['plans'])) {
       $plans = $mailParams['plans'];
     }
-
+    $this->sentArr = [];
     $products = Node::loadMultiple($productNids);
-
+    $total=0;
+    $recipients=[];
     foreach ($products as $product) {
+      $this->operations = [];
       $productNid = $product->id();
       $planName = $plans[$productNid]['name'] ?? NULL;
+      $recipients[]= $productNid . ($planName? ":".$planName:'');
       $toList = $this->getProductSubscribingMembers($product->apic_url->value . ':' . $planName);
-
+      if ($mailParams['send_unique'] !== NULL && (bool) $mailParams['send_unique'] === TRUE) {
+        $toList = $this->removeDupes($toList);
+      }
       $mailParams['langcode'] = $langcode;
 
       $rc = $this->sendEmail($mailParams, $toList, $from, $productNid);
@@ -152,6 +177,15 @@ class MailService {
         ->info('Sent email to members subscribing to product %product', [
           '%product' => $productNid,
         ]);
+      $total=$rc +$total;
+    }
+    if ($total > 0) {
+      if (isset($mailParams['plans'])) {
+        $recipients = 'members:product_id(s):plan::' . implode(',', $recipients);
+      } else {
+        $recipients = 'members:product_id(s)::' . implode(',', $recipients);
+      }
+      $this->logEmailAuditEvent($total, $mailParams, $from, $recipients, (isset($mailParams['plans']) ? 'subscribers/product/plan' : 'subscribers/product'));
     }
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
@@ -173,21 +207,29 @@ class MailService {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-
+    $total=0;
     $apiNids = $mailParams['apis'];
-
+    $this->sentArr = [];
     foreach ($apiNids as $apiNid) {
+      $this->operations = [];
       $toList = $this->getApiSubscribingOwners($apiNid);
-
+      if ($mailParams['send_unique'] !== NULL && (bool) $mailParams['send_unique'] === TRUE) {
+        $toList = $this->removeDupes($toList);
+      }
       $mailParams['langcode'] = $langcode;
-
       $rc = $this->sendEmail($mailParams, $toList, $from, $apiNid);
 
 
       \Drupal::logger('mail_subscribers')
         ->info('Sent email to owners subscribing to API %api', [
           '%api' => $apiNid,
-        ]);
+        ]); 
+        $total=$rc +$total;
+    }
+    if ($total > 0) {
+      $recipients = implode(',', $apiNids);
+      $recipients = 'owners:api_id(s):' . $recipients;
+      $this->logEmailAuditEvent($total, $mailParams, $from, $recipients, 'subscribers/api');
     }
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
@@ -209,11 +251,16 @@ class MailService {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-
+    $this->sentArr = [];
+    $total=0;
     $apiNids = $mailParams['apis'];
     foreach ($apiNids as $apiNid) {
-      $toList = $this->getApiSubscribingMembers($apiNid);
+      $this->operations = [];
 
+      $toList = $this->getApiSubscribingMembers($apiNid);
+      if ($mailParams['send_unique'] !== NULL && (bool) $mailParams['send_unique'] === TRUE) {
+        $toList = $this->removeDupes($toList);
+      }
       $mailParams['langcode'] = $langcode;
 
       $rc = $this->sendEmail($mailParams, $toList, $from, $apiNid);
@@ -222,6 +269,13 @@ class MailService {
         ->info('Sent email to members subscribing to API %api', [
           '%api' => $apiNid,
         ]);
+        $total=$rc +$total; 
+     
+    }
+    if ($total > 0) {
+      $recipients = implode(',', $apiNids);
+      $recipients = 'members:api_id(s):' . $recipients;
+      $this->logEmailAuditEvent($rc, $mailParams, $from, 'members:api_id:' . $apiNid, 'subscribers/api');
     }
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
@@ -243,13 +297,19 @@ class MailService {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
+    $this->sentArr = [];
+    $this->operations = [];
     $toList = $this->getConsumerorgOwners($mailParams['consumerorgs']);
     $mailParams['langcode'] = $langcode;
-
-    $rc = $this->sendEmail($mailParams, $toList, $from);
+    if ($mailParams['send_unique'] !== NULL && (bool) $mailParams['send_unique'] === TRUE) {
+      $toList = $this->removeDupes($toList);
+    }
+    $rc = $this->sendEmail($mailParams, $toList, $from, null);
 
     \Drupal::logger('mail_subscribers')->info('Sent email to all consumer organization owners');
-
+    if ($rc > 0) {
+      $this->logEmailAuditEvent($rc, $mailParams, $from, 'consumerorg:owners', 'subscribers/consumerorg');
+    }
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
     }
@@ -270,12 +330,17 @@ class MailService {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
+    $this->sentArr = [];
+    $this->operations = [];
     $toList = $this->getConsumerorgMembers($mailParams['consumerorgs']);
-
     $mailParams['langcode'] = $langcode;
-
-    $rc = $this->sendEmail($mailParams, $toList, $from);
-
+    if ($mailParams['send_unique'] !== NULL && (bool) $mailParams['send_unique'] === TRUE) {
+      $toList = $this->removeDupes($toList);
+    }
+    $rc = $this->sendEmail($mailParams, $toList, $from, null);
+    if ($rc > 0) {
+        $this->logEmailAuditEvent($rc, $mailParams, $from, 'consumerorg:members', 'subscribers/consumerorg');
+    }
     \Drupal::logger('mail_subscribers')->info('Sent email to all consumer organization members');
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
@@ -297,14 +362,21 @@ class MailService {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-
+    $this->sentArr = [];
+    $this->operations = [];
     $toList = $this->getAllSubscribingOwners();
-
     $mailParams['langcode'] = $langcode;
 
-    $rc = $this->sendEmail($mailParams, $toList, $from);
+    if ($mailParams['send_unique'] !== NULL && (bool) $mailParams['send_unique'] === TRUE) {
+      $toList = $this->removeDupes($toList);
+    }
+    $rc = $this->sendEmail($mailParams, $toList, $from, null);
 
     \Drupal::logger('mail_subscribers')->info('Sent email to all consumer organization owners');
+    
+    if ($rc > 0) {
+      $this->logEmailAuditEvent($rc, $mailParams, $from, 'all:owners', 'subscribers/all');
+    }
 
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
@@ -326,14 +398,21 @@ class MailService {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-
+    $this->sentArr = [];
+    $this->operations = [];
     $toList = $this->getAllSubscribingMembers();
-
     $mailParams['langcode'] = $langcode;
+    if ($mailParams['send_unique'] !== NULL && (bool) $mailParams['send_unique'] === TRUE) {
+      $toList = $this->removeDupes($toList);
+    }
 
-    $rc = $this->sendEmail($mailParams, $toList, $from);
+    $rc = $this->sendEmail($mailParams, $toList, $from, null);
 
     \Drupal::logger('mail_subscribers')->info('Sent email to all consumer organization members');
+    
+    if ($rc > 0) {
+      $this->logEmailAuditEvent($rc, $mailParams, $from, 'all:members', 'subscribers/all');
+    }
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $rc);
     }
@@ -643,6 +722,7 @@ class MailService {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
+
     \Drupal::moduleHandler()->loadInclude('mail_subscribers', 'helpers.inc');
     $siteConfig = \Drupal::config('system.site');
     if (!isset($from['name']) || empty($from['name'])) {
@@ -811,6 +891,13 @@ class MailService {
           $mailProperties['mailBody'] = $token_service->replace($mailBodyTemplate, $context);
           $mailProperties['mailParams']['subject'] = $token_service->replace($subjectTemplate, $context);
         }
+        if ($mailProperties['mailParams']['send_unique'] !== NULL && (bool) $mailProperties['mailParams']['send_unique'] === TRUE) {
+          if (!isset($this->sentArr[$to])) {
+            $this->sentArr[$to] = $to;
+          } else {
+            return;
+          }
+        }
         $this->queueMail($mailProperties, $to);
         $this->sent++;
       }
@@ -950,5 +1037,53 @@ class MailService {
       $context['application'] = $app;
       $this->processRecipients($mailProperties, $recipients, $context);
     }
+  }
+  private function removeDupes($toList) {
+    foreach ($toList as $key => $subArray) {
+      $toList[$key] = array_diff($subArray, array_keys($this->sentArr));
+    }
+
+    // Filter out any empty arrays, if needed
+    $toList = array_filter($toList);
+
+    $usedStrings = [];
+    $result = [];
+    foreach ($toList as $key => $subArray) {
+      $filteredSubArray = [];
+      foreach ($subArray as $innerKey => $value) {
+        if (!in_array($value, $usedStrings)) {
+          $filteredSubArray[$innerKey] = $value;
+          $usedStrings[] = $value;
+        }
+      }
+      $result[$key] = $filteredSubArray;
+    }
+    return $result;
+  }
+
+
+  /**
+   * Logs an audit event for email operations
+   *
+   * @param int $emailCount Number of emails sent or queued
+   * @param array $mailParams Mail parameters
+   * @param array $from Sender information
+   * @param string $recipient Recipient identifier
+   * @param string $category Category of the email operation (e.g., 'subscribers/product')
+   */
+  private function logEmailAuditEvent(int $emailCount, array $mailParams, array $from, string $recipient, string $category = 'email'): void {
+    $isDirect = isset($mailParams['direct']) && (bool) $mailParams['direct'] === TRUE;
+    \Drupal::service('ibm_apim.utils')->logAuditEvent(
+      'PORTAL_MAIL_SUBSCRIBERS_EMAIL_' . ($isDirect ? 'BATCH_SENT' : "QUEUED"),
+      'success',
+      $category,
+      $recipient,
+      [
+        'params' => $mailParams,
+        'email_count' => $emailCount,
+        'sender' => $from,
+        'recipient' => $recipient,
+      ]
+    );
   }
 }

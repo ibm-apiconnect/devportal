@@ -1,11 +1,11 @@
 --- modules/votingapi_widgets/js/fivestars.js   2024-09-02 15:14:14
 +++ modules/votingapi_widgets/js/fivestars.js      2024-09-03 15:16:42
-@@ -36,7 +36,7 @@
-         },
-       };
+@@ -41,7 +41,7 @@
+             },
+           };
 
--      $(once('processed', 'select', this)).barrating('show', options);
-+      setTimeout(function(){ $(once('processed', 'select', this)).barrating('show', options); }.bind(this), 500);
-       $this.find('[type=submit]').hide();
-     });
-     }
+-          $(once('processed', 'select', this)).barrating('show', options);
++          setTimeout(function(){ $(once('processed', 'select', this)).barrating('show', options); }.bind(this), 500);
+           $this.find('[type=submit]').hide();
+         });
+     },

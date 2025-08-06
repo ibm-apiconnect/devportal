@@ -1,0 +1,91 @@
+--- modules/flood_control/src/Form/FloodUnblockAdminForm.php	2025-07-02 15:48:55
++++ modules/flood_control/src/Form/FloodUnblockAdminForm.php	2025-07-02 16:21:48
+@@ -185,46 +185,54 @@
+ 
+     // Fetches data for the table.
+     $entries = $this->floodUnblockManager->getEntries($limit, $identifier, $header);
++    if (!empty($entries)) {
++      // Fetches user names or location string for identifiers.
++      $identifiers = $this->floodUnblockManager->fetchIdentifiers(array_unique($entries['result_identifiers']));
+ 
+-    // Fetches user names or location string for identifiers.
+-    $identifiers = $this->floodUnblockManager->fetchIdentifiers(array_unique($entries['result_identifiers']));
++      foreach ($entries['results'] as $result) {
+ 
+-    foreach ($entries['results'] as $result) {
++        // Gets status of identifier.
++        $is_blocked = $this->floodUnblockManager->isBlocked($result->identifier, $result->event);
+ 
+-      // Gets status of identifier.
+-      $is_blocked = $this->floodUnblockManager->isBlocked($result->identifier, $result->event);
+-
+-      // Defines list of options for tableselect element.
+-      if ($blocked && $is_blocked) {
+-        $options[$result->fid] = [
+-          'title' => ['data' => ['#title' => $this->t('Flood id @id', ['@id' => $result->fid])]],
+-          'identifier' => $identifiers[$result->identifier],
+-          'blocked' => $is_blocked ? $this->t('Blocked') : $this->t('Not blocked'),
+-          'event' => $this->floodUnblockManager->getEventLabel($result->event),
+-          'timestamp' => $this->dateFormatter->format($result->timestamp, 'short'),
+-          'expiration' => $this->dateFormatter->format($result->expiration, 'short'),
+-        ];
+-      }
+-      elseif (!$blocked) {
+-        $options[$result->fid] = [
+-          'title' => ['data' => ['#title' => $this->t('Flood id @id', ['@id' => $result->fid])]],
+-          'identifier' => $identifiers[$result->identifier],
+-          'blocked' => $is_blocked ? $this->t('Blocked') : $this->t('Not blocked'),
+-          'event' => $this->floodUnblockManager->getEventLabel($result->event),
+-          'timestamp' => $this->dateFormatter->format($result->timestamp, 'short'),
+-          'expiration' => $this->dateFormatter->format($result->expiration, 'short'),
+-        ];
++        // Defines list of options for tableselect element.
++        if ($blocked && $is_blocked) {
++          $options[$result->fid] = [
++            'title' => ['data' => ['#title' => $this->t('Flood id @id', ['@id' => $result->fid])]],
++            'identifier' => $identifiers[$result->identifier],
++            'blocked' => $is_blocked ? $this->t('Blocked') : $this->t('Not blocked'),
++            'event' => $this->floodUnblockManager->getEventLabel($result->event),
++            'timestamp' => $this->dateFormatter->format($result->timestamp, 'short'),
++            'expiration' => $this->dateFormatter->format($result->expiration, 'short'),
++          ];
++        } elseif (!$blocked) {
++          $options[$result->fid] = [
++            'title' => ['data' => ['#title' => $this->t('Flood id @id', ['@id' => $result->fid])]],
++            'identifier' => $identifiers[$result->identifier],
++            'blocked' => $is_blocked ? $this->t('Blocked') : $this->t('Not blocked'),
++            'event' => $this->floodUnblockManager->getEventLabel($result->event),
++            'timestamp' => $this->dateFormatter->format($result->timestamp, 'short'),
++            'expiration' => $this->dateFormatter->format($result->expiration, 'short'),
++          ];
++        }
+       }
+-    }
+ 
+-    // Provides the tableselect element.
+-    $form['table'] = [
+-      '#type' => 'tableselect',
+-      '#header' => $header,
+-      '#options' => $options,
+-      '#empty' => $this->t('There are no failed logins at this time.'),
+-    ];
++      // Provides the tableselect element.
++      $form['table'] = [
++        '#type' => 'tableselect',
++        '#header' => $header,
++        '#options' => $options,
++        '#empty' => $this->t('There are no failed logins at this time.'),
++      ];
++    } else {
++      $form['table'] = [
++        '#type' => 'tableselect',
++        '#header' => $header,
++        '#options' => $options,
++        '#empty' => $this->t("There are no failed logins at this time."),
++      ];
+ 
++    }
++
+     $form['actions'] = ['#type' => 'actions'];
+ 
+     // Provides the remove submit button.

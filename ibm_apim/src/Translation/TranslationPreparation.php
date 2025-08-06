@@ -33,6 +33,7 @@ class TranslationPreparation {
     'apic_letter_avatar',
     'auth_apic',
     'connect_theme',
+    'case_study',
     'consumerorg',
     'eventstream',
     'featuredcontent',

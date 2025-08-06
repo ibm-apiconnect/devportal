@@ -20,6 +20,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\TempStore\TempStoreException;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\UserUtils;
+use Drupal\ibm_apim\Service\Utils;
 use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\user\Entity\User;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -30,6 +31,11 @@ use Throwable;
  * IBM API Connect and updates / creates subscriptions as needed
  */
 class SubscriptionService {
+
+  /**
+   * @var \Drupal\ibm_apim\Service\Utils
+   */
+  protected Utils $utils;
 
   /**
    * @var \Drupal\ibm_apim\Service\UserUtils
@@ -58,6 +64,7 @@ class SubscriptionService {
     $this->userUtils = $userUtils;
     $this->apimUtils = $apimUtils;
     $this->moduleHandler = $moduleHandler;
+    $this->utils = \Drupal::service('ibm_apim.utils');
   }
 
   /**
@@ -77,7 +84,7 @@ class SubscriptionService {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function create(string $appUrl, string $subId, string $product, string $plan, string $consumerOrgUrl, $state, $billingUrl, $subscription): bool {
+  public function create(string $appUrl, string $subId, string $product, string $plan, string $consumerOrgUrl, $state, $billingUrl, $subscription): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, [$appUrl, $subId]);
     $created = FALSE;
     $appUrl = Html::escape($this->apimUtils->removeFullyQualifiedUrl($appUrl));
@@ -100,7 +107,8 @@ class SubscriptionService {
     // Populate an array of field values.  We use this to see if we need to perform an update or to create a new record
     $fields = [
       'uuid' => $subId,
-      'billing_url' => $billingUrl,
+      // billing_url could be the empty string, but Drupal will store NULL for that
+      'billing_url' => !empty($billingUrl) ? $billingUrl : NULL,
       'state' => $state,
       'plan' => $plan,
       'app_url' => $appUrl,
@@ -141,20 +149,24 @@ class SubscriptionService {
       [$created, $appEntityId] = $this->doCreate($fields, $created_at, $updated_at);
     }
 
+    $returnValue = '';
     if ($created === TRUE) {
       // Add the create event log entry
       $this->addEventLog('create', $created_at, $appEntityId, $fields, $created_by);
+      $returnValue = 'created';
     } else if ($updated === TRUE) {
       // Add the update event log entry
       $this->addEventLog('update', $updated_at, $appEntityId, $fields, $updated_by);
+      $returnValue = 'updated';
     } else {
-      \Drupal::logger('apic_app')->notice('Subscription @subid already existed and had not changed. No update was carried out', [
+      $this->utils->snapshotDebug('Subscription @subid already existed and had not changed. No update was carried out', [
         '@subid' => $subId,
       ]);
+      $returnValue = 'hashMatch';
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, $created);
-    return $created;
+    return $returnValue;
   }
 
   /**
@@ -362,9 +374,9 @@ class SubscriptionService {
    * @throws \Drupal\Core\Entity\EntityStorageException*@throws \Exception
    * @throws \Exception
    */
-  public function createOrUpdate($subscription): bool {
+  public function createOrUpdate($subscription): string {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    $returnValue = NULL;
+    $returnValue = '';
     if (isset($subscription['id'], $subscription['app_url'], $subscription['product_url'])) {
       if (!isset($subscription['state'])) {
         $subscription['state'] = 'enabled';
@@ -501,7 +513,7 @@ class SubscriptionService {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   private function clearCaches($appEntityId, $subscriptionEntityId): void {
-    Cache::invalidateTags(['node:' . $appEntityId]);
+    Cache::invalidateTags(['node:' . $appEntityId, 'apic_app_application_subs_list', 'config:views.view.application_subscriptions']);
     \Drupal::entityTypeManager()->getStorage('apic_app_application_subs')->resetCache([$subscriptionEntityId]);
     \Drupal::entityTypeManager()->getStorage('node')->resetCache([$appEntityId]);
   }
@@ -582,7 +594,7 @@ class SubscriptionService {
       // Create the references
       $tables = ['node__application_subscription_refs', 'node_revision__application_subscription_refs'];
       $appEntityId = $this->insertApplicationSubscriptionRef($fields['app_url'], $record->id, $tables);
-
+      $this ->clearCaches($appEntityId,$record->id);
     } else {
       \Drupal::logger('apic_app')->warning('Did not find the entity id of newly created subscription record for uuid @uuid', ['@uuid' => $fields['uuid']]);
     }

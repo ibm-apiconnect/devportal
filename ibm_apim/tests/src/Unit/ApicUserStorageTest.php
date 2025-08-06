@@ -18,9 +18,13 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\ApicUserService;
 use Drupal\ibm_apim\Service\UserRegistryService;
+use Drupal\ibm_apim\Service\Utils;
 use Drupal\Tests\auth_apic\Unit\Base\AuthApicTestBaseClass;
 use Drupal\user\Entity\User;
 use Psr\Log\LoggerInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 
 use Prophecy\Argument;
 
@@ -56,6 +60,16 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
    */
   private $userStorage;
 
+  /**
+   * @var \Drupal\ibm_apim\Service\Utils|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $utils;
+
+  /**
+   * @var ConfigFactoryInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
+  private  $config;
+
 
   /**
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
@@ -72,6 +86,16 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $this->userStorage = $this->prophet->prophesize(EntityStorageInterface::class);
 
     $this->entityTypeManager->getStorage('user')->willReturn($this->userStorage->reveal());
+
+    $this->config = $this->prophet->prophesize(ConfigFactoryInterface::class);
+    $ibm_config = $this->prophet->prophesize(ImmutableConfig::class);
+    $ibm_config->get('snapshot_debug')->willReturn(TRUE);
+    $this->config->get('ibm_apim.devel_settings')->willReturn($ibm_config->reveal());
+    $this->utils = new Utils($this->logger->reveal(), $this->config->reveal());
+
+    // $container = new ContainerBuilder();
+    // $container->set('config.factory', $this->config->reveal());
+    // \Drupal::setContainer($container);
   }
 
   // register() tests
@@ -107,7 +131,9 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils,
+    );
 
     $account = $service->register($user);
 
@@ -140,7 +166,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $service->register($user);
   }
@@ -169,7 +196,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $service->register($user);
   }
@@ -190,7 +218,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $service->register($user);
   }
@@ -211,7 +240,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $service->register($user);
   }
@@ -242,7 +272,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $user = $service->load($user);
 
@@ -276,7 +307,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $service->load($user);
   }
@@ -285,7 +317,6 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
    * @throws \Exception
    */
   public function testLoadNone(): void {
-
     $user = new ApicUser();
     $user->setApicUserRegistryUrl('/reg/url');
     $user->setUsername('andre');
@@ -303,10 +334,10 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $user = $service->load($user);
-
     self::assertNull($user);
 
   }
@@ -326,7 +357,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $service->load($user);
   }
@@ -350,7 +382,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $user = $service->loadByUsername('andre');
 
@@ -376,7 +409,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $service->loadByUsername('andre');
   }
@@ -398,7 +432,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $user = $service->loadByUsername('andre');
 
@@ -424,7 +459,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $user = $service->loadUserByEmailAddress('andre@example.com');
 
@@ -450,7 +486,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $service->loadUserByEmailAddress('andre@example.com');
   }
@@ -472,7 +509,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $user = $service->loadUserByEmailAddress('andre@example.com');
 
@@ -498,7 +536,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $user = $service->loadUserByUrl('/abc/1234');
 
@@ -524,7 +563,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $service->loadUserByUrl('/abc/1234');
 
@@ -547,7 +587,8 @@ class ApicUserStorageTest extends AuthApicTestBaseClass {
     $service = new ApicUserStorage($this->entityTypeManager->reveal(),
       $this->registryService->reveal(),
       $this->userService->reveal(),
-      $this->logger->reveal());
+      $this->logger->reveal(),
+      $this->utils);
 
     $user = $service->loadUserByUrl('/abc/1234');
 

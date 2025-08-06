@@ -37,7 +37,7 @@ class AccountMessagesBlock extends BlockBase {
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $org = $userUtils->getCurrentConsumerOrg();
     $currentUser = \Drupal::currentUser();
-    if (isset($org) && isset($current_user) && !$current_user->isAnonymous()) {
+    if (isset($org) && isset($org['url']) && isset($current_user) && !$current_user->isAnonymous()) {
       $consumerOrg = \Drupal::service('ibm_apim.consumerorg')->get($org['url']);
       $user = User::load($currentUser->id());
       if (!$user->isAnonymous()) {

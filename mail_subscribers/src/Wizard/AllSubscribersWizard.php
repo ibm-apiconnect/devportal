@@ -81,7 +81,9 @@ class AllSubscribersWizard extends FormWizardBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $cached_values = $form_state->getTemporaryValue('wizard');
-
+    if ($this->getStep($cached_values) === 'choosesubs' && \Drupal::request()->get('start') === '1') {
+      $cached_values = [];
+    }
     $data = \Drupal::service('tempstore.private')->get('mail_subscribers')->get('data');
     $cached_values['objectType'] = 'all';
     if (isset($cached_values['products'])) {

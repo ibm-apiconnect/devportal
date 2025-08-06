@@ -5,8 +5,6 @@
  * Dual licensed under the MIT and GPL licenses:
  *  http://www.opensource.org/licenses/mit-license.php
  *  http://www.gnu.org/licenses/gpl.html
- *
- * CHANGELOG: http://users.tpg.com.au/j_birch/plugins/superfish/changelog.txt
  */
 /*
  * This is not the original jQuery Superfish plugin.
@@ -14,82 +12,96 @@
  */
 
 (function($){
-  $.fn.superfish = function(op){
-    var sf = $.fn.superfish,
-      c = sf.c,
-      $arrow = $(['<span class="',c.arrowClass,'"> &#187;</span>'].join('')),
-      over = function(){
-        var $$ = $(this), menu = getMenu($$);
-        clearTimeout(menu.sfTimer);
-        $$.showSuperfishUl().siblings().hideSuperfishUl();
-      },
-      out = function(){
-        var $$ = $(this), menu = getMenu($$), o = sf.op;
-        clearTimeout(menu.sfTimer);
-        menu.sfTimer=setTimeout(function(){
-          if ($$.children('.sf-clicked').length == 0){
-            o.retainPath=($.inArray($$[0],o.$path)>-1);
-            $$.hideSuperfishUl();
-            if (o.$path.length && $$.parents(['li.',o.hoverClass].join('')).length<1){over.call(o.$path);}
+  $.fn.superfish = function(superfish_options){
+    const cssClasses = sf.cssClasses;
+    const $arrow = $(`<span class="${cssClasses.arrowClass}"> &#187;</span>`);
+
+    const over = function(){
+      const $$ = $(this);
+      const menu = getMenu($$);
+      clearTimeout(menu.sfTimer);
+      $$.showSuperfishUl().siblings().hideSuperfishUl();
+    };
+
+    const out = function(){
+      const $$ = $(this);
+      const menu = getMenu($$);
+      const options = sf.options;
+
+      clearTimeout(menu.sfTimer);
+      menu.sfTimer = setTimeout(function(){
+        if ($$.children('.sf-clicked').length === 0){
+          options.retainPath = ($.inArray($$[0], options.$path) > -1);
+          $$.hideSuperfishUl();
+          if (options.$path.length && $$.parents(`li.${cssClasses.hoverClass}`).length < 1){
+            over.call(options.$path);
           }
-        },o.delay);
-      },
-      getMenu = function($menu){
-        var menu = $menu.parents(['ul.',c.menuClass,':first'].join(''))[0];
-        sf.op = sf.o[menu.serial];
-        return menu;
-      },
-      addArrow = function($a){ $a.addClass(c.anchorClass).append($arrow.clone()); };
+        }
+      }, options.delay);
+    };
+
+    const getMenu = function($menu){
+      const menu = $menu.parents(`ul.${cssClasses.menuClass}:first`)[0];
+      sf.options = sf.optionsList[menu.serial];
+      return menu;
+    };
+
+    const addArrow = function($a){
+      $a.addClass(cssClasses.anchorClass).append($arrow.clone());
+    };
 
     return this.each(function() {
-      var s = this.serial = sf.o.length;
-      var o = $.extend({},sf.defaults,op);
-      o.$path = $('li.'+o.pathClass,this).slice(0,o.pathLevels);
-      var p = o.$path;
-      for (var l = 0; l < p.length; l++){
-        p.eq(l).addClass([o.hoverClass,c.bcClass].join(' ')).filter('li:has(ul)').removeClass(o.pathClass);
+      const s = this.serial = sf.optionsList.length;
+      const options = $.extend({}, sf.defaults, superfish_options);
+      options.$path = $(`li.${options.pathClass}`, this).slice(0, options.pathLevels);
+      const path = options.$path;
+      for (let l = 0; l < path.length; l++){
+        path.eq(l).addClass(`${cssClasses.hoverClass} ${cssClasses.bcClass}`).filter('li:has(ul)').removeClass(options.pathClass);
       }
-      sf.o[s] = sf.op = o;
+      sf.optionsList[s] = sf.options = options;
 
-      $('li:has(ul)',this)[($.fn.hoverIntent && !o.disableHI) ? 'hoverIntent' : 'hover'](over,out).each(function() {
-        if (o.autoArrows) addArrow( $(this).children('a:first-child, span.nolink:first-child') );
+      $('li:has(ul)', this)[($.fn.hoverIntent && !options.disableHI) ? 'hoverIntent' : 'hover'](over, out).each(function() {
+        if (options.autoArrows) {
+          addArrow( $(this).children('a:first-child, span.nolink:first-child') );
+        }
       })
-      .not('.'+c.bcClass)
-        .hideSuperfishUl();
+      .not('.' + cssClasses.bcClass).hideSuperfishUl();
 
-      var $a = $('a, span.nolink',this);
+      const $a = $('a, span.nolink', this);
       $a.each(function(i){
-        var $li = $a.eq(i).parents('li');
+        const $li = $a.eq(i).parents('li');
         $a.eq(i).focus(function(){over.call($li);}).blur(function(){out.call($li);});
       });
-      o.onInit.call(this);
+      options.onInit.call(this);
 
     }).each(function() {
-      var menuClasses = [c.menuClass];
-      if (sf.op.dropShadows){
-        menuClasses.push(c.shadowClass);
+      const menuClasses = [cssClasses.menuClass];
+      if (sf.options.dropShadows){
+        menuClasses.push(cssClasses.shadowClass);
       }
       $(this).addClass(menuClasses.join(' '));
     });
   };
 
-  var sf = $.fn.superfish;
-  sf.o = [];
-  sf.op = {};
+  const sf = $.fn.superfish;
+  sf.optionsList = [];
+  sf.options = {};
 
-  sf.c = {
+  sf.cssClasses = {
     bcClass: 'sf-breadcrumb',
     menuClass: 'sf-js-enabled',
     anchorClass: 'sf-with-ul',
     arrowClass: 'sf-sub-indicator',
-    shadowClass: 'sf-shadow'
+    shadowClass: 'sf-shadow',
+    hiddenClass: 'sf-hidden',
+    hoverClass: 'sfHover'
   };
+
   sf.defaults = {
-    hoverClass: 'sfHover',
     pathClass: 'overideThisToUse',
     pathLevels: 1,
     delay: 800,
-    animation: {opacity:'show'},
+    animation: {opacity: 'show'},
     speed: 'fast',
     autoArrows: true,
     dropShadows: true,
@@ -99,24 +111,25 @@
     onShow: function(){},
     onHide: function(){}
   };
+
   $.fn.extend({
     hideSuperfishUl : function(){
-      var o = sf.op,
-        not = (o.retainPath===true) ? o.$path : '';
-      o.retainPath = false;
-      var $ul = $(['li.',o.hoverClass].join(''),this).add(this).not(not).removeClass(o.hoverClass)
-          .children('ul').addClass('sf-hidden');
-      o.onHide.call($ul);
+      const options = sf.options;
+      const not = options.retainPath === true ? options.$path : '';
+      options.retainPath = false;
+      const $ul = $(`li.${sf.cssClasses.hoverClass}`, this).add(this).not(not).removeClass(sf.cssClasses.hoverClass)
+          .children('ul').addClass(sf.cssClasses.hiddenClass);
+      options.onHide.call($ul);
       return this;
     },
     showSuperfishUl : function(){
-      var o = sf.op,
-        sh = sf.c.shadowClass+'-off',
-        $ul = this.addClass(o.hoverClass)
-          .children('ul.sf-hidden').hide().removeClass('sf-hidden');
-      o.onBeforeShow.call($ul);
-      $ul.animate(o.animation,o.speed,function(){ o.onShow.call($ul); });
+      this.removeClass(sf.cssClasses.hiddenClass);
+      const options = sf.options;
+      const $ul = this.addClass(sf.cssClasses.hoverClass).children(`ul.${sf.cssClasses.hiddenClass}`).hide().removeClass(sf.cssClasses.hiddenClass);
+      options.onBeforeShow.call($ul);
+      $ul.animate(options.animation, options.speed, function(){ options.onShow.call($ul); });
       return this;
     }
   });
+
 })(jQuery);

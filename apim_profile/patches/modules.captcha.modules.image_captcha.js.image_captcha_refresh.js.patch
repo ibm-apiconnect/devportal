@@ -1,0 +1,36 @@
+--- modules/captcha/modules/image_captcha/js/image_captcha_refresh.js	2025-06-16 14:49:56.352307260 +0000
++++ modules/captcha/modules/image_captcha/js/image_captcha_refresh.js	2025-06-16 14:56:25.116305777 +0000
+@@ -25,10 +25,14 @@
+         const url = baseUrl.replace(/\/$/g, '') + '/' + $(this).attr('href').replace(/^\//g, '') + '?' + date.getTime();
+         // Adding loader.
+         $('.captcha').addClass('captcha--loading');
+-        $.get(
+-          url,
+-          {},
+-          function (response) {
++        $.ajax({
++          url: url,
++          type: 'GET',
++          dataType: 'json',
++          headers: {
++            'X-UserCheck-Redirect': 'image_captcha_refresh'
++          },
++          success: function (response) {
+             if (response.status === 1) {
+               $('.captcha', $form).find('img').attr('src', response.data.url);
+               $('input[name=captcha_sid]', $form).val(response.data.sid);
+@@ -39,9 +43,11 @@
+               alert(response.message);
+             }
+           },
+-          'json'
+-        );
+-        return FALSE;
++          error: function (xhr, status, error) {
++            console.error('Request failed:', status, error);
++          }
++        });
++        return false;
+       });
+     }
+   };

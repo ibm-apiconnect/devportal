@@ -1,0 +1,89 @@
+.apicCardMain .apicNewsDesc
+{
+  padding: 0.75rem 0;
+}
+
+.apicCardMain .apicNewsTitle.bx--about__title--name span{
+  display: flex;
+  font-size: 0.875rem;
+  line-height: 18px;
+  word-break: break-word;
+  font-weight: 600;
+  font-family: 'IBM Plex Sans', sans-serif;
+  padding-top: 10px;
+}
+
+.apicCardMain .apicNewsDesc,  .apicCardMain .apicNewsDesc p{
+  font-size:0.875rem;
+  line-height: 1;
+  height: 6rem;
+}
+
+.apicCardMain .apicNewsLink svg {
+  justify-self: end;
+}
+
+
+.apicCardMain .apicNewsLink svg {
+  margin-left: 90%;
+  fill: currentColor;
+}
+
+.apicCardMain .apicNewsImage {
+  height:150px;
+}
+
+.apicCardMain .apicNewsImage img {
+  justify-self: center;
+  max-height: 150px;
+  width: auto;
+}
+
+.apicNewsCard .apicCardMain .apicNewsImage .field {
+  margin: 0;
+}
+
+/* make the news card clickable */
+.bx--card .apicCard.apicNewsCard {
+  position: relative;
+  max-height: 19rem;
+  }
+
+.apicNewsCard a.apicNewsLink::before {
+    content: "";
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+  }
+
+.apicNewsTitle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.apicNewsTitleText {
+  display: flex;
+  align-items: baseline;
+  max-width: calc(100% - 6rem);
+}
+
+
+.featuredNewsBlockHeader {
+  display: inline-block;
+  width: calc(100% / 4 - 8px);
+  min-width: 250px;
+  vertical-align: top;
+}
+
+.featuredNews.featuredNewsBlockWrapper {
+  margin: 1.5rem 2rem;
+}
+
+.featuredNewsContainer {
+  display: inline-block;
+  width: 75%;
+}

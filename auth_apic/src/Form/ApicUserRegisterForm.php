@@ -310,7 +310,7 @@ class ApicUserRegisterForm extends RegisterForm {
         '#value' => $this->chosen_registry->getUrl(),
       ];
       // store the name for the template
-      $form['#registry_title']['registry_title'] = $this->chosen_registry->getTitle();
+      $form['#registry_title']['registry_title'] = $this->chosen_registry->getTitle() ?: '';
 
       if (sizeof($all_registries) > 1) {
         $other_registries = array_diff_key($all_registries, [$this->chosen_registry->getUrl() => $this->chosen_registry]);

@@ -60,24 +60,24 @@
           </div>
         </div>
         <div class="organizationTabs">
-          <ul>
-            <li class="orgManage"><a href="{{- path('ibm_apim.myorg') -}}">{{ 'Manage'|t }}</a></li>
+          <ul role="tablist">
+            <li role="tab" class="orgManage" aria-selected="false" tabindex="0"><a href="{{- path('ibm_apim.myorg') -}}">{{ 'Manage'|t }}</a></li>
             {% if analytics_access %}
-              <li class="selected orgAnalytics">
+              <li role="tab" class="selected orgAnalytics" aria-selected="true" tabindex="-1">
                 <a href="#">{{ 'Analytics'|t }}</a>
               </li>
             {% endif %}
             {% if billing_access %}
-              <li class="orgBilling">
+              <li role="tab" class="orgBilling" aria-selected="false" tabindex="0">
                 <a href="{{- path('ibm_apim.billing') -}}">{{ 'Billing'|t }}</a>
               </li>
             {% endif %}
-            <li class="orgActivity">
+            <li role="tab" class="orgActivity" aria-selected="false" tabindex="0">
               <a href="{{- path('ibm_apim.activity') -}}">{{ 'Notifications'|t }}</a>
             </li>
             {% if tabs is not empty %}
               {% for tab in tabs %}
-                <li class="orgExtraTab">
+                <li role="tab" class="orgExtraTab" aria-selected="false" tabindex="0">
                   <a href="{{- path(tab.path) -}}">{{ tab.title }}</a>
                 </li>
               {% endfor %}

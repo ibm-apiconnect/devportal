@@ -349,14 +349,14 @@ class ApicUserProfileForm extends ProfileForm {
     if (((int) $this->currentUser()->id() === 1) || ($this->currentUser()->getEmail() !== $editUser->getMail())) {
       // local admin user should only be updated in drupal db
       // if an admin is editing someone else, those changes should be made to drupal only as well
-      $this->accountService->updateLocalAccount($editUser);
+      $this->accountService->updateLocalAccount($editUser, NULL, false);
     }
     else {
       // everyone else needs updating in the mgmt appliance too
       $apicUser = $this->accountService->updateApicAccount($editUser);
 
       if (isset($apicUser)) {
-        $this->accountService->updateLocalAccount($apicUser);
+        $this->accountService->updateLocalAccount($apicUser, NULL, false);
       }
     }
 

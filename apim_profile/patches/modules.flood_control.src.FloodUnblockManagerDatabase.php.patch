@@ -1,0 +1,57 @@
+--- modules/flood_control/src/FloodUnblockManagerDatabase.php	2025-07-02 15:43:59
++++ modules/flood_control/src/FloodUnblockManagerDatabase.php	2025-07-02 15:47:18
+@@ -88,6 +88,20 @@
+     $this->logger = $logger_factory->get('flood_control');
+   }
+ 
++    /**
++   * Checks if the 'flood' table exists.
++   *
++   * @return bool
++   *   TRUE if the table exists, FALSE otherwise.
++   */
++  private function floodTableExists() {
++    if (!$this->database->schema()->tableExists('flood')) {
++      $this->logger->warning('The flood table does not exist.');
++      return FALSE;
++    }
++    return TRUE;
++  }
++
+   /**
+    * {@inheritdoc}
+    */
+@@ -99,6 +113,11 @@
+    * {@inheritdoc}
+    */
+   public function floodUnblockClearEvent($fid) {
++    if (!$this->floodTableExists()) {
++      $this->messenger->addMessage($this->t('The flood table does not exist.'), 'error');
++      return;
++    }
++
+     $txn = $this->database->startTransaction('flood_unblock_clear');
+     try {
+       $query = $this->database->delete('flood')
+@@ -122,6 +141,10 @@
+    * {@inheritdoc}
+    */
+   public function getEntries($limit = 50, $identifier = '', $header = []) {
++    if (!$this->floodTableExists()) {
++      return [];
++    }
++
+     $query = $this->database->select('flood', 'f')
+       ->extend('Drupal\Core\Database\Query\TableSortExtender')
+       ->orderByHeader($header);
+@@ -144,6 +167,10 @@
+    * {@inheritdoc}
+    */
+   public function getEventIds($event, $identifier = NULL) {
++    if (!$this->floodTableExists()) {
++      return [];
++    }
++
+     $event_ids = [];
+     $query = $this->database->select('flood', 'f');
+     $query->condition('event', $event);

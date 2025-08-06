@@ -1,0 +1,61 @@
+--- modules/workbench/config/optional/views.view.workbench_recent_content.yml    2024-10-28 15:58:39
++++ modules/workbench/config/optional/views.view.workbench_recent_content.yml       2024-11-01 12:32:40
+@@ -689,14 +689,14 @@
+           plugin_id: date
+       title: 'Workbench: Recent content'
+       header:
+-        area:
++        area_text_custom:
+           id: area
+           table: views
+           field: area
+           plugin_id: text
+       footer: {}
+       empty:
+-        area:
++        area_text_custom:
+           id: area_text_custom
+           table: views
+           field: area_text_custom
+@@ -1142,7 +1142,7 @@
+           plugin_id: entity_link_edit
+       link_display: /admin/workbench/content/all
+       header:
+-        area:
++        area_text_custom:
+           id: area_text_custom
+           table: views
+           field: area_text_custom
+
+--- modules/workbench/config/optional/views.view.workbench_edited.yml    2024-10-28 15:58:39
++++ modules/workbench/config/optional/views.view.workbench_edited.yml       2024-11-01 12:32:54
+@@ -774,7 +774,7 @@
+       header: {}
+       footer: {}
+       empty:
+-        area:
++        area_text_custom:
+           id: area_text_custom
+           table: views
+           field: area_text_custom
+@@ -904,7 +904,7 @@
+         link_url: true
+         use_ajax: false
+       header:
+-        area:
++        area_text_custom:
+           id: area_text_custom
+           table: views
+           field: area_text_custom
+
+--- modules/workbench/config/optional/views.view.workbench_current_user.yml      2024-11-01 12:32:10
++++ modules/workbench/config/optional/views.view.workbench_current_user.yml 2024-11-01 12:32:06
+@@ -405,7 +405,7 @@
+             default_group_multiple: {}
+             group_items: {}
+       header:
+-        area:
++        area_text_custom:
+           id: area_text_custom
+           table: views
+           field: area_text_custom

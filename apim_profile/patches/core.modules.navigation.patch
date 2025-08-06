@@ -1,0 +1,27 @@
+--- core/modules/navigation/js/admin-toolbar-wrapper.js 2025-03-05 21:15:52
++++ core/modules/navigation/js/admin-toolbar-wrapper.js        2025-04-23 15:00:39
+@@ -148,6 +148,13 @@
+         let firstState =
+           localStorage.getItem('Drupal.navigation.sidebarExpanded') !== 'false';
+ 
++        if (firstState && window.matchMedia('(min-width: 1024px)').matches) {
++          document.documentElement.setAttribute(
++            'data-admin-toolbar',
++            'expanded',
++          );
++        }
++
+         // We need to display closed sidebar on init on mobile.
+         if (window.matchMedia('(max-width: 1023px)').matches) {
+           firstState = false;
+--- core/modules/navigation/layouts/navigation.html.twig        2025-03-05 21:15:52
++++ core/modules/navigation/layouts/navigation.html.twig       2025-04-23 15:05:00
+@@ -85,8 +85,3 @@
+   </div>
+ </aside>
+ <div class="admin-toolbar-overlay" aria-controls="admin-toolbar" data-drupal-admin-styles></div>
+-<script>
+-  if (localStorage.getItem('Drupal.navigation.sidebarExpanded') !== 'false' && (window.matchMedia('(min-width: 1024px)').matches)) {
+-    document.documentElement.setAttribute('data-admin-toolbar', 'expanded');
+-  }
+-</script>

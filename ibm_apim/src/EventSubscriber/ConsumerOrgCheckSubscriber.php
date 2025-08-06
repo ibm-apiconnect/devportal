@@ -79,6 +79,7 @@ class ConsumerOrgCheckSubscriber implements EventSubscriberInterface
       \Drupal::routeMatch()->getRouteName() === 'system.js_asset' ||
       \Drupal::routeMatch()->getRouteName() === 'auth_apic.invitation' ||
       \Drupal::routeMatch()->getRouteName() === 'user.logout' ||
+      \Drupal::routeMatch()->getRouteName() === 'ibm_apic_session_check.status' ||
       !\Drupal::currentUser()->isAuthenticated() ||
       (int) \Drupal::currentUser()->id() === 0 ||
       (int) \Drupal::currentUser()->id() === 1 ||

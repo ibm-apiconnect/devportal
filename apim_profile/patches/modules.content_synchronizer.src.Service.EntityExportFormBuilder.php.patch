@@ -1,0 +1,39 @@
+--- modules/content_synchronizer/src/Service/EntityExportFormBuilder.php	2025-07-02 17:04:42
++++ modules/content_synchronizer/src/Service/EntityExportFormBuilder.php	2025-07-09 15:37:19
+@@ -81,10 +81,28 @@
+    * Add the export form in the entity edit form, if the entity is exportable.
+    */
+   public function addExportFields(array &$form, FormStateInterface $formState) {
+-    if ($this->isEntityEditForm($form, $formState)) {
++
++  if ($this->isEntityEditForm($form, $formState)) {
++    $entity = $formState->getFormObject()->getEntity();
++    $entityTypeId = $entity->getEntityTypeId();
++
++    // Block export for forum nodes
++    if ($entityTypeId === 'node' && $entity->bundle() === 'forum') {
++      return;
++    }
++
++    // Block export for globally blocked entity types
++    if (!$this->isBlocked($entityTypeId)) {
+       $this->addExportFieldsToEntityForm($form, $formState);
+     }
+   }
++  }
++
++  public function isBlocked(string $entity): bool {
++      $blockedTypes = [ "crop", "user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs", 
++      "apic_app_application_creds", "avatars_preview", "comment", "contact_message", "search_api_task", "vote", "vote_result", "vote_type" ];
++      return in_array($entity, $blockedTypes);
++    }
+ 
+   /**
+    * Return true if the form needs to have an export field.
+@@ -336,5 +354,5 @@
+       }
+     }
+   }
+-
++  
+ }

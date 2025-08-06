@@ -36,11 +36,16 @@ class AdminMessagesBlock extends BlockBase {
     // this has to be done as part of a user browsing session since drush doesnt know what the site URL is
     $update_site_url = \Drupal::state()->get('ibm_apim.update_site_url');
     if (defined('DRUPAL_ROOT') && $update_site_url === TRUE) {
+      $utils = \Drupal::service('ibm_apim.utils');
+      $intAudit = $utils->setInternalAuditFlag();
+
       require_once DRUPAL_ROOT . '/profiles/apim_profile/apim_profile.homepage.inc';
       if (function_exists('apim_profile_update_forum_block')) {
         apim_profile_update_forum_block();
       }
+
       \Drupal::state()->delete('ibm_apim.update_site_url');
+      $utils->resetInternalAuditFlag($intAudit);
     }
 
     // clear cookies when navigating away from user management pages
@@ -61,6 +66,22 @@ class AdminMessagesBlock extends BlockBase {
       \Drupal::messenger()->addError(t('Session expired. Please sign in again.'));
       \user_cookie_delete('ibm_apim_session_expired_on_token');
     }
+
+    $corg_create_status = \Drupal::request()->cookies->get('Drupal_visitor_corg_create_status_msg');
+    if (isset($corg_create_status) && !empty($corg_create_status)) {
+      $message_data = json_decode($corg_create_status, true);
+
+      if (isset($message_data) && !empty($message_data['text'])) {
+        if ($message_data['error']) {
+          \Drupal::messenger()->addError($message_data['text']);
+        } else {
+          \Drupal::messenger()->addMessage($message_data['text']);
+        }
+      }
+      // Clear cookie after use
+      user_cookie_delete('corg_create_status_msg');
+    }
+
 
     $status_messages = \Drupal::state()->get('ibm_apim.status_messages');
     $messages = [];

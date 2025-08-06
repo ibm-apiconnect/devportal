@@ -1,18 +1,22 @@
---- core/modules/user/user.module	2019-10-29 17:30:37.000000000 +0000
-+++ core/modules/user/user.module	2019-11-07 15:09:25.000000000 +0000
-@@ -1046,6 +1046,23 @@
- }
- 
- /**
+--- core/modules/user/src/Hook/UserHooks.php    2025-01-08 11:49:20
++++ core/modules/user/src/Hook/UserHooks.php       2025-01-08 11:48:59
+@@ -310,8 +310,26 @@
+       ]);
+       $action->trustData()->save();
+     }
++  }
++
++/**
 + * Implements hook_ENTITY_TYPE_update() for user_role entities.
 + */
-+function user_user_role_update(RoleInterface $role) {
++#[Hook('user_role_update')]
++function userRoleUpdate(RoleInterface $role) {
 +  $add_action = Action::load('user_add_role_action.' . $role->id());
 +  if ($add_action) {
 +    $add_action->set('label', t('Add the @label role to the selected user(s)', ['@label' => $role->label()]));
 +    $add_action->save();
-+  }
-+
+   }
+
 +  $remove_action = Action::load('user_remove_role_action.' . $role->id());
 +  if ($remove_action) {
 +    $remove_action->set('label', t('Remove the @label role from the selected user(s)', ['@label' => $role->label()]));
@@ -20,7 +24,6 @@
 +  }
 +}
 +
-+/**
-  * Implements hook_ENTITY_TYPE_delete() for user_role entities.
-  */
- function user_user_role_delete(RoleInterface $role) {
+   /**
+    * Implements hook_ENTITY_TYPE_delete() for user_role entities.
+    */

@@ -35,3 +35,12 @@ product.select:
     parameters:
       apiNode:
         type: 'apic_api.nidorpath'
+        
+product.download_api_specs:
+  path: '/product/{product_id}/download-specs'
+  defaults:
+    _controller: '\Drupal\product\Controller\ProductController::downloadSpecs'
+    _title: 'Download API Specs'
+  requirements:
+    _permission: 'access content'
+    product_id: \d+

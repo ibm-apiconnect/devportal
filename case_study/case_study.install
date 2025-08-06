@@ -1,0 +1,44 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2024, 2024
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+use Drupal\page_manager\Entity\Page;
+
+/**
+* Implements hook_install().
+*/
+function case_study_install() {
+    $page = Page::load('welcome');
+    // should only be one page variant, so we'll just grab the first one
+    if ($page !== NULL) {
+        $page_variants = $page->getVariants();
+        reset($page_variants);
+        $page_variant = array_values($page_variants)[0];
+
+        $variant_plugin = $page_variant->getVariantPlugin();
+        // Add Case Study Block
+        $casestudy_block = [
+            "id" => "casestudy_block",
+            "label" => "Case studies",
+            "label_display" => "0",
+            "provider" => "case_study",
+            "context_mapping" => [],
+            "region" => "main",
+            "weight" => 3,
+            "numberOfTiles" => 4,
+            "selectionType" => "CREATED",
+            "customNodes" => null,
+        ];
+        $variant_plugin->addBlock($casestudy_block);
+        $page_variant->save();
+    }
+}

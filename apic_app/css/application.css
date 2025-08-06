@@ -472,6 +472,7 @@
   font-size: 100%;
   font-family: inherit;
   vertical-align: baseline;
+  margin-left: 1rem;
 }
 
 .bx--card-footer__app-status > *,
@@ -489,11 +490,7 @@
   padding-top: 1rem;
   padding-right: 1rem;
   display: flex;
-}
-
-.bx--card .apicAppCard{
   flex-direction: column;
-  height: 12rem;
   width: 20rem;
   max-width: 20rem;
 }
@@ -549,6 +546,11 @@ button.clipboardjs-button:hover {
   background-color: #e5e5e5;
 }
 
+span.clipboardjs-tooltip {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
 button.clipboardjs-button:focus {
   outline: 2px solid #0f62fe;
   outline-offset: -2px;
@@ -577,4 +579,16 @@ consumeranalytics .App {
 
 .consumer_analytics_ui .contentInnerWrapper {
   padding-top: 1rem;
+}
+
+#application-verify-clientsecret-form input#edit-secret.form-text.required.form-control {
+  display: inline-block;
+}
+
+.my-svg {
+  enable-background: new 0 0 32 32; 
+}
+
+.st0 {
+  fill: none;
 }

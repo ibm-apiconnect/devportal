@@ -57,3 +57,6 @@ payment_method_encryption_profile: 'socialblock'
 billing_providers:
 api_max_depth: 9
 example_array_items: 3
+product_recommendations:
+  enabled: false
+  count: 3

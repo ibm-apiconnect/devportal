@@ -20,6 +20,7 @@ use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\ibm_apim\Service\ApimUtils;
 use Drupal\ibm_apim\Service\Utils;
+use Drupal\ibm_apim\Service\SiteConfig;
 use Psr\Log\LoggerInterface;
 use Drupal\Core\TempStore\PrivateTempStore;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
@@ -81,7 +82,10 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
    */
   protected EncryptionProfileManagerInterface $profileManager;
 
-
+  /**
+   * @var Drupal\ibm_apim\Service\SiteConfig
+   */
+  protected SiteConfig $siteConfig;
 
   public function __construct(StateInterface $state,
                               LoggerInterface $logger,
@@ -92,6 +96,7 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
                               Time $time,
                               EncryptServiceInterface $encryption,
                               EncryptionProfileManagerInterface $profileManager,
+                              SiteConfig $siteConfig
                               ) {
     $this->state = $state;
     $this->state = $state;
@@ -103,6 +108,7 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
     $this->time = $time;
     $this->encryption = $encryption;
     $this->profileManager = $profileManager;
+    $this->siteConfig = $siteConfig;
   }
 
   /**
@@ -147,7 +153,8 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
     if (function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
-    $client_id = $this->state->get('ibm_apim.site_client_id');
+
+    $client_id = $this->siteConfig->getClientId();
 
     if ($client_id === NULL) {
       if (function_exists('ibm_apim_exit_trace')) {
@@ -162,19 +169,19 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
 
     if (isset($invitation_object)) {
       // add invitation information to state object (potentially sensitive)
-      $state_obj['invitation_object'] = serialize($invitation_object);
+      $state_obj['invitation_object'] = json_encode($invitation_object);
       $state_obj['created'] = time();
     }
     $key = $this->time->getCurrentTime() . ':' . $state_obj['registry_url'];
     $encrypted_key = $this->encryption->encrypt($key, $this->profileManager->getEncryptionProfile('socialblock'));
-    $encrypted_data = $this->encryption->encrypt(serialize($state_obj), $this->profileManager->getEncryptionProfile('socialblock'));
+    $encrypted_data = $this->encryption->encrypt(json_encode($state_obj), $this->profileManager->getEncryptionProfile('socialblock'));
 
     $this->authApicSessionStore->set($key, $encrypted_data);
-    $state_param = $this->utils->base64_url_encode(serialize($encrypted_key));
+    $state_param = $this->utils->base64_url_encode(json_encode($encrypted_key));
 
     $host = $this->apimUtils->getHostUrl();
 
-    if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+    if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
       $route = URL::fromRoute('auth_apic.azcode')->toString();
     }
     else {
@@ -226,31 +233,31 @@ class OidcRegistryService implements OidcRegistryServiceInterface {
     if ($this->moduleHandler->moduleExists('social_media_links')) {
       switch ($registry->getProviderType()) {
         case 'facebook':
-          $image['html'] = '<i class="fa fa-brands fa-facebook-f" aria-hidden="true" style="font-size: 18px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-facebook-f" aria-hidden="true"></i>';
           $image['class'] = 'fa-facebook';
           break;
         case 'slack':
-          $image['html'] = '<i class="fa fa-brands fa-slack" aria-hidden="true" style="font-size: 19px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-slack" aria-hidden="true"></i>';
           $image['class'] = 'fa-slack';
           break;
         case 'twitter':
-          $image['html'] = '<i class="fa fa-brands fa-twitter" aria-hidden="true" style="font-size: 19px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-twitter" aria-hidden="true"></i>';
           $image['class'] = 'fa-twitter';
           break;
         case 'windows_live':
-          $image['html'] = '<i class="fa fa-brands fa-windows" aria-hidden="true" style="font-size: 17px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-windows" aria-hidden="true"></i>';
           $image['class'] = 'fa-windows';
           break;
         case 'linkedin':
-          $image['html'] = '<i class="fa fa-brands fa-linkedin" aria-hidden="true" style="font-size: 20px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-linkedin" aria-hidden="true"></i>';
           $image['class'] = 'fa-linkedin-square';
           break;
         case 'google':
-          $image['html'] = '<i class="fa fa-brands fa-google" aria-hidden="true" style="font-size: 18px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-google" aria-hidden="true"></i>';
           $image['class'] = 'fa-google';
           break;
         case 'github':
-          $image['html'] = '<i class="fa fa-brands fa-github" aria-hidden="true" style="font-size: 21px;"></i>';
+          $image['html'] = '<i class="fa fa-brands fa-github" aria-hidden="true"></i>';
           $image['class'] = 'fa-github';
           break;
       }

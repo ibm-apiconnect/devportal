@@ -1621,6 +1621,7 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
   private function resetToDefaultRegistry(): void {
     $lur = new UserRegistry();
     $lur->setName('lur1');
+    $lur->setTitle('lur 1');
     $lur->setUrl('/reg/lur1');
     $lur->setRegistryType('lur');
     $lur->setUserManaged(TRUE);

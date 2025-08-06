@@ -82,7 +82,7 @@ class ApicActivationService implements ApicActivationInterface {
     $result = FALSE;
 
     $mgmt_response = $this->mgmtServer->activateFromJWT($jwt);
-    if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+    if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
       if ($this->moduleHandler->moduleExists('contact')) {
         $contact_link = $this->linkGenerator->generate(t('Contact the site administrator.'), Url::fromRoute('contact.site_page'));
       }

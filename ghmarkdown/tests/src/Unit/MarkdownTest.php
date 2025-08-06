@@ -8,6 +8,7 @@
 namespace Drupal\Tests\ghmarkdown\Unit;
 
 use Drupal\ghmarkdown\cebe\markdown\Markdown;
+use Drupal\Tests\ghmarkdown\Unit\Base\BaseMarkdownBaseClass;
 
 /**
  * Test case for traditional markdown.
@@ -15,13 +16,13 @@ use Drupal\ghmarkdown\cebe\markdown\Markdown;
  * @author Carsten Brandt <mail@cebe.cc>
  * @group ghmarkdown
  */
-class MarkdownTest extends BaseMarkdownTest {
+class MarkdownTest extends BaseMarkdownBaseClass {
 
-  public function createMarkdown(): Markdown {
+  public static function createMarkdown(): Markdown {
     return new Markdown();
   }
 
-  public function getDataPaths(): array {
+  public static function getDataPaths(): array {
     return [
       'markdown-data' => __DIR__ . '/markdown-data',
     ];

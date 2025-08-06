@@ -1,22 +1,33 @@
---- core/modules/user/src/Form/UserLoginForm.php	2022-06-15 17:34:03.000000000 +0100
-+++ core/modules/user/src/Form/UserLoginForm.php	2022-06-27 12:18:48.000000000 +0100
-@@ -177,7 +177,11 @@
-     @trigger_error(__METHOD__ . ' is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3410706', E_USER_DEPRECATED);
-     if (!$form_state->isValueEmpty('name') && user_is_blocked($form_state->getValue('name'))) {
-       // Blocked in user administration.
--      $form_state->setErrorByName('name', $this->t('The username %name has not been activated or is blocked.', ['%name' => $form_state->getValue('name')]));
+--- core/modules/user/src/Form/UserLoginForm.php        2024-09-03 15:28:17
++++ core/modules/user/src/Form/UserLoginForm.php   2024-09-03 15:30:18
+@@ -249,6 +249,23 @@
+   }
+
+   /**
++   * Sets an error if supplied username has been blocked.
++   *
++   * Removed in Drupal 11 but added back by IBM APIC as validateName is now done in validateAuthentication
++   * We don't want this though as we have a different validation process and want to just be able to see
++   * if the name is blocked.
++   */
++  public function validateName(array &$form, FormStateInterface $form_state) {
++    if (!$form_state->isValueEmpty('name') && user_is_blocked($form_state->getValue('name'))) {
 +      $user_input = $form_state->getUserInput();
 +      $query = isset($user_input['name']) ? ['name' => $user_input['name']] : [];
 +      $this->logger('user')->notice('Login attempt for %user which has not been activated or is blocked.', ['%user' => $form_state->getValue('name')]);
 +      $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
 +      $form_state->setErrorByName('usernameorpassword2', $this->t('<a href=":password">Forgot your password? Click here to reset it.</a>', [':password' => Url::fromRoute('user.pass', [], ['query' => $query])->toString()]));
-     }
-   }
-
-@@ -269,20 +273,24 @@
++    }
++  }
++
++  /**
+    * Checks if user was not authenticated, or if too many logins were attempted.
+    *
+    * This validation function should always be the last one.
+@@ -263,20 +280,24 @@
          $this->userFloodControl->register('user.failed_login_user', $flood_config->get('user_window'), $flood_control_user_identifier);
        }
-
+ 
 +      $query = isset($user_input['name']) ? ['name' => $user_input['name']] : [];
        if ($flood_control_triggered = $form_state->get('flood_control_triggered')) {
 +        $user_input = $form_state->getUserInput();
@@ -33,7 +44,7 @@
 +          $form_state->setErrorByName('usernameorpassword', $this->t('Unable to sign in. This may be because the credentials provided for authentication are invalid or the user has not been activated. Please check that the user is active, then repeat the request with valid credentials. Please note that repeated attempts with incorrect credentials can lock the user account.'));
 +          $form_state->setErrorByName('usernameorpassword2', $this->t('<a href=":password">Forgot your password? Click here to reset it.</a>', [':password' => Url::fromRoute('user.pass', [], ['query' => $query])->toString()]));
          }
--        $response = $this->bareHtmlPageRenderer->renderBarePage(['#markup' => $message], $this->t('Login failed'), 'maintenance_page');
+-        $response = $this->bareHtmlPageRenderer->renderBarePage(['#markup' => $message], $this->t('Login failed'), 'maintenance_page__flood');
 -        $response->setStatusCode(403);
 -        $form_state->setResponse($response);
        }

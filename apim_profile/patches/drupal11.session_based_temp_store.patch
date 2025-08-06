@@ -1,0 +1,28 @@
+--- modules/session_based_temp_store/session_based_temp_store.info.yml  2024-09-03 12:43:47
++++ modules/session_based_temp_store/session_based_temp_store.info.yml     2024-09-03 15:47:46
+@@ -2,4 +2,4 @@
+ description: 'Provides a service to store and retrieve temporary data for a given owner through the session.'
+ package: Development
+ type: module
+-core_version_requirement: ^8 || ^9 || ^10
++core_version_requirement: ^8 || ^9 || ^10 || ^11
+
+--- modules/session_based_temp_store/src/SessionBasedTempStore.php      2025-02-04 16:27:44
++++ modules/session_based_temp_store/src/SessionBasedTempStore.php 2025-02-04 16:27:41
+@@ -186,7 +186,7 @@
+     $value = (object) [
+       'owner' => $this->getOwner(),
+       'data' => $value,
+-      'updated' => (int) $this->requestStack->getMasterRequest()->server->get('REQUEST_TIME'),
++      'updated' => (int) $this->requestStack->getMainRequest()->server->get('REQUEST_TIME'),
+     ];
+
+     // If the global expiration time is set to 0 (expire at the end of the session),
+@@ -353,7 +353,7 @@
+       return $this->expire;
+     }
+     // Otherwise set the specific expiration time passed in the argument.
+-    $request_time = (int) $this->requestStack->getMasterRequest()->server->get('REQUEST_TIME');
++    $request_time = (int) $this->requestStack->getMainRequest()->server->get('REQUEST_TIME');
+     return $request_time + $this->expire;
+   }

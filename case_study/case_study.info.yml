@@ -1,0 +1,11 @@
+name: Case Study
+type: module
+description: Provides a Case study node type, view and block
+package: IBM API Developer Portal
+core_version_requirement: ^10 || ^11
+version: 8.x-99.0.0
+project: case_study
+dependencies:
+- block
+- block_content
+- options

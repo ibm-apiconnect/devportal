@@ -153,12 +153,17 @@ class FeaturedContentBlock extends BlockBase {
       '#weight' => 50,
     ];
 
+    $nids = [];
+    foreach ($this->configuration['customNodes'] as $customNode) {
+      $nids[] = $customNode['target_id'];
+    }
+
     $form['customNodes'] = [
       '#type' => 'entity_autocomplete',
       '#target_type' => 'node',
       '#title' => $this->t('Custom nodes'),
       '#description' => $this->t('Manually specify the nodes to feature. \',\' separated. (This field is only used if using \'Custom\' node selection.)'),
-      '#default_value' => $this->configuration['customNodes'],
+      '#default_value' => Node::loadMultiple($nids),
       '#tags' => TRUE,
       '#selection_settings' => [
         'target_bundles' => ['api', 'product'],
@@ -286,16 +291,16 @@ class FeaturedContentBlock extends BlockBase {
       }
       switch (strtoupper($this->configuration['selectionType'])) {
         case static::CONST_UPDATED:
-          $query->sort('changed', 'ASC');
+          $query->sort('changed', 'DESC');
           break;
         case static::CONST_CREATED:
-          $query->sort('created', 'ASC');
-          break;
-        case static::CONST_OLDEST:
           $query->sort('created', 'DESC');
           break;
+        case static::CONST_OLDEST:
+          $query->sort('created', 'ASC');
+          break;
         case static::CONST_STALEST:
-          $query->sort('changed', 'DESC');
+          $query->sort('changed', 'ASC');
           break;
         case static::CONST_TITLE:
           $query->sort('title', 'ASC');
@@ -309,7 +314,7 @@ class FeaturedContentBlock extends BlockBase {
           break;
         default:
           // equates to CONST_UPDATED
-          $query->sort('changed', 'ASC');
+          $query->sort('changed', 'DESC');
           break;
       }
 
@@ -349,6 +354,7 @@ class FeaturedContentBlock extends BlockBase {
           }
           $data['version'] = $rawNode->apic_version->value;
           $data['id'] = $rawNode->api_id->value;
+          $data['tooltip_id'] = $rawNode->id();
           $data['apic_pathalias'] = $rawNode->apic_pathalias->value;
           $fid = $rawNode->apic_image->getValue();
           $imageUrl = NULL;
@@ -375,6 +381,7 @@ class FeaturedContentBlock extends BlockBase {
             $data['description'] = $utils->truncate_string(strip_tags($string), 300);
           }
           $data['id'] = $rawNode->product_id->value;
+          $data['tooltip_id'] = $rawNode->id();
           $data['version'] = $rawNode->apic_version->value;
           $data['apic_pathalias'] = $rawNode->apic_pathalias->value;
           $fid = $rawNode->apic_image->getValue();

@@ -1,0 +1,10 @@
+--- modules/content_synchronizer/content_synchronizer.info.yml  2024-01-04 09:20:15
++++ modules/content_synchronizer/content_synchronizer.info.yml     2024-09-02 15:38:07
+@@ -1,6 +1,6 @@
+ name: Content Synchronizer
+ type: module
+-core_version_requirement: ^9 || ^10
++core_version_requirement: ^9 || ^10 || ^11
+ package: Development
+ dependencies:
+   - drupal:file

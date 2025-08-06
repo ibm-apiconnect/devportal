@@ -1,0 +1,9 @@
+basic:
+  version: 1.x
+  css:
+    component:
+      css/case_study.css: { }
+  js:
+    js/CaseStudy.js: { }
+  dependencies:
+    - 'masonry/masonry.layout'

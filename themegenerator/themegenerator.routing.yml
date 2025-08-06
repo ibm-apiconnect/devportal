@@ -6,3 +6,11 @@ themegenerator.theme_generate:
   requirements:
     _permission: 'administer software updates'
     _access_update_manager: 'TRUE'
+themegenerator.theme_add:
+  path: '/admin/theme/install'
+  defaults:
+    _form: '\Drupal\update\Form\UpdateManagerInstall'
+    _title: 'Add new theme'
+  requirements:
+    _permission: 'administer software updates'
+    _access_update_manager: 'TRUE'

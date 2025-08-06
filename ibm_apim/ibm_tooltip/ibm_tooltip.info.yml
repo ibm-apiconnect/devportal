@@ -1,0 +1,7 @@
+name: IBM Tooltip
+type: module
+description: 'Provides a dynamic tooltip.'
+package: IBM API Developer Portal
+core_version_requirement: ^10 || ^11
+version: 8.x-99.0.0
+project: ibm_tooltip

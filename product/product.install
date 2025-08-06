@@ -546,6 +546,71 @@ function product_update_10003() {
 }
 
 /**
+ * Add Subscription Status filter to the products view
+ */
+function product_update_101000() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+  $subscription_status_filter = [
+    'id' => 'subscription_status_filter',
+    'table' => 'node__apic_url',
+    'field' => 'subscription_status_filter',
+    'relationship' => 'none',
+    'group_type' => 'group',
+    'admin_label' => '',
+    'plugin_id' => 'subscription_status_filter',
+    'operator' => 'in',
+    'value' => null,
+    'group' => 1,
+    'exposed' => true,
+    'expose' => [
+      'operator_id' => '',
+      'label' => 'Subscription Status',
+      'description' => '',
+      'use_operator' => false,
+      'operator' => 'subscription_status_filter_op',
+      'operator_limit_selection' => false,
+      'operator_list' => null,
+      'identifier' => 'subscription_status_filter',
+      'required' => false,
+      'remember' => false,
+      'multiple' => false,
+      'remember_roles' => [
+        'authenticated' => 'authenticated',
+        'anonymous' => '0',
+        'forum_moderator' => '0',
+        'content_author' => '0',
+        'administrator' => '0',
+        'superuser' => '0',
+      ],
+      'reduce' => 0,
+      'sort_values' => 1,
+    ],
+    'is_grouped' => false,
+    'group_info' => [
+      'label' => '',
+      'description' => '',
+      'identifier' => '',
+      'optional' => true,
+      'widget' => 'select',
+      'multiple' => false,
+      'remember' => false,
+      'default_group' => 'All',
+      'default_group_multiple' => null,
+      'group_items' => null,
+    ]
+  ];
+
+  $filters = \Drupal::configFactory()->get('views.view.products')->get('display.default.display_options.filters');
+  $filters['subscription_status_filter'] = $subscription_status_filter;
+  \Drupal::configFactory()->getEditable('views.view.products')->set('display.default.display_options.filters',$filters)->save();
+  views_invalidate_cache();
+  drupal_flush_all_caches();
+}
+
+/**
  * Implements hook_update_dependencies().
  */
 function product_update_dependencies(): array {

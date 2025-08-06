@@ -1,0 +1,9 @@
+news_style:
+  version: 1.x
+  css:
+    component:
+      css/ibm_apic_news.css: { }
+  js:
+    js/IbmNews.js: { }
+  dependencies:
+    - 'masonry/masonry.layout'

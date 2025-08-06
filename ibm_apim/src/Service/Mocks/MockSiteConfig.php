@@ -93,7 +93,7 @@ class MockSiteConfig extends SiteConfig {
   /**
    * @inheritDoc
    */
-  protected function get(): array {
+  public function get(): array {
     $catalog_config = $this->state->get('ibm_apim.mock_site_config');
     if (!isset($catalog_config)) {
       $catalog_config = [];

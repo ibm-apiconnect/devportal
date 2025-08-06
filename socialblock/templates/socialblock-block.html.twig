@@ -17,16 +17,25 @@
               <div class="tweet_profile">
                 <img class="profile_image" src="{{ post.profile_img }}" alt>
                 <div class="profile_name">
-                  <a href="https://twitter.com/{{ post.handle }}" target="_blank" rel="noopener"
-                     class="profile_name name">{{ post.name }}</a>
-                  <div class="twitter_handle">@{{ post.handle }}</div>
+                  {% if post.isTwitter %}
+                    <a href="https://twitter.com/{{ post.handle }}" target="_blank" rel="noopener" class="profile_name name twitter_handle">@{{ post.handle }}</a>
+                  {% elseif post.isTwitter is not defined or not post.isTwitter %}
+                    <a href="https://bsky.app/profile/{{ post.handle }}" target="_blank" rel="noopener"
+                      class="profile_name name twitter_handle">{{ post.name }}</a>
+                    <div class="twitter_handle">@{{ post.handle }}</div>
+                  {% endif %}
                 </div>
               </div>
               <div class="tweet_meta">
-                <a href="https://twitter.com/{{ post.handle }}/statuses/{{ post.tweet_id }}" target="_blank"
-                   rel="noopener"
-                   class="bird" title="{{ 'Open this tweet'|t }}"></a>
-                <div class="tweet_timestamp">{{ post.timestamp }}</div>
+                {% if post.isTwitter %}
+                  <a href="https://twitter.com/{{ post.handle }}/statuses/{{ post.tweet_id }}" target="_blank"
+                    rel="noopener"
+                    class="bird" title="{{ 'Open this tweet'|t }}"></a>
+                  <div class="tweet_timestamp">{{ post.timestamp }}</div>
+                {% elseif post.isTwitter is not defined or not post.isTwitter %}
+                  <a href="https://bsky.app/profile/{{ post.handle }}/post/{{ post.tweet_id }}" target="_blank" rel="noopener" class="bsky" title="{{ 'Open this tweet'|t }}"></a>
+                  <div class="tweet_timestamp">{{ post.timestamp }}</div>
+                {% endif %}
               </div>
             </div>
             {% if post.photos is defined and post.photos is not empty %}

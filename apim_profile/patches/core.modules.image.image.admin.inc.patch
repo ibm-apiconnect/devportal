@@ -1,0 +1,37 @@
+--- core/modules/image/image.admin.inc	2025-07-30 16:34:57
++++ core/modules/image/image.admin.inc	2025-07-30 16:32:17
+@@ -77,6 +77,7 @@
+   }
+ 
+   // Build the preview of the original image.
++  // Add image preview classes instead of inline styles.
+   $variables['original']['rendered'] = [
+     '#theme' => 'image',
+     '#uri' => $original_path,
+@@ -88,12 +89,12 @@
+     '#attributes' => [
+       'width' => $variables['original']['width'],
+       'height' => $variables['original']['height'],
+-      'style' => 'width: ' . $variables['preview']['original']['width'] . 'px; height: ' . $variables['preview']['original']['height'] . 'px;',
++      'class' => ['image-preview-original'],
++      'data-preview-width' => $variables['preview']['original']['width'],
++      'data-preview-height' => $variables['preview']['original']['height'],
+     ],
+   ];
+ 
+-  // Build the preview of the image style derivative. Timestamps are added
+-  // to prevent caching of images on the client side.
+   $variables['derivative']['rendered'] = [
+     '#theme' => 'image',
+     '#uri' => $variables['derivative']['url'] . '?cache_bypass=' . $variables['cache_bypass'] . '&itok=' . $variables['itok'],
+@@ -105,7 +106,9 @@
+     '#attributes' => [
+       'width' => $variables['derivative']['width'],
+       'height' => $variables['derivative']['height'],
+-      'style' => 'width: ' . $variables['preview']['derivative']['width'] . 'px; height: ' . $variables['preview']['derivative']['height'] . 'px;',
++      'data-preview-width' => $variables['preview']['derivative']['width'],
++      'data-preview-height' => $variables['preview']['derivative']['height'],
++      'class' => ['image-preview-derivative'],
+     ],
+   ];
+ 

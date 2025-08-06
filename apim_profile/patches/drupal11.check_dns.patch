@@ -1,0 +1,11 @@
+--- modules/check_dns/check_dns.info.yml        2023-07-20 07:17:35
++++ modules/check_dns/check_dns.info.yml   2024-09-03 11:23:23
+@@ -1,7 +1,7 @@
+ name: Check DNS
+ type: module
+ description: Checks if email domain has DNS Record before user registration.
+-core_version_requirement: ^8 || ^9 || ^10
++core_version_requirement: ^8 || ^9 || ^10 || ^11
+ package: Check DNS
+
+ # Information added by Drupal.org packaging script on 2023-07-20

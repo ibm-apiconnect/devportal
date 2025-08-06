@@ -1,0 +1,11 @@
+name: News
+type: module
+description: IBM API Connect News module.
+package: IBM API Developer Portal
+core_version_requirement: ^10 || ^11
+version: 8.x-99.0.0
+project: ibm_apic_news
+dependencies:
+  - block
+  - block_content
+  - options

@@ -51,6 +51,24 @@ body.toolbar-fixed {
   left: 72px;
 }
 
+@media screen and (min-width: 642px) and (max-width: 1024px) {
+  header.apicStickyHeader {
+    z-index: 500;
+  }
+
+  .admin-toolbar-control-bar {
+    top: 48px;
+  }
+
+  [data-admin-toolbar="collapsed"] .toolbar-loading .apicStickyHeader {
+    left: 0;
+  }
+}
+
+[data-admin-toolbar="expanded"] .admin-toolbar {
+  z-index: 100000;
+}
+
 // Remove flicking.
 body.toolbar-loading {
 

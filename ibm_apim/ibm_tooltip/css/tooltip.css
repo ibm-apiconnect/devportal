@@ -1,0 +1,136 @@
+#apic-tooltip {
+    position: absolute;
+    z-index: 100001;
+    border: 0px;
+    border-radius: 5px;
+    margin-top: 5px;
+    background-color: #fff;
+    box-shadow: -4px 6px 6px rgba(0,0,0,0.15);
+    width: auto;
+    transition: opacity 0.2s ease;
+    opacity: 0;
+    padding: 10px 20px 10px 20px;
+    pointer-events: none;
+    font-size: 0.875rem;
+}
+
+.apic-tooltip-pointer::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 0;
+    height: 0;
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+}
+
+.apic-tooltip-pointer-left::before {
+    right: 0;
+    transform: translate(100%, -50%);
+    border-left: 16px solid #fff;
+    filter: drop-shadow(4px 6px 6px rgba(0, 0, 0, 0.15));
+}
+
+.apic-tooltip-pointer-right::before {
+    left: 0;
+    transform: translate(-100%, -50%);
+    border-right: 16px solid #fff;
+    filter: drop-shadow(-4px 6px 6px rgba(0, 0, 0, 0.15));
+}
+
+.apic-tooltip-grid {
+    display: grid;    
+    column-gap: 12px;
+    row-gap: 6px;
+    max-width: 100%;
+    word-break: break-word;
+}
+
+.apic-tooltip-grid-1 {
+    grid-template-columns: repeat(1, auto);
+}
+
+.apic-tooltip-grid-2 {
+    grid-template-columns: repeat(2, auto);
+}
+
+.apic-tooltip-grid-3 {
+    grid-template-columns: repeat(3, auto);
+}
+.apic-tooltip-grid-4 {
+    grid-template-columns: repeat(4, auto);
+}
+
+.apic-tooltip-cell {
+    padding: 6px 10px 0px 10px;
+}
+
+.apic-tooltip-divider {
+    grid-column: 1 / -1;
+    border-top: 2px solid #ccc;
+}
+
+@media (max-width: 720px) {
+    #apic-tooltip {
+        width: 200px;
+        font-size: 0.65rem;
+    }
+    .apic-tooltip-grid {
+      display: flex;
+      flex-direction: column;
+      row-gap: 1px;
+    }
+
+    .apic-tooltip-cell {
+      width: 100%;
+    }
+}
+
+.apic-tooltip-tag {
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    width: auto;
+    text-align: center;
+    box-sizing: border-box;
+    color: #333;
+    font-weight: bold;
+}
+
+.apic-tooltip-tag-element-1 {
+    background-color: #bed3eb;
+    color: #586d85;
+}
+
+.apic-tooltip-tag-element-2 {
+    background-color: #d7eab2;
+    color: #71844c;
+}
+
+.apic-tooltip-tag-element-3 {
+    background-color: #fcd29f;
+    color: #966c39;
+}
+
+.apic-tooltip-tag-element-4 {
+    background-color: #c8c6fa;
+    color: #626094;
+}
+
+.apic-tooltip-tag-element-5 {
+    background-color: #e5c1c3;
+    color: #7f5b5d;
+}
+
+.apic-tooltip-tag-element-6 {
+    background-color: #d2d2d2;
+    color: #6c6c6c;
+}
+  /* Footer */
+.apic-tooltip-footer {
+    font-size: 12px;
+    color: #888;
+    margin-top: 6px;
+    text-align: center;
+}
+  

@@ -79,7 +79,7 @@ class JWTParserTest extends UnitTestCase {
   }
 
   /**
-   * Positive parser test.
+   * Positive parser test. THIS TEST WILL FAIL LOCALLY UNLESS YOU HAVE THE JENKINS JWK_B64_KEY ENV VAR SET
    *
    * @throws \JsonException
    * @throws \Exception
@@ -118,7 +118,7 @@ class JWTParserTest extends UnitTestCase {
   }
 
   /**
-   * Invalid - missing URL in token.
+   * Invalid - missing URL in token. THIS TEST WILL FAIL LOCALLY UNLESS YOU HAVE THE JENKINS JWK_B64_KEY ENV VAR SET
    *
    * @throws \Exception
    */

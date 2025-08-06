@@ -143,7 +143,7 @@ class DeleteInviteForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getDescription(): TranslatableMarkup {
-    return $this->t('Are you sure you want to delete the invitation to this user?');
+    return $this->t('This action will permanently revoke the invitation for the user to join the organization. Once the invitation has been deleted, the user will no longer have the option to accept it.');
   }
 
   /**

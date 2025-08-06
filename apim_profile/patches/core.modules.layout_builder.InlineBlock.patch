@@ -1,0 +1,54 @@
+--- core/modules/layout_builder/src/Plugin/Block/InlineBlock.php	2025-07-01 16:46:16
++++ core/modules/layout_builder/src/Plugin/Block/InlineBlock.php	2025-07-01 16:46:16
+@@ -173,25 +173,38 @@
+    * {@inheritdoc}
+    */
+   public function blockValidate($form, FormStateInterface $form_state) {
+-    $block_form = $form['block_form'];
++    if (!isset($form['setting']['block_form']['#block'])) {
++      \Drupal::messenger()->addWarning($this->t('InlineBlock only supports custom block content types. Please use a supported block type.'));
++      return;
++    }
++  
++    $block_form = $form['setting']['block_form'];
+     /** @var \Drupal\block_content\BlockContentInterface $block */
+     $block = $block_form['#block'];
+     $form_display = EntityFormDisplay::collectRenderDisplay($block, 'edit');
+     $complete_form_state = $form_state instanceof SubformStateInterface ? $form_state->getCompleteFormState() : $form_state;
+     $form_display->extractFormValues($block, $block_form, $complete_form_state);
+     $form_display->validateFormValues($block, $block_form, $complete_form_state);
+-    // @todo Remove when https://www.drupal.org/project/drupal/issues/2948549 is closed.
++  
++    // Store widget parent reference for blockSubmit.
+     $form_state->setTemporaryValue('block_form_parents', $block_form['#parents']);
+   }
++  
+ 
+   /**
+    * {@inheritdoc}
+    */
+   public function blockSubmit($form, FormStateInterface $form_state) {
+     $this->configuration['view_mode'] = $form_state->getValue('view_mode');
+-
+-    // @todo Remove when https://www.drupal.org/project/drupal/issues/2948549 is closed.
+-    $block_form = NestedArray::getValue($form, $form_state->getTemporaryValue('block_form_parents'));
++  
++    $block_form_parents = $form_state->getTemporaryValue('block_form_parents');
++    $block_form = is_array($block_form_parents) ? NestedArray::getValue($form, $block_form_parents) : NULL;
++  
++    if (!isset($block_form['#block'])) {
++      \Drupal::messenger()->addWarning($this->t('InlineBlock only supports custom block content types. Please use a supported block type.'));
++      return;
++    }
++  
+     /** @var \Drupal\block_content\BlockContentInterface $block */
+     $block = $block_form['#block'];
+     $form_display = EntityFormDisplay::collectRenderDisplay($block, 'edit');
+@@ -200,6 +213,7 @@
+     $block->setInfo($this->configuration['label']);
+     $this->configuration['block_serialized'] = serialize($block);
+   }
++  
+ 
+   /**
+    * {@inheritdoc}

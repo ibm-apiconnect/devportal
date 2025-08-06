@@ -1,0 +1,69 @@
+diff --git modules/page_load_progress/page_load_progress.info.yml modules/page_load_progress/page_load_progress.info.yml
+index d85708b..777f668 100644
+--- modules/page_load_progress/page_load_progress.info.yml      2022-12-15 16:37:25
++++ modules/page_load_progress/page_load_progress.info copy.yml 2022-12-15 16:37:29
+@@ -2,6 +2,5 @@
+ description: 'Locks the screen and adds a progress icon to indicate progress when a page takes a long time to reload.'
+ type: module
+ package: 'User interface'
+-core: 8.x
+-core_version_requirement: ^8 || ^9
+-configure: page_load_progress.admin_settings
+\ No newline at end of file
++core_version_requirement: ^8 || ^9 || ^10 || ^11
++configure: page_load_progress.admin_settings
+
+diff --git modules/page_load_progress/tests/src/Functional/PageLoadProgressAdminSettingsFormTest.php modules/page_load_progress/tests/src/Functional/PageLoadProgressAdminSettingsFormTest.php
+index 6a1c0b8..5e6a7eb 100644
+--- modules/page_load_progress/tests/src/Functional/PageLoadProgressAdminSettingsFormTest.php
++++ modules/page_load_progress/tests/src/Functional/PageLoadProgressAdminSettingsFormTest.php
+@@ -23,7 +23,7 @@ class PageLoadProgressAdminSettingsFormTest extends BrowserTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = ['page_load_progress'];
++  protected static $modules = ['page_load_progress'];
+
+   /**
+    * The installation profile to use with this test.
+@@ -46,7 +46,7 @@ class PageLoadProgressAdminSettingsFormTest extends BrowserTestBase {
+   /**
+    * {@inheritdoc}
+    */
+-  protected function setUp() {
++  protected function setUp(): void {
+     parent::setUp();
+     // Privileged user should only have the page_load_progress permissions.
+     $this->privilegedUser = $this->drupalCreateUser(['administer page load progress']);
+@@ -97,7 +97,8 @@ class PageLoadProgressAdminSettingsFormTest extends BrowserTestBase {
+       'page_load_progress_internal_links' => TRUE,
+       'page_load_progress_esc_key' => FALSE,
+     ];
+-    $this->drupalPostForm(Url::fromRoute('page_load_progress.admin_settings'), $edit, 'Save configuration');
++    $this->drupalGet(Url::fromRoute('page_load_progress.admin_settings'));
++    $this->submitForm($edit, 'Save configuration');
+
+     // Load settings form page and test for new values.
+     $this->drupalGet(Url::fromRoute('page_load_progress.admin_settings'));
+diff --git modules/page_load_progress/tests/src/Functional/PageLoadProgressAdminSettingsTest.php modules/page_load_progress/tests/src/Functional/PageLoadProgressAdminSettingsTest.php
+index 9e253e4..abc5560 100644
+--- modules/page_load_progress/tests/src/Functional/PageLoadProgressAdminSettingsTest.php
++++ modules/page_load_progress/tests/src/Functional/PageLoadProgressAdminSettingsTest.php
+@@ -23,7 +23,7 @@ class PageLoadProgressAdminSettingsTest extends BrowserTestBase {
+    *
+    * @var array
+    */
+-  public static $modules = ['page_load_progress'];
++  protected static $modules = ['page_load_progress'];
+
+   /**
+    * The installation profile to use with this test.
+@@ -46,7 +46,7 @@ class PageLoadProgressAdminSettingsTest extends BrowserTestBase {
+   /**
+    * {@inheritdoc}
+    */
+-  protected function setUp() {
++  protected function setUp(): void {
+     parent::setUp();
+     // Admin user account only needs a subset of admin permissions.
+     $this->adminUser = $this->drupalCreateUser([

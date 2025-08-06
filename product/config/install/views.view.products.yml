@@ -388,6 +388,51 @@ display:
           include_content_with_unpublished_translation: 0
           entity_type: node
           plugin_id: select_translation_filter
+        subscription_status_filter:
+          id: subscription_status_filter
+          table: node__apic_url
+          field: subscription_status_filter
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: subscription_status_filter
+          operator: in
+          value: null
+          group: 1
+          exposed: true
+          expose:
+            operator_id: ''
+            label: 'Subscription Status'
+            description: ''
+            use_operator: false
+            operator: subscription_status_filter_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: subscription_status_filter
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              forum_moderator: '0'
+              content_author: '0'
+              administrator: '0'
+              superuser: '0'
+            reduce: 0
+            sort_values: 1
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
       sorts:
         title:
           id: title

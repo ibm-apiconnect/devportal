@@ -219,7 +219,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       return '<front>';
     }
 
-    $stateReceived = unserialize($this->utils->base64_url_decode($state), ['allowed_classes' => FALSE]);
+    $stateReceived = json_decode($this->utils->base64_url_decode($state), false);
     try {
       $decrypted_key = $this->encryption->decrypt($stateReceived, $this->profileManager->getEncryptionProfile('socialblock'));
       $encrypted_data = $this->authApicSessionStore->get($decrypted_key);
@@ -235,7 +235,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       }
     }
     if (isset($stateObj)) {
-      $stateObj = unserialize($stateObj, ['allowed_classes' => FALSE]);
+      $stateObj = json_decode($stateObj, true);
       $this->authApicSessionStore->delete($stateReceived);
       // Clear the JWT from the session as we're done with it now
       $this->authApicSessionStore->delete('invitation_object');
@@ -358,7 +358,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       }
       return '<front>';
     }
-    $stateReceived = unserialize($this->utils->base64_url_decode($state), ['allowed_classes' => FALSE]);
+    $stateReceived = json_decode($this->utils->base64_url_decode($state), false);
     if (is_string($stateReceived)) {
       try {
         $decrypted_key = $this->encryption->decrypt($stateReceived, $this->profileManager->getEncryptionProfile('socialblock'));
@@ -506,7 +506,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     $title = $this->requestService->getCurrentRequest()->query->get('title');
 
     //Validates the state parameter
-    $stateReceived = unserialize($this->utils->base64_url_decode($state), ['allowed_classes' => FALSE]);
+    $stateReceived = json_decode($this->utils->base64_url_decode($state), false);
     if (is_string($stateReceived)) {
       try {
         $decrypted_key = $this->encryption->decrypt($stateReceived, $this->profileManager->getEncryptionProfile('socialblock'));
@@ -527,7 +527,7 @@ class ApicOidcAzCodeController extends ControllerBase {
 
     try {
       $stateObj = $this->encryption->decrypt($encrypted_data, $this->profileManager->getEncryptionProfile('socialblock'));
-      $stateObj = unserialize($stateObj, ['allowed_classes' => FALSE]);
+      $stateObj = json_decode($stateObj, true);
       $userRegistry = $this->userRegistryService->get($stateObj['registry_url']);
     } catch (\Exception $e) {
       $this->logger->error('validateApimOidcAz error: Failed to decrypt data. @errordes', ['@errordes' => $encrypted_data]);
@@ -567,7 +567,7 @@ class ApicOidcAzCodeController extends ControllerBase {
       return '<front>';
     }
 
-    if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+    if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
       $route = URL::fromRoute('auth_apic.azcode')->toString(TRUE)->getGeneratedUrl();
     }
     else {
@@ -649,7 +649,7 @@ class ApicOidcAzCodeController extends ControllerBase {
     $url_array = parse_url($redirect_location);
     if (!empty($url_array['query'])) {
       parse_str($url_array['query'], $query_array);
-      if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
         $query_array['redirect_uri'] = $host . URL::fromRoute('auth_apic.azredir')->toString(TRUE)->getGeneratedUrl();
       }
       else {

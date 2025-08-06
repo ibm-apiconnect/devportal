@@ -119,3 +119,18 @@
   background-position: -2px -1px !important;
   background-size: 17px !important;
 }
+
+[data-admin-toolbar="collapsed"] .bx--global-light-ui .node-preview-backlink.btn.btn-info.pull-left {
+  margin-left: 5rem;
+}
+
+[data-admin-toolbar="expanded"] .bx--global-light-ui .node-preview-backlink.btn.btn-info.pull-left {
+  margin-left: 17rem;
+}
+
+/* disable ckeditor 5 sticky toolbar over admin toolbar */
+.ck.ck-sticky-panel__content_sticky {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+}

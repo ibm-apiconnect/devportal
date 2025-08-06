@@ -4,3 +4,9 @@ themegenerator.theme_generate:
   route_name: themegenerator.theme_generate
   parent: system.themes_page
   weight: 0
+themegenerator.theme_add:
+  title: 'Add new theme'
+  description: 'Upload a new API Developer Portal custom theme.'
+  route_name: themegenerator.theme_add
+  parent: system.themes_page
+  weight: 0

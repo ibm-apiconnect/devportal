@@ -322,6 +322,7 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
+    global $base_url;
     $moduleService = \Drupal::service('module_handler');
     if ($moduleService->moduleExists('password_policy')) {
       if (!isset($form)) {
@@ -339,7 +340,16 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
     // special case original admin user who uses the drupal db.
     if ((int) $this->currentUser()->id() === 1) {
       $this->logger->notice('change password form submit for admin user');
+
+      $utils = \Drupal::service('ibm_apim.utils');
+      $intAudit = $utils->setInternalAuditFlag();
+
       parent::submitForm($form, $form_state);
+
+      $utils->resetInternalAuditFlag($intAudit);
+
+      // Send audit log (If we got here then the password was changed succesfully)
+      \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_UPDATE_SITE_ENTITY_USER_PASSWORD', 'success', 'service/security/account/user', $base_url . '/user/1', [ 'password' => '********']);
       // redirect to the home page regardless of outcome.
       $form_state->setRedirect('<front>');
     }

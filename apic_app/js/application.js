@@ -40,9 +40,9 @@
         let summary = '';
         const credid = $(this).attr('data-credid');
         // remove selected from all other tabs
-        $('li', tabsList).removeClass("selected");
+        $('li', tabsList).removeClass("selected").attr("aria-selected", "false").attr("tabindex", "0");
         // add it to this one
-        $(this).addClass("selected");
+        $(this).addClass("selected").attr("aria-selected", "true").attr("tabindex", "-1");
         // update client ID value
         $.each(drupalSettings.application.credentials, function(index, item) {
           if (item.uuid === credid) {

@@ -38,6 +38,7 @@ class ConfirmSend extends FormBase {
     $direct = $cached_values['direct'];
     $carbon_copy = $cached_values['carbon_copy'];
     $send_original = $cached_values['send_original'];
+    $send_unique = $cached_values['send_unique'];
     $priority = $cached_values['priority'];
     $receipt = $cached_values['receipt'];
     $headers = $cached_values['headers'];
@@ -223,6 +224,14 @@ class ConfirmSend extends FormBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Send the message directly using the Batch API.'),
       '#default_value' => $direct,
+      '#disabled' => TRUE,
+      '#weight' => -20,
+    ];
+    $form['send_unique'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Only send one email per user even if they\'re in multiple lists.'),
+      '#description' => $this->t("This will ensure each user only receives the email once, even if they're part of multiple selected apis, products, plans or consumer orgs."),
+      '#default_value' => $send_unique,
       '#disabled' => TRUE,
       '#weight' => -20,
     ];

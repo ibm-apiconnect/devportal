@@ -1,0 +1,7 @@
+ibm_apic_session_check.status:
+  path: "/session-check"
+  defaults:
+    _controller: '\Drupal\ibm_apic_session_check\Controller\SessionCheckController::status'
+    _title: "Session check"
+  requirements:
+    _access: "TRUE"

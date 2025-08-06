@@ -17,7 +17,7 @@
   ('productVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
   ('productState-' ~ content.product_state['#items'][0].value)|clean_class
 ] -%}
-<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+<article id="node-{{ node.id }}" tooltip-id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
   {% if content.apic_pathalias['#items'][0].value is defined and content.apic_pathalias['#items'][0].value is not empty %}
     {% set prodNode = content.apic_pathalias['#items'][0].value %}
   {% else %}
@@ -46,11 +46,6 @@
       <div class="apicProductRating" role="form"  aria-label="apic-product-rating-{{ node.id }}">
         {{ content.apic_rating }}
       </div>
-      {% if content.product_state['#items'][0].value is defined and content.product_state['#items'][0].value is not empty and content.product_state['#items'][0].value != 'published' %}
-        <div class="apicProductState">
-          {{ content.product_state['#items'][0].value }}
-        </div>
-      {% endif %}
     </div>
     {% if content.apic_summary['#items'][0].value is defined and content.apic_summary['#items'][0].value is not empty %}
       <div class="apicProductDesc summary"
@@ -95,4 +90,9 @@
       {% endif %}
     </div>
   </div>
+  {% if content.product_state['#items'][0].value is defined and content.product_state['#items'][0].value is not empty and content.product_state['#items'][0].value != 'published' %}
+    <div class="apicProductState apicProductStateCard">
+      {{ content.product_state['#items'][0].value }}
+    </div>
+  {% endif %}
 </article>

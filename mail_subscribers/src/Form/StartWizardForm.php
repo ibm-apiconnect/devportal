@@ -131,41 +131,41 @@ class StartWizardForm extends FormBase {
 
     if ($objectType === 'product') {
       if (!empty($step)) {
-        $url = Url::fromRoute('mail_subscribers.product_wizard.step', ['step' => $step]);
+        $url = Url::fromRoute('mail_subscribers.product_wizard.step', ['step' => $step], ['query' => ['start' => 1]]);
       } else {
-        $url = Url::fromRoute('mail_subscribers.product_wizard');
+        $url = Url::fromRoute('mail_subscribers.product_wizard', [], ['query' => ['start' => 1]]);
       }
       $form_state->setRedirectUrl($url);
     }
     elseif ($objectType === 'consumerorg') {
       if (!empty($step)) {
-        $url = Url::fromRoute('mail_subscribers.consumerorg_wizard.step', ['step' => $step]);
+        $url = Url::fromRoute('mail_subscribers.consumerorg_wizard.step', ['step' => $step], ['query' => ['start' => 1]]);
       } else {
-        $url = Url::fromRoute('mail_subscribers.consumerorg_wizard');
+        $url = Url::fromRoute('mail_subscribers.consumerorg_wizard', [], ['query' => ['start' => 1]]);
       }
       $form_state->setRedirectUrl($url);
     }
     elseif ($objectType === 'api') {
       if (!empty($step)) {
-        $url = Url::fromRoute('mail_subscribers.api_wizard.step', ['step' => $step]);
+        $url = Url::fromRoute('mail_subscribers.api_wizard.step', ['step' => $step], ['query' => ['start' => 1]]);
       } else {
-        $url = Url::fromRoute('mail_subscribers.api_wizard');
+        $url = Url::fromRoute('mail_subscribers.api_wizard', [], ['query' => ['start' => 1]]);
       }
       $form_state->setRedirectUrl($url);
     }
     elseif ($objectType === 'plan') {
       if (!empty($step)) {
-        $url = Url::fromRoute('mail_subscribers.plan_wizard.step', ['step' => $step]);
+        $url = Url::fromRoute('mail_subscribers.plan_wizard.step', ['step' => $step], ['query' => ['start' => 1]]);
       } else {
-        $url = Url::fromRoute('mail_subscribers.plan_wizard');
+        $url = Url::fromRoute('mail_subscribers.plan_wizard', [], ['query' => ['start' => 1]]);
       }
       $form_state->setRedirectUrl($url);
     }
     elseif ($objectType === 'all') {
       if (!empty($step)) {
-        $url = Url::fromRoute('mail_subscribers.all_wizard.step', $step);
+        $url = Url::fromRoute('mail_subscribers.all_wizard.step', ['step' => $step], ['query' => ['start' => 1]]);
       } else {
-        $url = Url::fromRoute('mail_subscribers.all_wizard');
+        $url = Url::fromRoute('mail_subscribers.all_wizard', [], ['query' => ['start' => 1]]);
       }
       $form_state->setRedirectUrl($url);
     }

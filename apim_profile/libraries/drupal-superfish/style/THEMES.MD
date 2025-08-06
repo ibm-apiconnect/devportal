@@ -75,27 +75,27 @@
   top: 40px;
 }
 #YOUR-BLOCK-ID .sf-sub-indicator:after {
-  content: "▼";
+  content: "\25BC";
 }
 #YOUR-BLOCK-ID ul .sf-sub-indicator:after,
 #YOUR-BLOCK-ID .sf-vertical .sf-sub-indicator:after {
-  content: "►";
+  content: "\25BA";
 }
 #YOUR-BLOCK-ID .sf-navbar ul .sf-sub-indicator:after,
 #YOUR-BLOCK-ID .sf-accordion .sf-sub-indicator:after,
 #YOUR-BLOCK-ID .sf-accordion.sf-accordion-with-buttons .sf-accordion-button:after {
-  content: "▼";
+  content: "\25BC";
 }
 #YOUR-BLOCK-ID .sf-navbar ul ul .sf-sub-indicator:after {
-  content: "►";
+  content: "\25BA";
 }
 #YOUR-BLOCK-ID .sf-accordion.sf-accordion-with-buttons li.sf-expanded > .sf-accordion-button:after {
-  content: "▲";
+  content: "\25B2";
 }
 #YOUR-BLOCK-ID .sf-horizontal.rtl ul .sf-sub-indicator:after,
 #YOUR-BLOCK-ID .sf-vertical.rtl .sf-sub-indicator:after,
 #YOUR-BLOCK-ID .sf-navbar.rtl ul ul .sf-sub-indicator:after {
-  content: "◄";
+  content: "\25C4";
 }
 #YOUR-BLOCK-ID div.sf-accordion-toggle.sf-style-none a {
   background: #f0f0f0;

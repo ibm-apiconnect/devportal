@@ -1,0 +1,134 @@
+id: application_subscriptions
+label: 'Application Subscriptions'
+base_table: apic_app_application_subs
+base_field: id
+status: true
+module: views
+dependencies:
+  config:
+    - user.role.authenticated
+  module:
+    - apic_app
+    - user
+display:
+  default:
+    display_plugin: default
+    id: default
+    display_title: Master
+    display_options:
+      query:
+        type: views_query
+      row:
+        type: app_subscription_row
+        options: {}
+      arguments:
+        app_url:
+          id: app_url
+          table: apic_app_application_subs
+          field: app_url
+          plugin_id: string
+          exception:
+            title_enable: false
+          default_argument_type: fixed
+          default_argument_options:
+            argument: ''
+          validate:
+            type: none
+          operator: '='
+          action: use
+          empty_argument_behavior: hide
+      access:
+        type: role
+        options:
+          role:
+            authenticated: authenticated
+      pager:
+        type: full
+        options:
+          items_per_page: 50
+          offset: 0
+          id: 0
+          total_pages: null
+          tags:
+            previous: ‹‹
+            next: ››
+            first: '« First'
+            last: 'Last »'
+          expose:
+            items_per_page: true
+            items_per_page_label: 'Items per page'
+            items_per_page_options: '10, 25, 50, 75'
+            items_per_page_options_all: false
+            items_per_page_options_all_label: '- All -'
+            offset: false
+            offset_label: Offset
+          quantity: 9
+      fields: 
+        id:
+          id: id
+          table: apic_app_application_subs
+          field: id
+          plugin_id: standard
+          exclude: false
+          relationship: none
+          group_type: group
+        uuid:
+          id: uuid
+          table: apic_app_application_subs
+          field: uuid
+          plugin_id: standard
+          exclude: false
+          relationship: none
+          group_type: group
+        app_url:
+          id: app_url
+          table: apic_app_application_subs
+          field: app_url
+          plugin_id: standard
+          exclude: false
+          relationship: none
+          group_type: group 
+        plan:
+          id: plan
+          table: apic_app_application_subs
+          field: plan
+          plugin_id: standard
+          exclude: false
+          relationship: none
+          group_type: group
+        state:
+          id: state
+          table: apic_app_application_subs
+          field: state
+          plugin_id: standard
+          exclude: false
+          relationship: none
+          group_type: group 
+        product_url:
+          id: product_url
+          table: apic_app_application_subs
+          field: product_url 
+          plugin_id: standard
+          exclude: false
+          relationship: none
+          group_type: group
+      empty: {  }
+      style:
+        type: app_subscriptions_style
+        options: {}
+  block_1:
+    display_plugin: block
+    id: block_1
+    display_title: Block
+    parent_display: default
+    display_options:
+      block_description: 'Application Subscriptions'
+      block_category: 'API Connect'
+      allow:
+        items_per_page: true
+      style:
+        type: app_subscriptions_style
+        options: { }
+      row:
+        type: app_subscription_row
+        options: { }

@@ -401,14 +401,14 @@ class MockAPIMServer implements ManagementServerInterface {
     $host = \Drupal::service('ibm_apim.apim_utils')->getHostUrl();
 
     $exp = '/consumer-api/oauth2/authorize?client_id=clientId' .
-      '&state=czozOiJrZXkiOw==' .
+      '&state=ImtleSI=' .
       '&redirect_uri=/ibm_apim/oauth2/redirect' .
       '&realm=consumer:orgId:envId/trueRealm' .
       '&response_type=code' .
       '&action=';
     if ($utils->startsWith($url, $exp)) {
       $loc = $host . URL::fromRoute('auth_apic.azredir')->toString(TRUE)->getGeneratedUrl() .
-        '?state=czozOiJrZXkiOw==_apimstate&' .
+        '?state=ImtleSI=_apimstate&' .
         'code=valid&' .
         'scope=scope';
       $result = new \stdClass();
@@ -427,7 +427,7 @@ class MockAPIMServer implements ManagementServerInterface {
     if ($utils->startsWith($url, $exp) && $utils->endsWith($url, '%2Fibm_apim%2Foidcredirect')) {
       $loc = $host . URL::fromRoute('auth_apic.azcode')->toString(TRUE)->getGeneratedUrl() .
         '?code=valid&' .
-        'state=czozOiJrZXkiOw==';
+        'state=ImtleSI=';
       $result = new \stdClass();
       $result->headers = ['Location' => $loc];
       $result->code = 302;

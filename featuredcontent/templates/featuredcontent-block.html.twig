@@ -16,7 +16,7 @@
       <div
           class="featuredcontentNodeContainer featuredcontentNodeType-{{ nodeType|clean_class }} featuredcontentAlgorithm-{{ algorithm|clean_class }}">
         {% for node in nodes %}
-          <div class="featuredcontentNode featuredcontentNodeID-{{ node.nid|clean_class }}">
+          <div class="featuredcontentNode featuredcontentNodeID-{{ node.nid|clean_class }}" tooltip-id="node-{{ node.tooltip_id }}">
             <div class="featuredcontentNodeInner">
               <div class="featuredcontentNodeHeader">
                 {% if node.image %}

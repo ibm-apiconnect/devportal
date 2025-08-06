@@ -3895,9 +3895,9 @@ th {
 .table>thead>tr>td,
 .table>tbody>tr>td,
 .table>tfoot>tr>td {
-  padding: 8px;
+  padding: 10px;
   line-height: 1.5;
-  vertical-align: top;
+  vertical-align: middle;
   border-top: 1px solid #ddd;
 }
 
@@ -9910,26 +9910,19 @@ html.js .ajax-new-content:empty {
  * File (and Image Widget) styles.
  */
 .file {
-  display: table;
   font-size: 75%;
   font-weight: 700;
-  margin: 5px 0;
   width: 100%;
+  display: block;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 1rem 0;
+  box-shadow: none;
 }
 
 .file>span {
-  background: #fff;
   color: #0f62fe;
-  border-bottom: 1px solid #8d8d8d;
-  border-top: 1px solid #8d8d8d;
-}
-
-.file>span:first-child {
-  border-left: 1px solid #8d8d8d;
-}
-
-.file>span:last-child {
-  border-right: 1px solid #8d8d8d;
 }
 
 .file>.tabledrag-changed {
@@ -9949,31 +9942,36 @@ html.js .ajax-new-content:empty {
 }
 
 .file-icon {
-  display: table-cell;
-  font-size: 150%;
-  padding: 0.25em 0.5em;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.4rem;
+  font-size: 1rem;
   vertical-align: middle;
 }
 
 .file-link {
-  display: table-cell;
+  display: inline;
+  font-weight: 500;
+  font-size: 1rem;
   vertical-align: middle;
-  width: 100%;
 }
 
 .file-link a,
 .file-link a:hover,
 .file-link a:focus,
 .file-link a:active {
-  color: inherit;
+  color: #0f62fe;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .file-size {
-  display: table-cell;
+  display: inline;
+  font-size: 0.9rem;
   padding: 0 1em;
-  text-align: right;
-  white-space: pre;
   vertical-align: middle;
 }
 
@@ -11045,7 +11043,7 @@ input[type="checkbox"].bx--checkbox {
 .route-change-pwd-pagechange-password-form.pass-reset .main-container .row,
 .route-apic-appdisplay-creds .main-container .row,
 form.user-pass-reset,
-.apic-user-form {
+.apic-user-form{
   background-color: #ffffff;
   border: unset;
 }
@@ -12141,7 +12139,6 @@ a .glyphicon.icon-after {
 .bx--global-light-ui .modal-content {
   border-radius: 0;
   border: none;
-  overflow-y: auto;
   box-shadow: unset;
 }
 
@@ -14252,7 +14249,6 @@ a {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 40;
   width: 100%;
 }
 
@@ -14486,6 +14482,7 @@ apiconnect-explorer ul {
   width: 24px;
   height: 24px;
   border-radius: 50%;
+  margin-left: -6px;
 }
 
 .path-search .region-content nav.tabs {
@@ -14908,7 +14905,7 @@ section.block-go-ahead {
 }
 
 .maintenance-page .main-container.container {
-  background-image: url(../images/ibmcarbon/svg/Error_Page_Illustrations_OTHER.svg);
+  background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_OTHER.svg);
   min-height: 600px;
   background-size: contain;
   background-repeat: no-repeat;
@@ -15104,7 +15101,7 @@ body.bx--global-light-ui.context--user-password {
 
 .route-system404 .main-container.container,
 .route-system403 .main-container.container {
-  background-image: url(../images/ibmcarbon/svg/Error_Page_Illustrations_403.svg);
+  background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_403.svg);
   min-height: 600px;
   background-size: contain;
   background-repeat: no-repeat;
@@ -15146,7 +15143,7 @@ body.bx--global-light-ui.context--user-password {
 }
 
 .route-system404 .main-container.container {
-  background-image: url(../images/ibmcarbon/svg/Error_Page_Illustrations_404.svg);
+  background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_404.svg);
 }
 
 /* comments filter format page */

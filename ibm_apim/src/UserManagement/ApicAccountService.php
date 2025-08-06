@@ -97,7 +97,7 @@ class ApicAccountService implements ApicAccountInterface {
   /**
    * @inheritDoc
    */
-  public function registerApicUser(ApicUser $user): ?EntityInterface {
+  public function registerApicUser(ApicUser $user, bool $userMightExist = TRUE): ?EntityInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
       $username = $user->getUsername() != NULL ? $user->getUsername() : NULL;
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $username);
@@ -105,7 +105,7 @@ class ApicAccountService implements ApicAccountInterface {
     $returnValue = NULL;
 
     if ($user->getUsername() !== NULL && $user->getApicUserRegistryUrl() !== NULL) {
-      if ($this->userStorage->load($user) === NULL) {
+      if (!$userMightExist || $this->userStorage->load($user) === NULL) {
         $returnValue = $this->userStorage->register($user);
       }
       else {
@@ -174,7 +174,7 @@ class ApicAccountService implements ApicAccountInterface {
         '@username' => $user->getUsername(),
       ]);
 
-      if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
         $this->messenger->addError(t('Failed to update your account data. Contact your site administrator.'));
       }
 
@@ -184,8 +184,8 @@ class ApicAccountService implements ApicAccountInterface {
 
     }
     else {
-        $account->set('first_name', $user->getFirstname());
-        $account->set('last_name', $user->getLastname());
+      $account->set('first_name', $user->getFirstname());
+      $account->set('last_name', $user->getLastname());
       // some user registries don't have a mail address and we store a known value to
       // identify this case and still be valid in Drupal so don't overwrite it with NULL
       if ($user->getMail() !== NULL && $user->getMail() !== '') {
@@ -261,8 +261,6 @@ class ApicAccountService implements ApicAccountInterface {
       }
     }
 
-    $account->save();
-
     if (\function_exists('ibm_apim_exit_trace')) {
       ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }
@@ -282,7 +280,7 @@ class ApicAccountService implements ApicAccountInterface {
     if ((int) $apic_me->getCode() !== 200) {
 
       // The management server rejected our update. Log the error.
-      if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+      if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
         $this->messenger->addError(t('There was an error while saving your account data. Contact your site administrator.'));
       }
 

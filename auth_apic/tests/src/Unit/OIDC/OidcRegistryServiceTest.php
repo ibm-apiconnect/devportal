@@ -16,6 +16,7 @@ namespace Drupal\Tests\auth_apic\Unit;
 use Drupal\auth_apic\JWTToken;
 use Drupal\auth_apic\Service\OidcRegistryService;
 use Drupal\ibm_apim\ApicType\UserRegistry;
+use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 use Prophecy\Prophet;
@@ -79,6 +80,11 @@ class OidcRegistryServiceTest extends UnitTestCase {
    */
   protected $store;
 
+  /**
+   * @var Drupal\ibm_apim\Service\SiteConfig|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $siteConfig;
+
   protected function setup(): void {
     $this->prophet = new Prophet();
     $this->state = $this->prophet->prophesize('Drupal\Core\State\StateInterface');
@@ -93,6 +99,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->storeFactory = $this->prophet->prophesize('Drupal\Core\TempStore\PrivateTempStoreFactory');
     $this->store = $this->prophet->prophesize('Drupal\Core\TempStore\PrivateTempStore');
     $this->storeFactory->get('auth_apic_storage')->willReturn($this->store);
+    $this->siteConfig = $this->prophet->prophesize(SiteConfig::class);
   }
 
   protected function tearDown(): void {
@@ -111,7 +118,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
     // see https://github.ibm.com/velox/devportal/issues/3726
     // $oidc_registry->setIdentityProviders(array(array('name'=>'idp1')));
 
-    $this->state->get('ibm_apim.site_client_id')->willReturn('iamaclientid');
+    $this->siteConfig->getClientId()->willReturn('iamaclientid');
     $this->utils->base64_url_encode(Argument::any())->willReturn('base64encodedstate');
     $this->apimUtils->getHostUrl()->willReturn('https://portal.example.com');
     $this->apimUtils->getOidcRedirectEndpoint('/consumer-api/oauth2/authorize')
@@ -156,7 +163,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $invitation_object->setDecodedJwt('blahdeblah');
     $this->profileManager->getEncryptionProfile(Argument::any())->willReturn($this->encryptionProfile->reveal());
 
-    $this->state->get('ibm_apim.site_client_id')->willReturn('iamaclientid');
+    $this->siteConfig->getClientId()->willReturn('iamaclientid');
     $this->utils->base64_url_encode(Argument::any())->willReturn('base64encodedstate');
     $this->apimUtils->getHostUrl()->willReturn('http://portal.example.com');
     $this->apimUtils->getOidcRedirectEndpoint('/consumer-api/oauth2/authorize')
@@ -204,7 +211,7 @@ class OidcRegistryServiceTest extends UnitTestCase {
     $this->logger->warning('unable to retrieve site client id to build oidc authentication url')->shouldBeCalled();
     $this->logger->error(Argument::any())->shouldNotBeCalled();
 
-    $this->state->get('ibm_apim.site_client_id')->willReturn(NULL);
+    $this->siteConfig->getClientId()->willReturn(NULL);
 
     $service = $this->getServiceUnderTest();
     $response = $service->getOidcMetadata($registry);
@@ -225,7 +232,8 @@ class OidcRegistryServiceTest extends UnitTestCase {
       $this->storeFactory->reveal(),
       $this->time->reveal(),
       $this->encryption->reveal(),
-      $this->profileManager->reveal()
+      $this->profileManager->reveal(),
+      $this->siteConfig->reveal()
     );
   }
 

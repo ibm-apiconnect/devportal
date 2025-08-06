@@ -1,6 +1,26 @@
---- modules/page_manager/page_manager_ui/src/Form/PageGeneralForm.php   2023-01-10 15:26:53
-+++ modules/page_manager/page_manager_ui/src/Form/PageGeneralForm.php      2023-01-10 15:26:49
-@@ -179,7 +179,7 @@
+--- modules/page_manager/page_manager_ui/src/Form/PageGeneralForm.php	2024-07-26 07:38:59
++++ modules/page_manager/page_manager_ui/src/Form/PageGeneralForm.php	2025-04-09 16:48:51
+@@ -1,7 +1,7 @@
+ <?php
+ 
+ namespace Drupal\page_manager_ui\Form;
+-
++use Drupal\Component\Utility\UrlHelper;
+ use Drupal\Core\Display\VariantManager;
+ use Drupal\Core\Entity\EntityTypeManagerInterface;
+ use Drupal\Core\Form\FormBase;
+@@ -201,7 +201,9 @@
+     $cached_values = $form_state->getTemporaryValue('wizard');
+     /** @var \Drupal\page_manager\Entity\Page $page */
+     $page = $cached_values['page'];
+-
++    if (UrlHelper::isExternal(trim($element['#value'], '/'))) {
++        $form_state->setErrorByName('path', $this->t('The page path must be internal.'));
++    } 
+     // Ensure the path has a leading slash.
+     if ($value = trim($element['#value'], '/')) {
+       $value = '/' . $value;
+@@ -214,7 +216,7 @@
        if (!$page->isNew()) {
          $path_query->condition('id', $page->id(), '<>');
        }

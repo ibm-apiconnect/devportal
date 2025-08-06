@@ -1,0 +1,161 @@
+<?php
+/********************************************************* {COPYRIGHT-TOP} ***
+  * Licensed Materials - Property of IBM
+  * 5725-L30, 5725-Z22
+  *
+  * (C) Copyright IBM Corporation 2025
+  *
+  * All Rights Reserved.
+  * US Government Users Restricted Rights - Use, duplication or disclosure
+  * restricted by GSA ADP Schedule Contract with IBM Corp.
+********************************************************** {COPYRIGHT-END} **/
+use Drupal\views\ViewExecutable;
+
+function ibm_tooltip_views_post_execute(ViewExecutable $view) {
+  $executable_pages = [
+    'products' => 'product', 
+    'product_content' => 'api'
+  ];
+  if ($view === NULL || !array_key_exists($view->id(), $executable_pages)) {
+    return;
+  }
+  $nids = [];
+  foreach ($view->result as $row) {
+    $nids[] = $row->nid;
+  }
+  
+  if (empty($nids)) {
+    return;
+  }
+  
+  $query = \Drupal::entityTypeManager()
+  ->getStorage('node')
+  ->getQuery()
+  ->accessCheck(TRUE)
+  ->condition('nid', $nids, 'IN')
+  ->condition('type', $executable_pages[$view->id()])
+  ->execute();
+  $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($query) ?? [];
+  if (empty($nodes)) {
+    return;
+  }
+  
+  $tooltip_datas = [];
+  switch($view->id()) {
+    case 'products':
+      foreach ($nodes as $node) {
+        $tooltip_datas += parse_product($node) ?? [];
+      }
+      break;
+    case 'product_content':
+      foreach ($nodes as $node) {
+        $tooltip_datas += parse_api($node) ?? [];
+      }
+      break;
+    default:
+    $tooltip_datas = [];
+  }
+  $view->element['#attached']['library'][] = 'ibm_tooltip/ibm_tooltip';
+  $view->element['#attached']['drupalSettings']['ibm_tooltip'] = [
+    'sharedData' => $tooltip_datas,
+  ];
+}
+
+function parse_api($apiNode) {
+  $apiReqs = unserialize($apiNode->get('api_swagger')->getValue()[0]['value']);
+  $apiReqs = $apiReqs['paths'] ?? [];
+  $apiReqs = array_slice($apiReqs ?? [], 0, 5);
+  $nodeKey = "node-{$apiNode->id()}";
+  $tooltip[$nodeKey] = [];
+  foreach ($apiReqs as $apiReqGroup) {
+    foreach ($apiReqGroup as $reqKey => $apiReq) {
+      $api_description = $apiReq['description'] ?? $apiReq['summary'] ?? '';
+      $api_description = strlen($api_description ) > 50 ? substr($api_description, 0, 50) . '...' : $api_description;
+      $tooltip[$nodeKey][] = [
+        'key' => $reqKey,
+        'summary' => $api_description === "" ? [] : [ $api_description ]
+      ];
+      if (count($tooltip[$nodeKey]) >= 5) {
+        break 2; // Break out of both loops
+      }
+    }
+  }
+  return $tooltip;
+}
+
+function parse_product($productNode) {
+  $product_apis = $productNode->get('product_apis')->getValue();
+  
+  $api_names = [];
+  foreach($product_apis as $product_api) {
+    $data = unserialize($product_api['value']);
+    $api_names[] = $data['name'];
+  }
+
+  if (empty($api_names)) {
+    return [];
+  }
+
+  $query = \Drupal::entityTypeManager()
+    ->getStorage('node')
+    ->getQuery()
+    ->accessCheck(TRUE)
+    ->condition('apic_ref', $api_names, 'IN')
+    ->condition('type', 'api')
+    ->range(0, 5)
+    ->execute();
+  $api_nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($query) ?? [];  
+  if (empty($api_nodes)) {
+    return [];
+  }
+  $node_key = "node-{$productNode->id()}";
+  $tooltip[$node_key] = [];
+  foreach($api_nodes as $api_node) {
+    $api = unserialize($api_node->get('api_swagger')->getValue()[0]['value']);
+    $api_name = $api['info']['title'] ?? '';
+    $api_type = $api['x-ibm-configuration']['type'] ?? '';
+    $api_version = $api['info']['version'] ?? '';
+    $api_description = $api['info']['description'] ?? $api['info']['x-ibm-summary'] ?? '';
+    $api_description = strlen($api_description ) > 50 ? substr($api_description, 0, 50) . '...' : $api_description;
+    $tooltip[$node_key][] = [
+      'key' => $api_name,
+      'summary' => [
+          strtoupper($api_type),
+          $api_version,
+          $api_description
+      ]
+    ];
+  }
+  return $tooltip;
+}
+
+//Execute only on Home page, as a Product is also could be rendered there
+function ibm_tooltip_preprocess_page(array &$variables) {
+  $path = \Drupal::service('path.current')->getPath();
+  $alias = \Drupal::service('path_alias.manager')->getAliasByPath($path);
+  if ($alias != '/home') {
+    return [];
+  }
+
+  $query = \Drupal::entityTypeManager()
+    ->getStorage('node')
+    ->getQuery()
+    ->accessCheck(TRUE)
+    ->condition('type', 'product')
+    ->sort('created', 'DESC')
+    ->range(0, 6) 
+    ->execute();
+
+  $product_nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($query) ?? [];  
+  if (empty($product_nodes)) {
+    return [];
+  }
+  $tooltip_datas = [];
+  foreach($product_nodes as $product_node) {
+    $tooltip_datas += parse_product($product_node) ?? [];
+  }
+  $variables['#attached']['library'][] = 'ibm_tooltip/ibm_tooltip';
+  $variables['#attached']['drupalSettings']['ibm_tooltip'] = [
+    'sharedData' => $tooltip_datas,
+  ];
+}

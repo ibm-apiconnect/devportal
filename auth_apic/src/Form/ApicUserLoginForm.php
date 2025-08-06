@@ -400,7 +400,14 @@ class ApicUserLoginForm extends UserLoginForm {
       $baseForm['pass']['#required'] = FALSE;
       $baseForm['pass']['#attributes'] = ['autocomplete' => 'off'];
 
-      $baseForm['actions']['submit']['#value'] = t('Sign in');
+      $baseForm['actions']['submit'] = [
+        '#type' => 'submit',
+        '#value' => t('Sign in'),
+        '#attributes' => [
+           'class' => ['button', 'button--primary', 'btn-primary', 'btn'],
+         ],
+      ];
+
       if ($chosenRegistryURL === $this->userRegistryService->getAdminRegistryUrl()) {
         unset($baseForm['actions']['submit']['#icon']);
       }
@@ -580,6 +587,7 @@ class ApicUserLoginForm extends UserLoginForm {
   public function validateApicAuthentication(array &$form, FormStateInterface $form_state): bool {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
+    global $base_url;
     $returnValue = FALSE;
     if ($this->validateFloodProtection($form, $form_state)) {
       $name = $form_state->getValue('name');
@@ -601,6 +609,7 @@ class ApicUserLoginForm extends UserLoginForm {
           $this->logger->debug('admin login, using core validation for login');
           $this->validateAuthentication($form, $form_state);
           if (!$form_state->get('uid')) {
+            \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_AUTHENTICATE', 'failure', 'service/security/account/user', $base_url . '/user/' . $admin->id());
             $this->messenger->addError(t('Unauthorized'));
           }
           $returnValue = TRUE;

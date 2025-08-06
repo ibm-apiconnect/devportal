@@ -16,6 +16,8 @@ framework:
     bootstrap/assets/javascripts/bootstrap/scrollspy.js: { }
     bootstrap/assets/javascripts/bootstrap/tab.js: { }
     bootstrap/assets/javascripts/bootstrap/transition.js: { }
+  dependencies:
+    - core/jquery
 
 # 3rd party module libraries.
 ds:

@@ -21,6 +21,7 @@ use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
+use Drupal\user\Entity\Role;
 use Drupal\user\UserStorageInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -372,7 +373,7 @@ class UserUtils {
       }
       if (empty($new_org_urls)) {
         user_cancel([], $account->id(), 'user_cancel_reassign');
-        if (!isset($GLOBALS['__PHPUNIT_BOOTSTRAP']) && \Drupal::hasContainer()) {
+        if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
           $batch = &batch_get();
           $batch['progressive'] = FALSE;
           batch_process();
@@ -414,7 +415,11 @@ class UserUtils {
     }
     $perm = &$drupal_static_fast['perm'];
     if (!isset($perm[$account->id()])) {
-      $role_permissions = user_role_permissions($account->getRoles());
+      $entities = Role::loadMultiple($account->getRoles());
+      $role_permissions = [];
+      foreach ($account->getRoles() as $rid) {
+        $role_permissions[$rid] = $entities[$rid]?->getPermissions() ?: [];
+      }
 
       $perms = [];
       foreach ($role_permissions as $one_role) {

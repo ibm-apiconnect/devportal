@@ -1,0 +1,24 @@
+--- core/themes/claro/css/theme/views_ui.admin.theme.css	2025-05-15 10:58:05
++++ core/themes/claro/css/theme/views_ui.admin.theme.css	2025-05-15 11:05:53
+@@ -827,4 +827,21 @@
+ 
+ html:not(.no-touchevents) .edit-display-settings-top.views-ui-display-tab-bucket {
+   padding: var(--space-m) var(--space-xs);
++}
++
++/* Masonry layout fixes */
++.views-live-preview div.views-row.masonry-item {
++  margin-top: 2.25rem;
+ }
++
++/* `.masonry-item`s are `position: absolute`, `.masonry` has JS-set height.
++   All sub-containers must inherit `.masonry`'s height to avoid elements overlapping. */
++.masonry .contextual-region {
++  display: flex;
++  flex-direction: column;
++  height: 100%;
++}
++
++.masonry .preview-section {
++  flex: 1 0 auto;
++}

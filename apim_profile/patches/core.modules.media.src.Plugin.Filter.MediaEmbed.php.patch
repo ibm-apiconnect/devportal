@@ -1,0 +1,38 @@
+--- core/modules/media/src/Plugin/Filter/MediaEmbed.php 2025-02-25 17:25:01.686697178 +0000
++++ core/modules/media/src/Plugin/Filter/MediaEmbed.php  2025-02-25 17:24:48.562031707 +0000
+@@ -170,7 +170,7 @@
+       '#options' => $bundle_options,
+       '#default_value' => $this->settings['allowed_media_types'],
+       '#description' => $this->t('If none are selected, all will be allowed.'),
+-      '#element_validate' => [[static::class, 'validateOptions']],
++      '#element_validate' => [[$this, 'validateOptions']],
+     ];
+
+     $form['allowed_view_modes'] = [
+@@ -179,7 +179,7 @@
+       '#options' => $view_mode_options,
+       '#default_value' => $this->settings['allowed_view_modes'],
+       '#description' => $this->t("If two or more view modes are selected, users will be able to update the view mode that an embedded media item should be displayed in after it has been embedded.  If less than two view modes are selected, media will be embedded using the default view mode and no view mode options will appear after a media item has been embedded."),
+-      '#element_validate' => [[static::class, 'validateOptions']],
++      '#element_validate' => [[$this, 'validateOptions']],
+     ];
+
+     return $form;
+@@ -193,10 +193,16 @@
+    * @param \Drupal\Core\Form\FormStateInterface $form_state
+    *   The form state.
+    */
+-  public static function validateOptions(array &$element, FormStateInterface $form_state) {
++  public function validateOptions(array &$element, FormStateInterface $form_state) {
+     // Filters the #value property so only selected values appear in the
+     // config.
+     $form_state->setValueForElement($element, array_filter($element['#value']));
++    if ($element['#name'] == 'filters[media_embed][settings][allowed_media_types]') {
++      $bundles = $this->entityTypeBundleInfo->getBundleInfo('media');
++      if (count($bundles) == 0) {
++        $form_state->setErrorByName('aliases', $this->t('You cannot add "Embed media" as you have no Media types. Please create a Media Type before enabling this option.'));
++      }
++    }
+   }
+
+   /**

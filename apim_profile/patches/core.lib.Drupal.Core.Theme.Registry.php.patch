@@ -1,6 +1,15 @@
 --- core/lib/Drupal/Core/Theme/Registry.php      2024-10-03 09:58:13
 +++ core/lib/Drupal/Core/Theme/Registry.php 2024-10-15 15:50:12
-@@ -698,7 +698,7 @@
+@@ -391,7 +391,7 @@
+       $cache = $cached->data;
+     }
+     else {
+-      if (defined('MAINTENANCE_MODE') && constant('MAINTENANCE_MODE') === 'install') {
++      if (defined('MAINTENANCE_MODE') && constant('MAINTENANCE_MODE') === 'install' && !\Drupal::service('lock')->lockMayBeAvailable('cron')) {
+         // System is still set here so preprocess can be updated in install.
+         $this->processExtension($cache, 'system', 'install', 'system', $this->moduleList->getPath('system'));
+       }
+@@ -715,7 +715,7 @@
      // @see https://www.drupal.org/node/2457295
      if (isset($cache[$source_hook_name]) && (!isset($cache[$source_hook_name]['incomplete preprocess functions']) || !isset($cache[$destination_hook_name]['incomplete preprocess functions']))) {
        $cache[$destination_hook_name] = $parent_hook + $cache[$source_hook_name];

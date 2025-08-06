@@ -334,8 +334,9 @@ function ibm_apim_update_10800() {
     return $equivalent_update->toSkipMessage();
   }
 
+  $block_id = 'accountstatusmessages';
   $values = [
-    'id' => 'accountstatusmessages',
+    'id' => $block_id,
     'plugin' => 'ibm_apim_account_status_messages',
     'provider' => NULL,
     'region' => 'highlighted',
@@ -349,8 +350,23 @@ function ibm_apim_update_10800() {
     'visibility' => [],
     'weight' => 0,
   ];
-  $block = Block::create($values);
-  $block->save();
+
+  if (!Block::load($block_id)) {
+    $block = Block::create($values);
+    $block->save();
+  }
+}
+
+/**
+* Add product_recommendations config to ibm_apim.settings
+*/
+function ibm_apim_update_10801() {
+  \Drupal::service('update.update_hook_registry')->markFutureUpdateEquivalent(10901, '10.0.9.0');
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+  \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->set('product_recommendations', [ 'enabled' => false, 'count' => 3])->save();
 }
 
 function ibm_apim_removeConfigDependency($config, $dep) {

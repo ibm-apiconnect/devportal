@@ -3,7 +3,7 @@
 # Run:
 # ./rununittests.sh
 
-export IBM_MODULE_LIST="ibm_apim auth_apic apic_app apic_api product consumerorg featuredcontent ghmarkdown mail_subscribers socialblock themegenerator"
+export IBM_MODULE_LIST="ibm_apim auth_apic apic_app apic_api product consumerorg featuredcontent ghmarkdown mail_subscribers socialblock themegenerator case_study"
 
 if [[ ! -d /tmp/test_results ]]
 then

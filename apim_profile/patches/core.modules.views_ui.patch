@@ -1,0 +1,26 @@
+--- core/modules/views_ui/js/views-admin.js	2025-06-06 00:34:52
++++ core/modules/views_ui/js/views-admin.js	2025-06-14 17:48:03
+@@ -381,9 +381,10 @@
+       const $menu = $(menu);
+ 
+       const $addDisplayDropdown = $(
+-        `<li class="add"><a href="#"><span class="icon add"></span>${Drupal.t(
+-          'Add',
+-        )}</a><ul class="action-list" style="display:none;"></ul></li>`,
++        `<li class="add">
++          <a href="#"><span class="icon add"></span>${Drupal.t('Add')}</a>
++          <ul class="action-list hidden"></ul>
++        </li>`
+       );
+       const $displayButtons = $menu.nextAll('input.add-display').detach();
+       $displayButtons
+--- core/modules/views_ui/css/views_ui.admin.css	2025-06-06 00:34:52
++++ core/modules/views_ui/css/views_ui.admin.css	2025-06-14 17:47:15
+@@ -234,3 +234,7 @@
+     display: unset;
+   }
+ }
++
++.hidden {
++  display: none;
++}

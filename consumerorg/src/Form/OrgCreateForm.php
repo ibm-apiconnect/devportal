@@ -231,9 +231,19 @@ class OrgCreateForm extends FormBase {
     }
 
     if ($response->getRedirect() !== NULL) {
-      $url = Url::fromRoute($response->getRedirect());
+
       if ($response->getRedirect() === '/user/logout') {
-        $url = Url::fromRoute($response->getRedirect(), [], [], TRUE);
+        //Drupal doesn't support showing messages after logout, because message are stored in association with session, which will cleared on logout
+        // this is a technique to overcome that limitation and show it in AdminMessagesBlock
+        $message_data = [
+          'text' => $response->getMessage(),
+          'error' => !$response->success(),
+        ];
+        user_cookie_save(['corg_create_status_msg' => json_encode($message_data)]);
+       
+        $url = Url::fromRoute('user.logout', [], [], TRUE);
+      } else {
+        $url = Url::fromRoute($response->getRedirect());
       }
       $form_state->setRedirectUrl($url);
     }

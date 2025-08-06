@@ -113,6 +113,7 @@
   flex-direction: row;
   align-items: center;
   padding: 0.5rem 0;
+  max-width: calc(100% - 6rem);
 }
 
 .apicProductTitleText {
@@ -121,7 +122,11 @@
   max-width: calc(100% - 6rem);
 }
 
-.field.apis .field__label.label,
+.apicProduct .apicProductBody .productRecommendationCards .field {
+  margin: unset;
+}
+
+.field.apis .field__label.label, .field__label.label,
 .field.plans .field__label.label {
   margin-top: 0;
 }
@@ -188,6 +193,7 @@ h1.apiName {
   font-size: 1.1rem;
   line-height: 1.4rem;
   margin-top: 0.5rem;
+  margin-left: 1rem;
 }
 
 .apicProductName {
@@ -249,14 +255,11 @@ ul.apicProductApiList {
   padding-left: 1rem;
   align-self: flex-end;
   font-weight: bold;
+  color: #525252;
 }
 
-.apicProductTermsOfService a.collapsed:after {
-  content: "\f107";
-}
-
-.apicProductTermsOfService a:not(.collapsed):after {
-  content: "\f106";
+.apicProductTermsOfService a:not(.collapsed) svg {
+  transform: rotate(180deg);
 }
 
 .apicApiTeaser {
@@ -806,16 +809,12 @@ div[class*="planColumn"]:not(:last-of-type) {
 
 /* cards */
 .node--type-product.bx--card {
-  height: 20rem;
   border: none;
   box-shadow: none;
+  min-width: 20rem;
+  height: 300px;
+  max-width: 20rem;
 }
-
-.node--type-product.bx--card {
-  border: none;
-  box-shadow: none;
-}
-
 
 .bx--card .apicProductCard {
   padding-left: 1rem;
@@ -825,6 +824,8 @@ div[class*="planColumn"]:not(:last-of-type) {
   display: grid;
   -ms-grid-columns: 50px auto;
   grid-template-columns: 50px auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .bx--card .apicProductCard .bx--about__icon {
@@ -858,6 +859,11 @@ div[class*="planColumn"]:not(:last-of-type) {
 .bx--card .apicProductCardMain .apicProductName {
   padding-right: 0.625rem;
   max-width: 10rem;
+}
+
+.bx--card .apicProductCardMain .apicProductName span {
+  white-space:break-spaces;
+  max-width: unset;
 }
 
 .bx--card .apicProductCardVersion {
@@ -895,21 +901,33 @@ div[class*="planColumn"]:not(:last-of-type) {
   line-height: 1rem;
 }
 
+.node--type-product .apicProductAPIs {
+  position: absolute;
+  top: 150px;
+}
+
 .bx--card .apicProductSeeAll {
   position: absolute;
-  bottom: 1rem;
   left: 1rem;
   font-weight: normal;
   font-family: IBMPlexSans, 'IBM Plex Sans', sans-serif;
   font-size: 0.75rem;
   line-height: 1rem;
-  padding-top: 0.5rem;
 }
 
 .apicProductState {
   text-transform: capitalize;
   border: 1px solid #e0e0e0;
   padding: 8px;
+}
+
+.apicProductStateCard {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+}
+
+.apicProductStateLineCard {
   margin-left: 30px;
 }
 
@@ -1077,6 +1095,7 @@ a.bx--side-nav__link,
   color: #161616;
 }
 
+.comments h2,
 h3.field__label.label
 {
   font-size: 1.25rem;
@@ -1164,7 +1183,7 @@ h3.field__label.label
 
 .planApiVersion {
   margin-left: 0.3rem;
-} 
+}
 
 .planApiCheck svg{
   height: 100%;
@@ -1320,3 +1339,13 @@ h3.field__label.label
   margin-bottom: 0.3rem;
 }
 
+
+.apis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.apis-header h3 {
+  margin: 0;
+}

@@ -19,10 +19,13 @@ default:
         - Drupal\DrupalExtension\Context\DrushContext
   extensions:
     Behat\MinkExtension:
-      goutte:
-        guzzle_parameters:
-          verify: false
-      default_session: goutte
+      browserkit_http:
+        http_client_parameters:
+          verify_peer: false
+          verify_host: false
+          timeout: 120
+          max_duration: 120
+      default_session: browserkit_http
       base_url: "$DRUPAL_TI_WEBSERVER_URL:$DRUPAL_TI_WEBSERVER_PORT/"
     Drupal\DrupalExtension:
       api_driver: "drupal"

@@ -37,7 +37,7 @@
         {% if social %}
           <div class="socialDiv">
             <h2>{{ 'Get Social'|t }}</h2>
-            {{ drupal_entity('block', 'socialmedialinks') }}
+            {{ drupal_entity('block', current_theme == 'connect_theme' ? 'socialmedialinks' : current_theme ~ '_socialmedialinks') }}
           </div>
         {% endif %}
       </div>

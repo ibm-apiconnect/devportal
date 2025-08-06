@@ -1,0 +1,237 @@
+diff --git modules/advagg/advagg.drush.inc modules/advagg/advagg.drush.inc
+index 1bc8028..dbae009 100644
+--- modules/advagg/advagg.drush.inc
++++ modules/advagg/advagg.drush.inc
+@@ -122,7 +122,7 @@ function drush_advagg_force_new_aggregates() {
+   $new_value = $config->get('global_counter') + 1;
+   $config->set('global_counter', $new_value)->save();
+   \Drupal::logger(dt('Global counter is now set to @new_value', ['@new_value' => $new_value]), 'ok');
+-  _drupal_flush_css_js();
++  \Drupal\Component\Utility\DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '10.2.0', fn() => \Drupal::service('asset.query_string')->reset(), fn() => _drupal_flush_css_js());
+ }
+
+ /**
+diff --git modules/advagg/advagg.info.yml modules/advagg/advagg.info.yml
+index 8f0dfc0..fcf003c 100644
+--- modules/advagg/advagg.info.yml
++++ modules/advagg/advagg.info.yml
+@@ -1,6 +1,6 @@
+ name: 'Advanced CSS/JS Aggregation'
+ description: 'Aggregates multiple CSS/JS files in a way that prevents 404 from happening when accessing a CSS or JS file.'
+ package: 'Advanced CSS/JS Aggregation'
+-core_version_requirement: ^9.3 || ^10
++core_version_requirement: ^9.3 || ^10 || ^11
+ type: module
+ configure: advagg.settings
+diff --git modules/advagg/advagg_bundler/advagg_bundler.info.yml modules/advagg/advagg_bundler/advagg_bundler.info.yml
+index c9b0bf3..354291c 100644
+--- modules/advagg/advagg_bundler/advagg_bundler.info.yml
++++ modules/advagg/advagg_bundler/advagg_bundler.info.yml
+@@ -1,7 +1,7 @@
+ name: 'AdvAgg Bundler'
+ description: 'Customize the number of aggregates to be created.'
+ package: 'Advanced CSS/JS Aggregation'
+-core_version_requirement: ^9.3 || ^10
++core_version_requirement: ^9.3 || ^10 || ^11
+ dependencies:
+   - advagg:advagg
+ type: module
+diff --git modules/advagg/advagg_bundler/src/EventSubscriber/MinificationSubscriber.php modules/advagg/advagg_bundler/src/EventSubscriber/MinificationSubscriber.php
+index d9e70a2..872bd80 100644
+--- modules/advagg/advagg_bundler/src/EventSubscriber/MinificationSubscriber.php
++++ modules/advagg/advagg_bundler/src/EventSubscriber/MinificationSubscriber.php
+@@ -44,7 +44,7 @@ class MinificationSubscriber implements EventSubscriberInterface {
+   /**
+    * {@inheritdoc}
+    */
+-  public static function getSubscribedEvents() {
++  public static function getSubscribedEvents(): array {
+     return [AssetOptimizationEvent::JS => ['minify', 0]];
+   }
+
+diff --git modules/advagg/advagg_cdn/advagg_cdn.info.yml modules/advagg/advagg_cdn/advagg_cdn.info.yml
+index 975ff90..f9819d5 100644
+--- modules/advagg/advagg_cdn/advagg_cdn.info.yml
++++ modules/advagg/advagg_cdn/advagg_cdn.info.yml
+@@ -1,7 +1,7 @@
+ name: 'AdvAgg CDN'
+ description: 'Use a shared CDN for JavaScript and/or CSS libraries, Google Libraries API currently.'
+ package: 'Advanced CSS/JS Aggregation'
+-core_version_requirement: ^9.3 || ^10
++core_version_requirement: ^9.3 || ^10 || ^11
+ dependencies:
+   - advagg:advagg
+ type: module
+diff --git modules/advagg/advagg_css_minify/advagg_css_minify.info.yml modules/advagg/advagg_css_minify/advagg_css_minify.info.yml
+index 77b2ee5..f1d0f02 100644
+--- modules/advagg/advagg_css_minify/advagg_css_minify.info.yml
++++ modules/advagg/advagg_css_minify/advagg_css_minify.info.yml
+@@ -1,7 +1,7 @@
+ name: 'AdvAgg Minify CSS'
+ description: 'Minify CSS.'
+ package: 'Advanced CSS/JS Aggregation'
+-core_version_requirement: ^9.3 || ^10
++core_version_requirement: ^9.3 || ^10 || ^11
+ dependencies:
+   - advagg:advagg
+ type: module
+diff --git modules/advagg/advagg_css_minify/src/EventSubscriber/MinificationSubscriber.php modules/advagg/advagg_css_minify/src/EventSubscriber/MinificationSubscriber.php
+index ac1733f..670a1c7 100644
+--- modules/advagg/advagg_css_minify/src/EventSubscriber/MinificationSubscriber.php
++++ modules/advagg/advagg_css_minify/src/EventSubscriber/MinificationSubscriber.php
+@@ -44,7 +44,7 @@ class MinificationSubscriber implements EventSubscriberInterface {
+   /**
+    * {@inheritdoc}
+    */
+-  public static function getSubscribedEvents() {
++  public static function getSubscribedEvents(): array {
+     return [AssetOptimizationEvent::CSS => ['minify', 0]];
+   }
+
+diff --git modules/advagg/advagg_ext_minify/advagg_ext_minify.info.yml modules/advagg/advagg_ext_minify/advagg_ext_minify.info.yml
+index 3551fcb..9f0b0cf 100644
+--- modules/advagg/advagg_ext_minify/advagg_ext_minify.info.yml
++++ modules/advagg/advagg_ext_minify/advagg_ext_minify.info.yml
+@@ -1,7 +1,7 @@
+ name: 'AdvAgg External Minification'
+ description: 'Minify Javascript and/or CSS with a command line minifier.'
+ package: 'Advanced CSS/JS Aggregation'
+-core_version_requirement: ^9.3 || ^10
++core_version_requirement: ^9.3 || ^10 || ^11
+ dependencies:
+   - advagg:advagg
+ type: module
+diff --git modules/advagg/advagg_ext_minify/src/EventSubscriber/MinificationSubscriber.php modules/advagg/advagg_ext_minify/src/EventSubscriber/MinificationSubscriber.php
+index c8a1cca..caca458 100644
+--- modules/advagg/advagg_ext_minify/src/EventSubscriber/MinificationSubscriber.php
++++ modules/advagg/advagg_ext_minify/src/EventSubscriber/MinificationSubscriber.php
+@@ -72,7 +72,7 @@ class MinificationSubscriber implements EventSubscriberInterface {
+   /**
+    * {@inheritdoc}
+    */
+-  public static function getSubscribedEvents() {
++  public static function getSubscribedEvents(): array {
+     return [
+       AssetOptimizationEvent::CSS => ['minifyCss', 0],
+       AssetOptimizationEvent::JS => ['minifyJs', 0],
+diff --git modules/advagg/advagg_js_minify/advagg_js_minify.info.yml modules/advagg/advagg_js_minify/advagg_js_minify.info.yml
+index cdecd8f..3cc834e 100644
+--- modules/advagg/advagg_js_minify/advagg_js_minify.info.yml
++++ modules/advagg/advagg_js_minify/advagg_js_minify.info.yml
+@@ -1,7 +1,7 @@
+ name: 'AdvAgg Minify JavaScript'
+ description: 'Minify JavaScript with a 3rd party minifier; JSMin+, JSMin c ext, JShrink, and JSqueeze currently.'
+ package: 'Advanced CSS/JS Aggregation'
+-core_version_requirement: ^9.3 || ^10
++core_version_requirement: ^9.3 || ^10 || ^11
+ dependencies:
+   - advagg:advagg
+ type: module
+diff --git modules/advagg/advagg_js_minify/src/EventSubscriber/MinificationSubscriber.php modules/advagg/advagg_js_minify/src/EventSubscriber/MinificationSubscriber.php
+index 2b4423e..d23d999 100644
+--- modules/advagg/advagg_js_minify/src/EventSubscriber/MinificationSubscriber.php
++++ modules/advagg/advagg_js_minify/src/EventSubscriber/MinificationSubscriber.php
+@@ -44,7 +44,7 @@ class MinificationSubscriber implements EventSubscriberInterface {
+   /**
+    * {@inheritdoc}
+    */
+-  public static function getSubscribedEvents() {
++  public static function getSubscribedEvents(): array {
+     return [AssetOptimizationEvent::JS => ['minify', 0]];
+   }
+
+diff --git modules/advagg/advagg_mod/advagg_mod.info.yml modules/advagg/advagg_mod/advagg_mod.info.yml
+index a0c5993..0a5e6c7 100644
+--- modules/advagg/advagg_mod/advagg_mod.info.yml
++++ modules/advagg/advagg_mod/advagg_mod.info.yml
+@@ -1,7 +1,7 @@
+ name: 'AdvAgg Modifier'
+ description: 'Allows one to alter the CSS and JS array.'
+ package: 'Advanced CSS/JS Aggregation'
+-core_version_requirement: ^9.3 || ^10
++core_version_requirement: ^9.3 || ^10 || ^11
+ dependencies:
+   - advagg:advagg
+ type: module
+diff --git modules/advagg/advagg_mod/src/EventSubscriber/InitSubscriber.php modules/advagg/advagg_mod/src/EventSubscriber/InitSubscriber.php
+index 895d521..d263b7c 100644
+--- modules/advagg/advagg_mod/src/EventSubscriber/InitSubscriber.php
++++ modules/advagg/advagg_mod/src/EventSubscriber/InitSubscriber.php
+@@ -108,7 +108,7 @@ class InitSubscriber implements EventSubscriberInterface {
+   /**
+    * {@inheritdoc}
+    */
+-  public static function getSubscribedEvents() {
++  public static function getSubscribedEvents(): array {
+     return [
+       KernelEvents::REQUEST => ['onEvent', 0],
+       KernelEvents::RESPONSE => [
+diff --git modules/advagg/advagg_old_ie_compatibility/advagg_old_ie_compatibility.info.yml modules/advagg/advagg_old_ie_compatibility/advagg_old_ie_compatibility.info.yml
+index 7d20cd6..7474d8d 100644
+--- modules/advagg/advagg_old_ie_compatibility/advagg_old_ie_compatibility.info.yml
++++ modules/advagg/advagg_old_ie_compatibility/advagg_old_ie_compatibility.info.yml
+@@ -1,7 +1,7 @@
+ name: 'AdvAgg Old Internet Explorer Compatibility Enhancer'
+ description: 'Provides some enhanced compatibility with outdated Internet Explorer versions.'
+ package: 'Advanced CSS/JS Aggregation'
+-core_version_requirement: ^9|^10
++core_version_requirement: ^9|^10|^11
+ dependencies:
+   - advagg:advagg
+ type: module
+diff --git modules/advagg/advagg_validator/advagg_validator.info.yml modules/advagg/advagg_validator/advagg_validator.info.yml
+index 8676321..c867ca1 100644
+--- modules/advagg/advagg_validator/advagg_validator.info.yml
++++ modules/advagg/advagg_validator/advagg_validator.info.yml
+@@ -1,7 +1,7 @@
+ name: 'AdvAgg CSS/JS Validator'
+ description: 'Validate the CSS and JS files used in Aggregation for syntax errors.'
+ package: 'Advanced CSS/JS Aggregation'
+-core_version_requirement: ^9.3 || ^10
++core_version_requirement: ^9.3 || ^10 || ^11
+ type: module
+ dependencies:
+   - advagg:advagg
+diff --git modules/advagg/advagg_validator/src/Form/CssW3Form.php modules/advagg/advagg_validator/src/Form/CssW3Form.php
+index 4bd45fc..2d7ad61 100644
+--- modules/advagg/advagg_validator/src/Form/CssW3Form.php
++++ modules/advagg/advagg_validator/src/Form/CssW3Form.php
+@@ -208,10 +208,10 @@ class CssW3Form extends BaseValidatorForm {
+         ->getBody();
+     }
+     catch (RequestException $e) {
+-      watchdog_exception('AdvAgg Validator', $e);
++      \Drupal\Component\Utility\DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '10.1.0', fn() => \Drupal\Core\Utility\Error::logException(\Drupal::logger('AdvAgg Validator'), $e), fn() => watchdog_exception('AdvAgg Validator', $e));
+     }
+     catch (\Exception $e) {
+-      watchdog_exception('AdvAgg Validator', $e);
++      \Drupal\Component\Utility\DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '10.1.0', fn() => \Drupal\Core\Utility\Error::logException(\Drupal::logger('AdvAgg Validator'), $e), fn() => watchdog_exception('AdvAgg Validator', $e));
+     }
+     if (!empty($data)) {
+       // Parse XML and return info.
+diff --git modules/advagg/src/Commands/AdvaggCommands.php modules/advagg/src/Commands/AdvaggCommands.php
+index 663e287..646ee83 100644
+--- modules/advagg/src/Commands/AdvaggCommands.php
++++ modules/advagg/src/Commands/AdvaggCommands.php
+@@ -143,7 +143,7 @@ class AdvaggCommands extends DrushCommands {
+     $new_value = $this->advaggConfig->get('global_counter') + 1;
+     $this->advaggConfig->set('global_counter', $new_value)->save();
+     $this->logger()->notice(dt('Global counter is now set to @new_value', ['@new_value' => $new_value]));
+-    _drupal_flush_css_js();
++    \Drupal\Component\Utility\DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '10.2.0', fn() => \Drupal::service('asset.query_string')->reset(), fn() => _drupal_flush_css_js());
+   }
+
+ }
+diff --git modules/advagg/src/EventSubscriber/ResponseSubscriber.php modules/advagg/src/EventSubscriber/ResponseSubscriber.php
+index f2b6c61..cd34434 100644
+--- modules/advagg/src/EventSubscriber/ResponseSubscriber.php
++++ modules/advagg/src/EventSubscriber/ResponseSubscriber.php
+@@ -33,7 +33,7 @@ class ResponseSubscriber implements EventSubscriberInterface {
+   /**
+    * {@inheritdoc}
+    */
+-  public static function getSubscribedEvents() {
++  public static function getSubscribedEvents(): array {
+     return [
+       KernelEvents::RESPONSE => [
+         ['processResponse', -9999],

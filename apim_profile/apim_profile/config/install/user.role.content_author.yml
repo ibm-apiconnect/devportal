@@ -12,6 +12,7 @@ permissions:
   - 'access media overview'
   - 'access taxonomy overview'
   - 'access toolbar'
+  - 'access navigation'
   - 'administer comments'
   - 'administer media'
   - 'administer nodes'

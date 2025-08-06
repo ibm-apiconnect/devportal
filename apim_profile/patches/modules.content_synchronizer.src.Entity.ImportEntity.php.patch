@@ -1,18 +1,32 @@
---- modules/content_synchronizer/src/Entity/ImportEntity.php    2023-07-13 16:25:52
-+++ modules/content_synchronizer/src/Entity/ImportEntity.php       2023-07-13 16:27:21
+--- modules/content_synchronizer/src/Entity/ImportEntity.php	2025-06-25 16:26:50
++++ modules/content_synchronizer/src/Entity/ImportEntity.php	2025-06-25 16:27:00
 @@ -268,7 +268,7 @@
        ->setLabel(t('Changed'))
        ->setDescription(t('The time that the entity was last edited.'));
-
+ 
 -    $extension = 'gz';
 +    $extension = 'gz tgz';
      $validators = [
        'file_validate_extensions' => [$extension],
        'file_validate_size'       => [Environment::getUploadMaxSize()],
+@@ -282,11 +282,11 @@
+       ->setRequired(TRUE)
+       ->setDisplayOptions('view', [
+         'label'  => 'above',
+-        'type'   => 'file',
++        'type'   => 'file_generic',
+         'weight' => -3,
+       ])
+       ->setDisplayOptions('form', [
+-        'type'        => 'file',
++        'type'        => 'file_generic',
+         // doesn't work.
+         'description' => [
+           // doesn't work.
 @@ -322,7 +322,16 @@
        $this->setName(basename($file->getFileUri()));
      }
-
+ 
 -    return parent::save();
 +    parent::save();
 +
@@ -25,10 +39,10 @@
 +
 +    return;
    }
-
+ 
    /**
 @@ -340,13 +349,16 @@
-
+ 
        $this->rootEntities = $this->getDataFromFile($this->getArchiveFilesPath() . '/' . ExportEntityWriter::ROOT_FILE_NAME . ExportEntityWriter::TYPE_EXTENSION);
        foreach ($this->rootEntities as &$entity) {
 -        $existingEntity = $this->globalReferenceManager->getExistingEntityByGidAndUuid($entity[ExportEntityWriter::FIELD_GID], $entity[ExportEntityWriter::FIELD_UUID]);

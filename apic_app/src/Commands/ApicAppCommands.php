@@ -98,12 +98,13 @@ class ApicAppCommands extends DrushCommands {
 
         $time_end = microtime(true);
         $execution_time = (microtime(true) - $time_start);
+        $utils = \Drupal::service('ibm_apim.utils');
 
-        if ($createdOrUpdated) {
-          fprintf(STDERR, "Drush %s created Application '%s' in %f seconds\n", $func, $ref, $execution_time);
+        if ($createdOrUpdated === 'created') {
+          $utils->snapshotDebug("Drush %s created Application '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
         }
-        else {
-          fprintf(STDERR, "Drush %s updated existing Application '%s' in %f seconds\n", $func, $ref, $execution_time);
+        else if ($createdOrUpdated === 'updated') {
+          $utils->snapshotDebug("Drush %s updated existing Application '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
         }
         $moduleHandler = \Drupal::service('module_handler');
         if ($func !== 'MassUpdate' && $moduleHandler->moduleExists('views')) {
@@ -224,14 +225,19 @@ class ApicAppCommands extends DrushCommands {
       $ref = $subInput['id'];
       $createdOrUpdated = $subService->createOrUpdate($subInput);
 
+      if ($createdOrUpdated !== 'created' && $createdOrUpdated !== 'updated' && $createdOrUpdated !== 'hashMatch') {
+        throw new \Exception('Could not create/update/hashMatch subscription');
+      }
+
       $time_end = microtime(true);
       $execution_time = (microtime(true) - $time_start);
+      $utils = \Drupal::service('ibm_apim.utils');
 
-      if ($createdOrUpdated) {
-        fprintf(STDERR, "Drush %s created Subscription '%s' in %f seconds\n", $func, $ref, $execution_time);
+      if ($createdOrUpdated === 'created') {
+        $utils->snapshotDebug("Drush %s created Subscription '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
       }
-      else {
-        fprintf(STDERR, "Drush %s updated existing Subscription '%s' in %f seconds\n", $func, $ref, $execution_time);
+      else if ($createdOrUpdated === 'updated') {
+        $utils->snapshotDebug("Drush %s updated existing Subscription '%s2' in %f seconds\n", [ '%s' => $func, '%s2' => $ref, '%f' => $execution_time]);
       }
     }
     else {

@@ -1,0 +1,15 @@
+--- modules/clipboardjs/css/tooltip.css 2025-05-06 13:38:04.157885313 +0000
++++ modules/clipboardjs/css/tooltip.css 2025-05-06 13:37:55.394885346 +0000
+@@ -13,9 +13,9 @@
+   visibility: hidden;
+   padding: 5px 4px;
+   text-align: center;
+-  color: #fff;
+-  border-radius: 6px;
+-  background-color: black;
++  color: #000;
++  border: 1px solid #000;
++  background-color: #fff;
+   font-size: medium;
+   font-weight: normal;
+ }

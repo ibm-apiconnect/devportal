@@ -1,0 +1,9 @@
+--- modules/maintenance200/maintenance200.info.yml      2024-09-05 16:25:15
++++ modules/maintenance200/maintenance200.info.yml 2024-09-06 14:33:31
+@@ -1,5 +1,5 @@
+ name: 'Maintenance 200'
+ type: module
+ description: 'Allows the maintenance page to return a configurable HTTP status code rather than the standard 503 code.'
+-core_version_requirement: ^9.1 || ^10
++core_version_requirement: ^9.1 || ^10 || ^11
+ configure: maintenance200_settings

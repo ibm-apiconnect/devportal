@@ -34,9 +34,9 @@
       var $ULs = $$.find('ul'),
       // get the font size of menu.
       // .css('fontSize') returns various results cross-browser, so measure an em dash instead
-      fontsize = $('<li id="menu-fontsize">&#8212;</li>'),
-      size = fontsize.attr('style','padding:0;position:absolute;top:-99999em;width:auto;')
-      .appendTo($$)[0].clientWidth; //clientWidth is faster than width()
+      fontsize = $('<li id="menu-fontsize" class="sf-font-size-test">&#8212;</li>'),
+      // Add the element to the DOM and get the width
+      size = fontsize.appendTo($$)[0].clientWidth; //clientWidth is faster than width()
       // remove em dash
       fontsize.remove();
 

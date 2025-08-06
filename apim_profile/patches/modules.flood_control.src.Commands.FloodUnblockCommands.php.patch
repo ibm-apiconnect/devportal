@@ -1,0 +1,25 @@
+--- modules/flood_control/src/Commands/FloodUnblockCommands.php	2025-07-02 15:35:21
++++ modules/flood_control/src/Commands/FloodUnblockCommands.php	2025-07-02 15:39:34
+@@ -40,6 +40,10 @@
+     $events = $this->manager->getEvents();
+     foreach ($events as $key => $event) {
+       $fids = $this->manager->getEventIds($key, $ip);
++      if (empty($fids)) {
++        $this->output()->writeln("No flood entries found for event {$key} and IP address {$ip}");
++        continue;
++      }
+       foreach ($fids as $fid) {
+         $this->manager->floodUnblockClearEvent($fid);
+       }
+@@ -57,6 +61,11 @@
+     $events = $this->manager->getEvents();
+     foreach ($events as $key => $event) {
+       $fids = $this->manager->getEventIds($key);
++      if (empty($fids)) {
++        $label = $event['label'];
++        $this->output()->writeln("No flood entries found for {$label} events");
++        continue;
++      }
+       foreach ($fids as $fid) {
+         $this->manager->floodUnblockClearEvent($fid);
+       }

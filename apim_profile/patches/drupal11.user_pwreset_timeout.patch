@@ -1,0 +1,10 @@
+--- modules/user_pwreset_timeout/user_pwreset_timeout.info.yml  2023-02-27 02:51:34
++++ modules/user_pwreset_timeout/user_pwreset_timeout.info.yml     2024-09-02 16:26:08
+@@ -1,6 +1,6 @@
+ name: User Password Reset Link Timeout
+ description: Presents a UI element to set the user password reset link timeout.
+-core_version_requirement: ^9.4 || ^10
++core_version_requirement: ^9.4 || ^10 || ^11
+ type: module
+ configure: entity.user.admin_form
+ dependencies:

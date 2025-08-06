@@ -1,14 +1,14 @@
---- core/modules/system/system.module	2018-08-02 11:56:14.066705149 +0000
-+++ core/modules/system/system.module	2018-08-02 12:35:07.444222208 +0000
-@@ -155,7 +155,7 @@
-       return $output;
+--- core/modules/system/src/Hook/SystemHooks.php        2025-01-06 22:41:17
++++ core/modules/system/src/Hook/SystemHooks.php   2025-01-08 12:26:13
+@@ -128,7 +128,7 @@
+         return $output;
 
-     case 'system.modules_uninstall':
--      return '<p>' . t('The uninstall process removes all data related to a module.') . '</p>';
-+      return '<p>' . t('The disable process removes all data related to a module.') . '</p>';
+       case 'system.modules_uninstall':
+-        return '<p>' . t('The uninstall process removes all data related to a module.') . '</p>';
++        return '<p>' . t('The disable process removes all data related to a module.') . '</p>';
 
-     case 'entity.block.edit_form':
-       if (($block = $route_match->getParameter('block')) && $block->getPluginId() == 'system_powered_by_block') {
+       case 'entity.block.edit_form':
+         if (($block = $route_match->getParameter('block')) && $block->getPluginId() == 'system_powered_by_block') {
 
 --- core/modules/system/src/Form/ModulesUninstallForm.php	2018-08-02 11:55:43.302432936 +0000
 +++ core/modules/system/src/Form/ModulesUninstallForm.php	2018-08-02 12:37:24.645471095 +0000
