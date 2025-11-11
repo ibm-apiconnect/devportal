@@ -1,4 +1,4 @@
-<h1>API Connect Developer Portal</h1>
+<h1>API Connect CMS Developer Portal</h1>
 
 <p>This repository contains the components necessary to create a developer portal for IBM API Connect 
 using the Drupal content management system.</p>
