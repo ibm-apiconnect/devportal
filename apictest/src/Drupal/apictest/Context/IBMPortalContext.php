@@ -29,6 +29,7 @@ use Drupal\user\Entity\User;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\session_limit\Services\SessionLimit;
+use Behat\Mink\Exception\ExpectationException;
 
 /**
  * Defines application features from the specific context.
@@ -173,12 +174,20 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
   /** @AfterStep */
   public function afterEachStep(AfterStepScope $stepScope): void {
-
     if (!$stepScope->getTestResult()->isPassed()) {
-      // The previous step failed. Dump out the HTML of the page for debugging purposes.
-      $this->dumpTheCurrentHtml();
+      try {
+        // Check if we have an active session with a page visit
+        $session = $this->getSession();
+        if ($session && $session->isStarted()) {
+          // The previous step failed. Dump out the HTML of the page for debugging purposes.
+          $this->dumpTheCurrentHtml();
+        } else {
+          print "Cannot dump HTML: No active session or page visit.\n";
+        }
+      } catch (\Exception $e) {
+        print "Error in afterEachStep: " . $e->getMessage() . "\n";
+      }
     }
-
   }
 
   /**
@@ -765,25 +774,27 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
    * so this step definition also prints the HTML to the screen if that option is set.
    */
   public function dumpTheCurrentHtml(): void {
+    try {
+      $this->minkContext->printCurrentUrl();
+      print '\n';
 
-    $this->minkContext->printCurrentUrl();
-    print '\n';
+      $html = $this->getSession()->getDriver()->getContent();
+      $htmlFileName = $this->debugDumpDir . '/failure-html-dump-' . $this->timestamp . '_' . $this->htmlDumpNumber . '.html';
+      file_put_contents($htmlFileName, $html);
 
-    $html = $this->getSession()->getDriver()->getContent();
-    $htmlFileName = $this->debugDumpDir . '/failure-html-dump-' . $this->timestamp . '_' . $this->htmlDumpNumber . '.html';
-    file_put_contents($htmlFileName, $html);
+      print sprintf("HTML failure dump available at %s \n", $htmlFileName);
 
-    print sprintf("HTML failure dump available at %s \n", $htmlFileName);
+      if ($this->dumpHtmlToScreen !== FALSE) {
+        print "Dumping HTML of current page to screen\n";
+        print "**************************************\n";
+        print $html;
+        print "**************************************\n";
+      }
 
-    if ($this->dumpHtmlToScreen !== FALSE) {
-      print "Dumping HTML of current page to screen\n";
-      print "**************************************\n";
-      print $html;
-      print "**************************************\n";
+      ++$this->htmlDumpNumber;
+    } catch (\Exception $e) {
+      print "Could not dump HTML: " . $e->getMessage() . "\n";
     }
-
-    ++$this->htmlDumpNumber;
-
   }
 
   /**
@@ -1846,5 +1857,104 @@ class IBMPortalContext extends DrupalContext implements SnippetAcceptingContext 
 
   }
 
+  /**
+   * Check that a link does not have target="_blank" attribute.
+   *
+   * @Then the link :linkText should not have target="_blank"
+   * 
+   * @param string $linkText
+   *   The text of the link to check
+   * 
+   * @throws \Exception
+   */
+  public function theLinkShouldNotHaveTargetBlank($linkText): void {
+    $page = $this->getSession()->getPage();
+    $link = $page->findLink($linkText);
+    
+    if (!$link) {
+      throw new \Exception("Link with text '$linkText' not found on the page");
+    }
+    
+    $target = $link->getAttribute('target');
+    if ($target === '_blank') {
+      throw new \Exception("Link with text '$linkText' has target=\"_blank\" but it should not");
+    }
+  }
 
+    /**
+   * Check whether a link has a specific CSS class.
+   *
+   * @Then the link :linkText should have the :className class
+   * 
+   * @param string $linkText
+   *   The text of the link to check
+   * @param string $className
+   *   The CSS class to check for
+   * 
+   * @throws \Exception
+   */
+  public function theLinkShouldHaveClass($linkText, $className): void {
+    $page = $this->getSession()->getPage();
+    $link = $page->findLink($linkText);
+    
+    if (!$link) {
+      throw new \Exception("Link with text '$linkText' not found on the page");
+    }
+    
+    $classes = $link->getAttribute('class');
+    if ($classes === null || !in_array($className, explode(' ', $classes))) {
+      throw new \Exception("Link with text '$linkText' does not have the class '$className'");
+    }
+  }
+
+  /**
+   * Check that a link does not have a specific CSS class.
+   *
+   * @Then the link :linkText should not have the :className class
+   *
+   * @param string $linkText
+   *   The text of the link to check
+   * @param string $className
+   *   The CSS class that should not be present
+   *
+   * @throws \Exception
+   */
+  public function theLinkShouldNotHaveClass($linkText, $className): void {
+    $page = $this->getSession()->getPage();
+    $link = $page->findLink($linkText);
+    
+    if (!$link) {
+      throw new \Exception("Link with text '$linkText' not found on the page");
+    }
+    
+    $classes = $link->getAttribute('class');
+    if ($classes !== null && in_array($className, explode(' ', $classes))) {
+      throw new \Exception("Link with text '$linkText' has the class '$className' but it should not");
+    }
+  }
+
+  /**
+   * Checks if a field contains a specific value (partial match).
+   *
+   * @Then the :field field should include :value
+   */
+  public function assertFieldContainsValue(string $field, string $expected, bool $caseInsensitive = false): void
+  {
+    // Finds by label, name, id, or placeholder and fails nicely if missing.
+    $node = $this->assertSession()->fieldExists($field);
+
+    $value = $node->getValue();
+    if (is_array($value)) {
+        $value = implode(',', array_map('strval', $value)); // normalize multi-selects
+    }
+    $value = (string) $value;
+
+    $pos = $caseInsensitive ? stripos($value, $expected) : strpos($value, $expected);
+    if ($pos === false) {
+        throw new ExpectationException(
+            sprintf('Field "%s" value did not include "%s". Actual: "%s"', $field, $expected, $value),
+            $this->getSession()
+        );
+    }
+  }
 }

@@ -66,15 +66,6 @@
          $entityToImport = $this->entityTypeManager
            ->getStorage($typeId)
            ->create($createData);
-@@ -666,7 +683,7 @@
-    *   The entity processor manager service.
-    */
-   protected function getEntityProcessorManager() {
--    return $this->entityProcessorManager;
-+    return $this->entityProcessorPluginManager;
-   }
- 
-   /**
 @@ -697,7 +714,6 @@
      $this->propertyIdsNotToImport = array_merge(
        $this->propertyIdsNotToExport,

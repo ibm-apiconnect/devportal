@@ -1,6 +1,8 @@
---- modules/search_api/src/Plugin/views/filter/SearchApiFulltext.php	2022-11-07 09:39:57
-+++ modules/search_api/src/Plugin/views/filter/SearchApiFulltext.php	2023-02-23 15:46:36
-@@ -205,7 +205,7 @@
+diff --git modules/search_api/src/Plugin/views/filter/SearchApiFulltext.php modules/search_api/src/Plugin/views/filter/SearchApiFulltext.php
+index a807a2c9..a1597cf3 100644
+--- modules/search_api/src/Plugin/views/filter/SearchApiFulltext.php
++++ modules/search_api/src/Plugin/views/filter/SearchApiFulltext.php
+@@ -207,7 +207,7 @@ class SearchApiFulltext extends FilterPluginBase {
        '#description' => $this->t('Minimum length of each word in the search keys. Leave empty to allow all words.'),
        '#type' => 'number',
        '#min' => 1,
@@ -8,17 +10,16 @@
 +      '#default_value' => $this->getMinWordLength(),
      ];
    }
-
-@@ -354,17 +354,18 @@
+ 
+@@ -389,16 +389,17 @@ class SearchApiFulltext extends FilterPluginBase {
      }
-
+ 
      // Only continue if there is a minimum word length set.
 -    if ($this->options['min_length'] < 2) {
 +    if ($this->getMinWordLength() < 2) {
        return;
      }
-
-     $words = preg_split('/\s+/', $input) ?: [];
+ 
      foreach ($words as $i => $word) {
 -      if (mb_strlen($word) < $this->options['min_length']) {
 +      if (mb_strlen($word) < $this->getMinWordLength()) {
@@ -31,11 +32,11 @@
        $msg = $this->formatPlural($this->options['min_length'], 'You must include at least one keyword to match in the content, and punctuation is ignored.', 'You must include at least one keyword to match in the content. Keywords must be at least @count characters, and punctuation is ignored.');
        $form_state->setErrorByName($identifier, $msg);
      }
-@@ -501,4 +502,28 @@
+@@ -536,5 +537,29 @@ class SearchApiFulltext extends FilterPluginBase {
+ 
      return $fields;
    }
-
-+  protected function validateOrigin() {
++    protected function validateOrigin() {
 +    $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 +    foreach ($backtrace as $caller) {
 +        if (isset($caller['file']) && strpos($caller['file'], "autocomplete") == true) {
@@ -59,4 +60,5 @@
 +      return $minL;
 +  }
 +
+
  }

@@ -406,4 +406,89 @@ class ApplicationContext extends RawDrupalContext {
     }
   }
 
+  /**
+   * @Given I create an application with metadata
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
+   */
+  public function iCreateAnApplicationWithMetadata(): void {
+    // If we are not using mocks, then we are testing with live data from a management appliance
+    if ($this->useMockServices === FALSE) {
+      print "This test is running with a real management server backend. No applications will be created in the database.\n";
+      return;
+    }
+
+    // in case moderation is on we need to run as admin
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(User::load(1));
+    }
+
+    $random = new Random();
+    $name = $random->name(8);
+    
+    $object = [];
+    $object['title'] = $name;
+    $object['name'] = $name;
+    $object['consumer_org_url'] = '/consumer-orgs/1234/5678/metadata-test-org';
+    $object['redirect_urls'] = [$name];
+    $object['enabled'] = TRUE;
+    $object['id'] = 'metadata-test-app-id';
+    $object['url'] = '/apps/1234/5678/metadata-test-org/apps/metadata-test-app-id';
+    $object['state'] = 'published';
+    $object['created_at'] = '2021-02-26T12:18:58.995Z';
+    $object['updated_at'] = '2021-02-26T12:18:58.995Z';
+    $object['metadata'] = [
+      'test_field' => 'test_value',
+      'nested' => ['key' => 'value'],
+      'custom_data' => 'custom_value',
+    ];
+    $object['app_credentials'] = [
+      [
+        'client_id' => '11111111-78f0-48d1-a015-6a803fd64e8f',
+        'client_secret' => 'fkvO2qWJQbtNB8zqcOMs2p1DPqhI0EuRB7Gfi1/tMrQ=',
+        'id' => 'metadata-test-app-idcred-1234567',
+        'url' => $object['url'] . '/credentials/metadata-test-app-idcred-1234567',
+        'title' => 'cred-1234567',
+        'summary' => 'cred-1234567',
+        'name' => 'cred-1234567',
+        'app_url' => $object['url'],
+        'created_at' => '2021-02-26T12:18:58.995Z',
+        'updated_at' => '2021-02-26T12:18:58.995Z',
+      ],
+    ];
+
+    $nid = \Drupal::service('apic_app.application')->create($object);
+
+    if ((int) $nid >= 0) {
+      // Verify metadata was serialized correctly
+      $node = Node::load($nid);
+      
+      if ($node !== NULL) {
+        $serializedMetadata = $node->get('apic_metadata')->value;
+        
+        if ($serializedMetadata !== NULL && !empty($serializedMetadata)) {
+          $metadata = unserialize($serializedMetadata);
+          
+          if (is_array($metadata) && isset($metadata['test_field']) && $metadata['test_field'] === 'test_value') {
+            print("Application created with properly serialized metadata (nid: $nid)\n");
+          } else {
+            throw new \Exception("Metadata was not properly serialized");
+          }
+        } else {
+          throw new \Exception("Metadata was not stored in apic_metadata field");
+        }
+      }
+    } else {
+      throw new \Exception("Failed to create application with metadata");
+    }
+
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+  }
+
 }

@@ -67,9 +67,9 @@ user_registry_count ? 'ur-count-' ~ user_registry_count,
       <js-placeholder token="{{ placeholder_token|raw }}">
         </head>
 <body{{ attributes.addClass(body_classes) }}>
-<div class="visually-hidden" role="complementary" aria-label="{{ 'Skip to main content'|t }}">
+<div class="visually-hidden" role="complementary" aria-label="{% trans %}Skip to main content{% endtrans %}">
   <a href="#main-content" class="visually-hidden focusable skip-link">
-    {{ 'Skip to main content'|t }}
+    {% trans %}Skip to main content{% endtrans %}
   </a>
 </div>
 {{ page_top }}

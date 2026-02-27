@@ -1,0 +1,10 @@
+--- core/modules/field_ui/src/Form/EntityDisplayFormBase.php	2025-06-06 00:34:52
++++ core/modules/field_ui/src/Form/EntityDisplayFormBase.php	2025-09-10 15:33:57
+@@ -203,7 +203,6 @@
+           'relationship' => 'parent',
+           'group' => 'field-region',
+           'subgroup' => 'field-region',
+-          'source' => 'field-name',
+         ],
+       ],
+     ];

@@ -4,7 +4,7 @@
       <div class="alert short alert-info" role="alert">
         <div class="alert-details">
           <div class="alert-text-wrapper">
-            <h4 class="sr-only">{{ 'Informative message'|t }}</h4>
+            <h4 class="sr-only">{% trans %}Informative message{% endtrans %}</h4>
             <ul class="item-list item-list--messages">
               <li class="item item--message">
                 {{ 'This product contains both enforced and unenforced APIs. Plans are not applicable to any unenforced APIs.'| t }}
@@ -71,12 +71,12 @@
           {% if elements['#view_mode'] == 'subscribewizard' %}
             <a class="btn btn-sm btn-primary"
               href="{{ path('ibm_apim.subscription_wizard') }}/chooseapp?productId={{ node.id }}&planTitle={{ plan.data.title }}&planId={{ planid }}">
-              {{ 'Select'|t }}
+              {% trans %}Select{% endtrans %}
             </a>
           {% else %}
             <a class="btn btn-sm btn-primary"
               href="{{ path('ibm_apim.subscription_wizard.noplan') }}/?productId={{ node.id }}&planTitle={{ plan.data.title }}&planId={{ planid }}">
-              {{ 'Select'|t }}
+              {% trans %}Select{% endtrans %}
             </a>
           {% endif %}
         {% else %}
@@ -85,7 +85,7 @@
           {% else %}
             {% set subscribeButtonAltText = 'This plan cannot be selected'|t %}
           {% endif %}
-          <button class="btn subscribe btn-sm btn-primary" disabled title="{{ subscribeButtonAltText }}">{{ 'Select'|t }}</button>
+          <button class="btn subscribe btn-sm btn-primary" disabled title="{{ subscribeButtonAltText }}">{% trans %}Select{% endtrans %}</button>
         {% endif %}
 
         {% if plan.data.description is defined and plan.data.description is not empty %}
@@ -100,10 +100,12 @@
 
         <div class="planApis">
           {% if numApis == 0 %}
-            <p class="body-short-01">{{ 'There are no APIs in this plan' |t }}</p>
+            <p class="body-short-01">{% trans %}There are no APIs in this plan{% endtrans %}</p>
           {% endif %}
           {% if numApis > 4 %}
-            <p class="body-short-01">{{ '@number APIs including' |t({'@number': numApis}) }}</p>
+            {% trans with {'@number': numApis} %}
+              <p class="body-short-01">@number APIs including</p>
+            {% endtrans %}
           {% endif %}
 
           <ul class="planApiList">
@@ -125,7 +127,7 @@
 
         {% if numApis != 0 %}
           <div class="planViewDetails">
-            <a href="#" data-toggle="modal" data-target="#planModal{{ loop.index }}" class="planDetailsButton">{{ 'View details'|t }}</a>
+            <a href="#" data-toggle="modal" data-target="#planModal{{ loop.index }}" class="planDetailsButton">{% trans %}View details{% endtrans %}</a>
           </div>
         {% endif %}
       </div>
@@ -135,7 +137,7 @@
           <div class="modal-content">
             <div class="planDetail--header">
               <a href="javascript:" data-toggle="modal" data-target="#planModal{{ loop.index }}" class="planDetail--modalClose" 
-              title={{ 'Close'|t }}>{{ close_svg|raw }}</a>
+              title={% trans %}Close{% endtrans %}>{{ close_svg|raw }}</a>
               <h2 class="productive-heading-04">{{ plan.data.title }}</h2>
               <div class="body-short-01">
                 {{ plan.data.description|markdown }}
@@ -153,7 +155,7 @@
                 {% if subscribable %}
                   <a class="btn btn-sm btn-primary"
                      href="{{ path('ibm_apim.subscription_wizard.noplan') }}?productId={{ node.id }}&planTitle={{ plan.data.title }}&planId={{ planid }}">
-                    {{ 'Select'|t }}
+                    {% trans %}Select{% endtrans %}
                   </a>
                 {% else %}
                   {% if content.product_state[0].value is defined and content.product_state[0].value is same as('deprecated') %}
@@ -161,7 +163,7 @@
                   {% else %}
                     {% set subscribeButtonAltText = 'This plan cannot be selected'|t %}
                   {% endif %}
-                  <button class="btn btn-sm btn-primary" disabled alt-text="{{ subscribeButtonAltText }}">{{ 'Select'|t }}</button>
+                  <button class="btn btn-sm btn-primary" disabled alt-text="{{ subscribeButtonAltText }}">{% trans %}Select{% endtrans %}</button>
                 {% endif %}
                 <div class="planDetail--planInfo">
                   {% if plan.rateLimit %}
@@ -184,23 +186,23 @@
               </div>
             </div>
             <div class="planDetail--content">
-              <p class="productive-heading-03">{{ 'APIs'|t }}</p>
+              <p class="productive-heading-03">{% trans %}APIs{% endtrans %}</p>
               <table class="plansTable">
                 <thead>
                 <tr>
-                  <th><span id="twistieHeader" class="apicTwistieIcon" title={{ '"Expand / Collapse All API Details"'|t }}><i
+                  <th><span id="twistieHeader" class="apicTwistieIcon" title={% trans %}"Expand / Collapse All API Details"{% endtrans %}><i
                             class="fa fa-angle-down" data-twistieheaderid="twistie_header"></i></span></th>
-                  <th>{{ 'Title'|t }}</th>
-                  <th>{{ 'Version'|t }}</th>
-                  <th>{{ 'Type'|t }}</th>
-                  <th class="fixedPlanColumnWidth">{{ 'Rate limits'|t }}</th>
+                  <th>{% trans %}Title{% endtrans %}</th>
+                  <th>{% trans %}Version{% endtrans %}</th>
+                  <th>{% trans %}Type{% endtrans %}</th>
+                  <th class="fixedPlanColumnWidth">{% trans %}Rate limits{% endtrans %}</th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for api in plan.nodes %}
                   {% set rowIndex = loop.index %}
                   <tr class="tableRow">
-                    <td><span class="apicTwistieIcon rowTwistie" title={{ '"Expand / Collapse API Details"'|t }} data-rowid={{ rowIndex }} ><i
+                    <td><span class="apicTwistieIcon rowTwistie" title={% trans %}"Expand / Collapse API Details"{% endtrans %} data-rowid={{ rowIndex }} ><i
                             class="fa fa-angle-down" data-twistieid="twistie_{{ rowIndex }}"></i></span></td>
                     <td>{{ api.title }}</td>
                     <td>{{ api.version[0].value }}</td>

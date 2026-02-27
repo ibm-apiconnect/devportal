@@ -1,0 +1,11 @@
+--- core/modules/system/system.routing.yml
++++ core/modules/system/system.routing.yml
+@@ -516,7 +516,7 @@ system.entity_autocomplete:
+   defaults:
+     _controller: '\Drupal\system\Controller\EntityAutocompleteController::handleAutocomplete'
+   requirements:
+-    _access: 'TRUE'
++    _permission: 'administer site configuration'
+ 
+ system.csrftoken:
+   path: '/session/token'

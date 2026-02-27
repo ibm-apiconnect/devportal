@@ -139,7 +139,7 @@ class CredentialsDeleteForm extends ConfirmFormBase {
     $question = $this->t('Delete credentials for %title?', ['%title' => $this->node->title->value]);
     if (isset($this->cred)) {
       $question = $this->t('Delete credentials %credentials for %title?', [
-        '%credentials' => $this->cred->name(),
+        '%credentials' => $this->cred->title(),
         '%title' => $this->node->title->value,
       ]);
     }

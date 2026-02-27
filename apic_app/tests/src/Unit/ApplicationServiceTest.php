@@ -119,4 +119,31 @@ class MockEntityTypeManager {
     $productBuilder = new MockProductNodeBuilder($this->phpUnitRef);
     return $productBuilder->setApicUrl('url')->build();
   }
+
+    /**
+   * Tests metadata setter/getter for Application entity.
+   */
+  public function testApplicationMetadataStoredAndRetrieved(): void {
+    $application = $this->applicationBuilder->build();
+
+    $metadata = [
+      'environment' => 'test',
+      'custom_key' => 'custom_val',
+    ];
+
+    $application->setMetadata($metadata);
+
+    $this->assertEquals($metadata, $application->getMetadata());
+    $this->assertEquals('test', $application->getMetadata()['environment']);
+  }
+
+  /**
+   * Tests that metadata defaults to empty array when not set.
+   */
+  public function testApplicationMetadataDefaultsToEmptyArray(): void {
+    $application = $this->applicationBuilder->build();
+
+    $this->assertEquals([], $application->getMetadata());
+  }
+
 }

@@ -9,8 +9,8 @@
 {% if newsContainer|length > 0 %}
   <div class="featuredNews featuredNewsBlockWrapper">
     <div class="featuredNewsBlockHeader">
-      <h3>{{ 'News'|t }}</h3>
-      <a href="{{ path('view.news.page_1') }}">{{ 'View all'|t }}</a>
+      <h3>{% trans %}News{% endtrans %}</h3>
+      <a href="{{ path('view.news.page_1') }}">{% trans %}View all{% endtrans %}</a>
     </div>
     <div class="featuredNewsContainer">
         {% for article in newsContainer %}

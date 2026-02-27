@@ -9,8 +9,8 @@
 {% if nodes|length > 0 %}
   <div class="featuredcontent featuredcontentBlockWrapper">
     <div class="featuredcontentBlockHeader">
-      <h3>{{ 'Explore products'|t }}</h3>
-      <a href="{{ path('view.products.page_1') }}">{{ 'View all'|t }}</a>
+      <h3>{% trans %}Explore products{% endtrans %}</h3>
+      <a href="{{ path('view.products.page_1') }}">{% trans %}View all{% endtrans %}</a>
     </div>
     <div class="featuredcontentContentContainer">
       <div

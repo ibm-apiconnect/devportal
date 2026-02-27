@@ -106,3 +106,17 @@ Feature: ApplicationCRUD
     And I should not see the text "Lifecycle State"
     And I should not see the text "Subscriptions"
     And there are no errors
+
+  @mocked
+  Scenario: Create application with metadata serialization
+    Given I am not logged in
+    Given users:
+      | name  | pass     | mail              | status |
+      | Andre | Qwert123IsBadPassword! | andre@example.com | 1      |
+    Given consumerorgs:
+      | title       | name        | id     | owner |
+      | andreconsumerorg | andreconsumerorg | 123456 | Andre |
+    Given I am logged in as "Andre"
+    Given I do not have any applications
+    Given I create an application with metadata
+    And I do not have any applications

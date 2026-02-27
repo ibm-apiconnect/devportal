@@ -1,6 +1,28 @@
---- core/lib/Drupal/Core/Routing/UrlGenerator.php	2017-08-31 11:03:37.627216844 +0000
-+++ core/lib/Drupal/Core/Routing/UrlGenerator.php	2017-08-31 11:02:18.263050080 +0000
-@@ -331,13 +331,16 @@
+--- core/lib/Drupal/Core/Routing/UrlGenerator.php	2025-12-17 09:51:20
++++ core/lib/Drupal/Core/Routing/UrlGenerator.php	2025-12-17 10:34:35
+@@ -197,12 +197,17 @@
+       if ('variable' === $token[0]) {
+         if (!$optional || !array_key_exists($token[3], $defaults) || (isset($mergedParams[$token[3]]) && (string) $mergedParams[$token[3]] !== (string) $defaults[$token[3]])) {
+           // Check requirement
+-          if (!preg_match('#^' . $token[2] . '$#', $mergedParams[$token[3]])) {
+-            $message = sprintf('Parameter "%s" for route "%s" must match "%s" ("%s" given) to generate a corresponding URL.', $token[3], $name, $token[2], $mergedParams[$token[3]]);
+-            throw new InvalidParameterException($message);
++          if (isset($mergedParams[$token[3]])) {
++            if (!preg_match('#^' . $token[2] . '$#', $mergedParams[$token[3]])) {
++              $message = sprintf('Parameter "%s" for route "%s" must match "%s" ("%s" given) to generate a corresponding URL.', $token[3], $name, $token[2], $mergedParams[$token[3]]);
++              throw new InvalidParameterException($message);
++            }
++            $url = $token[1] . $mergedParams[$token[3]] . $url;
++           }
++          else {
++            $url = $token[1] . $url;
+           }
+ 
+-          $url = $token[1] . $mergedParams[$token[3]] . $url;
+           $optional = FALSE;
+         }
+       }
+@@ -340,13 +345,16 @@
        if (isset($options['https'])) {
          if ($options['https'] === TRUE) {
            $base_url = str_replace('http://', 'https://', $base_url);
@@ -17,7 +39,7 @@
        return $collect_bubbleable_metadata ? $generated_url->setGeneratedUrl($url) : $url;
      }
  
-@@ -372,6 +375,14 @@
+@@ -381,6 +389,14 @@
        $generated_url->addCacheContexts(['url.site']);
      }
      $url = $scheme . '://' . $host . $port . $base_url . $path . $query . $fragment;

@@ -617,6 +617,20 @@ class Product {
           $node->set('product_terms_of_service', []);
         }
 
+        // Store raw metadata in apic_metadata field
+        $metadata = NULL;
+        if (isset($product['catalog_product']['info']['metadata'])) {
+          $metadata = $product['catalog_product']['info']['metadata'];
+        } elseif (isset($product['metadata'])) {
+          $metadata = $product['metadata'];
+        }
+
+        if ($metadata !== NULL && !empty($metadata)) {
+          $node->set('apic_metadata', serialize($metadata));
+        } else {
+          $node->set('apic_metadata', NULL);
+        }
+
         if ($this->utils->hashMatch($existingNodeHash, $node, 'new-product')) {
           $this->utils->snapshotDebug('Update product: No update required as the hash matched for @productName @version', [
               '@productName' => $product['catalog_product']['info']['name'],
@@ -1422,7 +1436,7 @@ class Product {
 
     // If any subscriptions where found get the ids of the application they belong to and reset the relevant caches
     if (!empty($subIds)) {
-      $tags = [];
+      $tags = ['apic_app_application_subs_list', 'config:views.view.application_subscriptions'];
       $appEntityIds = self::getAppIdsFromSubIds($subIds);
 
       foreach ($appEntityIds as $appId) {

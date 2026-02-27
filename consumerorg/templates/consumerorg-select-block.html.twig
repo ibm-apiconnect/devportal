@@ -15,7 +15,7 @@
 
 <div class="consumerorgSelectBlock">
   <ul class="dropitmenu orgmenu">
-    <li><a href="#" title="{{ 'Current organization:'|t }} {{ selected_name }}">
+    <li><a href="#" title="{% trans %}Current organization:{% endtrans %} {{ selected_name }}">
         <div class="orgHeading">
           <div class="currentOrg">
             {{ selected_name }}
@@ -29,14 +29,14 @@
             </svg>
         </span></a>
       <ul class="dropitmenu-submenu">
-        <li class="elipsis-names myorg" title="{{ 'My organization'|t }}"><a href="{{ path('ibm_apim.myorg') }}"
+        <li class="elipsis-names myorg" title="{% trans %}My organization{% endtrans %}"><a href="{{ path('ibm_apim.myorg') }}"
                                                                              class="elipsis-names">{{ 'My organization'| t }}</a>
         </li>
         {% if create_allowed == true %}
-          <li class="elipsis-names createorg" title="{{ 'Create organization'|t }}"><a
+          <li class="elipsis-names createorg" title="{% trans %}Create organization{% endtrans %}"><a
                 href="{{ path('consumerorg.create') }}" class="elipsis-names">{{ 'Create organization'| t }}</a></li>
         {% endif %}
-        <li class="selectorg" disabled>{{ 'Select organization'|t }}</li>
+        <li class="selectorg" disabled>{% trans %}Select organization{% endtrans %}</li>
         {% for org in orgs | sort((a, b) => a.title <=> b.title) %}
           <li class="elipsis-names consumerorg" {% if org.id == selected_id %}selected=true{% endif %}
               title="{{ org.title }}">{{ org.link_object }}</li>

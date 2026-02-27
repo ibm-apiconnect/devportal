@@ -623,6 +623,39 @@ class AdminForm extends ConfigFormBase {
 
   /**
    * {@inheritdoc}
+   * Validate that at least one code snippet language is selected
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
+    parent::validateForm($form, $form_state);
+
+    $languages = [
+      'codesnippets_curl',
+      'codesnippets_ruby',
+      'codesnippets_python',
+      'codesnippets_php',
+      'codesnippets_java',
+      'codesnippets_node',
+      'codesnippets_go',
+      'codesnippets_swift',
+      'codesnippets_c',
+      'codesnippets_csharp',
+    ];
+
+    $atLeastOneSelected = FALSE;
+    foreach ($languages as $language) {
+      if ($form_state->getValue($language)) {
+        $atLeastOneSelected = TRUE;
+        break;
+      }
+    }
+
+    if (!$atLeastOneSelected) {
+      $form_state->setErrorByName('codesnippets', $this->t('At least one code snippet language must be selected.'));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     $currentCategories = $this->config('ibm_apim.settings')->get('categories');

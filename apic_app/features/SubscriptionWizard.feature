@@ -262,3 +262,105 @@ Feature: Subscription
     And I should see the link 'myapp_@now'
     And I should see the link 'product1_@now'
     And I should see the text 'Default Plan'
+
+  Scenario: Application subscriptions display correctly when product is retired
+    Given I have no products or apis
+    And I do not have any applications
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.mail) |
+    Given I am logged in as "@data(andre.mail)"
+    Given apis:
+      | title    | id    | document      |
+      | PetStore | 12345 | petstore.json |
+    Given products:
+      | name      | title     | id     | document             |
+      | pet-store | Pet Store | 123456 | PetStoreProduct.json |
+    Given applications:
+      | title  | id          | org_id                      |
+      | MyApp4 | 1234567@now | @data(andre.consumerorg.id) |
+    Given subscriptions:
+      | org_id                      | app_id      | sub_id    | product | plan    |
+      | @data(andre.consumerorg.id) | 1234567@now | abcde@now | 123456  | default |
+    And I am at "/application"
+    Then I should see the text "MyApp4"
+    And there are no errors
+    
+    # View subscriptions before product retirement
+    When I click "MyApp4"
+    Then I should see the text "Subscriptions"
+    When I click "Subscriptions"
+    Then I should see the text "Product subscriptions"
+    And I should see the text "Pet Store"
+    And I should see the text "View documentation"
+    And I should see the text "Unsubscribe"
+    And there are no errors
+    
+    # Retire the product (simulates product being retired in API Manager)
+    Given I retire the product with id "123456"
+    
+    # View subscriptions after product retirement - should handle gracefully
+    When I am at "/application"
+    And I click "MyApp4"
+    Then I should see the text "Subscriptions"
+    When I click "Subscriptions"
+    Then I should see the text "Product subscriptions"
+    And I should not see the text "Pet Store"
+    And I should see the text "No subscriptions found"
+    And there are no errors
+
+  Scenario: Application subscriptions display correctly after product replacement without manual cache clear
+    Given I have no products or apis
+    And I do not have any applications
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                          | name                          | id                          | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.mail) |
+    Given I am logged in as "@data(andre.mail)"
+    Given apis:
+      | title    | id    | document      |
+      | PetStore | 12345 | petstore.json |
+    Given products:
+      | name       | title      | id     | document             |
+      | pet-store  | Pet Store  | 123456 | PetStoreProduct.json |
+      | pet-store2 | Pet Store2 | 123457 | PetStoreProduct.json |
+    Given applications:
+      | title  | id          | org_id                      |
+      | MyApp5 | 1234568@now | @data(andre.consumerorg.id) |
+    Given subscriptions:
+      | org_id                      | app_id      | sub_id    | product | plan    |
+      | @data(andre.consumerorg.id) | 1234568@now | abcdf@now | 123456  | default |
+    And I am at "/application"
+    Then I should see the text "MyApp5"
+    And there are no errors
+    
+    # View subscriptions before product replacement
+    When I click "MyApp5"
+    Then I should see the text "Subscriptions"
+    When I click "Subscriptions"
+    Then I should see the text "Product subscriptions"
+    And I should see the text "Pet Store"
+    And I should see the text "View documentation"
+    And I should see the text "Unsubscribe"
+    And there are no errors
+    
+    # Replace the product (simulates product replacement in API Manager)
+    # This should update subscriptions to point to the new product and clear caches
+    Given I replace product "123456" with product "123457" and plan mapping
+    
+    # View subscriptions after product replacement - should show new product WITHOUT manual cache clear
+    When I am at "/application"
+    And I click "MyApp5"
+    Then I should see the text "Subscriptions"
+    When I click "Subscriptions"
+    Then I should see the text "Product subscriptions"
+    And I should see the text "Pet Store2"
+    And I should see the text "View documentation"
+    And I should see the text "Unsubscribe"
+    And there are no errors
+    And there are no errors

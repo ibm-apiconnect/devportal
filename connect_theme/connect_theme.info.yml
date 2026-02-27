@@ -22,10 +22,11 @@ regions:
   collapse_right: Collapse Right
   disabled: Disabled
 libraries:
-- connect_theme/dropit
+  - connect_theme/dropit
+  - connect_theme/fix-tabledrag
 libraries-extend:
   bootstrap/framework:
-  - connect_theme/framework
+    - connect_theme/framework
 libraries-override:
   bootstrap/drupal.message: connect_theme/drupal.message
 interface translation project: connect_theme

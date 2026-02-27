@@ -1,0 +1,10 @@
+--- modules/field_group/field_group.libraries.yml	2024-08-03 09:06:27
++++ modules/field_group/field_group.libraries.yml	2025-09-12 10:43:20
+@@ -5,6 +5,7 @@
+     component:
+       css/field_group.field_ui.css: {}
+   dependencies:
++    - field_ui/drupal.field_ui
+     - core/jquery
+     - core/drupal
+     - core/once

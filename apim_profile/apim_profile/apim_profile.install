@@ -233,6 +233,7 @@ function apim_profile_install() {
     'ibm_apic_session_check',
     'ibm_apic_news',
     'ibm_tooltip',
+    'ibm_csp_extension',
   ];
   // enable our modules
   $module_installer = \Drupal::service('module_installer');
@@ -384,6 +385,17 @@ function apim_profile_install() {
 
   // rebuild access permissions
   node_access_rebuild();
+
+  // Configure extlink module to exclude .registry-button links
+  $config = \Drupal::service('config.factory')->getEditable('extlink.settings');
+  $current_exclude = $config->get('extlink_css_exclude');
+  
+  if (!empty($current_exclude)) {
+    $updated_exclude = $current_exclude . ", .registry-button";
+  } else {
+    $updated_exclude = '.registry-button';
+  }
+  $config->set('extlink_css_exclude', $updated_exclude)->save(TRUE);
 
   // enable paranoia last to avoid it blocking other config setup
   //$module_installer->install(['paranoia']);
@@ -1578,7 +1590,7 @@ function apim_profile_update_8102() {
     ->set('extlink_class', 'ext')
     ->set('extlink_label', '(link is external)')
     ->set('extlink_img_class', FALSE)
-    ->set('extlink_css_exclude', '')
+    ->set('extlink_css_exclude', '.registry-button')
     ->set('extlink_css_explicit', '')
     ->set('extlink_mailto_class', 'mailto')
     ->set('extlink_mailto_label', '(link sends email)')
@@ -3912,4 +3924,36 @@ function apim_profile_update_11007() {
   if (!empty($modules_to_install)) {
     $module_installer->install($modules_to_install);
   }
+}
+
+function apim_profile_update_11008() {
+  $module_installer = \Drupal::service('module_installer');
+  $modules_to_install = [];
+
+  if (\Drupal::moduleHandler()->moduleExists('csp') && !\Drupal::moduleHandler()->moduleExists('ibm_csp_extension')) {
+    $modules_to_install[] = 'ibm_csp_extension';
+  }
+
+  if (!empty($modules_to_install)) {
+    $module_installer->install($modules_to_install);
+  }
+}
+
+/**
+ * Update extlink configuration to exclude .registry-button links.
+ */
+function apim_profile_update_11009() {
+  $config = \Drupal::service('config.factory')->getEditable('extlink.settings');
+  $current_exclude = $config->get('extlink_css_exclude');
+  
+  if (!empty($current_exclude)) {
+    if (strpos($current_exclude, '.registry-button') === false) {
+      $updated_exclude = $current_exclude . ", .registry-button";
+    } else {
+      $updated_exclude = $current_exclude;
+    }
+  } else {
+    $updated_exclude = '.registry-button';
+  }
+  $config->set('extlink_css_exclude', $updated_exclude)->save(TRUE);
 }

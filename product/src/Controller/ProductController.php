@@ -184,7 +184,7 @@ class ProductController extends ControllerBase {
             $enforced = FALSE;
           }
         }
-
+         
         $api = [
           'nid' => $apiNode->id(),
           'id' => $apiNode->api_id->value,
@@ -193,7 +193,7 @@ class ProductController extends ControllerBase {
           'pathalias' => $apiNode->apic_pathalias->value,
           'image_url' => $apiImageUrl,
           'enforced' => $enforced,
-          'state' => $apiNode->api_state->value,
+          'state' => $apiNode->api_state->value
         ];
 
         if (!$found) {

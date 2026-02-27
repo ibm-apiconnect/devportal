@@ -36,21 +36,21 @@
  */
 #}
 <div class="system-status-general-info">
-  <h2 class="system-status-general-info__header">{{ 'General System Information'|t }}</h2>
+  <h2 class="system-status-general-info__header">{% trans %}General System Information{% endtrans %}</h2>
   <div class="system-status-general-info__items">
     <div class="system-status-general-info__item">
       <span class="system-status-general-info__item-icon system-status-general-info__item-icon--apic"></span>
       <div class="system-status-general-info__item-details">
-        <h3 class="system-status-general-info__item-title">{{ 'IBM API Developer Portal Version'|t }}</h3>
+        <h3 class="system-status-general-info__item-title">{% trans %}IBM API Developer Portal Version{% endtrans %}</h3>
         {{ apic.value }}
         {% if apic.description %}
           <div class="description">{{ apic.description }}</div>
         {% endif %}
-        <h4 class="system-status-general-info__sub-item-title">{{ 'API Explorer'|t }}</h4>{{ explorer.value }}
+        <h4 class="system-status-general-info__sub-item-title">{% trans %}API Explorer{% endtrans %}</h4>{{ explorer.value }}
         {% if explorer.description %}
           <div class="description">{{ explorer.description }}</div>
         {% endif %}
-        <h4 class="system-status-general-info__sub-item-title">{{ 'Consumer Analytics'|t }}</h4>{{ consumera7s.value }}
+        <h4 class="system-status-general-info__sub-item-title">{% trans %}Consumer Analytics{% endtrans %}</h4>{{ consumera7s.value }}
         {% if consumera7s.description %}
           <div class="description">{{ consumera7s.description }}</div>
         {% endif %}
@@ -59,7 +59,7 @@
     <div class="system-status-general-info__item">
       <span class="system-status-general-info__item-icon system-status-general-info__item-icon--drupal"></span>
       <div class="system-status-general-info__item-details">
-        <h3 class="system-status-general-info__item-title">{{ 'Drupal Version'|t }}</h3>
+        <h3 class="system-status-general-info__item-title">{% trans %}Drupal Version{% endtrans %}</h3>
         {{ drupal.value }}
         {% if drupal.description %}
           <div class="description">{{ drupal.description }}</div>
@@ -69,7 +69,7 @@
     <div class="system-status-general-info__item">
       <span class="system-status-general-info__item-icon system-status-general-info__item-icon--clock"></span>
       <div class="system-status-general-info__item-details">
-        <h3 class="system-status-general-info__item-title">{{ 'Last Cron Run'|t }}</h3>
+        <h3 class="system-status-general-info__item-title">{% trans %}Last Cron Run{% endtrans %}</h3>
         {{ cron.value }}
         {% if cron.run_cron %}
           <div class="system-status-general-info__run-cron">{{ cron.run_cron }}</div>
@@ -82,7 +82,7 @@
     <div class="system-status-general-info__item">
       <span class="system-status-general-info__item-icon system-status-general-info__item-icon--server"></span>
       <div class="system-status-general-info__item-details">
-        <h3 class="system-status-general-info__item-title">{{ 'Web Server'|t }}</h3>
+        <h3 class="system-status-general-info__item-title">{% trans %}Web Server{% endtrans %}</h3>
         {{ webserver.value }}
         {% if webserver.description %}
           <div class="description">{{ webserver.description }}</div>
@@ -92,13 +92,13 @@
     <div class="system-status-general-info__item">
       <span class="system-status-general-info__item-icon system-status-general-info__item-icon--php"></span>
       <div class="system-status-general-info__item-details">
-        <h3 class="system-status-general-info__item-title">{{ 'PHP'|t }}</h3>
-        <h4 class="system-status-general-info__sub-item-title">{{ 'Version'|t }}</h4>{{ php.value }}
+        <h3 class="system-status-general-info__item-title">{% trans %}PHP{% endtrans %}</h3>
+        <h4 class="system-status-general-info__sub-item-title">{% trans %}Version{% endtrans %}</h4>{{ php.value }}
         {% if php.description %}
           <div class="description">{{ php.description }}</div>
         {% endif %}
 
-        <h4 class="system-status-general-info__sub-item-title">{{ 'Memory limit'|t }}</h4>{{ php_memory_limit.value }}
+        <h4 class="system-status-general-info__sub-item-title">{% trans %}Memory limit{% endtrans %}</h4>{{ php_memory_limit.value }}
         {% if php_memory_limit.description %}
           <div class="description">{{ php_memory_limit.description }}</div>
         {% endif %}
@@ -107,13 +107,13 @@
     <div class="system-status-general-info__item">
       <span class="system-status-general-info__item-icon system-status-general-info__item-icon--database"></span>
       <div class="system-status-general-info__item-details">
-        <h3 class="system-status-general-info__item-title">{{ 'Database'|t }}</h3>
-        <h4 class="system-status-general-info__sub-item-title">{{ 'Version'|t }}</h4>{{ database_system_version.value }}
+        <h3 class="system-status-general-info__item-title">{% trans %}Database{% endtrans %}</h3>
+        <h4 class="system-status-general-info__sub-item-title">{% trans %}Version{% endtrans %}</h4>{{ database_system_version.value }}
         {% if database_system_version.description %}
           <div class="description">{{ database_system_version.description }}</div>
         {% endif %}
 
-        <h4 class="system-status-general-info__sub-item-title">{{ 'System'|t }}</h4>{{ database_system.value }}
+        <h4 class="system-status-general-info__sub-item-title">{% trans %}System{% endtrans %}</h4>{{ database_system.value }}
         {% if database_system.description %}
           <div class="description">{{ database_system.description }}</div>
         {% endif %}
@@ -122,7 +122,7 @@
     <div class="system-status-general-info__item">
       <span class="system-status-general-info__item-icon system-status-general-info__item-icon--modules"></span>
       <div class="system-status-general-info__item-details">
-        <h3 class="system-status-general-info__item-title">{{ 'Custom Modules'|t }}</h3>
+        <h3 class="system-status-general-info__item-title">{% trans %}Custom Modules{% endtrans %}</h3>
         {% if custom_modules|length > 0 %}
           <div class="description">
             {% for custom_module in custom_modules %}
@@ -130,14 +130,14 @@
             {% endfor %}
           </div>
         {% else %}
-          <div class="description">{{ 'None installed'|t }}</div>
+          <div class="description">{% trans %}None installed{% endtrans %}</div>
         {% endif %}
       </div>
     </div>
     <div class="system-status-general-info__item">
       <span class="system-status-general-info__item-icon system-status-general-info__item-icon--themes"></span>
       <div class="system-status-general-info__item-details">
-        <h3 class="system-status-general-info__item-title">{{ 'Custom Themes'|t }}</h3>
+        <h3 class="system-status-general-info__item-title">{% trans %}Custom Themes{% endtrans %}</h3>
         {% if custom_themes|length > 0 %}
           <div class="description">
             {% for custom_theme in custom_themes %}
@@ -145,14 +145,14 @@
             {% endfor %}
           </div>
         {% else %}
-          <div class="description">{{ 'None installed'|t }}</div>
+          <div class="description">{% trans %}None installed{% endtrans %}</div>
         {% endif %}
       </div>
     </div>
     <div class="system-status-general-info__item">
       <span class="system-status-general-info__item-icon system-status-general-info__item-icon--userfields"></span>
       <div class="system-status-general-info__item-details">
-        <h3 class="system-status-general-info__item-title">{{ 'Custom User Fields'|t }}</h3>
+        <h3 class="system-status-general-info__item-title">{% trans %}Custom User Fields{% endtrans %}</h3>
         {% if user_fields|length > 0 %}
           <div class="description">
             <ul class="fieldlist">
@@ -162,14 +162,14 @@
             </ul>
           </div>
         {% else %}
-          <div class="description">{{ 'None installed'|t }}</div>
+          <div class="description">{% trans %}None installed{% endtrans %}</div>
         {% endif %}
       </div>
     </div>
     <div class="system-status-general-info__item">
       <span class="system-status-general-info__item-icon system-status-general-info__item-icon--nodefields"></span>
       <div class="system-status-general-info__item-details">
-        <h3 class="system-status-general-info__item-title">{{ 'Custom Node Fields'|t }}</h3>
+        <h3 class="system-status-general-info__item-title">{% trans %}Custom Node Fields{% endtrans %}</h3>
         <div class="description">
           {% for node_type in ['product','api','application','consumerorg'] %}
             <div class="nodetype">
@@ -181,7 +181,7 @@
                   {% endfor %}
                 </ul>
               {% else %}
-                <div class="nonefound">{{ 'None installed'|t }}</div>
+                <div class="nonefound">{% trans %}None installed{% endtrans %}</div>
               {% endif %}
             </div>
           {% endfor %}

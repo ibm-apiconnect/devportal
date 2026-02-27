@@ -1,0 +1,8 @@
+name: IBM CSP Extension
+type: module
+description: 'Extends Content Security Policy to whitelist custom endpoints'
+core_version_requirement: ^9 || ^10 || ^11
+package: IBM
+version: 1.0.0
+dependencies:
+  - csp

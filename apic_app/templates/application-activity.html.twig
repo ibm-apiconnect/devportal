@@ -17,7 +17,7 @@
     <div class="titleInnerWrapper">
       <div class="leftTitle">
         <div class="breadcrumb"><a href="{{- path('view.applications.page_1') }}">
-            {{ 'Applications'|t }}</a></div>
+            {% trans %}Applications{% endtrans %}</a></div>
         <div class="applicationTitle">
           <div class="applicationLogo">
             {% if node.image is defined and node.image|trim is not empty %}
@@ -36,9 +36,9 @@
               {% if node.application_lifecycle_pending is not defined or node.application_lifecycle_pending is empty %}
                 <a href="{{- path('apic_app.promote', {'appId': node.application_id}) -}}"
                    class="button apicUpgradeApp"
-                   title="{{ 'Upgrade to production'|t }}">{{ 'Upgrade to production'|t }}</a>
+                   title="{% trans %}Upgrade to production{% endtrans %}">{% trans %}Upgrade to production{% endtrans %}</a>
               {% else %}
-                <span>{{ 'Pending Upgrade'|t }}</span>
+                <span>{% trans %}Pending Upgrade{% endtrans %}</span>
               {% endif %}
             {% endif %}
           </div>
@@ -46,15 +46,12 @@
         {% if userHasAppManage %}
           <div class="extraMenu">
             <ul class="overflow-menu applicationMenu dropitmenu">
-              <li title="{{ 'Manage application'|t }}"><a title="{{ 'Manage application'|t }}" href="#" class="trigger">
+              <li title="{% trans %}Manage application{% endtrans %}"><a title="{% trans %}Manage application{% endtrans %}" href="#" class="trigger">
                 <span class="dropit-icon">
                 <svg version="1.1" id="icon" xmlns="http://www.w3.org/2000/svg"
                      xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                     width="32px" height="32px" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;"
+                     width="32px" height="32px" viewBox="0 0 32 32" class="my-svg"
                      xml:space="preserve">
-                  <style type="text/css">.st0 {
-                      fill: none;
-                    }</style>
                   <title>overflow-menu--vertical</title>
                   <circle cx="16" cy="8" r="2"/>
                   <circle cx="16" cy="16" r="2"/>
@@ -64,17 +61,17 @@
                 <ul class="dropitmenu-submenu">
                   <li class="editApplication"><a
                         href="{{ path('apic_app.update', {'appId': node.application_id}) }}"
-                        title="{{ 'Edit App'|t }}">{{ 'Edit'|t }}</a>
+                        title="{% trans %}Edit App{% endtrans %}">{% trans %}Edit{% endtrans %}</a>
                   </li>
                   {% if appImageUploadEnabled %}
                     <li class="uploadImage"><a
                           href="{{ path('apic_app.image_upload', {'appId': node.application_id}) }}"
-                          title="{{ 'Upload image'|t }}">{{ 'Upload image'|t }}</a>
+                          title="{% trans %}Upload image{% endtrans %}">{% trans %}Upload image{% endtrans %}</a>
                     </li>
                   {% endif %}
                   <li class="deleteApplication"><a
                         href="{{ path('apic_app.delete', {'appId': node.application_id}) }}"
-                        title="{{ 'Delete App'|t }}">{{ 'Delete'|t }}</a>
+                        title="{% trans %}Delete App{% endtrans %}">{% trans %}Delete{% endtrans %}</a>
                   </li>
                 </ul>
               </li>
@@ -86,14 +83,14 @@
         <ul role="tablist">
           {% if analytics_access %}
             <li role="tab" aria-selected="false" tabindex="0"><a class="dashboardApplication"
-                   href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Dashboard'|t }}</a></li>
+                   href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{% trans %}Dashboard{% endtrans %}</a></li>
             <li role="tab" aria-selected="false" tabindex="0"><a class="subscriptionsApplication"
-                 href="{{- path('apic_app.subscriptions', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
+                 href="{{- path('apic_app.subscriptions', {'node': node.id}) -}}">{% trans %}Subscriptions{% endtrans %}</a></li>
           {% else %}
             <li role="tab" aria-selected="false" tabindex="0"><a class="subscriptionsApplication"
-                  href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
+                  href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{% trans %}Subscriptions{% endtrans %}</a></li>
           {% endif %}
-          <li role="tab" class="selected activityApplication" aria-selected="true" tabindex="-1"><a href="#">{{ 'Notifications'|t }}</a></li>
+          <li role="tab" class="selected activityApplication" aria-selected="true" tabindex="-1"><a href="#">{% trans %}Notifications{% endtrans %}</a></li>
         </ul>
       </div>
     </div>

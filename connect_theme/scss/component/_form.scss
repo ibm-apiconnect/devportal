@@ -851,6 +851,14 @@ input[type="checkbox"].bx--checkbox {
   clear: both;
 }
 
+.bx--global-light-ui .field--type-text-with-summary,
+.bx--global-light-ui .field--type-text-long,
+.bx--global-light-ui .field--type-string-long {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
 .context-user-login .form-actions .button.button--primary,
 .context-user-login .form-actions .button.btn-primary,
 .context-user-password .form-actions .button.button--primary,

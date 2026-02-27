@@ -1,8 +1,17 @@
---- core/modules/big_pipe/src/Controller/BigPipeController.php  2023-09-19 13:43:38
-+++ core/modules/big_pipe/src/Controller/BigPipeController.php     2023-09-19 13:43:35
-@@ -52,7 +52,7 @@
-
-     $response = new LocalRedirectResponse($request->query->get('destination'));
+--- core/modules/big_pipe/src/Controller/BigPipeController.php	2025-10-28 15:12:08.016250429 +0000
++++ core/modules/big_pipe/src/Controller/BigPipeController.php	2025-10-28 15:15:04.451249756 +0000
+@@ -49,10 +49,15 @@
+     if (!$request->query->has('destination')) {
+       throw new HttpException(400, 'The original location is missing.');
+     }
++    
++    $destination = $request->query->get('destination');
++    if (isset($GLOBALS['real_base_path']) && strpos($destination, $GLOBALS['real_base_path']) !== 0) {
++       $destination = $GLOBALS['real_base_path'] . $destination;
++    }
+ 
+-    $response = new LocalRedirectResponse($request->query->get('destination'));
++    $response = new LocalRedirectResponse($destination);
      // Set cookie without httpOnly, so that JavaScript can delete it.
 -    $response->headers->setCookie(new Cookie(BigPipeStrategy::NOJS_COOKIE, TRUE, 0, '/', NULL, FALSE, FALSE, FALSE, NULL));
 +    $response->headers->setCookie(new Cookie(BigPipeStrategy::NOJS_COOKIE, TRUE, 0, '/', NULL, TRUE, FALSE, FALSE, NULL));

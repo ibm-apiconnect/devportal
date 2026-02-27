@@ -18,7 +18,7 @@
 <div class='apic-user-form apic-user-form-login {{ ur_count_class }} {{ ur_managed_class }}'>
   <div class='apic-login-wrapper'>
     <div class='apic-portal-title'>{{ site_name }}</div>
-    <h3 class='apic-user-form-header'>{{ 'Sign in'|t }}</h3>
+    <h3 class='apic-user-form-header'>{% trans %}Sign in{% endtrans %}</h3>
     {% if element['#message'] and element['#message']['message'] %}
       <div class='apic-user-form-text'>{{ element['#message']['message'] }}</div>
     {% endif %}
@@ -31,17 +31,17 @@
       <div class='apic-user-forgot-password'>
         <a href=" {{ path('user.pass', {'registry_url':registry_url} ) }} ">
           {% if user_managed_registry_present %}
-            {{ 'Forgot password?'|t }}
+            {% trans %}Forgot password?{% endtrans %}
           {% elseif not hide_admin_registry %}
-            {{ 'Forgot your \'admin\' password?'|t }}
+            {% trans %} Forgot your 'admin' password? {% endtrans %}
           {% endif %}
         </a>
       </div>
       {% if user_managed_registry_present and enable_signup_link %}
         <div class='apic-user-form-text'>
-          {{ 'Don\'t have an account?'|t }}
+          {% trans %}Don't have an account?{% endtrans %}
           <a href=" {{ path('user.register') }} ">
-            {{ 'Sign up'|t }}
+            {% trans %}Sign up{% endtrans %}
           </a>
         </div>
       {% endif %}

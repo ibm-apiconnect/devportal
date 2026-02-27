@@ -1,6 +1,6 @@
 <div class="403-content">
-  <h1 class="page-header-error">{{ '↳ Error 403'|t }}</h1>
-  <h1 class="page-header">{{ 'Access denied'|t }}</h1>
-  <p>{{ 'You are not authorized to access the requested page. Please verify that you are logged in to the hosting environment and your access permissions are correct.'|t }}</p>
-  <a href="{{ path('user.login', {'redirectto': redirectto })}}">{{ 'Go to login'|t }}</a>
+  <h1 class="page-header-error">{% trans %}↳ Error 403{% endtrans %}</h1>
+  <h1 class="page-header">{% trans %}Access denied{% endtrans %}</h1>
+  <p>{% trans %}You are not authorized to access the requested page. Please verify that you are logged in to the hosting environment and your access permissions are correct.{% endtrans %}</p>
+  <a href="{{ path('user.login', {'redirectto': redirectto })}}">{% trans %}Go to login{% endtrans %}</a>
 </div>

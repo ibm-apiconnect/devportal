@@ -1,0 +1,74 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "x-ibm-name": "1234-numeric-api",
+    "title": "1234 Numeric API",
+    "description": "API with numeric name prefix for testing.",
+    "version": "1.0.0",
+    "x-pathalias": "numericapi"
+  },
+  "externalDocs": {
+    "url": "http://www.example.com",
+    "description": "Sample API documentation."
+  },
+  "schemes": ["https"],
+  "host": "example.com",
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "x-ibm-configuration": {
+    "enforced": true,
+    "testable": true,
+    "phase": "realized",
+    "cors": {
+      "enabled": true
+    }
+  },
+  "paths": {
+    "/test": {
+      "get": {
+        "summary": "Test endpoint",
+        "description": "A simple test endpoint",
+        "operationId": "getTest",
+        "tags": ["Test"],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    }
+  },
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Test",
+      "description": "Test API endpoints"
+    }
+  ],
+  "securityDefinitions": {
+    "client-secret": {
+      "type": "apiKey",
+      "description": "Client secret in the header",
+      "in": "header",
+      "name": "X-IBM-Client-Secret"
+    },
+    "client-id": {
+      "type": "apiKey",
+      "description": "API key in the header",
+      "in": "header",
+      "name": "X-IBM-Client-Id"
+    }
+  },
+  "security": [
+    {
+      "client-secret": [],
+      "client-id": []
+    }
+  ]
+}

@@ -19,6 +19,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\consumerorg\ApicType\ConsumerOrg;
 use Drupal\consumerorg\ApicType\Role;
 use Drupal\DrupalExtension\Context\RawDrupalContext;
+use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
 
 class ConsumerOrgContext extends RawDrupalContext {
@@ -286,6 +287,92 @@ class ConsumerOrgContext extends RawDrupalContext {
     ApicTestUtils::addMemberToOrg($org, $apic_user, [$ownerRole]);
 
     print('Saved user ' . $user->getAccountName() . '(uid=' . $user->id() . ') after adding consumerorg field ' . $org->getUrl() . "\n");
+  }
+
+  /**
+   * @Given I create a consumerorg with metadata
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
+   */
+  public function iCreateAConsumerorgWithMetadata(): void {
+    $apimUtils = \Drupal::service('ibm_apim.apim_utils');
+
+    // If we are not using mocks, then we are testing with live data from a management appliance
+    if ($this->useMockServices === FALSE) {
+      print "This test is running with a real management server backend. No consumerorgs will be created in the database.\n";
+      return;
+    }
+
+    // in case moderation is on we need to run as admin
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(User::load(1));
+    }
+
+    $org = new ConsumerOrg();
+    $org->setTitle('Test Org with Metadata');
+    $org->setName('test-org-metadata');
+    $org->setId('metadata-test-id');
+    $org->setOwnerUrl('/user/1');
+    $org->setCreatedAt(strtotime("-1 day"));
+    $org->setUpdatedAt(time());
+    $org->setOrgUrl('/orgs/1234');
+    $org->setCatalogUrl('/catalogs/1234/5678');
+    $org->setUrl('/consumer-orgs/1234/5678/metadata-test-id');
+    
+    // Set metadata
+    $org->setMetadata([
+      'test_field' => 'test_value',
+      'nested' => ['key' => 'value'],
+      'custom_data' => 'custom_value',
+    ]);
+
+    // Add roles
+    $ownerRole = ApicTestUtils::makeOwnerRole($org);
+    $administratorRole = ApicTestUtils::makeAdministratorRole($org);
+    $devRole = ApicTestUtils::makeDeveloperRole($org);
+    $viewerRole = ApicTestUtils::makeViewerRole($org);
+    $org->addRole($ownerRole);
+    $org->addRole($administratorRole);
+    $org->addRole($devRole);
+    $org->addRole($viewerRole);
+
+    $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
+    $consumerOrgService->createOrUpdateNode($org, 'test');
+
+    // Verify metadata was serialized correctly
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', 'consumerorg');
+    $query->condition('consumerorg_id.value', 'metadata-test-id');
+    $results = $query->accessCheck()->execute();
+
+    if ($results !== NULL && !empty($results)) {
+      $nid = array_shift($results);
+      $node = Node::load($nid);
+      
+      if ($node !== NULL) {
+        $serializedMetadata = $node->get('apic_metadata')->value;
+        
+        if ($serializedMetadata !== NULL && !empty($serializedMetadata)) {
+          $metadata = unserialize($serializedMetadata);
+          
+          if (is_array($metadata) && isset($metadata['test_field']) && $metadata['test_field'] === 'test_value') {
+            print("Consumer organization created with properly serialized metadata (nid: $nid)\n");
+          } else {
+            throw new \Exception("Metadata was not properly serialized");
+          }
+        } else {
+          throw new \Exception("Metadata was not stored in apic_metadata field");
+        }
+      }
+    } else {
+      throw new \Exception("Failed to find created consumer organization");
+    }
+
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
   }
 
 

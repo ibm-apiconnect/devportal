@@ -10,7 +10,7 @@
 <div class="ibmapimGetStarted">
   <div id="get-started-wrapper">
     <header class="getStartedHeader">
-      <div class="getStartedTitle"><h2>{{ 'Welcome,'|t }}<br/>{{ 'let\'s get started!'|t }}</h2></div>
+      <div class="getStartedTitle"><h2>{% trans %}Welcome,{% endtrans %}<br/>{% trans %}let's get started!{% endtrans %}</h2></div>
     </header>
     <div class="getStartedContentWrapper startguide">
       <div class="getStartedActivities">
@@ -20,8 +20,8 @@
               <div class="placeholder"></div>
             </div>
             <div class="getStartedText">
-              <h3>{{ 'Explore API Products'|t }}</h3>
-              <p>{{ 'Take a look at our API products and quickly find the APIs you need.'|t }}</p>
+              <h3>{% trans %}Explore API Products{% endtrans %}</h3>
+              <p>{% trans %}Take a look at our API products and quickly find the APIs you need.{% endtrans %}</p>
             </div>
           </a>
         </div>
@@ -32,14 +32,14 @@
                 <div class="placeholder"></div>
               </div>
               <div class="getStartedText">
-                <h3>{{ 'Create a new App'|t }}</h3>
-                <p>{{ 'Create an App so you can get access to our API Products and start building your application.'|t }}</p>
+                <h3>{% trans %}Create a new App{% endtrans %}</h3>
+                <p>{% trans %}Create an App so you can get access to our API Products and start building your application.{% endtrans %}</p>
               </div>
             </a>
           </div>
         {% endif %}
       </div>
-      <div class="homepageLink breadcrumb"><a href="{{ path('<front>') }}">{{ 'Take me to the homepage'|t }}
+      <div class="homepageLink breadcrumb"><a href="{{ path('<front>') }}">{% trans %}Take me to the homepage{% endtrans %}
           <svg width='16' height='14' viewBox='0 0 16 14' fill-rule='evenodd'>
             <path d='M12.6 6H0v2h12.7l-5 4.7L9 14l7-7-7-7-1.3 1.3z'></path>
           </svg>

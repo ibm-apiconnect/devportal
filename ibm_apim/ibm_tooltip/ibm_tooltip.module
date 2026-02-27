@@ -70,7 +70,7 @@ function parse_api($apiNode) {
   foreach ($apiReqs as $apiReqGroup) {
     foreach ($apiReqGroup as $reqKey => $apiReq) {
       $api_description = $apiReq['description'] ?? $apiReq['summary'] ?? '';
-      $api_description = strlen($api_description ) > 50 ? substr($api_description, 0, 50) . '...' : $api_description;
+      $api_description = mb_strlen($api_description, 'UTF-8') > 50 ? mb_substr($api_description, 0, 50, 'UTF-8') . '...' : $api_description;
       $tooltip[$nodeKey][] = [
         'key' => $reqKey,
         'summary' => $api_description === "" ? [] : [ $api_description ]
@@ -116,7 +116,7 @@ function parse_product($productNode) {
     $api_type = $api['x-ibm-configuration']['type'] ?? '';
     $api_version = $api['info']['version'] ?? '';
     $api_description = $api['info']['description'] ?? $api['info']['x-ibm-summary'] ?? '';
-    $api_description = strlen($api_description ) > 50 ? substr($api_description, 0, 50) . '...' : $api_description;
+    $api_description = mb_strlen($api_description, 'UTF-8') > 50 ? mb_substr($api_description, 0, 50, 'UTF-8') . '...' : $api_description;
     $tooltip[$node_key][] = [
       'key' => $api_name,
       'summary' => [

@@ -1,0 +1,40 @@
+--- libraries/drupal-superfish/sfsmallscreen.js	2025-11-05 13:12:59
++++ libraries/drupal-superfish/sfsmallscreen.js	2025-11-05 13:13:23
+@@ -277,16 +277,27 @@
+         // Creating the <option> elements.
+         const newMenu = toSelect(refinedMenu, 1);
+         // Creating the <select> element and assigning an ID and class name.
+-        const selectList = $('<select ' + classes + ' id="' + menuID + '-select"/>')
+-          // Attaching the title and the items to the <select> element.
+-          .html('<option>' + options.title + '</option>' + newMenu)
+-          // Attaching an event then.
+-          .change(function(){
+-            // Except for the first option that is the menu title and not a real menu item.
+-            if ($('option:selected', this).index()){
+-              window.location = selectList.val();
+-            }
+-          });
++        // Create the <select> element safely.
++        const selectList = $('<select>')
++          .addClass(classes)                // Use .addClass() instead of string concatenation
++          .attr('id', menuID + '-select');
++
++        // Add the title option safely.
++        $('<option>')
++          .text(options.title)              // .text() escapes content safely
++          .appendTo(selectList);
++
++        // Append the menu items (assuming newMenu is HTML from trusted source)
++        selectList.append(newMenu);
++
++        // Attach the change event safely.
++        selectList.on('change', function() {
++          // Except for the first option that is the menu title and not a real menu item.
++          if ($('option:selected', this).index()) {
++            window.location = selectList.val();
++          }
++        });
++
+         // Applying the addSelected option to it.
+         if (options.addSelected){
+           selectList.find('.active').attr('selected', !0);

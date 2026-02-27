@@ -1,12 +1,13 @@
 --- modules/change_pwd_page/change_pwd_page.info.yml    2024-09-03 12:43:39
 +++ modules/change_pwd_page/change_pwd_page.info.yml       2024-09-03 15:51:09
-@@ -6,5 +6,5 @@
-   - user
-
- # Information added by Drupal.org packaging script on 2016-10-28
+@@ -2,6 +2,6 @@
+ type: module
+ description: 'Provides a separate page containing a form for the current user to change their password.'
+ package: User Management
 -core_version_requirement: ^8 || ^9 || ^10
 +core_version_requirement: ^8 || ^9 || ^10 || ^11
- datestamp: 1470233791
+ dependencies:
+   - user
 
 --- modules/change_pwd_page/src/Form/ChangePasswordForm.php
 +++ modules/change_pwd_page/src/Form/ChangePasswordForm.php

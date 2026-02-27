@@ -53,7 +53,7 @@ abstract class Parser {
   public function parse($text) {
     $this->prepare();
 
-    if (ltrim($text) === '') {
+    if ($text === null || ltrim($text) === '') {
       return '';
     }
 
@@ -78,7 +78,7 @@ abstract class Parser {
   public function parseParagraph($text) {
     $this->prepare();
 
-    if (ltrim($text) === '') {
+    if ($text === null || ltrim($text) === '') {
       return '';
     }
 
@@ -386,3 +386,4 @@ abstract class Parser {
     return $block[1];
   }
 }
+

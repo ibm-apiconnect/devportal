@@ -1,0 +1,10 @@
+services:
+  ibm_csp_extension.api_endpoint_service:
+    class: Drupal\ibm_csp_extension\Service\ApiEndpointService
+    arguments: ['@entity_type.manager']
+  
+  ibm_csp_extension.policy_subscriber:
+    class: Drupal\ibm_csp_extension\EventSubscriber\CspPolicySubscriber
+    arguments: ['@ibm_csp_extension.api_endpoint_service']
+    tags:
+      - { name: event_subscriber }

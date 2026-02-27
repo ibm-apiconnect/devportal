@@ -52,9 +52,9 @@
       {% if applifecycleEnabled %}
         <div class="applicationType {{ content.application_lifecycle_state['#items'][0].value|clean_class }}">
           {% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %}
-            {{ 'Development'|t }}
+            {% trans %}Development{% endtrans %}
           {% elseif content.application_lifecycle_state['#items'][0].value|upper == 'PRODUCTION' %}
-            {{ 'Production'|t }}
+            {% trans %}Production{% endtrans %}
           {% else %}
             {{ content.application_lifecycle_state['#items'][0].value }}
           {% endif %}
@@ -70,7 +70,7 @@
         ] %}
         <div {{ my_attribute.addClass(status_classes) }}>
           <div class="apicStatusText">{% if apic_state|lower|clean_class == 'enabled' %}
-              {{ 'Enabled'|t }} {% else %} {{ 'Disabled'|t }} {% endif %}
+              {% trans %}Enabled{% endtrans %} {% else %} {% trans %}Disabled{% endtrans %} {% endif %}
           </div>
         </div>
       </div>

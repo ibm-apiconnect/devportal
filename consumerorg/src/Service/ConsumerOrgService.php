@@ -528,6 +528,14 @@ class ConsumerOrgService {
       $node->set('consumerorg_tags', $consumer->getTags());
       $this->utils->saveCustomFields($node, $this->getCustomFields(), $consumer->getCustomFields(), FALSE, FALSE);
 
+      // Store raw metadata in apic_metadata field
+      $metadata = $consumer->getMetadata();
+      if ($metadata !== NULL && !empty($metadata)) {
+        $node->set('apic_metadata', serialize($metadata));
+      } else {
+        $node->set('apic_metadata', NULL);
+      }
+
       $roles = [];
       if ($consumer->getRoles() !== NULL) {
         // Role objects need to be flattened for storage in the DB
@@ -2105,6 +2113,10 @@ class ConsumerOrgService {
             $org->addCustomField($field, $json['consumer_org']['metadata'][$field]);
           }
         }
+      }
+      // Store full raw metadata
+      if (isset($json['consumer_org']['metadata']) && is_array($json['consumer_org']['metadata'])) {
+          $org->setMetadata($json['consumer_org']['metadata']);
       }
       $roles = [];
       foreach ($json['roles'] as $role) {

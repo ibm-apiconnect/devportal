@@ -64,3 +64,10 @@ disable_forum_topic_api:
   dependencies:
     - core/jquery
     - core/drupal
+image_style_preview:
+  version: 1.x
+  js:
+    js/image_preview.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

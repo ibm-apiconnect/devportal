@@ -125,14 +125,25 @@ class GenerateTheme extends FormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $name = $form_state->getValue('name');
 
+    $reserved = [
+      'src', 'lib', 'vendor', 'assets', 'css', 'files', 'images', 'js', 'misc',
+      'templates', 'includes', 'fixtures', 'drupal',
+    ];
+
     if ($name === NULL || empty($name)) {
       $form_state->setErrorByName('name', $this->t('Sub-theme name is a required field.'));
     }
-    if (!preg_match('/^[a-z0-9_]+$/', $name)) {
-      $form_state->setErrorByName('name', $this->t('The sub-theme name can only contain the following characters: a-z0-9_'));
+    if (!preg_match('/^[a-z][a-z0-9_]*$/', $name)) {
+      $form_state->setErrorByName('name', $this->t('The sub-theme name must start with a letter and may contain only lower-case letters, numbers, and underscores.'));
     }
     if (\strlen($name) > 20) {
       $form_state->setErrorByName('name', $this->t('The sub-theme name must be less than 20 characters long.'));
+    }
+    if (in_array($name, $reserved, TRUE)) {
+      $form_state->setErrorByName(
+        'name',
+        $this->t('The sub-theme name "@name" is reserved. Please choose a different name.', ['@name' => $name])
+      );
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

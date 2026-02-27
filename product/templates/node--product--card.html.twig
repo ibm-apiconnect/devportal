@@ -17,6 +17,22 @@
   ('productVersion-' ~ content.apic_version['#items'][0].value)|clean_class,
   ('productState-' ~ content.product_state['#items'][0].value)|clean_class
 ] -%}
+{% if apiList is defined and apiList is iterable %}
+  {% set apiTypes = [] %}
+  {% for api in apiList %}
+    {% if
+      api.node is defined and
+      api.node.api_protocol is defined and
+      api.node.api_protocol[0] is defined and
+      api.node.api_protocol[0].value is defined
+    %}
+      {% set apiType = api.node.api_protocol[0].value|upper %}
+      {% if apiType not in apiTypes %}
+        {% set apiTypes = apiTypes|merge([apiType]) %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
 <article id="node-{{ node.id }}" tooltip-id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
   {% if content.apic_pathalias['#items'][0].value is defined and content.apic_pathalias['#items'][0].value is not empty %}
     {% set prodNode = content.apic_pathalias['#items'][0].value %}
@@ -32,6 +48,9 @@
       <div class="apicCardIcon">
         <img class="bx--about__icon" src="{{- placeholderUrl -}}" alt=""/>
       </div>
+      <div class="apicProductRating" role="form"  aria-label="apic-product-rating-{{ node.id }}">
+        {{ content.apic_rating }}
+      </div>
     {% endif %}
     <div class="apicProductCardMain">
       <div class="bx--about__title--name" data-toggle="tooltip" data-placement="bottom"
@@ -42,9 +61,13 @@
             <div class="apicProductCardVersion">{{- content.apic_version -}}</div>
           {% endif %}
         </a>
-      </div>
-      <div class="apicProductRating" role="form"  aria-label="apic-product-rating-{{ node.id }}">
-        {{ content.apic_rating }}
+        {% if apiTypes is defined and apiTypes|length > 0 %}
+          <span class="apicProductApiType">
+            {% for apiType in apiTypes %}
+              <span class="apiTypeLozenge">{{ apiType }}</span>
+            {% endfor %}
+          </span>
+        {% endif %}
       </div>
     </div>
     {% if content.apic_summary['#items'][0].value is defined and content.apic_summary['#items'][0].value is not empty %}
@@ -86,7 +109,7 @@
       {% endfor %}
       {% if apiCount > 6 %}
         <div class="apicProductSeeAll"><a href="{{- path('product.view', {'prodNode': prodNode}) -}}"
-                                          rel="bookmark">{{ 'View all'|t }}</a></div>
+                                          rel="bookmark">{% trans %}View all{% endtrans %}</a></div>
       {% endif %}
     </div>
   </div>

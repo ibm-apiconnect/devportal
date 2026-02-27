@@ -390,6 +390,20 @@ class Api {
           }
           $node->set('api_swagger', serialize(apic_api_remove_empty_elements($api['consumer_api'])));
 
+          // Store raw metadata in apic_metadata field
+          $metadata = NULL;
+          if (isset($api['consumer_api']['info']['metadata'])) {
+            $metadata = $api['consumer_api']['info']['metadata'];
+          } elseif (isset($api['metadata'])) {
+            $metadata = $api['metadata'];
+          }
+
+          if ($metadata !== NULL && !empty($metadata)) {
+            $node->set('apic_metadata', serialize($metadata));
+          } else {
+            $node->set('apic_metadata', NULL);
+          }
+
           // stored as base64 encoded string so can be passed through to explorer without PHP messing up empty objects / arrays
           if (!array_key_exists('encoded_consumer_api', $api) || empty($api['encoded_consumer_api'])) {
             $api['encoded_consumer_api'] = base64_encode(json_encode($api['consumer_api'], JSON_THROW_ON_ERROR));

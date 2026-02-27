@@ -68,7 +68,10 @@ class AppSubscriptionsStyle extends StylePluginBase
       if ($row_plugin) {
         foreach ($this->view->result as $row_index => $row) {
           $rendered_row = $row_plugin->render($row);
-          $rows[] = $rendered_row;
+          // Only add non-empty rows (skip subscriptions for retired/deleted products)
+          if (!empty($rendered_row)) {
+            $rows[] = $rendered_row;
+          }
         }
       }
     }

@@ -9,8 +9,8 @@
 {% if caseStudies|length > 0 %}
   <div class="featuredCaseStudies featuredCaseStudiesBlockWrapper">
     <div class="featuredCaseStudiesBlockHeader">
-      <h3>{{ 'Case studies'|t }}</h3>
-      <a href="{{ path('view.case_studies.page_1') }}">{{ 'View all'|t }}</a>
+      <h3>{% trans %}Case studies{% endtrans %}</h3>
+      <a href="{{ path('view.case_studies.page_1') }}">{% trans %}View all{% endtrans %}</a>
     </div>
       <div class="featuredCaseStudiesContainer">
         {% for caseStudy in caseStudies %}

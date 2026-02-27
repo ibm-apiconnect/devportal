@@ -41,9 +41,12 @@
    }
  
    /**
-@@ -340,13 +349,16 @@
+@@ -338,15 +347,18 @@
+         $this->unzipArchive();
+       }
  
-       $this->rootEntities = $this->getDataFromFile($this->getArchiveFilesPath() . '/' . ExportEntityWriter::ROOT_FILE_NAME . ExportEntityWriter::TYPE_EXTENSION);
+-      $this->rootEntities = $this->getDataFromFile($this->getArchiveFilesPath() . '/' . ExportEntityWriter::ROOT_FILE_NAME . ExportEntityWriter::TYPE_EXTENSION);
++      $this->rootEntities = (array) ($this->getDataFromFile($this->getArchiveFilesPath() . '/' . ExportEntityWriter::ROOT_FILE_NAME . ExportEntityWriter::TYPE_EXTENSION) ?? []);
        foreach ($this->rootEntities as &$entity) {
 -        $existingEntity = $this->globalReferenceManager->getExistingEntityByGidAndUuid($entity[ExportEntityWriter::FIELD_GID], $entity[ExportEntityWriter::FIELD_UUID]);
 -        if ($existingEntity) {

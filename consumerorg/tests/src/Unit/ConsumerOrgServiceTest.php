@@ -296,4 +296,65 @@ class ConsumerOrgServiceTest extends UnitTestCase {
       $this->utils->reveal());
   }
 
+  /**
+ * @covers ::createFromJSON
+ */
+public function testCreateFromJSONMetadataHandled(): void {
+  $json = [
+    "consumer_org" => [
+      "id" => "org-unit-test",
+      "name" => "Test Org",
+      "metadata" => [
+        "foo" => "bar",
+        "nested" => ["x" => 1],
+      ],
+    ],
+    "roles" => [],
+    "members" => [],
+  ];
+
+  // Expect metadata to be passed to storage layer
+  $this->entityTypeManager->getStorage('node')->willReturn(
+    $this->prophet->prophesize(EntityStorageInterface::class)->reveal()
+  );
+
+  // Expect metadata setter to be called on ConsumerOrgService
+  $this->utils->jsonEncode(Argument::type('array'))->willReturn(json_encode($json['consumer_org']['metadata']));
+
+  $service = $this->createService();
+
+  // Trigger the logic
+  $org = $service->createFromJSON($json);
+
+  // Assert metadata stored on ConsumerOrg object
+  $this->assertEquals([
+    "foo" => "bar",
+    "nested" => ["x" => 1],
+  ], $org->getMetadata());
+}
+
+/**
+ * @covers ::setMetadata
+ */
+public function testSetMetadataStoresJson(): void {
+  $orgId = "org-update-test";
+  $metadata = [
+    "custom_key" => "changed_value",
+    "num" => 123,
+  ];
+
+  $this->entityTypeManager->getStorage('node')->willReturn(
+    $this->prophet->prophesize(EntityStorageInterface::class)->reveal()
+  );
+
+  $this->utils->jsonEncode($metadata)->willReturn(json_encode($metadata));
+
+  $service = $this->createService();
+
+  $result = $service->setMetadata($orgId, $metadata);
+
+  $this->assertTrue($result);
+}
+
+
 }

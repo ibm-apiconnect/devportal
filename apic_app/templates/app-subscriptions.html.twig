@@ -2,16 +2,16 @@
   <div class="applicationSubscriptions">
     <div class="subscriptionsTable">
       <div class="subscriptionsHeader">
-        <div class="subscriptionsTitle">{{ 'Product subscriptions'|t }}</div>
+        <div class="subscriptionsTitle">{% trans %}Product subscriptions{% endtrans %}</div>
       </div>
       <div class="subscriptionsContent">
         <table>
           <thead>
           <tr>
-            <th id="product" class="product">{{ 'Product'|t }}</th>
-            <th id="plan" class="plan">{{ 'Plan'|t }}</th>
+            <th id="product" class="product">{% trans %}Product{% endtrans %}</th>
+            <th id="plan" class="plan">{% trans %}Plan{% endtrans %}</th>
             {% if billing_enabled == true %}
-              <th id="cost" class="cost">{{ 'Monthly Cost'|t }}</th>
+              <th id="cost" class="cost">{% trans %}Monthly Cost{% endtrans %}</th>
             {% else %}
               <th id="cost" class="cost"></th>
             {% endif %}
@@ -22,11 +22,13 @@
           <tbody>
           {% if node.subscriptions is defined and node.subscriptions is not empty %}
             {% for sub in node.subscriptions %}
+              {% set prodNode = null %}
               {% if sub.product_pathalias is defined and sub.product_pathalias is not empty %}
                 {% set prodNode = sub.product_pathalias %}
-              {% else %}
+              {% elseif sub.product_nid is defined and sub.product_nid is not empty %}
                 {% set prodNode = sub.product_nid %}
               {% endif %}
+              {% if prodNode is not null and prodNode is not empty %}
               <tr>
                 <td class="product">
                   <a href="{{ path('product.view', {'prodNode': prodNode}) }}"
@@ -36,7 +38,7 @@
                             src="{{- sub.application_image -}}" alt=""/></div>
                     {% endif %}
                     {{ sub.product_title }}
-                    {% if showVersions %}({{ sub.product_version }}){% endif %} {% if sub.state != 'enabled' %}({{ 'Pending approval'|t }}){% endif %}
+                    {% if showVersions %}({{ sub.product_version }}){% endif %} {% if sub.state != 'enabled' %}({% trans %}Pending approval{% endtrans %}){% endif %}
                   </a>
                 </td>
                 <td class="plan">{{ sub.plan_title }}</td>
@@ -66,11 +68,8 @@
                           <span class="dropit-icon">
                             <svg version="1.1" xmlns="http://www.w3.org/2000/svg"
                                  xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                                 width="32px" height="32px" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;"
+                                 width="32px" height="32px" viewBox="0 0 32 32" class="my-svg"
                                  xml:space="preserve">
-                              <style type="text/css">.st0 {
-                                  fill: none;
-                                }</style>
                               <title>overflow-menu--vertical</title>
                               <circle cx="16" cy="8" r="2"/>
                               <circle cx="16" cy="16" r="2"/>
@@ -82,12 +81,12 @@
                       <ul class="dropitmenu-submenu">
                         <li class="viewDocumentation"><a
                               href="{{ path('product.view', {'prodNode': prodNode}) }}"
-                              title="{% trans %}View documentation for {{ sub.product_title }}{% endtrans %}">{{ 'View documentation'|t }}</a>
+                              title="{% trans %}View documentation for {{ sub.product_title }}{% endtrans %}">{% trans %}View documentation{% endtrans %}</a>
                         </li>
                         {% if userHasAppManage %}
                           <li class="unsubscribe"><a
                                 href="{{ path('apic_app.unsubscribe', {'appId': node.application_id.value, 'subId': sub.subId}) }}"
-                                title="{% trans %}Unsubscribe from {{ sub.product_title }}{% endtrans %}">{{ 'Unsubscribe'|t }}</a>
+                                title="{% trans %}Unsubscribe from {{ sub.product_title }}{% endtrans %}">{% trans %}Unsubscribe{% endtrans %}</a>
                           </li>
                         {% endif %}
                       </ul>
@@ -95,13 +94,14 @@
                   </ul>
                 </td>
               </tr>
+              {% endif %}
             {% endfor %}
           {% else %}
             <tr>
               <td headers="product action {% if billing_enabled == true %} cost {% endif %} plan " colspan="5"
-                  class="noSubsFound">{{ 'No subscriptions found.'|t }} <a
+                  class="noSubsFound">{% trans %}No subscriptions found.{% endtrans %} <a
                     href="{{ path('view.products.page_1') }}"
-                    title="{{ 'Browse available APIs'|t }}">{{ 'Why not browse the available APIs?'|t }}</a>
+                    title="{% trans %}Browse available APIs{% endtrans %}">{% trans %}Why not browse the available APIs?{% endtrans %}</a>
               </td>
             </tr>
           {% endif %}

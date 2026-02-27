@@ -10,9 +10,9 @@
 <div class="apicForm">
   {% if element['#error'] %}
     <div class="apicFormHeader">
-      {{ 'Subscription Error'|t }}
+      {% trans %}Subscription Error{% endtrans %}
       <div class="apicFormText">
-        <p>{{ 'There was a problem with your subscription request. Review any error messages and try again.'|t }}</p>
+        <p>{% trans %}There was a problem with your subscription request. Review any error messages and try again.{% endtrans %}</p>
       </div>
     </div>
     <div class="apicFormFooter">
@@ -22,19 +22,19 @@
     </div>
   {% else %}
     <div class="apicFormHeader">
-    {{ 'Confirm Subscription'|t }}
+    {% trans %}Confirm Subscription{% endtrans %}
     {% if element['#planInfo']['billingInfo'] and element['#paymentMethod'] is empty %}
       <div class="apicFormText">
-        <p>{{ 'This plan requires payment.'|t }} <br>
+        <p>{% trans %}This plan requires payment.{% endtrans %} <br>
           <a class="button apicNewPaymentMethod"
-             href="{{ url('consumerorg.billing_add_payment') }}">{{ 'Click here to add a payment method and try again.'|t }}</a>
+             href="{{ url('consumerorg.billing_add_payment') }}">{% trans %}Click here to add a payment method and try again.{% endtrans %}</a>
         </p>
       </div>
     {% else %}
       {% if element['#planInfo']['billingInfo'] %}
         <p>
           {% trans %} Your default payment method is {{ element['#paymentMethod']['title'] }}.{% endtrans %}
-          <a href="{{ path('ibm_apim.billing') }}">{{ 'Click here to change your default payment method.'|t }}</a>
+          <a href="{{ path('ibm_apim.billing') }}">{% trans %}Click here to change your default payment method.{% endtrans %}</a>
         </p>
       {% endif %}
       </div>
@@ -42,11 +42,11 @@
         <table class="bx--data-table">
           <thead>
           <tr>
-            <th id="product" class="product">{{ 'Product'|t }}</th>
-            <th id="application" class="application">{{ 'Application'|t }}</th>
-            <th id="plan" class="plan">{{ 'Plan'|t }}</th>
+            <th id="product" class="product">{% trans %}Product{% endtrans %}</th>
+            <th id="application" class="application">{% trans %}Application{% endtrans %}</th>
+            <th id="plan" class="plan">{% trans %}Plan{% endtrans %}</th>
             {% if element['#planInfo']['billingInfo'] %}
-              <th id="price" class="price">{{ 'Price'|t }}</th>
+              <th id="price" class="price">{% trans %}Price{% endtrans %}</th>
             {% endif %}
 
           </tr>

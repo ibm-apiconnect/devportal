@@ -864,3 +864,43 @@ function apic_app_update_11001() {
   // Invalidate render cache to reflect config changes.
   \Drupal::service('cache.render')->invalidateAll();
 }
+
+/**
+ * Add apic_metadata field to store raw metadata from API Manager
+ * 
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_app_update_11002() {
+  // Check if field storage already exists
+  $fieldStorage = FieldStorageConfig::loadByName('node', 'apic_metadata');
+  if (!$fieldStorage) {
+    $fieldStorage = FieldStorageConfig::create([
+      'field_name' => 'apic_metadata',
+      'entity_type' => 'node',
+      'type' => 'string_long',
+      'required' => FALSE,
+      'translatable' => FALSE,
+      'cardinality' => 1,
+      'settings' => ['case_sensitive' => FALSE],
+    ]);
+    $fieldStorage->save();
+  }
+
+  // Check if field config already exists for application
+  $fieldConfig = FieldConfig::loadByName('node', 'application', 'apic_metadata');
+  if (!$fieldConfig) {
+    $fieldConfig = FieldConfig::create([
+      'field_name' => 'apic_metadata',
+      'entity_type' => 'node',
+      'bundle' => 'application',
+      'label' => t('APIC Metadata'),
+      'description' => t('Raw metadata from API Manager'),
+      'required' => FALSE,
+      'translatable' => FALSE,
+    ]);
+    $fieldConfig->save();
+  }
+  
+  \Drupal::logger('apic_app')->notice('Added apic_metadata field to application content type');
+}
+

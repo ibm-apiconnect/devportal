@@ -88,14 +88,19 @@ class UserCheckSubscriber implements EventSubscriberInterface
     $request = \Drupal::request();
     if ($request->server->has('HTTP_REFERER')) {
       $referer = $request->server->get('HTTP_REFERER');
-      $split = explode('/', $referer);
-      if (in_array(end($split), $white_list_user_not_login)) {
-        return;
+      // Parse the URL to get the path without query parameters
+      $refererPath = parse_url($referer, PHP_URL_PATH);
+      if ($refererPath) {
+        $split = explode('/', trim($refererPath, '/'));
+        $lastSegment = end($split);
+        if (in_array($lastSegment, $white_list_user_not_login)) {
+          return;
+        }
       }
     }
     if (!$request->headers->has('X-UserCheck-Redirect')) {
       $currentUser = \Drupal::currentUser();
-      $accept = $request->headers->get('Accept');
+      $accept = $request->headers->get('Accept') ?? '';
       $isXhrRequest = strpos($accept, 'application/json') !== false || $request->isXmlHttpRequest();
       $hasDestination = $request->query->has('destination');
 

@@ -14,7 +14,7 @@
 
 <div class="productMultiSelect">
   <div id="innerWrapper">
-    <p>{{ 'This API is in more than one Product. Select a Product from the list below.'|t }}</p>
+    <p>{% trans %}This API is in more than one Product. Select a Product from the list below.{% endtrans %}</p>
     <div class="productCards">
       {% for product in products %}
         {{ drupal_entity('node', product.nid, 'card') }}

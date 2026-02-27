@@ -35,7 +35,7 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>{{ 'Mail message template'|t }}</title>
+  <title>{% trans %}Mail message template{% endtrans %}</title>
 
   <style type="text/css">
     {% if css %}
@@ -59,7 +59,7 @@
             <div id="header">
               {% if logo %}
                 <a href="{{ url('<front>') }}" rel="bookmark">
-                  <img src="{{ logo }}" alt="{{ 'Site logo'|t }}"/>
+                  <img src="{{ logo }}" alt="{% trans %}Site logo{% endtrans %}"/>
                 </a>
               {% endif %}
             </div>
@@ -79,10 +79,10 @@
             <div id="footer">
               <a href="{{ url('<front>') }}" rel="bookmark">{{ drupal_config('system.site', 'name') }}</a>
               {% if tsandcs %}
-                <a href="{{ tsandcs }}" rel="bookmark">{{ 'Terms and Conditions'|t }}</a>
+                <a href="{{ tsandcs }}" rel="bookmark">{% trans %}Terms and Conditions{% endtrans %}</a>
               {% endif %}
               {% if privacy %}
-                <a href="{{ privacy }}" rel="bookmark">{{ 'Privacy Policy'|t }}</a>
+                <a href="{{ privacy }}" rel="bookmark">{% trans %}Privacy Policy{% endtrans %}</a>
               {% endif %}
             </div>
           </td>

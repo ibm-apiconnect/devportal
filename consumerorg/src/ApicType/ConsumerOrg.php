@@ -120,6 +120,12 @@ class ConsumerOrg {
   private array $custom_fields = [];
 
   /**
+   * @var array|null
+   */
+  private ?array $metadata = [];
+
+
+  /**
    * @return string
    */
   public function getName(): string {
@@ -727,6 +733,15 @@ class ConsumerOrg {
     }
     $this->custom_fields[$field] = $value;
   }
+
+  public function setMetadata(array $metadata): void {
+    $this->metadata = $metadata;
+  }
+
+  public function getMetadata(): ?array {
+      return $this->metadata;
+  }
+
 
 
 }

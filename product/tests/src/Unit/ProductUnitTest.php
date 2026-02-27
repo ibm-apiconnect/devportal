@@ -259,4 +259,30 @@ class ProductUnitTest extends UnitTestCase {
     $result = Product::getPlansThatContainApi($mockProduct, $this->apiRef);
     self::assertEquals(array($this->planName => $plan), $result);
   }
+
+    /**
+   * Tests metadata getter/setter on Product entity.
+   */
+  public function testProductMetadataStoredAndRetrieved(): void {
+    $product = new Product();
+
+    $metadata = [
+      'theme' => 'dark',
+      'test_key' => 'test_value',
+    ];
+
+    $product->setMetadata($metadata);
+
+    $this->assertEquals($metadata, $product->getMetadata());
+    $this->assertEquals('dark', $product->getMetadata()['theme']);
+  }
+
+  /**
+   * Tests metadata default value.
+   */
+  public function testProductMetadataDefaultsToEmptyArray(): void {
+    $product = new Product();
+
+    $this->assertEquals([], $product->getMetadata());
+  }
 }

@@ -24,7 +24,9 @@ class ProductNidOrPathParamConverter implements ParamConverterInterface {
     $returnValue = NULL;
     if ($value !== NULL && !empty($value)) {
       $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
-      if ((int) $value > 0) {
+      // Check if value is purely numeric (node ID) vs a string that starts with a number
+      // This prevents "1234-product-name:1.0.0" from being treated as node ID 1234
+      if (ctype_digit($value)) {
         $node = Node::load($value);
         if ($node !== NULL) {
           // ensure use the translated version of api nodes

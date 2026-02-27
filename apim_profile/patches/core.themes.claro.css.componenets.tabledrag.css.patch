@@ -1,0 +1,10 @@
+--- core/themes/claro/css/components/tabledrag.css	2025-10-10 16:12:58
++++ core/themes/claro/css/components/tabledrag.css	2025-10-10 16:12:55
+@@ -252,6 +252,7 @@
+ 
+ .tabledrag-cell-content__item {
+   padding-inline-end: var(--space-xs);
++  display: flex;
+ }
+ 
+ .tabledrag-cell-content__item:empty {

@@ -64,6 +64,30 @@ class ApicTheme extends Theme {
       throw new UpdaterException(t('Unable to parse info file: %info_file.', ['%info_file' => $info_file]));
     }
 
+    // Extract and validate machine name from info file
+    $info_file_name = basename($info_file, '.info.yml');
+    
+    // Define reserved theme names
+    $reserved = [
+      'src', 'lib', 'vendor', 'assets', 'css', 'files', 'images', 'js', 'misc',
+      'templates', 'includes', 'fixtures', 'drupal',
+    ];
+    
+    // Validate machine name format
+    if (!preg_match('/^[a-z][a-z0-9_]*$/', $info_file_name)) {
+      throw new UpdaterException(message: t('Invalid machine name: @name. Machine names must start with a lowercase letter and may contain only lowercase letters, numbers, and underscores.', ['@name' => $info_file_name]));
+    }
+    
+    // Check length
+    if (strlen($info_file_name) > 20) {
+      throw new UpdaterException(t('Invalid machine name: @name. Machine names must not exceed 20 characters.', ['@name' => $info_file_name]));
+    }
+    
+    // Check for reserved names
+    if (in_array($info_file_name, $reserved, TRUE)) {
+      throw new UpdaterException(t('Invalid machine name: @name. This name is reserved. Please choose a different name.', ['@name' => $info_file_name]));
+    }
+
     // APIC check for our functions
     $files = \Drupal::service('file_system')->scanDirectory($directory, '/(.*\.php$|.*\.module$|.*\.install$|.*\.inc$)/');
     foreach ($files as $file) {

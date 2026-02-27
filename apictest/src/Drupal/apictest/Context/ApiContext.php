@@ -761,4 +761,79 @@ class ApiContext extends RawDrupalContext {
     return $query->accessCheck()->execute();
   }
 
+  /**
+   * @Given I publish an api with metadata
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   * @throws \Exception
+   */
+  public function iPublishAnApiWithMetadata(): void {
+    // If we are not using mocks, then we are testing with live data from a management appliance
+    if ($this->useMockServices === FALSE) {
+      print "This test is running with a real management server backend. No apis will be created in the database.\n";
+      return;
+    }
+
+    // in case moderation is on we need to run as admin
+    $accountSwitcher = \Drupal::service('account_switcher');
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+    }
+
+    $name = 'test-api-metadata';
+    
+    $object = [];
+    $object['consumer_api'] = [];
+    $object['consumer_api']['info'] = [];
+    $object['consumer_api']['info']['name'] = $name;
+    $object['consumer_api']['info']['title'] = $name;
+    $object['consumer_api']['info']['x-ibm-name'] = $name;
+    $object['consumer_api']['info']['version'] = '1.0.0';
+    $object['consumer_api']['info']['description'] = 'Test API with metadata';
+    $object['consumer_api']['info']['x-pathalias'] = $name;
+    $object['consumer_api']['info']['metadata'] = [
+      'test_field' => 'test_value',
+      'nested' => ['key' => 'value'],
+      'custom_data' => 'custom_value',
+    ];
+    $object['id'] = 'metadata-test-api-id';
+    $object['url'] = 'https://localhost.com/metadata-test';
+    $object['created_at'] = '2021-02-26T12:18:58.995Z';
+    $object['updated_at'] = '2021-02-26T12:18:58.995Z';
+    $object['consumer_api']['x-ibm-configuration'] = [];
+    $object['consumer_api']['x-ibm-configuration']['type'] = 'rest';
+    $object['consumer_api']['x-ibm-configuration']['enforced'] = TRUE;
+    $object['encoded_consumer_api'] = base64_encode(json_encode($object['consumer_api'], JSON_THROW_ON_ERROR));
+
+    $api = new Api();
+    $nid = $api->create($object);
+
+    if (isset($originalUser) && (int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchBack();
+    }
+
+    if ((int) $nid >= 0) {
+      // Verify metadata was serialized correctly
+      $node = Node::load($nid);
+      
+      if ($node !== NULL) {
+        $serializedMetadata = $node->get('apic_metadata')->value;
+        
+        if ($serializedMetadata !== NULL && !empty($serializedMetadata)) {
+          $metadata = unserialize($serializedMetadata);
+          
+          if (is_array($metadata) && isset($metadata['test_field']) && $metadata['test_field'] === 'test_value') {
+            print("API created with properly serialized metadata (nid: $nid)\n");
+          } else {
+            throw new \Exception("Metadata was not properly serialized");
+          }
+        } else {
+          throw new \Exception("Metadata was not stored in apic_metadata field");
+        }
+      }
+    } else {
+      throw new \Exception("Failed to create API with metadata");
+    }
+  }
+
 }

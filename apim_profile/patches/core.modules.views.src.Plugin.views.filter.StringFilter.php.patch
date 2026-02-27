@@ -1,0 +1,10 @@
+--- core/modules/views/src/Plugin/views/filter/StringFilter.php	2025-11-12 21:53:29
++++ core/modules/views/src/Plugin/views/filter/StringFilter.php	2025-11-27 13:19:18
+@@ -267,6 +267,7 @@
+     // not rendered, we can't render dependencies; instead we only
+     // render the form items we need.
+     $which = 'all';
++    $source = '';
+     if (!empty($form['operator'])) {
+       $source = ':input[name="options[operator]"]';
+     }

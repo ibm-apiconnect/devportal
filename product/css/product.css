@@ -36,6 +36,23 @@
   display: none;
 }
 
+.apiTypeLozenge {
+  display: inline-block;
+  background-color: #e0e0e0;
+  color: #333; 
+  padding: 0.2em 0.6em; 
+  border-radius: 1em;
+  font-size: 0.75em; 
+  text-transform: uppercase;
+  margin-right: 5px;
+  white-space: nowrap; 
+}
+
+.apicProductApiType {
+  display: block;
+  margin-top: 4px;
+}
+
 .apicProduct .field.field--name-product-version {
   margin: 0;
 }
@@ -181,6 +198,7 @@ h1.apiName {
   flex: 0.05 0 auto;
   -ms-flex: 0.05 0 100px;
   min-width: 100px;
+  max-height: 2rem;
 }
 
 .apicProductRating .field,
@@ -188,6 +206,14 @@ h1.apiName {
 .apicProductRating .form-item {
   margin-bottom: 0;
 }
+
+.apicProductRating .br-widget {
+ display: flex;
+}
+
+.apicProductRating .br-widget a {
+  margin-top: 6px;
+ }
 
 .apicApiCount {
   font-size: 1.1rem;
@@ -378,7 +404,7 @@ ul.apicProductApiList {
 }
 
 .productApiWrapper .titleInnerWrapper .leftTitle {
-  width: calc(100% - 12rem);
+  width: calc(100% - 24rem);
 }
 
 .apicApiState {
@@ -426,7 +452,7 @@ ul.apicProductApiList {
 
 .apicTwistieIcon {
   display: inline-block;
-  transition: 0.2s ease-in-out;
+  width: 10px;
 }
 
 .apicTwistieIcon .fa {
@@ -435,7 +461,7 @@ ul.apicProductApiList {
   transition: .2s;
 }
 
-.apicTwistieIcon .fa.flip {
+.apicTwistieIcon svg.flip {
   transform: rotate(-180deg);
 }
 
@@ -812,7 +838,7 @@ div[class*="planColumn"]:not(:last-of-type) {
   border: none;
   box-shadow: none;
   min-width: 20rem;
-  height: 300px;
+  height: 310px;
   max-width: 20rem;
 }
 
@@ -858,7 +884,10 @@ div[class*="planColumn"]:not(:last-of-type) {
 
 .bx--card .apicProductCardMain .apicProductName {
   padding-right: 0.625rem;
-  max-width: 10rem;
+  max-width: 15rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
 .bx--card .apicProductCardMain .apicProductName span {
@@ -885,13 +914,19 @@ div[class*="planColumn"]:not(:last-of-type) {
 }
 
 .bx--card .apicProductDesc {
-  height: 2.5rem;
+  height: 3em;
   overflow: hidden;
   text-overflow: ellipsis;
   font-family: IBMPlexSans, 'IBM Plex Sans', sans-serif;
   font-size: 0.875rem;
   letter-spacing: 0.16px;
   line-height: 20px;
+  position: absolute;
+  top: 135px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  width: 290px;
 }
 
 .bx--card .apicProductCardApi {
@@ -903,7 +938,7 @@ div[class*="planColumn"]:not(:last-of-type) {
 
 .node--type-product .apicProductAPIs {
   position: absolute;
-  top: 150px;
+  top: 180px;
 }
 
 .bx--card .apicProductSeeAll {

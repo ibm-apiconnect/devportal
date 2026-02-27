@@ -37,6 +37,7 @@ use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\Core\StreamWrapper\PrivateStream;
 use Drupal\Core\StreamWrapper\TemporaryStream;
 use Drupal\views\Views;
+use Drupal\Core\Messenger\MessengerInterface;
 
 /**
  * Implementation of hook_init().
@@ -1275,6 +1276,8 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
           \Drupal::messenger()->addWarning(t(
             'Content Security Policy (CSP) is currently enforced. This may restrict certain features, such as Social media views, asynchronous APIs in Explorer and image uploads in CKEditor.'
           ));
+        } else {
+          \Drupal::messenger()->deleteByType(MessengerInterface::TYPE_WARNING);
         }
       }
       break;

@@ -9723,7 +9723,6 @@ html.js .ajax-new-content:empty {
 .bx--card .apicApiCount {
   border-top: 1px solid #ffffff;
   margin: 0 1rem;
-  padding: 1rem 0;
 }
 
 .bx--card .votingapi-widgets .form-item {
@@ -10958,6 +10957,14 @@ input[type="checkbox"].bx--checkbox {
 
 .bx--global-light-ui .field--type-text-with-summary .form-textarea-wrapper {
   clear: both;
+}
+
+.bx--global-light-ui .field--type-text-with-summary,
+.bx--global-light-ui .field--type-text-long,
+.bx--global-light-ui .field--type-string-long {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .context-user-login .form-actions .button.button--primary,

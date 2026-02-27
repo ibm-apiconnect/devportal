@@ -9,7 +9,7 @@
 #}
 {{ attach_library('mail_subscribers/basic') }}
 <div class="apicWizardMain">
-  <div class="apicWizardHeader">{{ 'Summary' |t }}</div>
+  <div class="apicWizardHeader">{% trans %}Summary{% endtrans %}</div>
   <form {{ attributes }}>
     {{ children }}
   </form>

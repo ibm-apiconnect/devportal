@@ -48,7 +48,7 @@
       {% set multipleRates = false %}
       {% set requireApproval = false %}
       <div class="field plans">
-        <h3 class="field__label label">{{ 'Plans'|t }}</h3>
+        <h3 class="field__label label">{% trans %}Plans{% endtrans %}</h3>
         <div class="subHeading">
         </div>
 
@@ -67,10 +67,10 @@
                   </svg>
                 </span>
                 <div class="alert-text-wrapper">
-                  <h4 class="sr-only">{{ 'Informative message'|t }}</h4>
+                  <h4 class="sr-only">{% trans %}Informative message{% endtrans %}</h4>
                   <ul class="item-list item-list--messages">
                     <li class="item item--message">
-                      {{ 'Only users with the required permissions can select plans'|t }}
+                      {% trans %}Only users with the required permissions can select plans{% endtrans %}
                     </li>
                   </ul>
                 </div>

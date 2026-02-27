@@ -356,6 +356,13 @@ class ApplicationService {
         $this->utils->saveCustomFields($node, $customFields, $app['metadata'], TRUE, FALSE);
       }
 
+      // Store raw metadata in apic_metadata field
+      if (isset($app['metadata']) && !empty($app['metadata'])) {
+        $node->set('apic_metadata', serialize($app['metadata']));
+      } else {
+        $node->set('apic_metadata', NULL);
+      }
+
       // ensure this application links to all its subscriptions
       $query = \Drupal::entityQuery('apic_app_application_subs');
       $query->condition('app_url', $app['url']);

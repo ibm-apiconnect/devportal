@@ -61,3 +61,12 @@ drupal.message:
   version: VERSION
   js:
     js/message.js: {}
+
+fix-tabledrag:
+  version: 1.x
+  js:
+    js/fix-tabledrag.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once

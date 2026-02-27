@@ -19,9 +19,9 @@
     <div class='apic-portal-title'>{{ site_name }}</div>
     <h3 class='apic-user-form-header'>
       {% if user_managed_registry_present %}
-        {{ 'Reset password'|t }}
+        {% trans %}Reset password{% endtrans %}
       {% else %}
-        {{ 'Reset \'admin\' password'|t }}
+        {% trans %}Reset 'admin' password{% endtrans %}
       {% endif %}
     </h3>
     <form{{ attributes }}>
@@ -56,7 +56,7 @@
 
             <div class='apic-user-form-or-container'>
               <div class='apic-user-form-line'></div>
-              <div class='apic-user-form-or'>{{ 'or'|t }}</div>
+              <div class='apic-user-form-or'>{% trans %}or{% endtrans %}</div>
               <div class='apic-user-form-line'></div>
             </div>
             <div class='apic-user-form-inner-wrapper apic-user-form-registries'>
@@ -71,7 +71,7 @@
     </form>
     <div class='apic-user-form-footer'>
       <div class='apic-user-form-text'>
-        <a href=" {{ path('user.login') }} ">{{ 'Back to Sign in'|t }}</a>
+        <a href=" {{ path('user.login') }} ">{% trans %}Back to Sign in{% endtrans %}</a>
       </div>
     </div>
   </div>

@@ -13,7 +13,7 @@
 {% if productCaseStudies|length > 0 %}
   <div class="productcasestudy">
     <div class="field product-case-study">
-      <h3 class="field__label label">{{ 'Case Studies'|t }}</h3>
+      <h3 class="field__label label">{% trans %}Case Studies{% endtrans %}</h3>
         <div class="productcasestudyCards">
           {% for nid in productCaseStudies %}
             {{ drupal_entity('node', nid, 'card') }}

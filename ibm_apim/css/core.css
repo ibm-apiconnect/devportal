@@ -5,6 +5,16 @@
   white-space: normal;
 }
 
+.apicProductCardApi {
+  width: 270px;
+}
+
+.apicProductCardApi.apicTruncate {
+  display: block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
 .apicFade {
   position: relative;
   overflow: hidden;
@@ -492,7 +502,19 @@ ul.analyticsAppSelector li.selected {
   margin-left: auto;
   margin-right: auto;
   max-width: 95%;
-  z-index: 10000;
+}
+
+.ui-dialog.ui-dialog-buttons,
+.ui-dialog.ui-front {
+  --jui-dialog-z-index: 100001;
+  z-index: 100001;
+}
+
+/* More specific selector to ensure modal appears above admin toolbar */
+.ui-dialog.ui-corner-all.ui-widget.ui-front,
+body.toolbar-fixed .ui-dialog.ui-corner-all.ui-widget.ui-front,
+body.toolbar-loading .ui-dialog.ui-corner-all.ui-widget.ui-front {
+  z-index: 100001;
 }
 
 .context-subscription #edit-submit,
@@ -1489,3 +1511,20 @@ span.cron-description__run-cron a {
 .apicNoContent .noContentImage svg .cls-19 { fill: url(#linear-gradient-3); }
 .apicNoContent .noContentImage svg .cls-20 { fill: #dbdbdb; }
 .apicNoContent .noContentImage svg .cls-21 { filter: url(#luminosity-noclip); }
+
+.apicMyOrgNoMembers .noMembersImage svg .cls-1{fill:#a3a3a3;}
+.apicMyOrgNoMembers .noMembersImage svg .cls-2{fill:url(#linear-gradient);}
+.apicMyOrgNoMembers .noMembersImage svg .cls-3{fill:#6f6f6f;}.cls-4{fill:#bdbdbd;}
+.apicMyOrgNoMembers .noMembersImage svg .cls-5{fill:#8b8b8b;}
+.apicMyOrgNoMembers .noMembersImage svg .cls-6{fill:url(#linear-gradient-2);}
+.apicMyOrgNoMembers .noMembersImage svg .cls-7{fill:url(#linear-gradient-3);}
+.apicMyOrgNoMembers .noMembersImage svg .cls-8{fill:#dbdbdb;}
+
+
+.apicMyOrg .dropit-icon #icon {
+  enable-background: new 0 0 32 32;
+}
+
+.apicMyOrg .dropit-icon #icon .st0 {
+  fill: none;
+}

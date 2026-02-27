@@ -1,0 +1,5 @@
+name: API Catalog
+type: module
+description: 'Provides a linkset format API catalog according to RFC 9727'
+core_version_requirement: ^10 || ^11
+package: 'IBM API Developer Portal'

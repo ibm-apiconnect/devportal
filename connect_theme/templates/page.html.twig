@@ -123,7 +123,7 @@
       page.sidebar_second and page.sidebar_first is empty ? 'col-sm-9',
       page.sidebar_first is empty and page.sidebar_second is empty ? 'col-sm-12'
       ] %}
-      <section{{ content_attributes.addClass(content_classes) }} aria-label="{{ 'Main content'|t }}">
+      <section{{ content_attributes.addClass(content_classes) }} aria-label="{% trans %}Main content{% endtrans %}">
 
         {# Highlighted #}
         {% if page.highlighted %}

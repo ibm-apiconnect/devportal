@@ -1,0 +1,29 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ * IBM CSP Extension module file.
+ */
+
+/**
+ * Implements hook_modules_installed().
+ */
+function ibm_csp_extension_modules_installed($modules) {
+  // If CSP module is installed, ensure our module is also enabled
+  if (in_array('csp', $modules) && !\Drupal::moduleHandler()->moduleExists('ibm_csp_extension')) {
+    // This module should already be enabled since it's a dependency of CSP,
+    // but this is an extra safety measure
+    \Drupal::service('module_installer')->install(['ibm_csp_extension']);
+  }
+}

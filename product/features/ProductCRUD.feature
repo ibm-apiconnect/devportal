@@ -14,3 +14,6 @@ Feature: ProductCRUD
   Scenario: Create product, do not create category taxonomies
     Given I publish a product with the name "product_@now" and categories "Animals / Fluffy / Cat" and create_taxonomies_from_categories is false
     Then I should have a product with name "product_@now" and no taxonomies for the categories "Animals / Fluffy / Cat"
+
+  Scenario: Create product with metadata serialization
+    Given I publish a product with metadata

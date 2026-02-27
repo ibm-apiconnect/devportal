@@ -19,7 +19,7 @@
 <div class='apic-user-form apic-user-form-register {{ ur_count_class }} {{ ur_managed_class }}'>
   <div class='apic-register-wrapper'>
     <div class='apic-portal-title'>{{ site_name }}</div>
-    <h3 class='apic-user-form-header'>{{ 'Sign up'|t }}</h3>
+    <h3 class='apic-user-form-header'>{% trans %}Sign up{% endtrans %}</h3>
     {% if element['#message'] and element['#message']['message'] %}
       <div class='apic-user-form-text'>{{ element['#message']['message'] }}</div>
     {% endif %}
@@ -41,7 +41,7 @@
 
             <div class='apic-user-form-or-container'>
               <div class='apic-user-form-line'></div>
-              <div class='apic-user-form-or'>{{ 'or'|t }}</div>
+              <div class='apic-user-form-or'>{% trans %}or{% endtrans %}</div>
               <div class='apic-user-form-line'></div>
             </div>
             <div class='apic-user-form-inner-wrapper apic-user-form-registries'>
@@ -54,8 +54,8 @@
     </form>
     <div class='apic-user-form-footer'>
       <div class='apic-user-form-text'>
-        {{ 'Already have an account?'|t }}
-        <a href=" {{ path('user.login') }} ">{{ 'Sign in'|t }}</a>
+        {% trans %}Already have an account?{% endtrans %}
+        <a href=" {{ path('user.login') }} ">{% trans %}Sign in{% endtrans %}</a>
       </div>
 
     </div>

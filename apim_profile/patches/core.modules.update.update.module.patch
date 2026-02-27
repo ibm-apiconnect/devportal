@@ -31,3 +31,4 @@
 +    \Drupal::service('file_system')->scanDirectory($directory, '/.*/', ['callback' => 'update_delete_file_if_stale', 'recurse' => FALSE]);
    }
  }
+ 

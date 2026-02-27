@@ -272,7 +272,7 @@ class IbmApimThemeInstallController extends ThemeController {
     if (isset($theme)) {
       $themes = $this->themeHandler->listInfo();
       // this theme is using scss and may need it build into css
-      $theme_path = \Drupal::service('extension.list.theme')->getPath($themes[$theme]->info['name']);
+      $theme_path = \Drupal::service('extension.list.theme')->getPath($theme);
       $filename = $theme_path . '/compile-scss.yml';
       if (file_exists($filename)) {
         $scss_compile_settings = yaml_parse_file($filename);

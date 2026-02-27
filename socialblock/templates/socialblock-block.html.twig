@@ -30,10 +30,10 @@
                 {% if post.isTwitter %}
                   <a href="https://twitter.com/{{ post.handle }}/statuses/{{ post.tweet_id }}" target="_blank"
                     rel="noopener"
-                    class="bird" title="{{ 'Open this tweet'|t }}"></a>
+                    class="bird" title="{% trans %}Open this tweet{% endtrans %}"></a>
                   <div class="tweet_timestamp">{{ post.timestamp }}</div>
                 {% elseif post.isTwitter is not defined or not post.isTwitter %}
-                  <a href="https://bsky.app/profile/{{ post.handle }}/post/{{ post.tweet_id }}" target="_blank" rel="noopener" class="bsky" title="{{ 'Open this tweet'|t }}"></a>
+                  <a href="https://bsky.app/profile/{{ post.handle }}/post/{{ post.tweet_id }}" target="_blank" rel="noopener" class="bsky" title="{% trans %}Open this tweet{% endtrans %}"></a>
                   <div class="tweet_timestamp">{{ post.timestamp }}</div>
                 {% endif %}
               </div>
@@ -50,7 +50,7 @@
             <div class="forum_info">
               <div class="forum_title"><a href="{{ post.url }}" class="title"
                                           title="{{ post.title }}">{{ post.title }}</a></div>
-              <div class="forum_icon"><a href="{{ post.url }}" class="speechbubble" title="{{ 'Open this post'|t }}">
+              <div class="forum_icon"><a href="{{ post.url }}" class="speechbubble" title="{% trans %}Open this post{% endtrans %}">
                   <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                        xml:space="preserve">
 <g>

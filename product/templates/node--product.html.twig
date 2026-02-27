@@ -21,7 +21,7 @@
   <div class="apicProduct">
     <header class="node__header--has-meta node__header apicProductHeader">
       <div class="breadcrumb">
-        <a href="{{ path('view.products.page_1') }}">{{ 'Products'|t }}</a> /
+        <a href="{{ path('view.products.page_1') }}">{% trans %}Products{% endtrans %}</a> /
       </div>
       <div class="apicProductTitle">
         {% if content.apic_image is defined and content.apic_image|render|trim is not empty %}
@@ -100,7 +100,7 @@
               <li class="bx--side-nav__menu-item tocItem docItem truncate embeddedDocNavLink apisandplans">
                 <a href="#"
                    class="bx--side-nav__link {% if 'apisandplans' is same as(initial_embeddeddoc) %}selected{% endif %}"
-                   data-page="apisandplans"><span class="bx--side-nav__link-text">{{ 'APIs and Plans'|t }}</span></a>
+                   data-page="apisandplans"><span class="bx--side-nav__link-text">{% trans %}APIs and Plans{% endtrans %}</span></a>
               </li>
             </ul>
           </div>
@@ -153,7 +153,7 @@
           </div>
           {% if docpages is defined and docpages is not empty %}
             <div class="customDocPages">
-              <div class="field--label">{{ 'Documentation'|t }}</div>
+              <div class="field--label">{% trans %}Documentation{% endtrans %}</div>
               <div class="field--item">
                 {% for docpage in docpages %}
                   <div class="docPage {{ docpage.title|clean_class }}">
@@ -183,11 +183,11 @@
           {% endif %}
           <div class="field apis">
             <div class="apis-header">
-              <h3 class="field__label label">{{ 'APIs'|t }}</h3>
+              <h3 class="field__label label">{% trans %}APIs{% endtrans %}</h3>
               <div class="api-download-link">
                 <a href="{{ path('product.download_api_specs', {'product_id': node.id}) }}"
                    class="button button--primary  btn-sm">
-                  {{ 'Download API Specs (zip)'|t }}
+                  {% trans %}Download API Specs (zip){% endtrans %}
                 </a>
               </div>
             </div>
@@ -200,7 +200,7 @@
             {% set multipleRates = false %}
             {% set requireApproval = false %}
             <div class="field plans">
-              <h3 class="field__label label">{{ 'Plans'|t }}</h3>
+              <h3 class="field__label label">{% trans %}Plans{% endtrans %}</h3>
               <div class="subHeading">
                 {% if not userLoggedIn %}
                   <div class="notLoggedIn">
@@ -228,7 +228,7 @@
           {% endif %}
           {% if content.product_contact_name['#items'][0].value is defined or content.product_contact_email['#items'][0].value is defined or content.product_contact_url['#items'][0].value is defined %}
             <div class="field contact">
-              <h3 class="field__label label productive-heading-03">{{ 'Contact information'|t }}</h3>
+              <h3 class="field__label label productive-heading-03">{% trans %}Contact information{% endtrans %}</h3>
 
               <div class="apicProductContactInformation">
 
@@ -237,7 +237,7 @@
                 {% endif %}
                 {% if content.product_contact_email['#items'][0].value is defined %}
                   <div class="contactEmail"><a
-                        href="mailto:{{- content.product_contact_email['#items'][0].value -}}">{{ 'email'|t }}</a>
+                        href="mailto:{{- content.product_contact_email['#items'][0].value -}}">{% trans %}email{% endtrans %}</a>
                   </div>
                 {% endif %}
                 {% if content.product_contact_url['#items'][0].value is defined %}
@@ -251,10 +251,10 @@
           {% endif %}
           {% if content.product_terms_of_service['#items'][0].value is defined %}
             <div class="field apicProductTermsOfService">
-              <h3 class="field__label label">{{ 'Terms of Service'|t }}</h3>
+              <h3 class="field__label label">{% trans %}Terms of Service{% endtrans %}</h3>
               <a role="button" class="collapsed " data-toggle="collapse" href="#collapseTos" aria-expanded="false"
                  aria-controls="collapseTos">
-                <svg class="svg-inline--fa fa-angle-down flip" data-twistieheaderid="twistie_header" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="angle-down" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg=""><path fill="currentColor" d="M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z"></path></svg>
+                <svg class="svg-inline--fa fa-angle-down flip" data-twistieheaderid="twistie_header" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="angle-down" role="img" xmlns="http://www.w3.org/2000/svg" height="16" width="16" viewBox="0 0 448 512" data-fa-i2svg=""><path fill="currentColor" d="M201.4 374.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 306.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z"></path></svg>
               </a>
               <div class="tosContainer">
                 <div class="collapse termsOfService" id="collapseTos"
@@ -264,7 +264,7 @@
           {% endif %}
           {% if content.product_license_url['#items'][0].value is defined %}
             <div class="field apicProductLicense">
-              <h3 class="field__label label">{{ 'License'|t }}</h3>
+              <h3 class="field__label label">{% trans %}License{% endtrans %}</h3>
               <div class="licenseName"><a href="{{- content.product_license_url['#items'][0].value -}}"
                                           target="_blank"
                                           rel="noopener">{{ content.product_license_name['#items'][0].value }}</a>

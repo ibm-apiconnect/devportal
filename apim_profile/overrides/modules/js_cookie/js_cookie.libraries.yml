@@ -1,0 +1,9 @@
+js-cookie:
+  remote: https://github.com/js-cookie/js-cookie
+  version: '3.0.5'
+  license:
+    name: MIT
+    url: https://raw.githubusercontent.com/js-cookie/js-cookie/v3.0.5/LICENSE
+    gpl-compatible: true
+  js:
+    /libraries/js-cookie/dist/js.cookie.min.js: { minified: true }

@@ -1,0 +1,7 @@
+api_catalog.api_catalog:
+  path: '/.well-known/api-catalog'
+  defaults:
+    _controller: '\Drupal\api_catalog\Controller\ApiCatalogController::getApiCatalog'
+    _title: 'API Catalog'
+  requirements:
+    _permission: 'access content'

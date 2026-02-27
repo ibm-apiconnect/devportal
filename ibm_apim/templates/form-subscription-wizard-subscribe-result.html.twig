@@ -11,9 +11,9 @@
 <div class="apicForm {{ errorClass }}">
   <div class="apicFormHeader">
     {% if element['#error'] %}
-      <div class="error">{{ 'Subscription Error'|t }}</div>
+      <div class="error">{% trans %}Subscription Error{% endtrans %}</div>
     {% else %}
-      <div class="success">{{ 'Subscription Complete'|t }}</div>
+      <div class="success">{% trans %}Subscription Complete{% endtrans %}</div>
     {% endif %}
     <p>{{ element['#messages'].statusText }}</p>
   </div>
@@ -22,11 +22,11 @@
       <table class="bx--data-table">
         <thead>
         <tr>
-          <th id="product" class="product">{{ 'Product'|t }}</th>
-          <th id="application" class="application">{{ 'Application'|t }}</th>
-          <th id="plan" class="plan">{{ 'Plan'|t }}</th>
+          <th id="product" class="product">{% trans %}Product{% endtrans %}</th>
+          <th id="application" class="application">{% trans %}Application{% endtrans %}</th>
+          <th id="plan" class="plan">{% trans %}Plan{% endtrans %}</th>
           {% if element['#subscriptionDetails'].price %}
-            <th id="price" class="price">{{ 'Price'|t }}</th>
+            <th id="price" class="price">{% trans %}Price{% endtrans %}</th>
           {% endif %}
         </tr>
         </thead>
@@ -61,7 +61,7 @@
     <div class="apicFormFooter">
       {% if element['#subscriptionDetails'].referer is defined %}
         <a class="button"
-           href="{{ element['#subscriptionDetails'].referer }}">{{ 'Done'|t }}</a>
+           href="{{ element['#subscriptionDetails'].referer }}">{% trans %}Done{% endtrans %}</a>
       {% endif %}
     </div>
     {% if element['#productRecommendations'] %}

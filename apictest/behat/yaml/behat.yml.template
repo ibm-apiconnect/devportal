@@ -23,6 +23,7 @@ default:
         - Drupal\apictest\Context\ApiContext
         - Drupal\apictest\Context\ConsumerOrgContext
         - Drupal\apictest\Context\UserRegistryContext
+        - Drupal\apictest\Context\EntityAutocompleteContext
         - Drupal\DrupalExtension\Context\MinkContext
         - Drupal\DrupalExtension\Context\MessageContext
         - Drupal\DrupalExtension\Context\DrushContext

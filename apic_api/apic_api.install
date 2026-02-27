@@ -1320,3 +1320,43 @@ function apic_api_update_dependencies(): array {
     ],
   ];
 }
+
+/**
+ * Add apic_metadata field to store raw metadata from API Manager
+ * 
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_api_update_10006() {
+  // Check if field storage already exists
+  $fieldStorage = FieldStorageConfig::loadByName('node', 'apic_metadata');
+  if (!$fieldStorage) {
+    $fieldStorage = FieldStorageConfig::create([
+      'field_name' => 'apic_metadata',
+      'entity_type' => 'node',
+      'type' => 'string_long',
+      'required' => FALSE,
+      'translatable' => FALSE,
+      'cardinality' => 1,
+      'settings' => ['case_sensitive' => FALSE],
+    ]);
+    $fieldStorage->save();
+  }
+
+  // Check if field config already exists for api
+  $fieldConfig = FieldConfig::loadByName('node', 'api', 'apic_metadata');
+  if (!$fieldConfig) {
+    $fieldConfig = FieldConfig::create([
+      'field_name' => 'apic_metadata',
+      'entity_type' => 'node',
+      'bundle' => 'api',
+      'label' => t('APIC Metadata'),
+      'description' => t('Raw metadata from API Manager'),
+      'required' => FALSE,
+      'translatable' => FALSE,
+    ]);
+    $fieldConfig->save();
+  }
+  
+  \Drupal::logger('apic_api')->notice('Added apic_metadata field to api content type');
+}
+

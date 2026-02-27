@@ -369,6 +369,41 @@ function ibm_apim_update_10801() {
   \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->set('product_recommendations', [ 'enabled' => false, 'count' => 3])->save();
 }
 
+/**
+ * Fix CSP settings configuration structure by reinstalling the CSP module.
+ *
+ * This ensures that the CSP settings are properly structured with 'enforce.enable'
+ * instead of just 'enforce' set to false.
+ */
+function ibm_apim_update_11101() {
+  
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  $config = \Drupal::configFactory()->getEditable('csp.settings');
+  if ($config) {
+    $enforce = $config->get('enforce');
+    
+    // Check if 'enforce' is a boolean value or an array without 'enable' key (invalid structure)
+    if (is_bool($enforce) || (is_array($enforce) && !array_key_exists('enable', $enforce))) {
+      \Drupal::logger('ibm_apim')->notice('Fixing invalid CSP settings structure by reinstalling the CSP module');
+      
+      // Uninstall the CSP module
+      \Drupal::service('module_installer')->uninstall(['csp']);
+      
+      // Delete any remaining configuration
+      $config->delete();
+      
+      // Reinstall the CSP module to get fresh configuration
+      \Drupal::service('module_installer')->install(['csp']);
+      
+      \Drupal::logger('ibm_apim')->notice('CSP module has been reinstalled with correct configuration structure');
+    }
+  }
+}
+
 function ibm_apim_removeConfigDependency($config, $dep) {
   try {
     $key = 'dependencies.config';

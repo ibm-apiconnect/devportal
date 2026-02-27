@@ -24,7 +24,7 @@
           <div class="rightTitle">
             <div class="extraMenu apicMyOrgActions">
               <ul class="overflow-menu organizationMenu dropitmenu">
-                <li title="{{ 'Manage organization'|t }}"><a href="#" class="trigger">
+                <li title="{% trans %}Manage organization{% endtrans %}"><a href="#" class="trigger">
                   <span class="dropit-icon">
                   <svg version="1.1" id="icon" xmlns="http://www.w3.org/2000/svg"
                        xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
@@ -40,21 +40,21 @@
                   <ul class="dropitmenu-submenu">
                     {% if myorg_can_rename_org %}
                       <li class="editOrganizationName">
-                        <a href="{{ url('consumerorg.update') }}" title="{{ 'Edit organization'|t }}">
-                          {{ 'Edit organization'|t }}
+                        <a href="{{ url('consumerorg.update') }}" title="{% trans %}Edit organization{% endtrans %}">
+                          {% trans %}Edit organization{% endtrans %}
                         </a>
                       </li>
                     {% endif %}
                     {% if myorg_can_transfer_owner and myorg_members|length > 0 %}
                       <li class="changeOrganizationOwner">
-                        <a href="{{ url('consumerorg.changeowner') }}" title="{{ 'Change organization owner'|t }}">
-                          {{ 'Change organization owner'|t }}</a>
+                        <a href="{{ url('consumerorg.changeowner') }}" title="{% trans %}Change organization owner{% endtrans %}">
+                          {% trans %}Change organization owner{% endtrans %}</a>
                       </li>
                     {% endif %}
                     {% if myorg_can_delete_org %}
                       <li class="deleteOrganization">
-                        <a href="{{ url('consumerorg.delete') }}" title="{{ 'Delete organization'|t }}">
-                          {{ 'Delete organization'|t }}</a>
+                        <a href="{{ url('consumerorg.delete') }}" title="{% trans %}Delete organization{% endtrans %}">
+                          {% trans %}Delete organization{% endtrans %}</a>
                       </li>
                     {% endif %}
                   </ul>
@@ -66,20 +66,20 @@
         {% if edit_mode %}
           <div class="organizationTabs">
             <ul role="tablist">
-              <li role="tab" class="orgManage selected" aria-selected="true" tabindex="-1"><a href="#">{{ 'Manage'|t }}</a></li>
+              <li role="tab" class="orgManage selected" aria-selected="true" tabindex="-1"><a href="#">{% trans %}Manage{% endtrans %}</a></li>
               {% if analytics_access %}
                 <li role="tab" class="orgAnalytics" aria-selected="false" tabindex="0">
-                  <a href="{{- path('ibm_apim.analytics') -}}">{{ 'Analytics'|t }}</a>
+                  <a href="{{- path('ibm_apim.analytics') -}}">{% trans %}Analytics{% endtrans %}</a>
                 </li>
               {% endif %}
               {% if billing_access %}
                 <li role="tab" class="orgBilling" aria-selected="false" tabindex="0">
-                  <a href="{{- path('ibm_apim.billing') -}}">{{ 'Billing'|t }}</a>
+                  <a href="{{- path('ibm_apim.billing') -}}">{% trans %}Billing{% endtrans %}</a>
                 </li>
               {% endif %}
               {% if notifications_access %}
               <li role="tab" class="orgActivity" aria-selected="false" tabindex="0">
-                <a href="{{- path('ibm_apim.activity') -}}">{{ 'Notifications'|t }}</a>
+                <a href="{{- path('ibm_apim.activity') -}}">{% trans %}Notifications{% endtrans %}</a>
               </li>
               {% endif %}
               {% if tabs is not empty %}
@@ -123,19 +123,19 @@
                 {{ myorg_owner.name }}
               </h5>
               <span class="apicUserMail">{{ myorg_owner.details }}</span>
-              <mark class="ownerTag">{{ 'Owner'|t }}</mark>
+              <mark class="ownerTag">{% trans %}Owner{% endtrans %}</mark>
             </div>
           </div>
         </div>
       </div>
       <div class="memberSection">
         <div class="memberHeader">
-          <h3>{{ 'Members'|t }}</h3>
+          <h3>{% trans %}Members{% endtrans %}</h3>
           {% if edit_mode and myorg_has_member_manage_perm and consumer_org_invitation_enabled %}
             <div class="apicNewUserWrapper">
               <a class="button apicNewUser orgInvite" href="{{ url('consumerorg.invite') }}"
-                 title="{{ 'Invite other users to join your consumer organization'|t }}">
-                <span>{{ 'Invite'|t }}</span>
+                 title="{% trans %}Invite other users to join your consumer organization{% endtrans %}">
+                <span>{% trans %}Invite{% endtrans %}</span>
               </a>
             </div>
           {% endif %}
@@ -145,11 +145,11 @@
           <table>
             <thead>
             <tr>
-              <th id="name">{{ 'Name'|t }}</th>
+              <th id="name">{% trans %}Name{% endtrans %}</th>
               {% for role in myorg_roles %}
                 <th id="{{ role.title }}">{{ role.title }}</th>
               {% endfor %}
-              <th id="state">{{ 'State'|t }}</th>
+              <th id="state">{% trans %}State{% endtrans %}</th>
               <th id="space"></th>
             </tr>
             </thead>
@@ -163,10 +163,10 @@
                     </div>
                     <div class="noContentTextContainer noMembersTextContainer">
                       <span
-                          class="noContentText noMembersText firstLine">{{ "You don't currently have any members."|t }}</span>
+                          class="noContentText noMembersText firstLine">{% trans %}You don't currently have any members.{% endtrans %}</span>
                       {% if consumer_org_invitation_enabled %}
                         <span
-                            class="noContentText noMembersText secondLine">{{ "Click Invite to invite new members."|t }}</span>
+                            class="noContentText noMembersText secondLine">{% trans %}Click Invite to invite new members.{% endtrans %}</span>
                       {% endif %}
                     </div>
                   </div>
@@ -228,11 +228,11 @@
                     <div class="apicMyOrgStatus">
                       {% set stateUpper = member.state|upper %}
                       {% if stateUpper == 'ENABLED' %}
-                        {{ 'Active'|t }}
+                        {% trans %}Active{% endtrans %}
                       {% elseif stateUpper == 'DISABLED' %}
-                        {{ 'Disabled'|t }}
+                        {% trans %}Disabled{% endtrans %}
                       {% elseif stateUpper == 'PENDING' %}
-                        {{ 'Pending'|t }}
+                        {% trans %}Pending{% endtrans %}
                       {% else %}
                         {{ member.state }}
                       {% endif %}
@@ -242,7 +242,7 @@
                     {% if edit_mode and myorg_has_member_manage_perm %}
                       <div class="extraMenu apicMyOrgActions">
                         <ul class="overflow-menu dropitmenu">
-                          <li title="{{ 'Manage organization user'|t }}">
+                          <li title="{% trans %}Manage organization user{% endtrans %}">
                             <a href="#" class="trigger">
                             <span class="dropit-icon">
                             <svg version="1.1" id="icon" xmlns="http://www.w3.org/2000/svg"
@@ -262,14 +262,14 @@
                               {% if member.state != 'Pending' %}
                                 <li class="changeMemberRole">
                                   <a href="{{ url('consumerorg.change_member_role', {'memberId': member.id}) }}"
-                                     title="{{ 'Change role'|t }}">
-                                    {{ 'Change role'|t }}
+                                     title="{% trans %}Change role{% endtrans %}">
+                                    {% trans %}Change role{% endtrans %}
                                   </a>
                                 </li>
                                 <li class="removeOrganizationUser">
                                   <a href="{{ url('consumerorg.remove_user', {'memberId': member.id}) }}"
-                                     title="{{ 'Delete member'|t }}">
-                                    {{ 'Delete member'|t }}
+                                     title="{% trans %}Delete member{% endtrans %}">
+                                    {% trans %}Delete member{% endtrans %}
                                   </a>
                                 </li>
                               {% endif %}
@@ -277,14 +277,14 @@
                               {% if member.state == 'Pending' %}
                                 <li class="resendInvitation">
                                   <a href="{{ url('consumerorg.resend_invite', {'inviteId': member.id}) }}"
-                                     title="{{ 'Resend invitation'|t }}">
-                                    {{ 'Resend invitation'|t }}
+                                     title="{% trans %}Resend invitation{% endtrans %}">
+                                    {% trans %}Resend invitation{% endtrans %}
                                   </a>
                                 </li>
                                 <li class="removeInvitation">
                                   <a href="{{ url('consumerorg.delete_invite', {'inviteId': member.id}) }}"
-                                     title="{{ 'Delete invitation'|t }}">
-                                    {{ 'Delete invitation'|t }}
+                                     title="{% trans %}Delete invitation{% endtrans %}">
+                                    {% trans %}Delete invitation{% endtrans %}
                                   </a>
                                 </li>
                               {% endif %}
