@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2025
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -244,27 +234,43 @@ class ConsumerOrgHooks {
    */
   #[Hook('theme')]
   public function theme($existing, $type, $theme, $path): array {
-    return [
-      'consumerorg_select_block' => [
-        'variables' => [
-          'orgs' => [],
-          'selected_name' => NULL,
-          'selected_id' => NULL,
-          'create_allowed' => FALSE,
+    $module_path = \Drupal::service('extension.list.module')->getPath('consumerorg');
+
+    $definitions = [
+        'consumerorg_select_block' => [
+            'variables' => [
+                'orgs' => [],
+                'selected_name' => NULL,
+                'selected_id' => NULL,
+                'create_allowed' => FALSE,
+            ],
         ],
-      ],
-      'consumerorg_billing' => [
-        'variables' => [
-          'node' => [],
-          'consumerorgId' => NULL,
-          'consumerorgTitle' => NULL,
-          'tabs' => [],
-          'images_path' => \Drupal::service('extension.list.module')->getPath('ibm_apim'),
-          'showPlaceholders' => TRUE,
+        'consumerorg_billing' => [
+            'variables' => [
+                'node' => [],
+                'consumerorgId' => NULL,
+                'consumerorgTitle' => NULL,
+                'tabs' => [],
+                'images_path' => \Drupal::service('extension.list.module')->getPath('ibm_apim'),
+                'showPlaceholders' => TRUE,
+            ],
         ],
-      ],
+        // Node templates for consumerorg content type
+        'node__consumerorg' => [
+            'base hook' => 'node',
+            'template' => 'node--consumerorg',
+            'path' => $module_path . '/templates',
+        ],
+        'node__consumerorg__teaser' => [
+            'base hook' => 'node',
+            'template' => 'node--consumerorg--teaser',
+            'path' => $module_path . '/templates',
+        ],
     ];
+
+    return $definitions;
   }
+
 
   /**
    * Implements hook_token_info().

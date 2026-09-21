@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\auth_apic\UserManagement\Mocks;
 
@@ -54,7 +44,7 @@ class MockApicPasswordService implements ApicPasswordInterface {
   /**
    * @inheritDoc
    */
-  public function lookupUpAccount(string $reset_password_for, string $registry_url = NULL): ?EntityInterface {
+  public function lookupUpAccount(string $reset_password_for, ?string $registry_url = NULL): ?EntityInterface {
     \Drupal::logger('mock_auth_apic')->debug('@class::@function: TODO IMPL', ['@class' => __CLASS__, '@function' => __FUNCTION__]);
     return NULL;
   }

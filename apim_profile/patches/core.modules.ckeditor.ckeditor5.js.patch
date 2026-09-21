@@ -1,0 +1,37 @@
+--- core/modules/ckeditor5/js/ckeditor5.js	2025-11-12 21:53:29
++++ core/modules/ckeditor5/js/ckeditor5.js	2025-11-21 16:30:38
+@@ -385,23 +385,26 @@
+            */
+           function calculateLineHeight(rows) {
+             const element = document.createElement('p');
+-            element.setAttribute('style', 'visibility: hidden;');
+-            element.innerHTML = '&nbsp;';
++            element.classList.add('temp-measure-line');
++
++            // Use a real space instead of innerHTML to avoid inline HTML.
++            element.textContent = '\u00A0';
++
+             editor.ui.view.editable.element.append(element);
+ 
+             const styles = window.getComputedStyle(element);
+             const height = element.clientHeight;
+             const marginTop = parseInt(styles.marginTop, 10);
+             const marginBottom = parseInt(styles.marginBottom, 10);
+-            const mostMargin =
+-              marginTop >= marginBottom ? marginTop : marginBottom;
++            const mostMargin = Math.max(marginTop, marginBottom);
+ 
+             element.remove();
++
+             return (
+-              (height + mostMargin) * (rows - 1) +
+-              marginTop +
+-              height +
+-              marginBottom
++                (height + mostMargin) * (rows - 1) +
++                marginTop +
++                height +
++                marginBottom
+             );
+           }
+ 

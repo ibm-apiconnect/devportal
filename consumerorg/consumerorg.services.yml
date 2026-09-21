@@ -50,7 +50,12 @@ services:
                  '@ibm_apim.apicuser',
                  '@ibm_apim.event_log',
                  '@ibm_apim.utils',
+                 '@consumerorg.invitation_rate_limit'
     ]
+  consumerorg.invitation_rate_limit:
+    class: Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface
+    factory: [ '@keyvalue.expirable', get ]
+    arguments: [ 'consumerorg_invitation_rate_limit' ]
   consumerorg.login:
     class: Drupal\consumerorg\Service\ConsumerOrgLoginService
     arguments: [ '@ibm_apim.consumerorg',
@@ -58,3 +63,6 @@ services:
     ]
   consumerorg.paymentmethod:
     class: Drupal\consumerorg\Service\PaymentMethodService
+  consumerorg.member_migration:
+    class: Drupal\consumerorg\Service\ConsumerOrgMemberMigrationService
+    arguments: ['@entity_type.manager', '@logger.channel.consumerorg']

@@ -32,10 +32,10 @@
 #}
 {% set classes = module ? (key ? module ~ '-' ~ key) %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
+<html lang="en">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>{{ 'Mail message template'|t }}</title>
+  <title>{% trans %}Mail message template{% endtrans %}</title>
 
   <style type="text/css">
     {% if css %}
@@ -59,7 +59,7 @@
             <div id="header">
               {% if logo %}
                 <a href="{{ url('<front>') }}" rel="bookmark">
-                  <img src="{{ logo }}" alt="{{ 'Site logo'|t }}"/>
+                  <img src="{{ logo }}" alt="{% trans %}Site logo{% endtrans %}"/>
                 </a>
               {% endif %}
             </div>
@@ -79,10 +79,10 @@
             <div id="footer">
               <a href="{{ url('<front>') }}" rel="bookmark">{{ drupal_config('system.site', 'name') }}</a>
               {% if tsandcs %}
-                <a href="{{ tsandcs }}" rel="bookmark">{{ 'Terms and Conditions'|t }}</a>
+                <a href="{{ tsandcs }}" rel="bookmark">{% trans %}Terms and conditions{% endtrans %}</a>
               {% endif %}
               {% if privacy %}
-                <a href="{{ privacy }}" rel="bookmark">{{ 'Privacy Policy'|t }}</a>
+                <a href="{{ privacy }}" rel="bookmark">{% trans %}Privacy policy{% endtrans %}</a>
               {% endif %}
             </div>
           </td>

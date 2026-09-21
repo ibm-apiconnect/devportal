@@ -2,7 +2,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - block.block.noproductsblock
     - core.entity_view_mode.node.card
     - node.type.product
     - taxonomy.vocabulary.tags
@@ -388,6 +387,47 @@ display:
           include_content_with_unpublished_translation: 0
           entity_type: node
           plugin_id: select_translation_filter
+        api_type_filter:
+          id: api_type_filter
+          table: node_field_data
+          field: api_type_filter
+          relationship: none
+          group_type: group
+          admin_label: ''
+          operator: in
+          value: []
+          group: 1
+          exposed: true
+          expose:
+            operator_id: api_type_filter_op
+            label: 'API Type'
+            description: ''
+            use_operator: false
+            operator: api_type_filter_op
+            identifier: api_type_filter
+            required: false
+            remember: true
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              forum_moderator: '0'
+              content_author: '0'
+              administrator: '0'
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: []
+            group_items: []
+          plugin_id: api_type_filter
         subscription_status_filter:
           id: subscription_status_filter
           table: node__apic_url

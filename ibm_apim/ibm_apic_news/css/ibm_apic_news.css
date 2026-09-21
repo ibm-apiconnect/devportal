@@ -1,0 +1,234 @@
+
+ /* CSS for homepage */
+.bx--card .apicCardMain .apicNewsTitle.bx--about__title--name {
+  width: 100%;
+}
+
+.apicCardMain .apicNewsTitle.bx--about__title--name span {
+  display: block;
+  font-size: 24px;
+  line-height: 36px;
+  word-break: break-word;
+  font-weight: 400;
+  font-family: 'IBM Plex Sans', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apicCardMain .apicNewsCardDetails .apicNewsDesc {
+  width: 100%;
+  max-width: revert;
+  text-align: justify;
+  max-height: 6.2rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 24px;
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.apicCardMain .apicNewsLink svg {
+  justify-self: end;
+}
+
+
+.apicCardMain .apicNewsLink svg {
+  margin-inline-start: 90%;
+  fill: currentColor;
+}
+.apicCardMain .apicNewsImage {
+  height: 150px;
+  position: absolute;
+  margin-inline-start: 35px;
+}
+
+.apicCardMain .apicNewsImage img {
+  max-height: 180px;
+  max-width: 425px;
+}
+
+.apicNewsCard .apicCardMain .apicNewsImage .field {
+  margin: 0;
+}
+
+.apicNewsCard .apicCardMain .apicNewsCardDetails {
+  position: relative;
+  margin-inline-start: 382px;
+}
+
+/* make the news card clickable */
+.bx--card .apicCard.apicNewsCard {
+  display: contents;
+}
+
+.apicNewsTitle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.apicNewsTitleText {
+  display: flex;
+  align-items: baseline;
+  max-width: calc(100% - 6rem);
+}
+
+
+.featuredNewsBlockHeader {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  padding-left: 40px;
+  padding-right: 60px;
+}
+
+.featuredNewsBlockHeader a {
+  position: relative;
+  top: 32px;
+  height: fit-content;
+  font-size: 20px;
+  color: var(--home-link-color);
+}
+
+.featuredNews.featuredNewsBlockWrapper {
+  background: var(--layer-02);
+}
+
+.featuredNewsContainer .apicNewsCard .apicCardMain {
+  align-self: center;
+  width: 75%;
+  height: 100%;
+}
+
+.featuredNewsContainer .featuredNewsNode {
+  background-color: var(--layer-02);
+}
+
+.featuredNewsContainer .featuredNewsNode.bx--card {
+  width: revert;
+  max-width: revert;
+  min-height: revert;
+  max-height: revert;
+  height: 220px;
+  margin: 0;
+}
+
+.featuredNewsContainer {
+  padding-bottom: 20px;
+  padding-top: 20px;
+}
+
+.apicCardMain .apicNewsCardDetails a {
+  top: 10px;
+  position: relative;
+}
+
+/* CSS for /news page */
+article .apicCardMain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+article .apicCardMain .apicNewsLink {
+  align-self: flex-end;
+  margin-top: auto;
+}
+
+article .apicCardMain .apicNewsLink svg {
+  fill: currentColor;
+}
+
+article .apicNewsDesc.apicFade {
+  height: 75px;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  max-height: none;
+  margin: auto;
+}
+
+article .apicCardMain .apicNewsTitle.bx--about__title--name span {
+  font-size: 18px;
+  margin: auto;
+  width: 90%;
+}
+
+article .apicCardMain .apicNewsImage {
+  height: auto;
+  position: relative;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+article .apicCardMain .apicNewsImage img {
+  max-width: 100%;
+}
+
+article .bx--card .apicCardMain .apicNewsTitle.bx--about__title--name {
+  width: 90%;
+  margin: auto;
+}
+
+article .apicCardMain .apicNewsImage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+@media (min-width: 768px) and (max-width: 1199px) {
+
+  .apicCardMain .apicNewsTitle.bx--about__title--name span {
+    font-size: 18px;
+  }
+
+  .apicCardMain .apicNewsCardDetails .apicNewsDesc {
+    line-height: 16px;
+    font-size: 12px;
+  }
+
+  .apicNewsCard .apicCardMain .apicNewsCardDetails {
+    margin-inline-start: 382px;
+  }
+
+  .apicCardMain .apicNewsCardDetails a {
+    font-size: 14px;
+  }
+
+  .featuredNewsContainer .apicNewsCard .apicCardMain {
+    width: 768px;
+  }
+}
+
+@media (max-width: 767px) {
+  .apicCardMain .apicNewsTitle.bx--about__title--name span {
+    font-size: 20px;
+  }
+
+  .apicCardMain .apicNewsCardDetails .apicNewsDesc {
+    font-size: 16px;
+  }
+
+  .apicNewsCard .apicCardMain .apicNewsCardDetails {
+    margin: 0;
+  }
+
+  .apicCardMain .apicNewsImage {
+    display: none;
+  }
+
+  .apicCardMain .apicNewsCardDetails a {
+    font-size: 16px;
+  }
+
+  .featuredNewsContainer .apicNewsCard .apicCardMain {
+    width: 457px;
+  }
+}

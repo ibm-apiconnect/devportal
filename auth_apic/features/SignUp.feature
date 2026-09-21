@@ -22,6 +22,41 @@ Feature: Sign-up
     And there are no warnings
     And there are no messages
 
+  Scenario: Registration when self service onboarding approval is enabled
+    Given I am not logged in
+    And self service onboarding approval is enabled
+    And I am at "/user/register"
+    Given I enter "Mario" for "First Name"
+    And I enter "Mario@now" for "Last Name"
+    And I enter "mario_org_@now" for "Consumer organization"
+    And I enter "mario_@now@example.com" for "Email address"
+    And I enter "mario_@now@example.com" for "Username"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
+    And if the field "captcha_response" is present, enter the value "@captcha"
+    When I press the "Sign up" button
+    And there are messages
+    And I should not see the text "There was an error creating your account"
+    And I should see the text "Your registration request is pending approval. You will receive an email with further instructions if your request has been successful."
+    And self service onboarding approval is disabled
+
+  Scenario: Registration when self service onboarding approval is disabled
+    Given I am not logged in
+    And self service onboarding approval is disabled
+    And I am at "/user/register"
+    Given I enter "Peach" for "First Name"
+    And I enter "Peach_@now" for "Last Name"
+    And I enter "peach_org_@now" for "Consumer organization"
+    And I enter "peach@now@example.com" for "Email address"
+    And I enter "peach_@now@example.com" for "Username"
+    And I enter "Qwert123IsBadPassword!" for "Password"
+    And if the field "pass[pass2]" is present, enter the value "Qwert123IsBadPassword!"
+    And if the field "captcha_response" is present, enter the value "@captcha"
+    When I press the "Sign up" button
+    And there are messages
+    And I should not see the text "There was an error creating your account"
+    And I should see the text "Your registration request has been received. You will receive an email with activation instructions if your request has been successful."
+
   Scenario: Unable to view registration form when self sign up is blocked
     Given I am not logged in
     And self service onboarding is disabled

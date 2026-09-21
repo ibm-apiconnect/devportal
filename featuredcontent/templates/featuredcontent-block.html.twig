@@ -1,4 +1,15 @@
 {#
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 /**
  * @file
  * Default theme implementation for the featuredcontent block
@@ -9,21 +20,16 @@
 {% if nodes|length > 0 %}
   <div class="featuredcontent featuredcontentBlockWrapper">
     <div class="featuredcontentBlockHeader">
-      <h3>{{ 'Explore products'|t }}</h3>
-      <a href="{{ path('view.products.page_1') }}">{{ 'View all'|t }}</a>
+      <h3>{% trans %}Explore our API products{% endtrans %}</h3>
+      <a href="{{ path('view.products.page_1') }}">{% trans %}View all{% endtrans %}</a>
     </div>
     <div class="featuredcontentContentContainer">
       <div
           class="featuredcontentNodeContainer featuredcontentNodeType-{{ nodeType|clean_class }} featuredcontentAlgorithm-{{ algorithm|clean_class }}">
         {% for node in nodes %}
-          <div class="featuredcontentNode featuredcontentNodeID-{{ node.nid|clean_class }}">
+          <div class="featuredcontentNode featuredcontentNodeID-{{ node.nid|clean_class }}" tooltip-id="node-{{ node.tooltip_id }}">
             <div class="featuredcontentNodeInner">
               <div class="featuredcontentNodeHeader">
-                {% if node.image %}
-                  <div class="featuredcontentNodeImage">
-                    <img src="{{- node.image -}}" alt=""/>
-                  </div>
-                {% endif %}
                 <div class="featuredcontentNodeTitle">
                   {% if nodeType == 'api' %}
                     {% if node.apic_pathalias is defined and node.apic_pathalias is not empty %}
@@ -50,6 +56,11 @@
                   {% endif %}
                 </div>
               </div>
+              {% if node.image %}
+                <div class="featuredcontentNodeImage">
+                  <img src="{{- node.image -}}" alt=""/>
+                </div>
+              {% endif %}
               <div class="featuredcontentNodeInfo">
                 {% if node.summary is defined and node.summary is not empty %}
                   <div class="featuredcontentNodeSummary">

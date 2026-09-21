@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\mail_subscribers\Wizard\Mail;
 
@@ -18,6 +8,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\node\Entity\Node;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 class ChoosePlanStep extends FormBase {
 
@@ -75,7 +66,7 @@ class ChoosePlanStep extends FormBase {
     $productsPlans = [];
     foreach($products as $product) {
       foreach ($product->product_plans->getValue() as $arrayValue) {
-        $productsPlans[$product->id()][] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+        $productsPlans[$product->id()][] = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
       }
     }
     if ($productsPlans === NULL || empty($productsPlans)) {

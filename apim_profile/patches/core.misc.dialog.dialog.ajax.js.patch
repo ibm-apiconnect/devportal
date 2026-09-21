@@ -1,0 +1,11 @@
+--- core/misc/dialog/dialog.ajax.js	2025-11-12 21:53:29
++++ core/misc/dialog/dialog.ajax.js	2025-12-08 16:00:36
+@@ -23,7 +23,7 @@
+         // http://api.jqueryui.com/theming/stacking-elements/.
+         document.body.insertAdjacentHTML(
+           'beforeend',
+-          '<div id="drupal-modal" class="ui-front" style="display:none"></div>',
++          '<div id="drupal-modal" class="ui-front display-none"></div>',
+         );
+       }
+ 

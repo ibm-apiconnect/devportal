@@ -6,12 +6,12 @@
 
 // Mimics .dropdown-menu styles.
 .ui-autocomplete {
-  background: $dropdown-bg;
+  background: var(--dropdown-bg);
   background-clip: padding-box;
   border: 1px solid $dropdown-fallback-border;
   border: 1px solid $dropdown-border;
   border-radius: $border-radius-base;
-  box-shadow: 0 6px 12px rgba(0,0,0,.175);
+  box-shadow: var(--dropdown-box-shadow);
   color: inherit;
   font-family: $font-family-base;
   font-size: $font-size-base;
@@ -25,7 +25,7 @@
     border: 0;
     border-radius: 0;
     clear: both;
-    color: $dropdown-link-color;
+    color: var(--dropdown-link-color);
     cursor: pointer;
     display: block;
     font-weight: normal;
@@ -36,16 +36,38 @@
     text-decoration: none;
     white-space: nowrap;
 
-    &.ui-state-hover {
-      background: $dropdown-link-hover-bg;
-      color: $dropdown-link-hover-color;
+    &:hover {
+      background-color: var(--layer-hover-02);
+      color: var(--dropdown-link-hover-color);
     }
 
-    &.ui-state-active, &.ui-state-focus {
-      background: $dropdown-link-active-bg;
-      color: $dropdown-link-active-color;
+    .ui-menu-item-wrapper {
+      padding-inline-start: .4em;
+      padding-inline-end: 1em;
+      padding-left: 0;
+      padding-right: 0;
+      color: var(--text-secondary);
+      &.ui-state-active {
+        background: inherit;
+        color: inherit;
+        border-color: transparent;
+        .search-api-autocomplete-suggestion {
+          background: inherit;
+          color: inherit;
+        }
+      }
     }
 
   }
 
+}
+
+// Override
+.ui-widget-content a {
+  color: var(--text-secondary);
+  &:hover,
+  &:active,
+  &:visited {
+    color: var(--text-primary);
+  }
 }

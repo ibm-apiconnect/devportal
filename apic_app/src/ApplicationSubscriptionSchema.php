@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\apic_app;
 
@@ -32,6 +22,10 @@ class ApplicationSubscriptionSchema extends SqlContentEntityStorageSchema {
       case 'consumerorg_url':
       case 'app_url':
       case 'product_url':
+      case 'plan_title':
+      case 'product_title':
+      case 'plan_title_missing':
+      case 'product_title_missing':
         $this->addSharedTableFieldIndex($storage_definition, $schema);
         break;
     }

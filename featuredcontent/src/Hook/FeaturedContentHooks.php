@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2025
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -18,6 +8,7 @@
 namespace Drupal\featuredcontent\Hook;
 
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\Database\Query\SelectInterface;
 
 class FeaturedContentHooks {
   /**
@@ -52,10 +43,10 @@ class FeaturedContentHooks {
    *
    *  From https://www.drupal.org/node/1174806
    *
-   * @param \Drupal\Core\Database\Query\AlterableInterface $query
+   * @param \Drupal\Core\Database\Query\SelectInterface $query
    */
   #[Hook('query_random_alter')]
-  public function queryRandomAlter(Drupal\Core\Database\Query\AlterableInterface $query) {
+  public function queryRandomAlter(SelectInterface $query) {
     $query->orderRandom();
   }
  }

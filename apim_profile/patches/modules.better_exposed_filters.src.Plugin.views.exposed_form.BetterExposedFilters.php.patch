@@ -1,0 +1,11 @@
+--- modules/better_exposed_filters/src/Plugin/views/exposed_form/BetterExposedFilters.php	2025-01-31 19:51:10
++++ modules/better_exposed_filters/src/Plugin/views/exposed_form/BetterExposedFilters.php	2025-11-27 13:17:48
+@@ -926,7 +926,7 @@
+               foreach (['sort_bef_combine', 'sort_by', 'sort_order'] as $sort_el) {
+                 if (isset($this->view->exposed_data[$sort_el]) && isset($form[$sort_el])) {
+                   $this->request->query->remove($sort_el);
+-                  $form_state->setValue($sort_el, $form[$sort_el]['#default_value']);
++                  $form_state->setValue($sort_el, $form[$sort_el]['#default_value'] ?? NULL);
+                 }
+               }
+               continue 2;

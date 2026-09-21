@@ -1,0 +1,20 @@
+--- modules/workbench/config/optional/views.view.workbench_edited.yml
++++ modules/workbench/config/optional/views.view.workbench_edited.yml
+@@ -774,7 +774,7 @@
+       header: {}
+       footer: {}
+       empty:
+-        area:
++        area_text_custom:
+           id: area_text_custom
+           table: views
+           field: area_text_custom
+@@ -904,7 +904,7 @@
+         link_url: true
+         use_ajax: false
+       header:
+-        area:
++        area_text_custom:
+           id: area_text_custom
+           table: views
+           field: area_text_custom

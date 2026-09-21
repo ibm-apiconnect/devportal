@@ -7,15 +7,15 @@
  */
 #}
 {% if concepts is not empty %}
-<div class="ibmapimConcepts" role="search" aria-label="{{ 'Concepts'|t }}">
+<div class="ibmapimConcepts" role="search" aria-label="{% trans %}Concepts{% endtrans %}">
   <div class="conceptContainer">
-    <h2 class="viewTitle">{{ 'Concepts overview'|t }}</h2>
+    <h2 class="viewTitle">{% trans %}Concepts overview{% endtrans %}</h2>
     <div class="apicConcepts">
       <table>
         <thead>
         <tr>
-          <th id="concept">{{ 'Concept'|t }}</th>
-          <th id="description">{{ 'Description'|t }}</th>
+          <th id="concept">{% trans %}Concept{% endtrans %}</th>
+          <th id="description">{% trans %}Description{% endtrans %}</th>
         </tr>
         </thead>
         <tbody>

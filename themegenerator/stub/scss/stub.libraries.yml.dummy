@@ -2,3 +2,12 @@ global-styling:
   css:
     theme:
       css/style.css: {}
+
+# Dark mode handler
+dark_mode_handler:
+  version: 1.x
+  js:
+    js/dark-mode-handler.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

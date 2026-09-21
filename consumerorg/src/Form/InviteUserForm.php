@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\consumerorg\Form;
 
@@ -247,7 +237,7 @@ class InviteUserForm extends FormBase {
 
         $form['role'] = [
           '#type' => 'radios',
-          '#title' => t('Assign Roles'),
+          '#title' => t('Assign roles'),
           '#default_value' => $default_role,
           '#options' => $roles_array,
           '#description' => t('Select which role the new user will have in your organization.'),
@@ -302,7 +292,18 @@ class InviteUserForm extends FormBase {
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     parent::validateForm($form, $form_state);
+    
+    // Get and sanitize email
     $mail = $form_state->getValue('new_email');
+    $mail = filter_var($mail, FILTER_SANITIZE_EMAIL);
+    
+    // Validate email format
+    if (!filter_var($mail, FILTER_VALIDATE_EMAIL)) {
+      $form_state->setErrorByName('new_email', t('Please enter a valid email address.'));
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+      return;
+    }
+    
     $moduleHandler = \Drupal::service('module_handler');
     if ($moduleHandler->moduleExists('check_dns') && $mail !== NULL && 2 < \strlen($mail)) {
       // Get the email.
@@ -348,8 +349,19 @@ class InviteUserForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    
+    // Get and sanitize email
     $email = $form_state->getValue('new_email');
+    $email = filter_var($email, FILTER_SANITIZE_EMAIL);
+    
+    // Get and sanitize role only if it contains characters that need escaping
     $role = $form_state->getValue('role');
+    $originalRole = $role;
+    $sanitizedRole = htmlspecialchars($originalRole, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+    // Only use the sanitized value if it's different from the original
+    if ($originalRole !== $sanitizedRole) {
+      $role = $sanitizedRole;
+    }
 
     if (!empty($email)) {
       $response = $this->consumerOrgService->inviteMember($this->currentOrg, $email, $role);
@@ -357,7 +369,7 @@ class InviteUserForm extends FormBase {
         $this->messenger->addMessage(t('Invitation sent successfully.'));
       }
       else {
-        $this->messenger->addError(t('Error sending invitation. Contact the system administrator.'));
+        $this->messenger->addError($response->getMessage() ?? t('Error sending invitation. Contact the system administrator.'));
       }
     }
     else {

@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Wizard\Subscription;
 
@@ -140,7 +130,7 @@ class ChooseApplicationStep extends IbmWizardStepBase {
         // the productName check here is to ensure we were fed a valid productId
         $form['#createNewApp'] = [
           '#type' => 'link',
-          '#title' => $this->t('Create Application'),
+          '#title' => $this->t('Create application'),
           '#url' => Url::fromRoute('apic_app.create_modal'),
           '#attributes' => [
             'class' => [

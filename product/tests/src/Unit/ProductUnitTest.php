@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\Tests\product\Unit;
 
@@ -258,5 +248,31 @@ class ProductUnitTest extends UnitTestCase {
 
     $result = Product::getPlansThatContainApi($mockProduct, $this->apiRef);
     self::assertEquals(array($this->planName => $plan), $result);
+  }
+
+    /**
+   * Tests metadata getter/setter on Product entity.
+   */
+  public function testProductMetadataStoredAndRetrieved(): void {
+    $product = new Product();
+
+    $metadata = [
+      'theme' => 'dark',
+      'test_key' => 'test_value',
+    ];
+
+    $product->setMetadata($metadata);
+
+    $this->assertEquals($metadata, $product->getMetadata());
+    $this->assertEquals('dark', $product->getMetadata()['theme']);
+  }
+
+  /**
+   * Tests metadata default value.
+   */
+  public function testProductMetadataDefaultsToEmptyArray(): void {
+    $product = new Product();
+
+    $this->assertEquals([], $product->getMetadata());
   }
 }

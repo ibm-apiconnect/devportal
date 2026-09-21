@@ -1,19 +1,10 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Service\Mocks;
 
 use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\ibm_apim\Service\UserRegistryService;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * Mock functionality for handling user registries
@@ -43,7 +34,7 @@ class MockUserRegistryService extends UserRegistryService {
    * @inheritDoc
    */
   public function updateAll(array $data): bool {
-    $this->logger->debug('MockUserRegistryService::updateAll() with %data', ['%data' => serialize($data)]);
+    $this->logger->debug('MockUserRegistryService::updateAll() with %data', ['%data' => SerializationUtility::encodeData($data)]);
     return parent::updateAll($data);
   }
 

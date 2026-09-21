@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\consumerorg\Form;
 
@@ -194,7 +184,7 @@ class PaymentMethodCreateForm extends FormBase {
       $billingProvider = \Drupal::service('ibm_apim.billing')->decrypt($this->billingUrl);
       $form['title'] = [
         '#type' => 'textfield',
-        '#title' => t('Payment Method Title'),
+        '#title' => t('Payment method title'),
         '#required' => TRUE,
         '#description' => t('Provide a title to identify this payment method.'),
       ];
@@ -211,7 +201,7 @@ class PaymentMethodCreateForm extends FormBase {
       $billingProvider = isset($this->billingUrl) ? \Drupal::service('ibm_apim.billing')->decrypt($this->billingUrl) : '';
       $form['title'] = [
         '#type' => 'textfield',
-        '#title' => t('Payment Method Title'),
+        '#title' => t('Payment method title'),
         '#required' => TRUE,
         '#description' => t('Provide a title to identify this payment method.'),
       ];
@@ -274,6 +264,27 @@ class PaymentMethodCreateForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     parent::validateForm($form, $form_state);
+    
+    // Sanitize and validate title if present
+    if ($form_state->hasValue('title')) {
+      $title = $form_state->getValue('title');
+      $originalTitle = $title;
+      $sanitizedTitle = htmlspecialchars($originalTitle, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+      // Only use the sanitized value if it's different from the original
+      if ($originalTitle !== $sanitizedTitle) {
+        $title = $sanitizedTitle;
+      }
+      
+      if (empty(trim($title))) {
+        $form_state->setErrorByName('title', $this->t('Payment method title is required.'));
+      }
+      
+      // Check for URLs in the title
+      $pattern = '/(https?|ftp|ftps|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]|www\.[A-Z0-9.-]+\.[A-Z]{2,4}/i';
+      if (preg_match($pattern, $title)) {
+        $form_state->setErrorByName('title', $this->t('Payment method title cannot contain URLs'));
+      }
+    }
   }
 
   /**
@@ -326,10 +337,43 @@ class PaymentMethodCreateForm extends FormBase {
         'card'
       ])) {
         if (is_array($value) && isset($value[0]['value'])) {
-          $value = $value[0]['value'];
+          // Sanitize array values only if they contain characters that need escaping
+          $originalValue = $value[0]['value'];
+          $sanitizedValue = htmlspecialchars($originalValue, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+          // Only use the sanitized value if it's different from the original
+          if ($originalValue !== $sanitizedValue) {
+            $value = $sanitizedValue;
+          } else {
+            $value = $originalValue;
+          }
         }
         elseif (isset($value[0]) && is_array($value[0])) {
-          $value = array_values($value[0]);
+          $sanitizedValues = [];
+          foreach (array_values($value[0]) as $arrayValue) {
+            if (is_string($arrayValue)) {
+              // Sanitize string values only if they contain characters that need escaping
+              $originalValue = $arrayValue;
+              $sanitizedValue = htmlspecialchars($originalValue, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+              // Only use the sanitized value if it's different from the original
+              if ($originalValue !== $sanitizedValue) {
+                $sanitizedValues[] = $sanitizedValue;
+              } else {
+                $sanitizedValues[] = $originalValue;
+              }
+            } else {
+              $sanitizedValues[] = $arrayValue;
+            }
+          }
+          $value = $sanitizedValues;
+        }
+        elseif (is_string($value)) {
+          // Sanitize string values only if they contain characters that need escaping
+          $originalValue = $value;
+          $sanitizedValue = htmlspecialchars($originalValue, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+          // Only use the sanitized value if it's different from the original
+          if ($originalValue !== $sanitizedValue) {
+            $value = $sanitizedValue;
+          }
         }
         $requestBody['configuration'][$key] = $value;
       }
@@ -337,6 +381,13 @@ class PaymentMethodCreateForm extends FormBase {
 
     $isDefault = (boolean) $form_state->getValue('is_default') === TRUE;
     $title = $form_state->getValue('title');
+    // Sanitize title only if it contains characters that need escaping
+    $originalTitle = $title;
+    $sanitizedTitle = htmlspecialchars($originalTitle, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+    // Only use the sanitized value if it's different from the original
+    if ($originalTitle !== $sanitizedTitle) {
+      $title = $sanitizedTitle;
+    }
     $requestBody['title'] = $title;
     $consumerOrgUrl = $org['url'];
     $configuration = $requestBody['configuration'];

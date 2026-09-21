@@ -1,4 +1,14 @@
 {#
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 /**
  * @file
  * Default theme implementation for the caseStudy block
@@ -6,44 +16,65 @@
  * @ingroup themeable
  */
 #}
+<div class="case-study-banner">
+  <div class="case-study-banner-content">
+      <p>{% trans %}We believe working together and combining 
+      our strengths will lead to the best results. {% endtrans %}</p>
+      <a class="button cta-btns--white__btn" href="product">{% trans %}Get started{% endtrans %}</a>
+  </div>
+</div>
 {% if caseStudies|length > 0 %}
   <div class="featuredCaseStudies featuredCaseStudiesBlockWrapper">
     <div class="featuredCaseStudiesBlockHeader">
-      <h3>{{ 'Case studies'|t }}</h3>
-      <a href="{{ path('view.case_studies.page_1') }}">{{ 'View all'|t }}</a>
+      <h3>{% trans %}Case studies{% endtrans %}</h3>
+      <a href="{{ path('view.case_studies.page_1') }}">{% trans %}View all{% endtrans %}</a>
     </div>
-      <div class="featuredCaseStudiesContainer">
+      <div class="featuredCaseStudiesContainer{% if caseStudies|length > 3 %} case-study-slider-wrapper{% endif %}" data-case-count="{{ caseStudies|length }}">
+        <div class="case-study-slider-track">
         {% for caseStudy in caseStudies %}
-        <div class="featuredCaseStudiesNode bx--card">
+        <div class="featuredCaseStudiesNode bx--card{% if caseStudies|length > 3 %} case-study-slide{% endif %}">
           <div class="apicCard apicCaseStudyCard caseStudyNodeID-{{ caseStudy.nid|clean_class }}">
             <div class="apicCardMain">
               <div>
                 {% if caseStudy.image %}
                   <div class="apicCaseStudyImage">
-                    <img src="{{- caseStudy.image -}}" loading="lazy" alt={{ caseStudy.title }} class="img-responsive" typeof="foaf:Image" />
+                    <img src="{{- caseStudy.image -}}" loading="lazy" alt="{{ caseStudy.title }}" class="img-responsive" typeof="foaf:Image" />
                   </div>
                 {% else %}
                   <div class="apicCaseStudyImage">
                     <img src="modules/case_study/images/case_study_placeholder.png" loading="lazy" alt="placeholder" class="img-responsive" typeof="foaf:Image" />
                   </div>
                 {% endif %}
-                <div class="apicCaseStudyTitle bx--about__title--name">
+                <div class="apicCaseStudyTitle bx--about__title--name" data-toggle="tooltip" data-placement="bottom" title="{{ caseStudy.title }}">
                   <span>
                     {{ caseStudy.title }}
                   </span>
                 </div>
               </div>
-              <div class="apicCaseStudyDesc apicFade">
+              <div class="apicCaseStudyDesc apicFade" data-toggle="tooltip" data-placement="bottom" title="{{ caseStudy.summary|striptags|trim }}">
                 {{ caseStudy.summary }}
               </div>
-              <a class="apicCaseStudyLink" href="{{- path('entity.node.canonical', {'node': caseStudy.nid}) -}}" rel="bookmark">
-                <svg width="16px" height="14px" viewBox="0 0 16 14" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd"><polygon id="Shape" points="12.6 6 0 6 0 8 12.7 8 7.7 12.7 9 14 16 7 9 0 7.7 1.3"></polygon></svg>
+              <a class="apicCaseStudyLink" href="{{- path('entity.node.canonical', {'node': caseStudy.nid}) -}}" rel="bookmark" aria-label="{% trans %}Read more about {{ caseStudy.title }}{% endtrans %}">
+                <svg aria-hidden="true" width="16px" height="14px" viewBox="0 0 16 14" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill-rule="evenodd"><polygon id="Shape" points="12.6 6 0 6 0 8 12.7 8 7.7 12.7 9 14 16 7 9 0 7.7 1.3"></polygon></svg>
               </a>
             </div>
           </div>
         </div>
         {% endfor %}
-      </div>
+        </div>
+        {% if caseStudies|length > 3 %}
+          <button class="case-study-slider-btn case-study-slider-prev" aria-label="Previous slide">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M10 16L20 6L21.4 7.4L12.8 16L21.4 24.6L20 26L10 16Z" fill="#8D8D8D"/>
+            </svg>
+          </button>
+          <button class="case-study-slider-btn case-study-slider-next" aria-label="Next slide">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M22 16L12 26L10.6 24.6L19.2 16L10.6 7.4L12 6L22 16Z" fill="#8D8D8D"/>
+            </svg>
+          </button>
+          <div class="case-study-slider-dots"></div>
+        {% endif %}
     </div>
   </div>
 {% endif %}

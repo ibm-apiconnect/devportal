@@ -1,0 +1,2370 @@
+//
+// Copyright IBM Corp. 2024
+//
+// Dark Theme Colors for IBM API Connect Developer Portal
+// SEGMENTED BY PAGE FOR MAXIMUM READABILITY
+//
+
+// ============================================================================
+// DARK MODE COLOR VARIABLES
+// ============================================================================
+
+$dark-bg-layer-00: #161616;
+$dark-bg-layer-01: #262626;
+$dark-bg-layer-02: #393939;
+$dark-bg-layer-03: #525252;
+$dark-bg-hover: #4c4c4c;
+
+$dark-text-primary: #f4f4f4;
+$dark-text-secondary: #c6c6c6;
+$dark-text-tertiary: #a8a8a8;
+
+$dark-border-color: #525252;
+$dark-border-subtle: #393939;
+
+$dark-link-color: #78a9ff;
+$dark-link-hover: #a6c8ff;
+$dark-link-visited: #be95ff;
+
+$dark-status-green: #42be65;
+$dark-status-yellow: #f1c21b;
+$dark-text-error: #ff8389;
+$dark-status-blue: #4589ff;
+
+$dark-shadow: rgba(0, 0, 0, 0.5);
+$dark-shadow-hover: rgba(0, 0, 0, 0.7);
+
+// ============================================================================
+// FOUC PREVENTION - Hide content until dark mode is determined
+// ============================================================================
+// Prevents Flash of Unstyled Content (FOUC) by hiding page content
+// until JS sets data-dmt-mode on the body element.
+
+// Exclude admin pages and toolbar-fixed pages from FOUC prevention
+body:not([data-dmt-mode]):not(.path-admin):not(.toolbar-fixed) {
+  background-color: #f4f4f4; // Light background
+  position: relative;
+  overflow: hidden; // Prevent scroll during load
+
+  // Hide only the actual content, not the pseudo-elements
+  > * {
+    opacity: 0;
+  }
+
+  // Light overlay covering the viewport
+  &::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f4f4f4;
+    z-index: 9998;
+  }
+
+  // Centered spinner — doubled in size
+  &::before {
+    content: '';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 96px;
+    height: 96px;
+    margin-top: -48px;
+    margin-left: -48px;
+    border: 6px solid #e0e0e0; // Light gray ring
+    border-top-color: #0f62fe; // IBM Blue
+    border-radius: 50%;
+    animation: spinner-rotate 0.8s linear infinite;
+    z-index: 9999;
+  }
+}
+
+// Spinner rotation animation
+@keyframes spinner-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// Show content once mode is set
+body[data-dmt-mode='dark'],
+body[data-dmt-mode='light'] {
+  > * {
+    opacity: 1;
+    transition: opacity 0.15s ease-in;
+  }
+
+  &::after,
+  &::before {
+    display: none;
+  }
+}
+
+// ============================================================================
+// GLOBAL STYLES (APPLY TO ALL PAGES)
+// ============================================================================
+
+body[data-dmt-mode="dark"] {
+  // Navbar navigation-right layout adjustments (admin contextual + toggle)
+  // Apply on all routed pages (bodies that have a path-* class)
+  &[class*="path-"] header.apicStickyHeader #navbar .region-navigation-right {
+    align-items: center;
+    gap: 0.5rem;
+
+    // Prevent contextual/admin wrappers from stretching items across the bar when logged in as admin
+    .contextual-region {
+      display: flex;
+      align-items: center;
+      flex: 0 0 auto;
+    }
+  }
+
+  // Apps page: keep right-side controls aligned and prevent contextual wrappers from stretching
+  &.path-application header.apicStickyHeader.section-header #navbar.container .navbar-right .region-navigation-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .contextual-region {
+      display: flex;
+      align-items: center;
+      flex: 0 0 auto;
+    }
+  }
+
+  background-color: $dark-bg-layer-01;
+  color: $dark-text-primary;
+
+  // Base body override
+  &.bx--global-light-ui {
+    background-color: $dark-bg-layer-01;
+    color: $dark-text-primary;
+  }
+
+  // Page wrapper
+  #page-wrapper {
+    background-color: $dark-bg-layer-00;
+    color: $dark-text-primary;
+  }
+
+  // Global typography rules
+  h1, h2, h3, h4, h5, h6 {
+    color: $dark-text-primary;
+  }
+
+  span {
+    color: $dark-text-secondary;
+  }
+
+  a {
+    color: $dark-link-color;
+
+    &:hover,
+    &:focus {
+      color: $dark-link-hover;
+    }
+
+    &:visited {
+      color: $dark-link-color;  // Keep same color as unvisited
+    }
+  }
+
+  // Cards and panels (global)
+  .panel,
+  .card,
+  .well,
+  .block {
+    background-color: $dark-bg-layer-01;
+    border-color: $dark-border-color;
+    color: $dark-text-primary;
+  }
+
+  // Navigation (global)
+  .navbar,
+  .navbar-default {
+    background-color: $dark-bg-layer-00;
+    border-color: $dark-border-color;
+
+    .navbar-nav > li > a {
+      color: $dark-text-primary;
+
+      &:hover,
+      &:focus {
+        color: $dark-link-hover;
+        background-color: $dark-bg-hover;
+      }
+    }
+  }
+
+  // Active navbar links - Carbon Design System blue indicator
+  // Higher specificity to override $brand-primary from _navbar.scss
+  .navbar .nav.navbar-nav > li > a.is-active,
+  .navbar .nav.navbar-nav > li.active > a,
+  .nav.menu--login > li.active a {
+    border-bottom: 2px solid $dark-link-color; // #78a9ff - lighter Carbon blue
+    background-color: $dark-bg-layer-00;
+  }
+
+  // Consumer org select block in navbar
+  .consumerorgSelectBlock {
+    background-color: $dark-bg-layer-00; // #161616
+
+    &:hover,
+      &:focus {
+        background-color: $dark-bg-layer-02;
+        color: $dark-text-primary;
+      }
+  }
+
+  // Dropdowns (global)
+  .dropdown-menu {
+    background-color: $dark-bg-layer-01;
+    border-color: $dark-border-color;
+
+    > li > a {
+      color: $dark-text-primary;
+
+      &:hover,
+      &:focus {
+        background-color: $dark-bg-hover;
+        color: $dark-text-primary;
+      }
+    }
+  }
+
+    // No forum topic content message (global)
+  .noForumTopicContent {
+    background-color: $dark-bg-layer-01; // #262626
+    color: $dark-text-primary;
+  }
+
+  // Forms (global)
+  .form-control,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    background-color: $dark-bg-layer-02;
+    border-color: $dark-border-color;
+    color: $dark-text-primary;
+
+    &:hover {
+      // No style change on hover
+      background-color: $dark-bg-layer-02;
+      color: $dark-text-primary;
+    }
+
+    &:focus {
+      background-color: $dark-bg-layer-00;
+      border-color: $dark-link-color;
+      color: $dark-text-primary;
+    }
+
+    &::placeholder {
+      color: $dark-text-tertiary;
+    }
+  }
+
+  // Button links - keep white color, don't follow link styling
+  // Very high specificity to override global link styles including :visited
+  body[data-dmt-mode="dark"] .btn a,
+  body[data-dmt-mode="dark"] .btn-primary a,
+  body[data-dmt-mode="dark"] .btn-success a,
+  body[data-dmt-mode="dark"] .btn-info a,
+  body[data-dmt-mode="dark"] .btn-warning a,
+  body[data-dmt-mode="dark"] .btn-danger a,
+  body[data-dmt-mode="dark"] .btn-xs a,
+  body[data-dmt-mode="dark"] a.btn,
+  body[data-dmt-mode="dark"] a.btn-primary,
+  body[data-dmt-mode="dark"] a.btn-success,
+  body[data-dmt-mode="dark"] a.btn-info,
+  body[data-dmt-mode="dark"] a.btn-warning,
+  body[data-dmt-mode="dark"] a.btn-danger,
+  body[data-dmt-mode="dark"] a.btn-xs,
+  body[data-dmt-mode="dark"] .forum-actions-wrapper .btn a,
+  body[data-dmt-mode="dark"] .forum-actions-wrapper a.btn {
+    color: $dark-text-primary;
+  }
+
+  // Separate selectors for each pseudo-class to ensure they override global visited links
+  body[data-dmt-mode="dark"] .btn a:hover,
+  body[data-dmt-mode="dark"] .btn-primary a:hover,
+  body[data-dmt-mode="dark"] .btn-success a:hover,
+  body[data-dmt-mode="dark"] .btn-info a:hover,
+  body[data-dmt-mode="dark"] .btn-warning a:hover,
+  body[data-dmt-mode="dark"] .btn-danger a:hover,
+  body[data-dmt-mode="dark"] .btn-xs a:hover,
+  body[data-dmt-mode="dark"] a.btn:hover,
+  body[data-dmt-mode="dark"] a.btn-primary:hover,
+  body[data-dmt-mode="dark"] a.btn-success:hover,
+  body[data-dmt-mode="dark"] a.btn-info:hover,
+  body[data-dmt-mode="dark"] a.btn-warning:hover,
+  body[data-dmt-mode="dark"] a.btn-danger:hover,
+  body[data-dmt-mode="dark"] a.btn-xs:hover,
+  body[data-dmt-mode="dark"] .forum-actions-wrapper .btn a:hover,
+  body[data-dmt-mode="dark"] .forum-actions-wrapper a.btn:hover {
+    color: $dark-text-primary;
+  }
+
+  body[data-dmt-mode="dark"] .btn a:focus,
+  body[data-dmt-mode="dark"] .btn-primary a:focus,
+  body[data-dmt-mode="dark"] .btn-success a:focus,
+  body[data-dmt-mode="dark"] .btn-info a:focus,
+  body[data-dmt-mode="dark"] .btn-warning a:focus,
+  body[data-dmt-mode="dark"] .btn-danger a:focus,
+  body[data-dmt-mode="dark"] .btn-xs a:focus,
+  body[data-dmt-mode="dark"] a.btn:focus,
+  body[data-dmt-mode="dark"] a.btn-primary:focus,
+  body[data-dmt-mode="dark"] a.btn-success:focus,
+  body[data-dmt-mode="dark"] a.btn-info:focus,
+  body[data-dmt-mode="dark"] a.btn-warning:focus,
+  body[data-dmt-mode="dark"] a.btn-danger:focus,
+  body[data-dmt-mode="dark"] a.btn-xs:focus,
+  body[data-dmt-mode="dark"] .forum-actions-wrapper .btn a:focus,
+  body[data-dmt-mode="dark"] .forum-actions-wrapper a.btn:focus {
+    color: $dark-text-primary;
+  }
+
+  body[data-dmt-mode="dark"] .btn a:visited,
+  body[data-dmt-mode="dark"] .btn-primary a:visited,
+  body[data-dmt-mode="dark"] .btn-success a:visited,
+  body[data-dmt-mode="dark"] .btn-info a:visited,
+  body[data-dmt-mode="dark"] .btn-warning a:visited,
+  body[data-dmt-mode="dark"] .btn-danger a:visited,
+  body[data-dmt-mode="dark"] .btn-xs a:visited,
+  body[data-dmt-mode="dark"] a.btn:visited,
+  body[data-dmt-mode="dark"] a.btn-primary:visited,
+  body[data-dmt-mode="dark"] a.btn-success:visited,
+  body[data-dmt-mode="dark"] a.btn-info:visited,
+  body[data-dmt-mode="dark"] a.btn-warning:visited,
+  body[data-dmt-mode="dark"] a.btn-danger:visited,
+  body[data-dmt-mode="dark"] a.btn-xs:visited,
+  body[data-dmt-mode="dark"] .forum-actions-wrapper .btn a:visited,
+  body[data-dmt-mode="dark"] .forum-actions-wrapper a.btn:visited {
+    color: $dark-text-primary;
+  }
+
+  // Form field descriptions and password strength
+  &.bx--global-light-ui .form-item .description,
+  &.bx--global-light-ui .password-strength__title,
+  .captcha__description.description {
+    color: $dark-text-secondary; // #c6c6c6
+  }
+
+  // Form legends (CAPTCHA title, fieldsets)
+  legend {
+    color: $dark-text-secondary; // #c6c6c6
+    border-bottom-color: $dark-border-color;
+  }
+
+  // Radio buttons - Carbon Design System dark theme
+  // Border (outer circle)
+  &.bx--global-light-ui .bx--radio-button__appearance {
+    border-color: $dark-text-secondary; // #c6c6c6
+  }
+
+  // Border when checked - match inner dot color
+  &.bx--global-light-ui .bx--radio-button:checked + .bx--radio-button__appearance {
+    border-color: $dark-text-secondary; // #c6c6c6 - match inner dot
+  }
+
+  // Inner dot when checked
+  &.bx--global-light-ui .bx--radio-button:checked + .bx--radio-button__appearance::before {
+    background-color: $dark-text-secondary; // #c6c6c6 instead of #161616
+  }
+
+  // Password visibility toggle icons - site-wide
+  .eye-open,
+  .eye-close {
+    filter: brightness(0) saturate(100%) invert(84%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(95%) contrast(88%);
+    // This filter converts any color to #c6c6c6
+  }
+
+  // Input group addon glyphicons (e.g., calendar icons, search icons)
+  .form-item .input-group-addon .glyphicon {
+    color: $dark-text-secondary; // #c6c6c6
+    opacity: 0.5;
+    transition: 150ms color, 150ms opacity;
+  }
+
+  // Nav tabs (format selector, primary tabs)
+  .nav-tabs > li > a,
+  ul.nav.nav-tabs.filter-formats li a,
+  ul.tabs--primary.nav.nav-tabs li a,
+  &.path-user .nav-tabs > li > a,
+  &.path-user ul.nav.nav-tabs.filter-formats li a,
+  &.path-user ul.tabs--primary.nav.nav-tabs li a {
+    color: $dark-text-secondary; // #c6c6c6 - normal state
+    border-bottom-color: $dark-border-color; // #525252
+    transition: color 0.3s ease, border-bottom-color 0.3s ease;
+  }
+
+  // Nav tabs hover state
+  .nav-tabs > li:hover > a,
+  ul.nav.nav-tabs.filter-formats li:hover a,
+  ul.tabs--primary.nav.nav-tabs li:hover a,
+  &.path-user .nav-tabs > li:hover > a,
+  &.path-user ul.nav.nav-tabs.filter-formats li:hover a,
+  &.path-user ul.tabs--primary.nav.nav-tabs li:hover a {
+    color: $dark-text-primary; // #f4f4f4 - white
+    border-bottom-color: #8d8d8d; // grey
+  }
+
+  // Nav tabs active/selected state
+  .nav-tabs > li.active > a,
+  .nav-tabs > li.active > a:hover,
+  .nav-tabs > li.active > a:focus,
+  ul.nav.nav-tabs.filter-formats li.active a,
+  ul.tabs--primary.nav.nav-tabs li.active a,
+  ul.tabs--primary.nav.nav-tabs li.is-active a,
+  &.path-user .nav-tabs > li.active > a,
+  &.path-user .nav-tabs > li.active > a:hover,
+  &.path-user .nav-tabs > li.active > a:focus,
+  &.path-user ul.nav.nav-tabs.filter-formats li.active a,
+  &.path-user ul.tabs--primary.nav.nav-tabs li.active a,
+  &.path-user ul.tabs--primary.nav.nav-tabs li.is-active a {
+    color: $dark-text-primary; // #f4f4f4 - white
+    border-bottom-color: $dark-link-color; // #78a9ff - Carbon blue
+    background-color: $dark-bg-layer-02;
+  }
+
+  // User profile page nav tabs - hover state for non-active tabs
+  &.path-user.route-entityusercanonical .nav-tabs > li:not(.active):hover > a,
+  &.path-user.route-entityuseredit-form .nav-tabs > li:not(.active):hover > a,
+  &.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) .nav-tabs > li:not(.active):hover > a {
+    background-color: $dark-bg-hover; // #4c4c4c - hover background
+  }
+
+  // User profile page nav tabs - transparent background for active tabs
+  &.path-user.route-entityusercanonical .nav-tabs > li.active > a,
+  &.path-user.route-entityusercanonical .nav-tabs > li.active > a:hover,
+  &.path-user.route-entityusercanonical .nav-tabs > li.active > a:focus,
+  &.path-user.route-entityuseredit-form .nav-tabs > li.active > a,
+  &.path-user.route-entityuseredit-form .nav-tabs > li.active > a:hover,
+  &.path-user.route-entityuseredit-form .nav-tabs > li.active > a:focus,
+  &.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) .nav-tabs > li.active > a,
+  &.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) .nav-tabs > li.active > a:hover,
+  &.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) .nav-tabs > li.active > a:focus {
+    background-color: transparent;
+    border-left-color: $dark-link-color; // #78a9ff - Carbon blue for left border
+  }
+
+  // User profile page content area - tertiary background with secondary text
+  &.path-user.route-entityusercanonical .region-content article,
+  &.path-user.route-entityuseredit-form .region-content form.user-form,
+  &.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) form.apic-change-pwd-form {
+    background-color: $dark-bg-layer-02; // #393939
+    color: $dark-text-secondary; // #c6c6c6
+  }
+
+  // User edit form panels - tertiary background
+  &.path-user.route-entityuseredit-form {
+    form.user-form {
+      #edit-timezone,
+      #edit-language,
+      #edit-statustext,
+      #edit-rolestext,
+      #edit-avatars-avatar-generator--wrapper,
+      .panel-collapse,
+      .panel-body,
+      .panel-heading {
+        background-color: $dark-bg-layer-02; // #393939
+      }
+
+      // Panel title text - primary color (white)
+      .panel-heading .panel-title,
+      .panel-heading a.panel-title {
+        color: $dark-text-primary; // #f4f4f4 - white
+      }
+
+      // Panel body children text - secondary color
+      .panel-body .children {
+        color: $dark-text-secondary; // #c6c6c6
+      }
+  
+      // Panel body help-block text - secondary color
+      .panel-body .help-block {
+        color: $dark-text-secondary; // #c6c6c6
+      }
+  
+      // User edit form inputs - one shade darker
+      input[type="text"],
+      input[type="email"],
+      input[type="password"],
+      textarea,
+      select,
+      .form-control {
+        background-color: $dark-bg-hover; // #4c4c4c - one shade darker
+        border-color: $dark-border-color; // #525252
+        color: $dark-text-primary; // #f4f4f4
+  
+        &:hover {
+          background-color: $dark-bg-hover; // #4c4c4c
+          color: $dark-text-primary;
+        }
+  
+        &:focus {
+          background-color: $dark-bg-layer-00; // #161616
+          border-color: $dark-link-color; // #78a9ff
+          color: $dark-text-primary;
+        }
+  
+        &::placeholder {
+          color: $dark-text-tertiary; // #a8a8a8
+        }
+      }
+    }
+  }
+
+  // Change password form inputs - one shade darker
+  &.path-user.route-change-pwd-pagechange-password-form:not(.pass-reset) {
+    // Wrap the change password screen in dark backgrounds for readability.
+    .region-content,
+    .highlighted {
+      background-color: $dark-bg-layer-00; // #262626
+      color: $dark-text-secondary; // #c6c6c6
+
+      a {
+        color: $dark-link-color;
+
+        &:hover,
+        &:focus {
+          color: $dark-link-hover;
+        }
+      }
+    }
+
+    .highlighted .alert {
+      background-color: $dark-bg-layer-02; // #393939
+      border-color: $dark-border-color; // #525252
+      color: $dark-text-secondary;
+
+      .alert-text-wrapper h4,
+      .item-list--messages,
+      .item-list--messages li {
+        color: $dark-text-secondary;
+      }
+    }
+
+    .page-header {
+      color: $dark-text-primary; // white
+    }
+
+    form.apic-change-pwd-form {
+      input[type="password"],
+      input[type="text"],
+      .form-control {
+        background-color: $dark-bg-hover; // #4c4c4c - one shade darker
+        border-color: $dark-border-color; // #525252
+        color: $dark-text-primary; // #f4f4f4
+
+        &:hover {
+          background-color: $dark-bg-hover; // #4c4c4c
+          color: $dark-text-primary;
+        }
+
+        &:focus {
+          background-color: $dark-bg-layer-00; // #161616
+          border-color: $dark-link-color; // #78a9ff
+          color: $dark-text-primary;
+        }
+
+        &::placeholder {
+          color: $dark-text-tertiary; // #a8a8a8
+        }
+      }
+
+      // Form container background and borders
+      background-color: $dark-bg-layer-02; // #393939
+      border: 1px solid $dark-border-color;
+      color: $dark-text-secondary;
+    }
+  }
+
+  // Consumer org header - secondary background with dark border
+  &.path-myorg.route-ibm-apimmyorg header.apicMyOrgHeader,
+  &.route-ibm-apimbilling header.apicMyOrgHeader,
+  &.route-ibm-apimactivity header.apicMyOrgHeader,
+  &.route-ibm-apimanalytics header.apicMyOrgHeader {
+    background-color: $dark-bg-layer-01; // #393939
+    border-bottom: 1px solid $dark-border-color; // #525252
+  }
+
+  // Consumer org organization tabs - secondary background
+  &.path-myorg.route-ibm-apimmyorg header.apicMyOrgHeader .organizationTabs ul,
+  &.route-ibm-apimbilling header.apicMyOrgHeader .organizationTabs ul,
+  &.route-ibm-apimactivity header.apicMyOrgHeader .organizationTabs ul,
+  &.route-ibm-apimanalytics header.apicMyOrgHeader .organizationTabs ul {
+    background-color: $dark-bg-layer-01; // #262626
+  }
+
+  // Consumer org member section and owner - tertiary background
+  .apicMyOrg .memberSection,
+  .apicMyOrgOwner {
+    background-color: $dark-bg-layer-02; // #393939
+  }
+
+  // Consumer org member table th and td - tertiary background
+  .apicMyOrg .memberSection .apicMyOrgMembers table th,
+  .apicMyOrg .memberSection .apicMyOrgMembers table td {
+    background-color: $dark-bg-layer-02; // #393939
+  }
+
+  // Consumer org member role enabled SVG checkmarks - grey
+  .apicMyOrg .memberSection .apicMyOrgMembers table .apicMyOrgMemberRoleEnabled svg {
+    filter: brightness(0) saturate(100%) invert(42%) sepia(0%) saturate(0%) hue-rotate(173deg) brightness(92%) contrast(88%);
+  }
+
+  // Consumer org member actions overflow menu SVG icon - grey
+  .apicMyOrg .memberSection .apicMyOrgMembers table .apicMyOrgActions .overflow-menu .dropit-trigger .dropit-icon svg {
+    filter: brightness(0) saturate(100%) invert(42%) sepia(0%) saturate(0%) hue-rotate(173deg) brightness(92%) contrast(88%);
+  }
+
+  // Consumer org member actions overflow menu hover background
+  .apicMyOrg .memberSection .apicMyOrgMembers table .apicMyOrgActions .overflow-menu .dropit-trigger:hover {
+    background-color: $dark-bg-hover; // #4c4c4c
+  }
+
+  // "No content" messages - org members, payment methods, general content
+  .apicMyOrg .apicMyOrgMembers .apicMyOrgNoMembers .noMembersTextContainer .firstLine,
+  .noPaymentMethods .noPaymentMethodsText.firstLine,
+  .block .apicNoContent .noContentTextContainer .firstLine {
+    color: $dark-text-tertiary;
+  }
+
+  // Alert messages - transparent backgrounds with vibrant border colors
+  .alert-info,
+  .alert.alert-info {
+    background-color: transparent;
+    color: $dark-text-primary;
+    border-color: #4589ff; // Lighter blue
+    border-left-color: #4589ff;
+  }
+
+  .alert-success,
+  .alert.alert-success {
+    background-color: transparent;
+    color: $dark-text-primary;
+    border-color: #42be65; // Green
+    border-left-color: #42be65;
+  }
+
+  .alert-danger,
+  .alert.alert-danger,
+  .alert-error,
+  .alert.alert-error {
+    background-color: transparent;
+    color: $dark-text-primary;
+    border-color: #fa4d56; // Red
+    border-left-color: #fa4d56;
+  }
+
+  .alert-warning,
+  .alert.alert-warning {
+    background-color: transparent;
+    color: $dark-text-primary;
+    border-color: #f1c21b; // Yellow (Carbon Design System warning color)
+    border-left-color: #f1c21b;
+  }
+
+  // Rich text editors (CKEditor) - for blogs, forums, and content with styling
+  .ck-blurred.ck.ck-content.ck-editor__editable.ck-rounded-corners.ck-editor__editable_inline,
+  .ck.ck-content.ck-editor__editable.ck-rounded-corners.ck-editor__editable_inline,
+  .ck-editor__main > .ck-editor__editable {
+    background-color: $dark-bg-layer-02; // #393939
+    color: $dark-text-primary;
+    border-color: $dark-border-color;
+  }
+
+  // CKEditor when focused/selected - maintain tertiary background
+  .ck-focused.ck.ck-content.ck-editor__editable.ck-rounded-corners.ck-editor__editable_inline,
+  .ck-editor__main > .ck-editor__editable:focus,
+  .ck-editor__main > .ck-editor__editable.ck-focused {
+    background-color: $dark-bg-layer-02; // #393939 - keep same background when selected
+    color: $dark-text-primary;
+    border-color: $dark-link-color; // #78a9ff - blue border when focused
+  }
+
+  // CKEditor format selector
+  #edit-body-0-format {
+    background-color: $dark-bg-layer-02;
+    color: $dark-text-primary;
+    border-color: $dark-border-color;
+  }
+
+  // Tables (global)
+  table,
+  .table {
+    color: $dark-text-primary;
+
+    thead {
+      background-color: $dark-bg-layer-02;
+      border-color: $dark-border-color;
+    }
+
+    tbody tr {
+      background-color: $dark-bg-layer-02;
+      border-color: $dark-border-color;
+
+      &:hover {
+        background-color: $dark-bg-hover;
+      }
+    }
+  }
+
+  // Tooltips and Popovers - Bootstrap and Carbon Design System
+  // High specificity to override any existing styles
+  body[data-dmt-mode="dark"] .tooltip,
+  body[data-dmt-mode="dark"] .popover,
+  body[data-dmt-mode="dark"] div.tooltip,
+  body[data-dmt-mode="dark"] div.popover {
+    background-color: $dark-bg-layer-02;
+    color: $dark-text-primary;
+    border: 1px solid $dark-border-color;
+
+    .tooltip-inner,
+    .popover-content,
+    .popover-body {
+      background-color: $dark-bg-layer-02;
+      color: $dark-text-primary;
+      border: 1px solid $dark-border-color;
+    }
+
+    .tooltip-arrow,
+    .arrow {
+      &::before,
+      &::after {
+        border-color: $dark-bg-layer-02;
+      }
+    }
+
+    .popover-title,
+    .popover-header {
+      background-color: $dark-bg-layer-01;
+      color: $dark-text-primary;
+      border-bottom-color: $dark-border-color;
+    }
+  }
+
+  // Bootstrap tooltip variations
+  body[data-dmt-mode="dark"] .tooltip.top .tooltip-arrow,
+  body[data-dmt-mode="dark"] .tooltip.bottom .tooltip-arrow,
+  body[data-dmt-mode="dark"] .tooltip.left .tooltip-arrow,
+  body[data-dmt-mode="dark"] .tooltip.right .tooltip-arrow {
+    border-color: transparent;
+    
+    &::before {
+      border-top-color: $dark-bg-layer-02;
+      border-bottom-color: $dark-bg-layer-02;
+      border-left-color: $dark-bg-layer-02;
+      border-right-color: $dark-bg-layer-02;
+    }
+  }
+
+  // Carbon Design System tooltips
+  body[data-dmt-mode="dark"] .bx--tooltip,
+  body[data-dmt-mode="dark"] .bx--assistive-text,
+  body[data-dmt-mode="dark"] .bx--tooltip__trigger,
+  body[data-dmt-mode="dark"] .bx--tooltip__label {
+    background-color: $dark-bg-layer-02;
+    color: $dark-text-primary;
+    border: 1px solid $dark-border-color;
+  }
+
+  // Carbon tooltip content
+  body[data-dmt-mode="dark"] .bx--tooltip__content {
+    background-color: $dark-bg-layer-02;
+    color: $dark-text-primary;
+  }
+
+  // Carbon tooltip caret/arrow
+  body[data-dmt-mode="dark"] .bx--tooltip__caret {
+    background-color: $dark-bg-layer-02;
+    border-color: $dark-border-color;
+  }
+
+  // Modals (global)
+  .modal-content {
+    background-color: $dark-bg-layer-01;
+    border-color: $dark-border-color;
+    color: $dark-text-primary;
+  }
+
+  .modal-header {
+    border-bottom-color: $dark-border-color;
+
+    // Modal close button (X) - make grey
+    .close,
+    button.close {
+      svg {
+        filter: brightness(0) saturate(100%) invert(42%) sepia(0%) saturate(0%) hue-rotate(173deg) brightness(92%) contrast(88%);
+      }
+    }
+  }
+
+  .modal-footer {
+    border-top-color: $dark-border-color;
+  }
+
+  // All modal close buttons and X SVGs - make grey
+  .modal {
+    .close svg,
+    button.close svg,
+    a.close svg,
+    .planDetail--modalClose svg,
+    .modal-close svg {
+      filter: brightness(0) saturate(100%) invert(42%) sepia(0%) saturate(0%) hue-rotate(173deg) brightness(92%) contrast(88%);
+    }
+  }
+
+  // Breadcrumbs (global)
+  .breadcrumb {
+    background-color: $dark-bg-layer-01;
+    color: $dark-text-secondary;
+
+    // Active breadcrumb item - lighter text for readability
+    li.active {
+      color: $dark-text-secondary; // #c6c6c6
+    }
+  }
+
+  // Sidebar (global)
+  .sidebar,
+  .region-sidebar-first,
+  .region-sidebar-second {
+    background-color: $dark-bg-layer-01;
+  }
+
+  // Code blocks (global)
+  pre,
+  code {
+    background-color: $dark-bg-layer-01;
+    border-color: $dark-border-color;
+    color: #ff7b72;
+  }
+
+  // Highlighted content (global)
+  .region-highlighted {
+    background-color: $dark-bg-layer-01;
+  }
+
+  // Featured content headers (global)
+  .featuredcontent h3,
+  .featuredcontentBlockHeader {
+    color: $dark-text-primary;
+  }
+
+  // Footer (global - all pages)
+  footer.footer.container,
+  footer,
+  .footer {
+    background-color: $dark-bg-layer-00;
+    border-top-color: $dark-border-color;
+    color: $dark-text-primary;
+
+    // Footer links - primary text color by default, link color on hover
+    a,
+    .menu--footer a {
+      color: $dark-text-primary;
+      
+      &:hover,
+      &:focus {
+        color: $dark-link-color;
+      }
+    }
+  }
+
+  // Page header (global)
+  h1.page-header {
+    background-color: $dark-bg-layer-01;
+    color: $dark-text-primary;
+  }
+
+  // Social media icons (global) - make all SVGs grey
+  .social-media-links--platforms,
+  .block-social-media-links {
+    svg {
+      filter: brightness(0) saturate(100%) invert(42%) sepia(0%) saturate(0%) hue-rotate(173deg) brightness(92%) contrast(88%);
+    }
+  }
+
+  // Sticky header search block (global)
+  header.apicStickyHeader .block-search-icon-block {
+    background-color: $dark-bg-layer-00;
+  }
+}
+
+// ============================================================================
+// FORM LABELS - MAXIMUM SPECIFICITY OVERRIDE
+// ============================================================================
+// Place outside body block to avoid double body[data-dmt-mode="dark"] nesting
+// This ensures maximum specificity to override Carbon Design System .bx--global-light-ui
+
+body[data-dmt-mode="dark"].bx--global-light-ui .form-item label,
+body[data-dmt-mode="dark"].bx--global-light-ui .form-item .label,
+body[data-dmt-mode="dark"].bx--global-light-ui .label,
+body[data-dmt-mode="dark"] .bx--label,
+body[data-dmt-mode="dark"] .field--name-application-redirect-endpoints .field-multiple-table th.field-label {
+  color: $dark-text-primary; // #f4f4f4 - white
+}
+
+// ============================================================================
+// AUTH PAGES (LOGIN, REGISTER, PASSWORD RESET)
+// ============================================================================
+
+body[data-dmt-mode="dark"] {
+  // Body background for auth pages (right side)
+  &.bx--global-light-ui.context--user-login,
+  &.bx--global-light-ui.context--user-register,
+  &.bx--global-light-ui.route-change-pwd-pagereset,
+  &.bx--global-light-ui.route-apicresetpw,
+  &.bx--global-light-ui.context--user-password {
+    background-color: $dark-bg-layer-01;
+  }
+
+  // Auth page alerts (e.g., login error) close icon
+  .highlighted .alert .close .bx--inline-notification__close-icon path {
+    fill: $dark-text-primary; // make the “x” white in dark mode
+  }
+}
+
+body[data-dmt-mode="dark"] {
+  // Auth page wrapper backgrounds (left side)
+  .apic-login-wrapper::after,
+  .apic-register-wrapper::after,
+  .apic-reset-wrapper::after {
+    background-color: $dark-bg-layer-00;
+    background-image: url(../images/apic-home.svg);
+    background-repeat: no-repeat;
+    background-position: 0 50%;
+    background-size: 50%;
+    content: ' ';
+    pointer-events: none;
+    z-index: -1; // match light theme stacking so content stays above
+  }
+}
+
+body[data-dmt-mode="dark"] {
+  // Auth pages footer
+  &.bx--global-light-ui.context--user-login footer.footer.container,
+  &.bx--global-light-ui.context--user-register footer.footer.container,
+  &.bx--global-light-ui.route-change-pwd-pagereset footer.footer.container,
+  &.bx--global-light-ui.route-apicresetpw footer.footer.container,
+  &.bx--global-light-ui.context--user-password footer.footer.container {
+    background-color: $dark-bg-layer-00;
+  }
+}
+
+body[data-dmt-mode="dark"] {
+  // Auth page forms (Main Form)
+  #user-register-form,
+  #user-login-form,
+  #user-pass-form,
+  .apic-user-form {
+    background-color: $dark-bg-layer-01;
+    color: $dark-text-secondary; // #c6c6c6 for better readability
+  }
+
+  // Auth page form headers
+  .apic-user-form-header {
+    color: $dark-text-primary;
+  }
+
+  // Form separator
+  // lines
+  .apicFormLine,
+  .apic-user-form-line {
+    background-color: $dark-text-secondary;
+  }
+
+  .apicFormLine,
+  .apic-user-form-line {
+    background-color: $dark-text-secondary;
+  }
+
+  .apicFormOr,
+  .apic-user-form-or {
+  color:  $dark-text-secondary;
+}
+}
+
+// ============================================================================
+// CONSUMER ORG INVITE USER PAGE (body.context--myorg-invite)
+// ============================================================================
+
+body[data-dmt-mode="dark"] {
+  &.context--myorg-invite.route-consumerorginvite {
+    // Main container background
+    .apicMainContent.main-container.container.js-quickedit-main-content {
+      background-color: $dark-bg-layer-01; // #262626
+
+      // Row container
+      .row {
+        background-color: $dark-bg-layer-02; // #393939
+      }
+    }
+
+    // Page header - tertiary background
+    h1.page-header {
+      background-color: $dark-bg-layer-02; // #393939
+    }
+
+    // Invite user form - tertiary background to stand out from page
+    .consumerorg-invite-user-form {
+      background-color: $dark-bg-layer-02; // #393939
+      color: $dark-text-secondary; // #c6c6c6
+    }
+  }
+}
+
+// Invite user form inputs - outside body block for maximum specificity
+body[data-dmt-mode="dark"].bx--global-light-ui.context--myorg-invite.route-consumerorginvite {
+  .consumerorg-invite-user-form {
+    // Form inputs - match global form styling
+    .form-control,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+      background-color: $dark-bg-hover; // #393939
+      border-color: $dark-border-color; // #525252
+      color: $dark-text-primary; // #f4f4f4
+
+      &:hover {
+        background-color: $dark-bg-layer-00;
+        color: $dark-text-primary;
+      }
+
+      &:focus {
+        background-color: $dark-bg-layer-00; // #161616
+        border-color: $dark-link-color; // #78a9ff
+        color: $dark-text-primary;
+      }
+
+      &::placeholder {
+        color: $dark-text-primary; // #a8a8a8
+      }
+    }
+
+    // Form labels
+    label,
+    .label,
+    .bx--label {
+      color: $dark-text-primary; // #f4f4f4
+    }
+
+    // Form descriptions
+    .description {
+      color: $dark-text-secondary; // #c6c6c6
+    }
+
+    // Fieldset legends
+    legend {
+      color: $dark-text-secondary; // #c6c6c6
+      border-bottom-color: $dark-border-color;
+    }
+
+    // Radio buttons
+    .bx--radio-button__appearance {
+      border-color: $dark-text-secondary; // #c6c6c6
+    }
+
+    // Border when checked - match inner dot color
+    .bx--radio-button:checked + .bx--radio-button__appearance {
+      border-color: $dark-text-secondary; // #c6c6c6 - match inner dot
+    }
+
+    .bx--radio-button:checked + .bx--radio-button__appearance::before {
+      background-color: $dark-text-secondary; // #c6c6c6
+    }
+  }
+}
+
+// ============================================================================
+// CONSUMER ORG CREATE PAGE (body.context--myorg-create)
+// ============================================================================
+
+body[data-dmt-mode="dark"] {
+  &.context--myorg-create.route-consumerorgcreate {
+    // Main container background
+    .apicMainContent.main-container.container.js-quickedit-main-content {
+      background-color: $dark-bg-layer-01; // #262626
+
+      // Row container - tertiary background
+      .row {
+        background-color: $dark-bg-layer-02; // #393939
+
+        // Section inside row - tertiary background
+        section.col-sm-12 {
+          background-color: $dark-bg-layer-02; // #393939
+        }
+      }
+    }
+
+    // Create org form - tertiary background
+    .consumerorg-create-form {
+      background-color: $dark-bg-layer-02; // #393939
+      color: $dark-text-secondary; // #c6c6c6
+    }
+  }
+}
+
+// Create org form inputs - outside body block for maximum specificity
+body[data-dmt-mode="dark"].bx--global-light-ui.context--myorg-create.route-consumerorgcreate {
+  .consumerorg-create-form {
+    // Form inputs - match global form styling
+    .form-control,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+      background-color: $dark-bg-layer-02; // #393939
+      border-color: $dark-border-color; // #525252
+      color: $dark-text-primary; // #f4f4f4
+
+      &:hover {
+        background-color: $dark-bg-layer-02;
+        color: $dark-text-primary;
+      }
+
+      &:focus {
+        background-color: $dark-bg-layer-00; // #161616
+        border-color: $dark-link-color; // #78a9ff
+        color: $dark-text-primary;
+      }
+
+      &::placeholder {
+        color: $dark-text-tertiary; // #a8a8a8
+      }
+    }
+
+    // Form labels
+    label,
+    .label,
+    .bx--label {
+      color: $dark-text-primary; // #f4f4f4
+    }
+
+    // Form descriptions
+    .description {
+      color: $dark-text-secondary; // #c6c6c6
+    }
+
+    // Fieldset legends
+    legend {
+      color: $dark-text-secondary; // #c6c6c6
+      border-bottom-color: $dark-border-color;
+    }
+
+    // Radio buttons
+    .bx--radio-button__appearance {
+      border-color: $dark-text-secondary; // #c6c6c6
+    }
+
+    // Border when checked - match inner dot color
+    .bx--radio-button:checked + .bx--radio-button__appearance {
+      border-color: $dark-text-secondary; // #c6c6c6 - match inner dot
+    }
+
+    .bx--radio-button:checked + .bx--radio-button__appearance::before {
+      background-color: $dark-text-secondary; // #c6c6c6
+    }
+  }
+}
+
+// ============================================================================
+// CONSUMER ORG CHANGE MEMBER ROLE PAGE (body.context--myorg-changerole-*)
+// ============================================================================
+
+body[data-dmt-mode="dark"] {
+  &[class*="context--myorg-changerole"] {
+    // Main container background
+    .apicMainContent.main-container.container.js-quickedit-main-content {
+      background-color: $dark-bg-layer-01; // #262626
+
+      // Row container - tertiary background
+      .row {
+        background-color: $dark-bg-layer-02; // #393939
+      }
+    }
+
+    // Page header - tertiary background
+    h1.page-header {
+      background-color: $dark-bg-layer-02; // #393939
+    }
+  }
+}
+
+// ============================================================================
+// CONSUMER ORG REMOVE USER PAGE (body.context--myorg-remove-*)
+// ============================================================================
+
+body[data-dmt-mode="dark"] {
+  &[class*="context--myorg-remove"] {
+    // Main container background
+    .apicMainContent.main-container.container.js-quickedit-main-content {
+      background-color: $dark-bg-layer-01; // #262626
+
+      // Row container - tertiary background
+      .row {
+        background-color: $dark-bg-layer-02; // #393939
+      }
+    }
+
+    // Page header - tertiary background
+    h1.page-header {
+      background-color: $dark-bg-layer-02; // #393939
+    }
+  }
+}
+
+// ============================================================================
+// PRODUCT PAGE (body.path-product)
+// ============================================================================
+
+body[data-dmt-mode="dark"] {
+  &.path-product {
+
+    .apicMainContent.main-container.container.js-quickedit-main-content{
+        background-color: $dark-bg-layer-01;
+        color: $dark-text-primary;
+      }
+      
+    // Main containers
+    .apicMainContent.main-container.container.js-quickedit-main-content,
+    .views-element-container.form-group,
+    .masonry-layout-products.form-group.masonry.masonry-layout,
+    .views-exposed-form.bef-exposed-form {
+      background-color: $dark-bg-layer-01;
+      color: $dark-text-primary;
+    }
+
+    // Product header with metadata
+    .node__header--has-meta.node__header.apicProductHeader {
+      background-color: $dark-bg-layer-01;
+      color: $dark-text-primary;
+    }
+
+    // Page titles and headings
+    h1.page-header,
+    h1.node__title,
+    h1.productName,
+    h1.applicationName,
+    h1.apiName,
+    h1.orgName {
+      color: $dark-text-primary;
+    }
+
+    // Product name span - ensure it's white, not secondary color
+    h1.productName span,
+    h1.productName span.field-name-title span {
+      color: $dark-text-primary;
+    }
+
+    // API list items (cards in product view)
+    .apicProductApiList .list-group-item .bx--card {
+      background-color: $dark-bg-layer-02;
+      border-color: $dark-border-color;
+      color: $dark-text-primary;
+
+      &:hover {
+        background-color: $dark-bg-hover;
+        box-shadow: 0 4px 8px $dark-shadow-hover;
+      }
+
+      // API card links and API name spans
+      a {
+        color: $dark-link-color;
+        &:hover {
+          color: lighten($dark-link-color, 10%);
+        }
+        
+        // API name span within link - ensure it uses link color
+        span.apicApiName,
+        span.apicApiName span {
+          color: $dark-link-color; // #78a9ff
+        }
+      }
+    }
+
+    // API count border in cards
+    .bx--card .apicApiCount {
+      border-top-color: $dark-border-color; // #525252 - grey
+    }
+
+    // API protocol and state text (REST, Online, etc.)
+    .apicProtocol.bx--tertiary-text,
+    .apicState.bx--tertiary-text {
+      color: $dark-text-tertiary; // #a8a8a8
+
+      .field {
+        color: $dark-text-tertiary;
+      }
+    }
+
+    // Plan cards
+    .planCard {
+      background-color: $dark-bg-layer-02;
+      border-color: $dark-border-color;
+      color: $dark-text-primary;
+
+      &:hover {
+        background-color: $dark-bg-hover;
+        box-shadow: 0 4px 8px $dark-shadow-hover;
+      }
+
+      // Plan rate limits heading and span
+      .planRatesAndBilling {
+        p.productive-heading-02 {
+          color: $dark-text-secondary; // #f4f4f4 - white
+
+          span.multiRateLimits {
+            color: $dark-text-secondary; // #f4f4f4 - white
+          }
+        }
+      }
+
+      // Plan API checkmark SVG - make grey
+      .planApiList li .planApiCheckMark svg {
+        filter: brightness(0) saturate(100%) invert(42%) sepia(0%) saturate(0%) hue-rotate(173deg) brightness(92%) contrast(88%);
+      }
+    }
+
+    // Plan detail sections
+    .planDetail--content {
+      background-color: $dark-bg-layer-02;
+
+      // Plan comparison table within modal
+      table.plansTable {
+        background-color: $dark-bg-layer-00; // #161616 - darker for better contrast
+        color: $dark-text-primary;
+        border-color: $dark-border-color;
+
+        thead {
+          background-color: $dark-bg-layer-01; // #262626
+          border-color: $dark-border-color;
+
+          th {
+            background-color: $dark-bg-layer-01;
+            color: $dark-text-primary;
+            border-color: $dark-border-color;
+          }
+        }
+
+        tbody {
+          tr {
+            background-color: $dark-bg-layer-00; // #161616
+            border-color: $dark-border-color;
+
+            &:hover {
+              background-color: $dark-bg-layer-01; // #262626 on hover
+            }
+
+            td {
+              background-color: $dark-bg-layer-00;
+              color: $dark-text-primary;
+              border-color: $dark-border-color;
+            }
+          }
+        }
+
+        // Table cells
+        th, td {
+          border-color: $dark-border-color;
+        }
+      }
+    }
+
+    .planDetail--header {
+      background-color: $dark-bg-layer-02;
+    }
+
+    // About icon
+    .bx--about__icon {
+      background-color: transparent;
+      border-color: transparent;
+    }
+
+    // Product, API, and App cards
+    .product-card,
+    .api-card,
+    .app-card {
+      background-color: $dark-bg-layer-01;
+      border-color: $dark-border-color;
+      color: $dark-text-primary;
+
+      &:hover {
+        background-color: $dark-bg-hover;
+        box-shadow: 0 4px 8px $dark-shadow-hover;
+      }
+    }
+
+    // Product cards in masonry layout - High specificity to override inline styles
+    .apicMainContent {
+      .region-content {
+        .masonry-layout-products {
+          .masonry-item {
+            article.node--type-product.bx--card {
+              background-color: $dark-bg-layer-02;
+              border-color: $dark-border-color;
+              color: $dark-text-primary;
+
+              &:hover {
+                background-color: $dark-bg-hover;
+                box-shadow: 0 4px 8px $dark-shadow-hover;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // API type lozenge span - Darker background for better readability
+    .apicProductCard {
+      .apicProductCardMain {
+        .bx--about__title--name {
+          span.apicProductApiType {
+            span.apiTypeLozenge {
+              background-color: #262626;
+              color: $dark-text-primary;
+              border-color: $dark-border-color;
+            }
+          }
+        }
+      }
+    }
+
+    // Product name links - Always use link color, never visited color
+    .masonry-layout-products {
+      .masonry-item {
+        article.node--type-product.bx--card {
+          a[rel="bookmark"] {
+            color: $dark-link-color;
+
+            &:visited {
+              color: $dark-link-color;
+            }
+
+            &:hover {
+              color: $dark-link-hover;
+            }
+
+            // Product name span inside the link
+            span.apicProductName {
+              color: $dark-link-color;
+
+              span {
+                color: $dark-link-color;
+              }
+            }
+
+            // Ensure visited state doesn't change color
+            &:visited span.apicProductName,
+            &:visited span.apicProductName span {
+              color: $dark-link-color;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// ============================================================================
+// FORUM PAGE (body.path-forum, body.context--forum)
+// ============================================================================
+
+body[data-dmt-mode="dark"] {
+  &.path-forum {
+    .forumWrapper .forumContent {
+      background-color: $dark-bg-layer-01;
+      color: $dark-text-primary;
+    }
+  }
+}
+
+body[data-dmt-mode="dark"] {
+  // Main content container
+  &.context--forum .apicMainContent.main-container.container.js-quickedit-main-content {
+    background-color: $dark-bg-layer-01;
+    color: $dark-text-primary;
+  }
+
+  // Forum sidebar
+  &.context--forum .forumSidebar {
+    background-color: $dark-bg-layer-01;
+    color: $dark-text-primary;
+  }
+
+  // Forum specific containers
+  &.context--forum .forumWrapper,
+  &.context--forum .forum-actions-wrapper,
+  &.context--forum .region-content {
+    background-color: $dark-bg-layer-01;
+    color: $dark-text-primary;
+  }
+}
+
+// ============================================================================
+// SUPPORT PAGE (body.path-support, body.context--support)
+// ============================================================================
+
+body[data-dmt-mode="dark"] {
+  &.path-support {
+    .supportContentWrapper .supportContent {
+      background-color: $dark-bg-layer-02;
+      color: $dark-text-primary;
+    }
+  }
+}
+
+body[data-dmt-mode="dark"] {
+  &.context--support {
+    // Main containers
+    .apicMainContent.main-container.container.js-quickedit-main-content,
+    .supportContentWrapper,
+    .faqDiv,
+    .support-actions-wrapper,
+    .region-content {
+      background-color: $dark-bg-layer-01;
+      color: $dark-text-primary;
+    }
+
+    // Support view container
+    .apicMainContent
+      .supportContentWrapper
+      .views-element-container
+      .view {
+        background-color: $dark-bg-layer-02;
+        border: unset;
+        color: $dark-text-primary;
+    }
+
+    // FAQ accordion questions
+    .faqfield-question {
+      background-color: $dark-bg-layer-01;
+      color: $dark-text-primary;
+
+      &:hover {
+        background-color: $dark-bg-hover;
+      }
+    }
+
+    // FAQ accordion answers
+    .faqfield-answer {
+      background-color: $dark-bg-layer-01;
+      color: $dark-text-secondary;
+    }
+
+    // Accordion header icon (chevron arrow) - make it white
+    .apicMainContent .ui-accordion-header-icon {
+      filter: brightness(0) saturate(100%) invert(96%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(103%) contrast(96%);
+      // This filter converts the SVG icon to #f4f4f4 (white)
+    }
+
+        // FAQ accordion UI state
+    .views-element-container
+      .view.view-faqs
+      .ui-state-default,
+    .views-element-container
+      .view.view-faqs
+      .ui-widget-content
+      .ui-state-default,
+    .views-element-container
+      .view.view-faqs
+      .ui-widget-header
+      .ui-state-default {
+        color: $dark-text-primary;
+        background-color: $dark-bg-layer-01;
+        border-color: $dark-border-color;
+    }
+
+    // FAQ/Support view spans
+    .views-element-container .view.view-faqs span,
+      .supportContentWrapper span {
+        color: $dark-text-primary;
+      }
+    }
+  }
+
+// ============================================================================
+// CONTACT PAGE (body.path-contactsite-page)
+// ============================================================================
+
+body[data-dmt-mode="dark"] {
+  &.path-contactsite-page {
+    .contact-message-feedback-form {
+      padding-top: 2rem;
+      background-color: $dark-bg-layer-01;
+      color: $dark-text-primary;
+      border: unset;
+
+      // Contact form inputs
+      input,
+      textarea,
+      select {
+        background-color: $dark-bg-layer-00;
+        color: $dark-text-primary;
+        border: 1px solid $dark-border-color;
+
+        &:hover {
+          // No style change on hover
+          background-color: $dark-bg-layer-00;
+        }
+
+        &:focus {
+          background-color: $dark-bg-layer-00;
+          border-color: $dark-link-color;
+          outline: none;
+        }
+      }
+    }
+  }
+}
+
+// ============================================================================
+// HOMEPAGE (body.path-frontpage)
+// ============================================================================
+
+body[data-dmt-mode="dark"] {
+  &.path-frontpage {
+    // Getting started block
+    .block-getting-started .startguide {
+      background-color: $dark-bg-layer-01;
+    }
+
+    // Getting started block h4 headings
+    .block-getting-started h4 {
+      color: $dark-text-primary;
+    }
+
+    // Featured content block header h3
+    .featuredcontentBlockWrapper .featuredcontentBlockHeader h3 {
+      color: $dark-text-primary;
+    }
+
+    // Featured content outer containers
+    // More specific selector to override existing styles
+    .region-content .featuredcontentContentContainer,
+    .region-content .featuredcontentNodeContainer {
+      background-color: $dark-bg-layer-01;
+      color: $dark-text-primary;
+    }
+
+    // Featured content nodes (with dynamic IDs like featuredcontentNodeID-_2)
+    // Only apply to the actual node divs, not the containers
+    .featuredcontentNode[class*="featuredcontentNodeID"] {
+      background-color: $dark-bg-layer-02;
+      border-color: $dark-border-color;
+      color: $dark-text-primary;
+
+      &:hover {
+        background-color: $dark-bg-hover;
+        box-shadow: 0 4px 8px $dark-shadow-hover;
+      }
+    }
+
+    // Invert the colour of the small svg's in the Let's Get Started Section
+    .block-getting-started .startguide .gsstep div.placeholder {
+      filter: brightness(0) saturate(100%) invert(96%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(103%) contrast(96%);
+    }
+
+  }
+}
+
+// ============================================================================
+// FEATURED CONTENT TOOLTIPS - GLOBAL (highest specificity)
+// ============================================================================
+// Featured content tooltips - primary background with primary text
+// Tooltips use custom apic-tooltip classes
+// Structure: div#apic-tooltip > div > div.apic-tooltip-grid > div.apic-tooltip-cell
+body[data-dmt-mode="dark"].bx--global-light-ui.path-frontpage {
+  // Main tooltip container
+  div#apic-tooltip,
+  div.apic-tooltip-pointer {
+    background-color: #ffffff; // White background
+    color: #4c4c4c; // Darker gray text
+    border: 1px solid $dark-border-color;
+
+    // All child divs (wrapper divs)
+    > div,
+    > div > div {
+      background-color: #ffffff; // White background
+      color: #4c4c4c; // Darker gray text
+    }
+
+    // Tooltip grid container
+    div.apic-tooltip-grid,
+    .apic-tooltip-grid-4 {
+      background-color: #ffffff; // White background
+      color: #4c4c4c; // Darker gray text
+    }
+
+    // Tooltip cells (individual content cells)
+    div.apic-tooltip-cell,
+    .apic-tooltip-cell {
+      background-color: #ffffff; // White background
+      color: #4c4c4c; // Darker gray text
+    }
+
+    // Tooltip tag (e.g., "API: HISTORICAL DATA API")
+    span.apic-tooltip-tag,
+    .apic-tooltip-tag-element-3 {
+      color: #4c4c4c; // Darker gray text
+      border-color: $dark-border-color;
+    }
+
+    // Tooltip divider
+    div.apic-tooltip-divider,
+    .apic-tooltip-divider {
+      background-color: #e0e0e0; // Light gray divider
+      border-color: #e0e0e0;
+    }
+  }
+
+  // Specific tooltip pointer variations (right, left, top, bottom)
+  div#apic-tooltip.apic-tooltip-pointer-right,
+  div#apic-tooltip.apic-tooltip-pointer-left,
+  div#apic-tooltip.apic-tooltip-pointer-top,
+  div#apic-tooltip.apic-tooltip-pointer-bottom {
+    background-color: #ffffff; // White background
+    color: #4c4c4c; // Darker gray text
+    border-color: $dark-border-color;
+  }
+}
+
+// Featured content tooltips on PRODUCT PAGES - same styling as homepage
+body[data-dmt-mode="dark"].bx--global-light-ui.path-product.context-product {
+  // Main tooltip container
+  div#apic-tooltip,
+  div.apic-tooltip-pointer {
+    background-color: #ffffff; // White background
+    color: #4c4c4c; // Darker gray text
+    border: 1px solid $dark-border-color;
+
+    // All child divs (wrapper divs)
+    > div,
+    > div > div {
+      background-color: #ffffff; // White background
+      color: #4c4c4c; // Darker gray text
+    }
+
+    // Tooltip grid container
+    div.apic-tooltip-grid,
+    .apic-tooltip-grid-4 {
+      background-color: #ffffff; // White background
+      color: #4c4c4c; // Darker gray text
+    }
+
+    // Tooltip cells (individual content cells)
+    div.apic-tooltip-cell,
+    .apic-tooltip-cell {
+      background-color: #ffffff; // White background
+      color: #4c4c4c; // Darker gray text
+    }
+
+    // Tooltip tag (e.g., "API: HISTORICAL DATA API")
+    span.apic-tooltip-tag,
+    .apic-tooltip-tag-element-3 {
+      color: #4c4c4c; // Darker gray text
+      border-color: $dark-border-color;
+    }
+
+    // Tooltip divider
+    div.apic-tooltip-divider,
+    .apic-tooltip-divider {
+      background-color: #e0e0e0; // Light gray divider
+      border-color: #e0e0e0;
+    }
+  }
+
+  // Specific tooltip pointer variations (right, left, top, bottom)
+  div#apic-tooltip.apic-tooltip-pointer-right,
+  div#apic-tooltip.apic-tooltip-pointer-left,
+  div#apic-tooltip.apic-tooltip-pointer-top,
+  div#apic-tooltip.apic-tooltip-pointer-bottom {
+    background-color: #ffffff; // White background
+    color: #4c4c4c; // Darker gray text
+    border-color: $dark-border-color;
+  }
+}
+
+// ============================================================================
+// BLOG PAGE (body.path-blog, search results, node teasers)
+// ============================================================================
+
+[data-dmt-mode="dark"] {
+  // Blog teaser nodes and search results
+  .node--view-mode-teaser,
+  article.search-result {
+    background-color: $dark-bg-layer-02;
+    border-color: $dark-border-color;
+    color: $dark-text-primary;
+    padding: 20px;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease;
+
+  }
+
+  // Blog teaser footer (user icon area)
+  footer.apicTeaserIcon {
+    background-color: $dark-bg-layer-02;
+    color: $dark-text-primary;
+    transition: background-color 0.3s ease;
+  }
+
+  // Blog teaser main content area
+  .apicTeaserMain {
+    background-color: $dark-bg-layer-02;
+    color: $dark-text-primary;
+    transition: background-color 0.3s ease;
+
+    h2 {
+      color: $dark-text-primary;
+      
+      a {
+        color: $dark-link-color;
+        transition: color 0.3s ease;
+
+        &:hover {
+          color: $dark-link-hover;
+
+          // Span inside link should also change color on hover
+          span {
+            color: $dark-link-hover;
+          }
+        }
+
+        // Span inside link - use link color
+        span {
+          color: $dark-link-color;
+          transition: color 0.3s ease;
+        }
+      }
+    }
+
+    a {
+      color: $dark-link-color;
+      transition: color 0.3s ease;
+
+      &:hover {
+        color: $dark-link-hover;
+      }
+    }
+  }
+
+  // Blog post footer (full blog post page)
+  article.blog-post footer {
+    background-color: $dark-bg-layer-01; // #262626
+  }
+}
+
+// ============================================================================
+// SEARCH PAGE (body.path-search, body.context--search-content)
+// ============================================================================
+
+body[data-dmt-mode="dark"] {
+  &.path-search,
+  &.context--search-content {
+    // All card types in search results (API, FAQ, Product, etc.)
+    article.node--view-mode-card.bx--card {
+      background-color: $dark-bg-layer-02; // #393939
+      border-color: $dark-border-color;
+      color: $dark-text-primary;
+
+      &:hover {
+        background-color: $dark-bg-hover;
+        box-shadow: 0 4px 8px $dark-shadow-hover;
+      }
+
+      // Product card links
+      .apicProductCard .apicProductCardMain .bx--about__title--name a {
+        color: $dark-link-color;
+
+        &:hover {
+          color: $dark-link-hover;
+        }
+
+        // Product name span
+        span.apicProductName,
+        span.apicProductName span {
+          color: $dark-link-color;
+        }
+      }
+
+      // API count border in product cards
+      .apicProductAPIs .apicApiCount {
+        border-top-color: $dark-border-color; // #525252 - grey
+      }
+
+      // Product card icon - transparent background and no border
+      .apicProductCard .apicCardIcon img.bx--about__icon {
+        background-color: transparent;
+        border-color: transparent;
+      }
+
+      // API type lozenge - dark primary background
+      .apicProductCard .apicProductCardMain .bx--about__title--name span.apicProductApiType span.apiTypeLozenge {
+        background-color: $dark-bg-layer-00; // #161616
+        color: $dark-text-primary;
+        border-color: $dark-border-color;
+      }
+
+      // FAQ accordion question text - tertiary text color
+      .faqfield-question.ui-accordion-header {
+        color: $dark-text-tertiary; // #a8a8a8
+      }
+
+      // FAQ accordion answer text - tertiary text color
+      .faqfield-answer.ui-accordion-content p {
+        color: $dark-text-tertiary; // #a8a8a8
+      }
+
+      // FAQ accordion arrow icon - white
+      .faqfield-question.ui-accordion-header .ui-accordion-header-icon {
+        filter: brightness(0) saturate(100%) invert(96%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(103%) contrast(96%);
+        // This filter converts the icon to #f4f4f4 (white)
+      }
+
+      // Blog post user picture field - tertiary background
+      footer.apicIcon article .field--name-user-picture {
+        background-color: $dark-bg-layer-02; // #393939
+      }
+
+      // Application card footer - tertiary background
+      .bx--card-footer.apicAppFooter {
+        background-color: $dark-bg-layer-02; // #393939
+      }
+
+      // Pagination active item - tertiary background, lighter blue on hover
+      .pagination > .active > a,
+      .pagination > .active > span {
+        background-color: $dark-bg-layer-02; // #393939
+        border-color: $dark-bg-layer-02;
+        color: $dark-text-primary; // #f4f4f4
+        
+        &:hover,
+        &:focus {
+          background-color: $dark-link-color; // #78a9ff - lighter blue
+          border-color: $dark-link-color;
+          color: $dark-text-primary;
+        }
+      }
+    }
+
+    // Search navbar item - lighter blue border-bottom
+    .navbar .ibmapimSearch {
+      border-bottom-color: $dark-link-color; // #78a9ff - lighter blue
+    }
+  }
+}
+
+// ============================================================================
+// PASSWORD RESET FORM - TRANSPARENT BACKGROUND
+// ============================================================================
+// Override light theme background for password reset form
+
+body[data-dmt-mode="dark"] {
+  form.user-pass-reset {
+    background-color: transparent;
+    border: unset;
+  }
+}
+
+// ============================================================================
+// APPLICATIONS PAGE (body.path-application, body.context--application)
+// ============================================================================
+
+body[data-dmt-mode="dark"] {
+  &.path-application,
+  &.context--application {
+    // Application cards in masonry layout
+    article.node--type-application.node--view-mode-card.bx--card {
+      background-color: $dark-bg-layer-02; // #393939
+      border-color: $dark-border-color;
+      color: $dark-text-primary;
+
+      &:hover {
+        background-color: $dark-bg-hover;
+        box-shadow: 0 4px 8px $dark-shadow-hover;
+      }
+
+      // Application card link wrapper
+      a {
+        color: $dark-text-primary;
+        text-decoration: none;
+
+        &:hover {
+          color: $dark-text-primary;
+        }
+      }
+
+      // Application card content area
+      .apicAppCard {
+        background-color: $dark-bg-layer-02; // #393939
+        color: $dark-text-primary;
+
+        // Application title
+        h3,
+        .apicAppTitle {
+          color: $dark-text-primary; // #f4f4f4 - white
+        }
+
+        // Application description
+        p,
+        .apicAppDescription {
+          color: $dark-text-secondary; // #c6c6c6 - light gray
+        }
+
+        // Application metadata (created date, etc.)
+        .apicAppMeta,
+        .field--name-created,
+        .field--name-changed {
+          color: $dark-text-tertiary; // #a8a8a8 - gray
+        }
+      }
+
+      // Application card footer
+      .bx--card-footer.apicAppFooter {
+        background-color: $dark-bg-layer-02; // #393939
+        border-top-color: $dark-border-color;
+        color: $dark-text-secondary; // #c6c6c6
+
+        // Footer links and text
+        a {
+          color: $dark-link-color;
+
+          &:hover {
+            color: $dark-link-hover;
+          }
+        }
+
+        // Footer metadata
+        span,
+        div {
+          color: $dark-text-secondary;
+        }
+      }
+    }
+
+    // Masonry layout container
+    .masonry-layout-applications.masonry-layout {
+      background-color: transparent;
+    }
+
+    // Application view container
+    .application-view.view {
+      background-color: transparent;
+      color: $dark-text-primary;
+    }
+
+    // Application state badges/labels
+    .application-state-enabled,
+    .application-state-disabled {
+      color: $dark-text-primary;
+    }
+  }
+
+  // APPLICATION CREATE/EDIT FORM (body.context--application-new)
+  &.context--application-new,
+  &.route-apic-appcreate {
+    // Main container and row - tertiary background
+    .apicMainContent.main-container.container {
+      background-color: $dark-bg-layer-01; // #262626
+
+      .row {
+        background-color: $dark-bg-layer-02; // #393939
+      }
+
+      // Region content
+      .region.region-content {
+        background-color: $dark-bg-layer-02; // #393939
+
+        // Page header
+        h1.page-header {
+          background-color: $dark-bg-layer-02; // #393939
+          color: $dark-text-primary; // #f4f4f4
+        }
+      }
+    }
+
+    // Application create form
+    form.application-create-form,
+    form#application-create-form {
+      background-color: $dark-bg-layer-02; // #393939
+      color: $dark-text-primary;
+
+      // Form inputs - match other form styling
+      input[type="text"],
+      input[type="email"],
+      input[type="url"],
+      input[type="password"],
+      input[type="number"],
+      textarea,
+      select,
+      .form-control {
+        background-color: $dark-bg-hover; // #4c4c4c - one shade darker
+        border-color: $dark-border-color; // #525252
+        color: $dark-text-primary; // #f4f4f4
+
+        &:hover {
+          background-color: $dark-bg-hover; // #4c4c4c
+          color: $dark-text-primary;
+        }
+
+        &:focus {
+          background-color: $dark-bg-layer-00; // #161616
+          border-color: $dark-link-color; // #78a9ff
+          color: $dark-text-primary;
+        }
+
+        &::placeholder {
+          color: $dark-text-tertiary; // #a8a8a8
+        }
+      }
+
+      // Redirect endpoints table
+      #application-redirect-endpoints-values.field-multiple-table {
+        background-color: $dark-bg-layer-02;
+        border-color: $dark-border-color;
+
+        thead {
+          background-color: $dark-bg-layer-02; // #393939
+          color: $dark-text-primary;
+
+          tr {
+            background-color: $dark-bg-layer-02; // #393939
+            border-color: $dark-border-color;
+          }
+
+          th {
+            background-color: $dark-bg-layer-02; // #393939
+            color: $dark-text-primary;
+            border-color: $dark-border-color;
+          }
+        }
+
+        tbody {
+          tr {
+            background-color: $dark-bg-layer-02;
+            border-color: $dark-border-color;
+
+            &:hover {
+              background-color: $dark-bg-hover;
+            }
+
+            td {
+              background-color: $dark-bg-layer-02;
+              border-color: $dark-border-color;
+              color: $dark-text-primary;
+
+              // Input fields in table cells
+              input.form-text {
+                background-color: $dark-bg-hover; // #4c4c4c
+                border-color: $dark-border-color;
+                color: $dark-text-primary;
+
+                &:focus {
+                  background-color: $dark-bg-layer-00;
+                  border-color: $dark-link-color;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Form labels
+      label {
+        color: $dark-text-primary; // #f4f4f4
+      }
+
+      // Help text
+      .help-block,
+      .description {
+        color: $dark-text-secondary; // #c6c6c6
+      }
+
+      // Form wrappers
+      .form-wrapper,
+      .form-group {
+        background-color: transparent;
+      }
+    }
+  }
+}
+
+// ============================================================================
+// ADMIN TOOLBAR - EXPLICIT DRUPAL STYLING
+// ============================================================================
+// Apply Drupal's default admin toolbar colors explicitly to override dark mode
+// Elements are marked with data-exclude-dark-mode="true" via JavaScript
+
+body[data-dmt-mode="dark"] {
+  
+  // Main toolbar bar (top #4f5661 bar)
+  [data-exclude-dark-mode="true"].toolbar-bar,
+  [data-exclude-dark-mode="true"] .toolbar-bar {
+    background-color: #0f0f0f;
+    color: white;
+  }
+  
+  // Toolbar tabs and items
+  [data-exclude-dark-mode="true"] .toolbar-tab,
+  [data-exclude-dark-mode="true"] .toolbar-item {
+    background-color: transparent;
+    color: #4f5661;
+  }
+  
+  // Toolbar links and buttons
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-tab > a,
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-item > a,
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-tab > button,
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-item > button,
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-button,
+  [data-exclude-dark-mode="true"] .toolbar-button {
+    color: #4f5661;
+    background-color: transparent;
+  }
+  
+  // Toolbar button labels
+  [data-exclude-dark-mode="true"] .toolbar-button__label,
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-button__label {
+    color: #4f5661;
+  }
+  
+  // Toolbar links hover
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-tab > a:hover,
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-item > a:hover,
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-tab > button:hover,
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-item > button:hover {
+    background-color: #1a1a1a;
+    color: white;
+  }
+  
+  // Active/selected toolbar items
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-tab.is-active > a,
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-item.is-active > a {
+    background-color: #4f5661;
+    color: white;
+  }
+  
+  // Toolbar tray (dropdown menu area)
+  [data-exclude-dark-mode="true"].toolbar-tray,
+  [data-exclude-dark-mode="true"] .toolbar-tray {
+    background-color: #ffffff;
+    color: #4f5661;
+    border-bottom: 1px solid #cccccc;
+  }
+  
+  // Toolbar menu in tray
+  [data-exclude-dark-mode="true"] .toolbar-menu,
+  [data-exclude-dark-mode="true"] .toolbar-menu ul {
+    background-color: #ffffff;
+    color: #4f5661;
+  }
+  
+  // Toolbar menu links
+  [data-exclude-dark-mode="true"] .toolbar-menu a,
+  [data-exclude-dark-mode="true"] .toolbar-menu button {
+    color: #4f5661;
+    background-color: transparent;
+  }
+  
+  // Toolbar menu links hover
+  [data-exclude-dark-mode="true"] .toolbar-menu a:hover,
+  [data-exclude-dark-mode="true"] .toolbar-menu button:hover,
+  [data-exclude-dark-mode="true"] .toolbar-menu a:focus,
+  [data-exclude-dark-mode="true"] .toolbar-menu button:focus {
+    background-color: #f5f5f5;
+    color: #4f5661;
+  }
+  
+  // Toolbar menu active trail
+  [data-exclude-dark-mode="true"] .toolbar-menu a.is-active,
+  [data-exclude-dark-mode="true"] .toolbar-menu .menu-item--active-trail > a {
+    color: #4f5661;
+    font-weight: bold;
+  }
+  
+  // Toolbar icons
+  [data-exclude-dark-mode="true"] .toolbar-icon {
+    color: #4f5661;
+    fill: #ffffff;
+  }
+  
+  [data-exclude-dark-mode="true"] .toolbar-tray .toolbar-icon {
+    color: #4f5661;
+    fill: #4f5661;
+  }
+  
+  // Contextual links
+  [data-exclude-dark-mode="true"].contextual,
+  [data-exclude-dark-mode="true"] .contextual {
+    background-color: #4f5661;
+    border: 1px solid #cccccc;
+  }
+  
+  [data-exclude-dark-mode="true"] .contextual-links a {
+    color: #0074bd;
+    background-color: #ffffff;
+  }
+  
+  [data-exclude-dark-mode="true"] .contextual-links a:hover {
+    background-color: #f5f5f5;
+    color: #0074bd;
+  }
+  
+  // Toolbar button
+  [data-exclude-dark-mode="true"] .toolbar-toggle-orientation button {
+    background-color: transparent;
+    color: #ffffff;
+  }
+  
+  // Override global typography rules for toolbar
+  // Force white text in top bar
+  [data-exclude-dark-mode="true"] .toolbar-bar *,
+  [data-exclude-dark-mode="true"].toolbar-bar *,
+  [data-exclude-dark-mode="true"] .toolbar-bar span,
+  [data-exclude-dark-mode="true"] .toolbar-bar a,
+  [data-exclude-dark-mode="true"] .toolbar-bar button,
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-tab,
+  [data-exclude-dark-mode="true"] .toolbar-bar .toolbar-item {
+    color: #ffffff;
+  }
+  
+  // Force #4f5661 text in dropdown tray
+  [data-exclude-dark-mode="true"] .toolbar-tray *,
+  [data-exclude-dark-mode="true"].toolbar-tray *,
+  [data-exclude-dark-mode="true"] .toolbar-tray span,
+  [data-exclude-dark-mode="true"] .toolbar-tray a,
+  [data-exclude-dark-mode="true"] .toolbar-tray button,
+  [data-exclude-dark-mode="true"] .toolbar-menu span,
+  [data-exclude-dark-mode="true"] .toolbar-menu a,
+  [data-exclude-dark-mode="true"] .toolbar-menu button {
+    color: #4f5661;
+  }
+  
+  // Contextual links text
+  [data-exclude-dark-mode="true"] .contextual *,
+  [data-exclude-dark-mode="true"] .contextual span,
+  [data-exclude-dark-mode="true"] .contextual a {
+    color: #0074bd;
+  }
+}
+
+// ============================================================================
+// BOX-SIZING CONSISTENCY (GLOBAL)
+// ============================================================================
+
+body *, body ::before, body ::after {
+  box-sizing: border-box;
+}

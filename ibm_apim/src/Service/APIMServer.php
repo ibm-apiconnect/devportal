@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Service;
 
@@ -34,6 +24,7 @@ use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\ibm_apim\Service\Interfaces\UserRegistryServiceInterface;
 use Drupal\user\Entity\User;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * API Connect Management Server REST apis.
@@ -96,6 +87,11 @@ class APIMServer implements ManagementServerInterface {
   protected MessengerInterface $messenger;
 
   /**
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  private RequestStack $requestStack;
+
+  /**
    * APIMServer constructor.
    *
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
@@ -109,6 +105,7 @@ class APIMServer implements ManagementServerInterface {
    * @param \Drupal\ibm_apim\Service\ApimUtils $apim_utils
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    */
   public function __construct(PrivateTempStoreFactory $temp_store_factory,
                               SiteConfig $config,
@@ -120,7 +117,8 @@ class APIMServer implements ManagementServerInterface {
                               MeResponseReader $me_response_reader,
                               ApimUtils $apim_utils,
                               AccountProxyInterface $current_user,
-                              MessengerInterface $messenger
+                              MessengerInterface $messenger,
+                              RequestStack $request_stack
   ) {
     $this->sessionStore = $temp_store_factory->get('ibm_apim');
     $this->siteConfig = $config;
@@ -133,6 +131,7 @@ class APIMServer implements ManagementServerInterface {
     $this->apim_utils = $apim_utils;
     $this->current_user = $current_user;
     $this->messenger = $messenger;
+    $this->requestStack = $request_stack;
   }
 
 
@@ -468,7 +467,7 @@ class APIMServer implements ManagementServerInterface {
    * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    * @throws \Drupal\ibm_apim\Rest\Exception\RestResponseParseException|\Exception
    */
-  public function acceptInvite(JWTToken $token, ApicUser $acceptingUser, string $orgTitle = NULL) {
+  public function acceptInvite(JWTToken $token, ApicUser $acceptingUser, ?string $orgTitle = NULL) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $headers = [
@@ -711,7 +710,7 @@ class APIMServer implements ManagementServerInterface {
    * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    * @throws \Exception
    */
-  public function postMemberInvitation(ConsumerOrg $org, string $email_address, string $role = NULL) {
+  public function postMemberInvitation(ConsumerOrg $org, string $email_address, ?string $role = NULL) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $data = [
       'email' => $email_address,
@@ -856,6 +855,14 @@ class APIMServer implements ManagementServerInterface {
       'X-IBM-Client-Id: ' . $this->siteConfig->getClientId(),
       'X-IBM-Client-Secret: ' . $this->siteConfig->getClientSecret(),
     ];
+
+    $request = $this->requestStack->getCurrentRequest();
+
+    // Block HEAD requests often used for prefetching
+    if ($request->getMethod() === 'HEAD') {
+      return new RestResponse('Valid activation link', 200);
+    }
+
     $pos = strpos($jwt->getUrl(), '?activation_id=');
     if ($pos !== false) {
       $activationID = substr($jwt->getUrl(), $pos+15);

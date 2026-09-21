@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\Tests\auth_apic\Unit {
 
@@ -18,6 +8,7 @@ namespace Drupal\Tests\auth_apic\Unit {
   use Drupal\ibm_apim\ApicType\ApicUser;
   use Drupal\ibm_apim\Rest\RestResponse;
   use Drupal\ibm_apim\Service\APIMServer;
+  use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
   use Drupal\ibm_apim\UserManagement\ApicAccountService;
   use Drupal\Tests\auth_apic\Unit\UserManagement\AuthApicUserManagementBaseTestClass;
   use Prophecy\Argument;
@@ -45,11 +36,17 @@ namespace Drupal\Tests\auth_apic\Unit {
      */
     protected $logger;
 
+    /**
+     * @var \Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface|\Prophecy\Prophecy\ObjectProphecy
+     */
+    protected $userStorage;
+
     protected function setup(): void {
       $this->prophet = new Prophet();
       $this->mgmtServer = $this->prophet->prophesize(APIMServer::class);
       $this->userManager = $this->prophet->prophesize(ApicAccountService::class);
       $this->logger = $this->prophet->prophesize(LoggerInterface::class);
+      $this->userStorage = $this->prophet->prophesize(ApicUserStorageInterface::class);
     }
 
     protected function tearDown(): void {
@@ -71,10 +68,12 @@ namespace Drupal\Tests\auth_apic\Unit {
 
       $this->logger->notice('invitation processed for @username', ['@username' => $user->getUsername()])->shouldBeCalled();
       $this->logger->error(Argument::any())->shouldNotBeCalled();
+      $this->userStorage->load($user)->willReturn(NULL);
 
       $service = new ApicInvitationService($this->mgmtServer->reveal(),
         $this->userManager->reveal(),
-        $this->logger->reveal());
+        $this->logger->reveal(),
+        $this->userStorage->reveal());
       $result = $service->acceptInvite($jwt, $user);
 
       self::assertTrue($result->success(), 'Exected success from mgmt call');
@@ -95,10 +94,12 @@ namespace Drupal\Tests\auth_apic\Unit {
       $this->mgmtServer->acceptInvite($jwt, $user, 'AndreOrg')->willReturn($mgmtResponse);
 
       $this->logger->error('Error during acceptInvite:  @error', ['@error' => 'TEST ERROR'])->shouldBeCalled();
+      $this->userStorage->load($user)->willReturn(NULL);
 
       $service = new ApicInvitationService($this->mgmtServer->reveal(),
         $this->userManager->reveal(),
-        $this->logger->reveal());
+        $this->logger->reveal(),
+        $this->userStorage->reveal());
       $result = $service->acceptInvite($jwt, $user);
 
       self::assertFalse($result->success(), 'Unexpected result from mgmt call');
@@ -122,11 +123,13 @@ namespace Drupal\Tests\auth_apic\Unit {
 
       $this->logger->notice('invitation processed for @username', ['@username' => 'andre'])->shouldBeCalled();
       $this->logger->error(Argument::any())->shouldNotBeCalled();
+      $this->userStorage->load($user)->willReturn(NULL);
       //$this->logger->debug("Registering @username in database as new account.", ["@username" => "andre"])->shouldBeCalled();
 
       $service = new ApicInvitationService($this->mgmtServer->reveal(),
         $this->userManager->reveal(),
-        $this->logger->reveal());
+        $this->logger->reveal(),
+        $this->userStorage->reveal());
       $result = $service->registerInvitedUser($jwt, $user);
 
       self::assertTrue($result->success(), 'Expected registerInvitedUser() to be successful');
@@ -150,10 +153,12 @@ namespace Drupal\Tests\auth_apic\Unit {
 
       $this->logger->notice(Argument::any())->shouldNotBeCalled();
       $this->logger->error('Error during account registration: @error', ['@error' => 'TEST ERROR'])->shouldBeCalled();
+      $this->userStorage->load($user)->willReturn(NULL);
 
       $service = new ApicInvitationService($this->mgmtServer->reveal(),
         $this->userManager->reveal(),
-        $this->logger->reveal());
+        $this->logger->reveal(),
+        $this->userStorage->reveal());
       $result = $service->registerInvitedUser($jwt, $user);
 
       self::assertFalse($result->success(), 'Expected registerInvitedUser() NOT to be successful');
@@ -174,7 +179,8 @@ namespace Drupal\Tests\auth_apic\Unit {
 
       $service = new ApicInvitationService($this->mgmtServer->reveal(),
         $this->userManager->reveal(),
-        $this->logger->reveal());
+        $this->logger->reveal(),
+        $this->userStorage->reveal());
       $result = $service->registerInvitedUser($jwt, NULL);
 
       self::assertFalse($result->success(), 'Expected registerInvitedUser() NOT to be successful');

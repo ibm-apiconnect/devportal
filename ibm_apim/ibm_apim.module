@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -37,6 +27,11 @@ use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\Core\StreamWrapper\PrivateStream;
 use Drupal\Core\StreamWrapper\TemporaryStream;
 use Drupal\views\Views;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Block\BlockPluginInterface;
+use Drupal\block\Entity\Block;
+use Drupal\ibm_apim\External\SerializationUtility;
+
 
 /**
  * Implementation of hook_init().
@@ -505,6 +500,10 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
         'events_found' => NULL,
         'node' => [],
         'tabs' => [],
+        'myorg_members' => [],
+        'myorg_can_transfer_owner' => FALSE,
+        'myorg_can_rename_org' => FALSE,
+        'myorg_can_delete_org' => FALSE,
       ],
     ],
     'ibm_apim_activity' => [
@@ -514,6 +513,10 @@ function ibm_apim_theme($existing, $type, $theme, $path) {
         'tabs' => [],
         'events' => [],
         'analytics_access' => FALSE,
+        'myorg_members' => [],
+        'myorg_can_transfer_owner' => FALSE,
+        'myorg_can_rename_org' => FALSE,
+        'myorg_can_delete_org' => FALSE,
       ],
     ],
     'ibm_apim_status_messages_block' => [
@@ -798,12 +801,19 @@ function ibm_apim_preprocess_html(&$variables) {
 }
 
 /**
- * Add core library to all pages and display info message for module/theme update 
+ * Add core library to all pages and display info message for module/theme update
  *
  * @param array $attachments
  */
 function ibm_apim_page_attachments(array &$attachments) {
   $attachments['#attached']['library'][] = 'ibm_apim/core';
+  
+  // Attach admin toolbar tooltip library for users with toolbar access
+  $user = \Drupal::currentUser();
+  if ($user->hasPermission('access toolbar')) {
+    $attachments['#attached']['library'][] = 'ibm_apim/admin_toolbar_tooltip';
+  }
+  
   $route_name = \Drupal::routeMatch()->getRouteName();
   $update_routes = [
     'update.report_update',
@@ -818,6 +828,26 @@ function ibm_apim_page_attachments(array &$attachments) {
 
 function ibm_apim_preprocess_page(&$variables) {
   $variables['redirectto'] = \Drupal::request()->get('redirectto');
+
+  // check if this is an admin user and if we're on the homepage
+  $session = \Drupal::request()->getSession();
+  if ($session->get('ibm_apim_first_time_admin_login')) {
+    $isFrontPage = \Drupal::service('path.matcher')->isFrontPage();
+    
+    if ($isFrontPage) {
+      // clear the flag so it only shows once
+      $session->remove('ibm_apim_first_time_admin_login');
+      
+      $basePath = base_path();
+      if (substr($basePath, -1) === '/') {
+        $basePath = substr($basePath, 0, -1);
+      }
+      $tutorialUrl = $basePath . '/admin/getting-started';
+      
+      \Drupal::messenger()->addMessage(t('Welcome admin user! Check out the <a href="@url">Getting started tutorials</a> to learn how you can customize your portal.',
+        ['@url' => $tutorialUrl]), 'status');
+    }
+  }
 }
 
 function ibm_apim_preprocess_forums(&$variables) {
@@ -879,6 +909,27 @@ function ibm_apim_updater_info_alter(&$updaters) {
  */
 function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   switch ($form_id) {
+    case 'system_themes_admin_form':
+      // Exclude connect_theme from administration theme dropdown
+      if (isset($form['admin_theme']['admin_theme']['#options']['connect_theme'])) {
+        unset($form['admin_theme']['admin_theme']['#options']['connect_theme']);
+      }
+      
+      // If default theme is connect_theme, also remove the "Default theme" option
+      $default_theme = \Drupal::config('system.theme')->get('default');
+      if ($default_theme === 'connect_theme' && isset($form['admin_theme']['admin_theme']['#options'][''])) {
+        unset($form['admin_theme']['admin_theme']['#options']['']);
+        // Add a description explaining why
+        if (isset($form['admin_theme']['admin_theme']['#description'])) {
+          $form['admin_theme']['admin_theme']['#description'] .= ' ' . t('The "Default theme" option is not available because the current default theme (connect_theme) cannot be used as an administration theme.');
+        } else {
+          $form['admin_theme']['admin_theme']['#description'] = t('The "Default theme" option is not available because the current default theme (connect_theme) cannot be used as an administration theme.');
+        }
+      }
+      
+      // Add form validation
+      $form['#validate'][] = 'ibm_apim_system_themes_admin_form_validate';
+      break;
     case 'node_forum_form':
     case 'node_forum_edit_form':
       $form['#attached']['library'][] = 'ibm_apim/disable_forum_topic_api';
@@ -934,6 +985,59 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       break;
     case 'user_form':
       $form['account']['password_policy_status']['#access'] = FALSE;
+      
+      // Translate the codesnippet field description
+      if (isset($form['codesnippet']['widget']['#description'])) {
+        $form['codesnippet']['widget']['#description'] = t('If you have a preferred programming language then you can set it here and it will be used as the default language for all API code snippets.');
+      }
+      
+      // Translate avatar generator field label and description
+      if (isset($form['avatars_avatar_generator'])) {
+        if (isset($form['avatars_avatar_generator']['widget']['#title'])) {
+          $form['avatars_avatar_generator']['widget']['#title'] = t('Avatar Generator');
+        }
+        if (isset($form['avatars_avatar_generator']['widget']['#description'])) {
+          $form['avatars_avatar_generator']['widget']['#description'] = t('Select source of avatar. It is possible to use an autogenerated avatar or upload your own profile image below.');
+        }
+        // Translate the radio button options dynamically
+        if (isset($form['avatars_avatar_generator']['widget']['#options'])) {
+          // Map of known generator IDs to their translated labels
+          $generator_labels = [
+            'user_picture' => t('User picture upload'),
+            'letter_generator' => t('APIC Letter Generator'),
+            'apic_letter_avatar' => t('APIC Letter Avatar'),
+            'robohash' => t('Robohash'),
+            'adorable' => t('Adorable'),
+            'gravatar' => t('Gravatar'),
+          ];
+          
+          foreach ($form['avatars_avatar_generator']['widget']['#options'] as $key => $label) {
+            if (isset($generator_labels[$key])) {
+              $form['avatars_avatar_generator']['widget']['#options'][$key] = $generator_labels[$key];
+            }
+          }
+        }
+        
+        // Set up conditional visibility for avatars_user_picture field
+        // It should only be visible when 'user_picture' is selected
+        if (isset($form['avatars_user_picture'])) {
+          $form['avatars_user_picture']['#states'] = [
+            'visible' => [
+              ':input[name="avatars_avatar_generator"]' => ['value' => 'user_picture'],
+            ],
+          ];
+        }
+      }
+      
+      // Translate user picture upload field label and description
+      if (isset($form['avatars_user_picture'])) {
+        if (isset($form['avatars_user_picture']['widget'][0]['#title'])) {
+          $form['avatars_user_picture']['widget'][0]['#title'] = t('User picture upload');
+        }
+        if (isset($form['avatars_user_picture']['widget'][0]['#description'])) {
+          $form['avatars_user_picture']['widget'][0]['#description'] = t('An image representing your user account.');
+        }
+      }
       break;
     case 'password_policy_general_form':
       // do not support password reset
@@ -941,9 +1045,15 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         unset($form['password_reset']);
       }
       break;
+    case 'flood_unblock_admin_form':
+      // Append a custom submit handler for audit logging
+      $form['#submit'][] = 'ibm_apim_flood_unblock_audit_submit';
+      break;
     case 'user_pass_reset' :
       // rename the Log in link
       $form['actions']['submit']['#value'] = t('Sign in');
+      // Add custom submit handler to override the status message
+      $form['#submit'][] = 'ibm_apim_user_pass_reset_submit';
       break;
     case 'system_modules' :
       // The 'Extend' module list page
@@ -968,8 +1078,8 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         unset($form['modules']['Core']['syslog']);
       }
       // hide our test module
-      if (isset($form['modules']['IBM API Developer Portal']['apictest'])) {
-        unset($form['modules']['IBM API Developer Portal']['apictest']);
+      if (isset($form['modules']['IBM CMS Portal']['apictest'])) {
+        unset($form['modules']['IBM CMS Portal']['apictest']);
       }
       // hide the migration modules
       if (isset($form['modules']['Migration']['migrate_upgrade'])) {
@@ -1008,11 +1118,11 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       // if billing isn't enabled hide the monetization modules
       $billingEnabled = \Drupal::service('ibm_apim.billing')->isEnabled();
       if ($billingEnabled !== TRUE) {
-        if (isset($form['modules']['IBM API Developer Portal']['ibm_create_payment_method'])) {
-          unset($form['modules']['IBM API Developer Portal']['ibm_create_payment_method']);
+        if (isset($form['modules']['IBM CMS Portal']['ibm_create_payment_method'])) {
+          unset($form['modules']['IBM CMS Portal']['ibm_create_payment_method']);
         }
-        if (isset($form['modules']['IBM API Developer Portal']['ibm_stripe_payment_method'])) {
-          unset($form['modules']['IBM API Developer Portal']['ibm_stripe_payment_method']);
+        if (isset($form['modules']['IBM CMS Portal']['ibm_stripe_payment_method'])) {
+          unset($form['modules']['IBM CMS Portal']['ibm_stripe_payment_method']);
         }
       }
       $siteConfig = \Drupal::service('ibm_apim.site_config');
@@ -1097,7 +1207,7 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       break;
     case 'system_site_maintenance_mode':
 			if (isset($form['maintenance_mode']['#description'])) {
-        $form['maintenance_mode']['#description'] = t('<em>Important:</em> Maintenance mode is designed for short-term site maintenance; it is not meant for long-term usage. While a site is in maintenance mode, the database is not updated with new content from API Manager. As soon as the maintenance tasks are finished, you must take the site out of maintenance mode. Do not log out of the Developer Portal while the site is in maintenance mode, as you will not be able to log back in to the UI. In this case, maintenance mode can be turned off only by using the CLI; see: ') . ' <a href="https://www.ibm.com/docs/SSMNED_10.0.8?topic=tasks-toggling-site-in-out-maintenance-mode" target="_new">' . t('Documentation') . '</a>' . t(' for details');
+        $form['maintenance_mode']['#description'] = t('<em>Important:</em> Maintenance mode is designed for short-term site maintenance; it is not meant for long-term usage. While a site is in maintenance mode, the database is not updated with new content from API Manager. As soon as the maintenance tasks are finished, you must take the site out of maintenance mode. Do not log out of the Developer Portal while the site is in maintenance mode, as you will not be able to log back in to the UI. In this case, maintenance mode can be turned off only by using the CLI; see: ') . ' <a href="https://www.ibm.com/docs/SSMNED_12.1.x_cd?topic=tasks-toggling-site-in-out-maintenance-mode" target="_new">' . t('Documentation') . '</a>' . t(' for details');
 			}
       break;
     case 'system_theme_settings':
@@ -1132,11 +1242,11 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         }
       }
       if (isset($form['manual_updates'])) {
-        $form['manual_updates']['#prefix'] .= '<p>' . t('To update the version of Drupal Core download the latest IBM API Developer Portal release or contact IBM Support.') . '</p>';
+        $form['manual_updates']['#prefix'] .= '<p>' . t('To update the version of Drupal Core download the latest IBM CMS Portal release or contact IBM Support.') . '</p>';
       }
       if (count($ibmUpdateNeeded) > 0) {
         $form['ibm_update'] = [
-          '#markup' => '<h2>' . t('IBM APIC Developer Portal Modules') . '</h2><p>' . t('Updates found for the following modules provided by the IBM API Developer Portal: %modules.', ['%modules' => implode(",", $ibmUpdateNeeded)]) . '</p><p>' . t('To update modules provided by the IBM API Developer Portal download the latest release from IBM or contact IBM Support.') . '</p>',
+          '#markup' => '<h2>' . t('IBM APIC Developer Portal Modules') . '</h2><p>' . t('Updates found for the following modules provided by the IBM CMS Portal: %modules.', ['%modules' => implode(",", $ibmUpdateNeeded)]) . '</p><p>' . t('To update modules provided by the IBM CMS Portal download the latest release from IBM or contact IBM Support.') . '</p>',
           '#weight' => 150,
         ];
         // if no updatable modules left remove the table
@@ -1259,11 +1369,94 @@ function ibm_apim_form_alter(&$form, FormStateInterface $form_state, $form_id) {
         $form['name']['#plain_text'] = $name;
       }
       break;
+    case 'update_manager_install_form':
+       $form['#submit'][] = 'ibm_apim_update_manager_audit';
+       break;
+   case 'system_cron_settings':
+     // Remove the broken external cron URL link.
+     unset($form['cron_url']);
+     break;
+    case 'csp_settings':
+      $config = \Drupal::config('csp.settings');
+      if ($config && is_array($config->get('enforce'))) {
+        $enforce_settings = $config->get('enforce');
+        $enforced_enabled = $enforce_settings['enable'] ?? FALSE;
+        if ($enforced_enabled) {
+          \Drupal::messenger()->addWarning(t(
+            'Content Security Policy (CSP) is currently enforced. This may restrict certain features, such as Social media views, asynchronous APIs in Explorer and image uploads in CKEditor.'
+          ));
+        } else {
+          \Drupal::messenger()->deleteByType(MessengerInterface::TYPE_WARNING);
+        }
+      }
+      break;
+    case 'image_style_edit_form':
+      $form['#attached']['library'][] = 'ibm_apim/image_style_preview';
+      break;
   }
 
   // Look for any form provided by the contact module and remove preview button
   if (strpos($form_id, 'contact_message_') !== FALSE) {
     $form['actions']['preview']['#access'] = FALSE;
+  }
+}
+
+/**
+ * Custom audit log for flood unblock action.
+ */
+function ibm_apim_flood_unblock_audit_submit(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  $current_user = \Drupal::currentUser();
+  foreach ($form_state->getValue('table') as $fid) {
+    if ($fid !== 0) {
+      \Drupal::service('ibm_apim.utils')->logAuditEvent(
+        'PORTAL_FLOOD_UNBLOCK',
+        'success',
+        'data/drupal/flood_entry',
+        'flood_entry:' . $fid,
+        [
+          'performed_by_uid' => $current_user->id(),
+          'performed_by_name' => $current_user->getAccountName(),
+        ],
+        [
+          'status' => 'entry_removed',
+          'flood_id' => $fid,
+        ]
+      );
+    }
+  }
+}
+
+/**
+ * Validation handler for system_themes_admin_form.
+ * 
+ * Prevents selecting "Default theme" as admin theme when default theme is connect_theme.
+ */
+function ibm_apim_system_themes_admin_form_validate(&$form, FormStateInterface $form_state) {
+  $admin_theme = $form_state->getValue('admin_theme');
+  $default_theme = \Drupal::config('system.theme')->get('default');
+  
+  // If user tries to select "Default theme" (empty value) and default is connect_theme
+  if ($admin_theme === '' && $default_theme === 'connect_theme') {
+    $form_state->setErrorByName('admin_theme', t('The "Default theme" option cannot be selected because the current default theme (connect_theme) is not suitable for use as an administration theme. Please select a different administration theme.'));
+  }
+}
+
+/**
+ * Custom submit handler to override the password reset status message.
+ */
+function ibm_apim_user_pass_reset_submit(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  $messenger = \Drupal::messenger();
+
+  $messages = $messenger->messagesByType('status');
+  
+  foreach ($messages as $key => $message) {
+    $message_text = (string) $message;
+    if (strpos($message_text, 'You have just used your one-time login link') !== FALSE && 
+        strpos($message_text, 'Please change your password') !== FALSE) {
+      $messenger->deleteByType('status');
+      $messenger->addStatus(t('You have just used your one-time login link. It is no longer necessary to use this link to log in.'));
+      break;
+    }
   }
 }
 
@@ -1572,7 +1765,7 @@ function ibm_apim_entry_trace($function = 'undefined', $args = NULL) {
   if ($entryExitTrace === TRUE) {
     \Drupal::logger('ibm_apim')->debug('%function ENTRY Trace input: %data.', [
       '%function' => $function,
-      '%data' => serialize($args),
+      '%data' => SerializationUtility::encodeData($args),
     ]);
   }
 }
@@ -1588,7 +1781,7 @@ function ibm_apim_exit_trace($function = 'undefined', $response = NULL) {
   if ($entryExitTrace === TRUE) {
     \Drupal::logger('ibm_apim')->debug('%function EXIT Trace return: %data.', [
       '%function' => $function,
-      '%data' => serialize($response),
+      '%data' => SerializationUtility::encodeData($response),
     ]);
   }
 }
@@ -1605,7 +1798,10 @@ function ibm_apim_theme_suggestions_form_alter(array &$suggestions, array $varia
   if (function_exists('ibm_apim_entry_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
   }
-
+  // Bail early if 'element' key is missing or not an array
+  if (!isset($variables['element']) || !is_array($variables['element'])) {
+    return;
+  }
   if (isset($variables['element']['#form_id']) && !empty($variables['element']['#form_id'])) {
     $suggestions[] = 'form_' . $variables['element']['#form_id'];
   }
@@ -1715,7 +1911,7 @@ function ibm_apim_form_subscription_wizard_confirm_subscribe_alter(&$form, \Drup
 
 /**
  * Ensure forms have an aria-label for accessibility
- *
+ * @LegacyHook
  * @param array $variables
  */
 function ibm_apim_preprocess_form(&$variables) {
@@ -1770,6 +1966,52 @@ function ibm_apim_preprocess_form(&$variables) {
   $variables['site_name'] = \Drupal::config('system.site')->get('name');
 }
 
+
+/**
+ * Ensure forms have an aria-label for accessibility
+ * @LegacyHook
+ * @param array $variables
+ */
+function ibm_apim_preprocess_user_login_form(&$variables) {
+  ibm_apim_preprocess_form($variables);
+}
+
+/**
+ * Ensure forms have an aria-label for accessibility
+ * @LegacyHook
+ * @param array $variables
+ */
+function ibm_apim_preprocess_user_pass_reset(&$variables) {
+  ibm_apim_preprocess_form($variables);
+}
+
+/**
+ * Ensure forms have an aria-label for accessibility
+ * @LegacyHook
+ * @param array $variables
+ */
+function ibm_apim_preprocess_user_pass(&$variables) {
+  ibm_apim_preprocess_form($variables);
+}
+
+/**
+ * Ensure forms have an aria-label for accessibility
+ * @LegacyHook
+ * @param array $variables
+ */
+function ibm_apim_preprocess_user_register_form(&$variables) {
+  ibm_apim_preprocess_form($variables);
+}
+
+/**
+ * Ensure forms have an aria-label for accessibility
+ * @LegacyHook
+ * @param array $variables
+ */
+function ibm_apim_preprocess_apic_change_pwd_form(&$variables) {
+  ibm_apim_preprocess_form($variables);
+}
+
 /**
  * Dynamically add to the ibm_apim/analytics library since the name of the files change every build
  *
@@ -1819,6 +2061,23 @@ function ibm_apim_user_login($account) {
     $avatarManager->syncAvatar($account);
   }
 
+  // check if this is an admin user and if it's their first time login
+  $roles = $account->getRoles();
+  if (in_array('administrator', $roles, TRUE)) {
+    $user = User::load($account->id());
+    if ($user !== NULL) {
+      $firstTimeLogin = $user->get('first_time_login')->value;
+      // only show the message if this is their first login
+      if ($firstTimeLogin == 1) {
+        $session = \Drupal::request()->getSession();
+        $session->set('ibm_apim_first_time_admin_login', TRUE);
+        // reset the flag
+        $user->set('first_time_login', 0);
+        $user->save();
+      }
+    }
+  }
+
   $utils->resetInternalAuditFlag($intAudit);
 
   ibm_apim_exit_trace(__FUNCTION__, NULL);
@@ -1827,7 +2086,8 @@ function ibm_apim_user_login($account) {
 /**
  * Implementation of hook_language_switch_links_alter().
  *
- * This is to stop weird query parameters in the lang selection block
+ * Filters the switcher to only languages configured for URL negotiation and
+ * removes superfluous ?q= query parameters produced by nginx path-prefix setups.
  */
 function ibm_apim_language_switch_links_alter(&$links, $type, $path) {
   $pathUrl = '';
@@ -1841,14 +2101,21 @@ function ibm_apim_language_switch_links_alter(&$links, $type, $path) {
   $language_manager = \Drupal::service('language_manager');
   $languages = $language_manager->getLanguages();
 
-  foreach ($links as &$link) {
-    // check whether the q query parameter is superfluous, if it is just drop it.
-    // NOTE, when it is just a lang code this is side effect of running url negotiation via the language switcher running with nginx.
+  // Filter $links to only the langcodes configured in the language switcher
+  // block's visibility condition. This ensures the dropdown only shows the
+  // languages the block is configured to be visible for (e.g. en, fr).
+  $block_config = \Drupal::config('block.block.connect_theme_languageswitcher');
+  $allowed = $block_config->get('visibility.language.langcodes') ?? [];
+  if (!empty($allowed)) {
+    $links = array_filter($links, static fn($langcode) => isset($allowed[$langcode]), ARRAY_FILTER_USE_KEY);
+  }
 
+  // Remove superfluous ?q= params produced by nginx url-rewriting.
+  foreach ($links as &$link) {
     if (isset($link['query']['q'])) {
       $is_currentpath = $link['query']['q'] === ltrim($pathUrl, '/');
       $is_empty = $link['query']['q'] === '';
-      $is_lang_prefix = preg_match('@^[a-zA-Z-]+' . $pathUrl . '@', $link['query']['q']);
+      $is_lang_prefix = preg_match('@^/?[a-zA-Z-]+' . preg_quote($pathUrl, '@') . '@', $link['query']['q']);
       $is_langcode = array_key_exists($link['query']['q'], $languages);
 
       if ($is_currentpath || $is_empty || $is_lang_prefix || $is_langcode) {
@@ -1856,7 +2123,6 @@ function ibm_apim_language_switch_links_alter(&$links, $type, $path) {
       }
     }
   }
-  // needed to prevent weird side effects since by reference above
   unset($link);
 }
 
@@ -1990,4 +2256,85 @@ function ibm_apim_welcome_mail($key, &$message, $params) {
   $message['subject'] = strtr($mail['subject'], $params['variables']);
   $message['body'][0] = Markup::create(strtr($mail['body'], $params['variables']));
   ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
+
+/**
+ * Custom submit handler to log uploaded module/theme files.
+ */
+function ibm_apim_update_manager_audit($form, FormStateInterface $form_state) {
+  $url= $form_state->getValue('project_url');
+  if(!empty($url)){ 
+  // Check for error messages
+    $errors = \Drupal::messenger()->all()['error'] ?? [];
+    if (!empty($errors)) {
+     \Drupal::service('ibm_apim.utils')->logAuditEvent(
+      'PORTAL_ADD_MODULE_OR_THEME_VIA_URL',
+      'failure',
+      'data/drupal/entity/file',
+      'download_url:'.$url
+      );
+    } else {
+      \Drupal::service('ibm_apim.utils')->logAuditEvent(
+        'PORTAL_ADD_MODULE_OR_THEME_VIA_URL',
+        'success',
+        'data/drupal/entity/file',
+        'download_url:'.$url);
+      }
+  }
+}
+
+function ibm_apim_block_view_alter(array &$build, BlockPluginInterface $block) {
+  try {
+    $path = __DIR__;
+    require_once $path . '/ibm_apim.emptycontent.inc';
+    $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $manchineName = $block->getPluginId();
+    if ($manchineName && str_starts_with($manchineName, 'views_block:')) {
+      [$prefix, $view_display] = explode(':', $manchineName);
+      [$view_id, $display_id] = explode('-', $view_display);
+      $view = \Drupal\views\Views::getView($view_id);
+      if (!$view) {
+        return;
+      }
+
+      if (!isset($view->getDependencies()['config']) || !in_array("node.type.blog_post", $view->getDependencies()['config'])) {
+        return;
+      }
+
+      $view->setDisplay($display_id);
+      $view->preExecute();
+      $view->execute();
+    
+      if (count($view->result) > 0) {
+        return;
+      }
+      $build['content'][] = [
+        '#type' => 'processed_text',
+        '#text' => ibm_apim_get_localized_noblogs_content($langcode),
+        '#format' => 'full_html',
+      ];
+    }
+  }
+  catch(Exception $e) {
+    \Drupal::logger('blog')->error('Block merge failed on a Blog view');
+  }
+}
+
+/**
+ * Implements hook_block_alter().
+ *
+ * Hide dark mode toggle block from the Place block UI.
+ * The toggle is automatically added to the navbar via theme preprocessing.
+ */
+function ibm_apim_block_alter(&$definitions) {
+  // Remove any blocks from the dark_mode_toggle module
+  foreach ($definitions as $id => $definition) {
+    if (isset($definition['provider']) && $definition['provider'] === 'dark_mode_toggle') {
+      unset($definitions[$id]);
+    }
+    // Also check for blocks with 'dark_mode_toggle' in the ID
+    if (strpos($id, 'dark_mode_toggle') !== FALSE) {
+      unset($definitions[$id]);
+    }
+  }
 }

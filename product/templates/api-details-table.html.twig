@@ -1,0 +1,59 @@
+{% if  plan.nodes|length == 1 %}
+  <p class="productive-heading-03">{% trans %}API{% endtrans %}</p>
+{% else %}
+  <p class="productive-heading-03">{% trans %}APIs{% endtrans %}</p>
+{% endif %}
+<table class="plansTable">
+  <thead>
+  <tr>
+    <th scope="col"><button type="button" id="twistieHeader" class="apicTwistieIcon" aria-expanded="false" aria-label="{% trans %}Expand / Collapse All API Details{% endtrans %}"><i
+              class="fa fa-angle-down" aria-hidden="true" data-twistieheaderid="twistie_header"></i></button></th>
+    <th scope="col">{% trans %}Title{% endtrans %}</th>
+    <th scope="col">{% trans %}Version{% endtrans %}</th>
+    <th scope="col">{% trans %}Type{% endtrans %}</th>
+    <th scope="col" class="fixedPlanColumnWidth">{% trans %}Rate limits{% endtrans %}</th>
+  </tr>
+  </thead>
+  <tbody>
+    {% for api in plan.nodes %}
+      {% set rowIndex = loop.index %}
+      <tr class="tableRow">
+        <td><button type="button" class="apicTwistieIcon rowTwistie" aria-expanded="false" aria-label="{% trans %}Expand / Collapse API Details{% endtrans %}" aria-controls="row_{{ rowIndex }}" data-rowid="{{ rowIndex }}"><i
+                class="fa fa-angle-down" aria-hidden="true" data-twistieid="twistie_{{ rowIndex }}"></i></button></td>
+        <td>{{ api.title }}</td>
+        <td>{{ api.version[0].value }}</td>
+        <td>{{ api.protocol }}</td>
+        <td>
+          {% if plan.rateData is defined %}
+            {% set multipleRates = true %}
+            <span class="multiRateLimits" data-ratelimits="{{ plan.rateData }}" data-placement="bottom" >{{ plan.rateLimit }}</span>
+          {% else %}
+            {{ plan.rateLimit }}
+          {% endif %}
+        </td>
+      </tr>
+      {% for resource, operations in api.resources %}
+        {% for verb, operation in operations %}
+          <tr data-twistierowid="row_{{ rowIndex }}" class="tableRow twistieRow hiddenRow">
+            <td/>
+            {% if verb matches '/^\\d+$/' %}
+              <td colspan="3">{{ resource }}</td>
+            {% else %}
+              <td class="{{ verb|lower }}" colspan="3"><span class="verb">{{ verb }}</span> {{ resource }}
+              </td>
+            {% endif %}
+            <td>
+              {% if operation.rateData is defined %}
+                {% set multipleRates = true %}
+                <span class="multiRateLimits"
+                      data-ratelimits="{{ operation.rateData }}"  data-placement="bottom" >{{ operation.rateLimit }}</span>
+              {% else %}
+                {{ operation.rateLimit }}
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      {% endfor %}
+    {% endfor %}
+  </tbody>
+</table>

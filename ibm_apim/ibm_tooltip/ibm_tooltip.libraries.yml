@@ -1,0 +1,10 @@
+ibm_tooltip:
+  version: 1.x
+  js:
+    js/tooltip.js: {}
+  css:
+    theme:
+      css/tooltip.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal

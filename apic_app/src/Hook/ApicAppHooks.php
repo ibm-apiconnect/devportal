@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2025
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -22,6 +12,7 @@ use Drupal\Core\Access\AccessResultAllowed;
 use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Access\AccessResultNeutral;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\Entity\Node;
@@ -151,6 +142,40 @@ class ApicAppHooks {
   }
 
   /**
+   * Only allows access to the subscriptions and credentials for the current consumerorg
+   *
+   * Implements hook_entity_access().
+   */
+  #[Hook('entity_access')]
+  public function apic_app_entityAccess(EntityInterface $entity, $operation, AccountInterface $account) {
+    if ($entity->bundle() === 'apic_app_application_subs') {
+      $userUtils = \Drupal::service('ibm_apim.user_utils');
+      $org = $userUtils->getCurrentConsumerorg();
+      if (isset($org['url']) && $entity->consumerorg_url() === $org['url']) {
+        $access = new AccessResultAllowed();
+      }
+      else {
+        $access = new AccessResultForbidden();
+      }
+      return $access;
+    }
+    
+    if ($entity->bundle() === 'apic_app_application_creds') {
+      $userUtils = \Drupal::service('ibm_apim.user_utils');
+      $org = $userUtils->getCurrentConsumerorg();
+      if (isset($org['url']) && $entity->consumerorg_url() === $org['url']) {
+        $access = new AccessResultAllowed();
+      }
+      else {
+        $access = new AccessResultForbidden();
+      }
+      return $access;
+    }
+    
+    return new AccessResultNeutral();
+  }
+
+  /**
    * Implements hook_form_alter().
    *
    * @param array $form
@@ -166,6 +191,17 @@ class ApicAppHooks {
           unset($form['actions']['delete']);
         }
         break;
+      case 'application_create_form':
+      case 'application_update_form':
+      case 'modal_application_create_form':
+        // Translate maxlength labels for title and description fields
+        if (isset($form['title']['widget'][0]['value']['#attributes']['maxlength_js_label'][0])) {
+          $form['title']['widget'][0]['value']['#attributes']['maxlength_js_label'][0] = t('Title is limited to @limit characters, remaining: <strong>@remaining</strong>');
+        }
+        if (isset($form['apic_summary']['widget'][0]['value']['#attributes']['maxlength_js_label'][0])) {
+          $form['apic_summary']['widget'][0]['value']['#attributes']['maxlength_js_label'][0] = t('Description is limited to @limit characters, remaining: <strong>@remaining</strong>');
+        }
+        break;
       case 'node_application_edit_form':
         // disable fields to stop admin editing applications
         $currentUser = \Drupal::currentUser();
@@ -174,6 +210,9 @@ class ApicAppHooks {
           $form['apic_summary']['#disabled'] = TRUE;
           $form['application_image']['#disabled'] = TRUE;
           $form['application_redirect_endpoints']['#disabled'] = TRUE;
+          if (isset($form['actions']['delete'])) {
+            $form['actions']['delete']['#access'] = FALSE;
+          }
         }
         // if anyone has made our internal fields visible, then lets make them readonly
         $internal_field_list = \Drupal::service('apic_app.application')->getIBMFields();
@@ -183,6 +222,24 @@ class ApicAppHooks {
           }
         }
         break;
+    }
+  }
+
+  /**
+   * Implements hook_menu_local_tasks_alter().
+   */
+  #[Hook('menu_local_tasks_alter')]
+  public function menuLocalTasksAlter(&$data, $route_name) {
+    // Remove delete tab for application nodes when user doesn't have developer access
+    if ($route_name === 'entity.node.canonical' || $route_name === 'entity.node.edit_form') {
+      $node = \Drupal::routeMatch()->getParameter('node');
+      if ($node && $node->bundle() === 'application') {
+        $developerAccessCheck = \Drupal::service('apic_app.developer_access_checker');
+        $accessResult = $developerAccessCheck->access($node);
+        if (!$accessResult->isAllowed() && isset($data['tabs'][0]['entity.node.delete_form'])) {
+          unset($data['tabs'][0]['entity.node.delete_form']);
+        }
+      }
     }
   }
 
@@ -215,81 +272,126 @@ class ApicAppHooks {
    */
   #[Hook('theme')]
   public function theme($existing, $type, $theme, $path): array {
-    return [
-      'new_application' => [
-        'variables' => [
-          'access' => FALSE
-        ],
-      ],
-      'application_subscriptions' => [
-        'variables' => [
-          'catalogId' => NULL,
-          'catalogName' => NULL,
-          'porgId' => NULL,
-          'userHasAppManage' => FALSE,
-          'userHasSubManage' => FALSE,
-          'userHasSubView' => FALSE,
-          'applifecycleEnabled' => FALSE,
-          'appImageUploadEnabled' => FALSE,
-          'notifications_access' => FALSE,
-          'analytics_access' => FALSE,
-          'node' => NULL,
-          'subscriptions' => NULL,
-          'credentials' => NULL,
-        ],
-      ],
-      'application_analytics' => [
-        'variables' => [
-          'catalogId' => NULL,
-          'catalogName' => NULL,
-          'porgId' => NULL,
-          'userHasAppManage' => FALSE,
-          'userHasSubManage' => FALSE,
-          'userHasSubView' => FALSE,
-          'applifecycleEnabled' => FALSE,
-          'notifications_access' => FALSE,
-          'appImageUploadEnabled' => FALSE,
-          'node' => NULL,
-        ],
-      ],
-      'application_activity' => [
-        'variables' => [
-          'catalogId' => NULL,
-          'catalogName' => NULL,
-          'porgId' => NULL,
-          'userHasAppManage' => FALSE,
-          'userHasSubManage' => FALSE,
-          'userHasSubView' => FALSE,
-          'applifecycleEnabled' => FALSE,
-          'appImageUploadEnabled' => FALSE,
-          'analytics_access' => FALSE,
-          'notifications_access' => FALSE,
-          'node' => NULL,
-          'events' => [],
-        ],
-      ],
-      'app_credentials' => [
-        'variables' => [
-          'node' => NULL,
-          'clipboard' => NULL,
-          'userHasAppManage' => FALSE,
-          'allowNewCredentials' => FALSE,
-          'allowClientidReset' => FALSE,
-          'allowClientsecretReset' => FALSE,
-        ],
-      ],
-      'app_subscriptions' => [
-        'variables' => [
-          'node' => NULL,
-          'userHasAppManage' => FALSE,
-          'userHasSubView' => FALSE,
-          'userHasSubManage' => FALSE,
-          'showVersions' => FALSE,
-          'billing_enabled' => FALSE,
-        ],
-      ]
+    $definitions = [];
+
+    // Node view mode templates for 'application' content type
+    $template_map = [
+        'full' => 'node--application',
+        'card' => 'node--application--card',
+        'teaser' => 'node--application--teaser',
+        'subscribewizard' => 'node--application--subscribewizard',
     ];
+
+    $theme_name = \Drupal::theme()->getActiveTheme()->getName();
+    $theme_path = \Drupal::service('extension.list.theme')->getPath($theme_name);
+    $module_path = \Drupal::service('extension.list.module')->getPath('apic_app');
+
+    foreach ($template_map as $view_mode => $template_file) {
+        if (file_exists($theme_path . '/templates/node/' . $template_file . '.html.twig')) {
+            $template_path = $theme_path . '/templates/node';
+        } elseif (file_exists($theme_path . '/templates/' . $template_file . '.html.twig')) {
+            $template_path = $theme_path . '/templates';
+        } else {
+            $template_path = $module_path . '/templates';
+        }
+
+        $definitions['node__application__' . $view_mode] = [
+            'base hook' => 'node',
+            'template' => $template_file,
+            'path' => $template_path,
+        ];
+    }
+
+    // Existing custom templates
+   $definitions['new_application'] = [
+    'variables' => ['access' => FALSE],
+    ];
+
+    // Declare the views exposed form template for the applications view
+    $definitions['views_exposed_form__applications'] = [
+      'render element' => 'form', // keep this so default preprocessing works
+      'template' => 'views-exposed-form--applications',
+      'path' => $module_path . '/templates',
+    ];
+
+
+    $definitions['application_subscriptions'] = [
+        'variables' => [
+            'catalogId' => NULL,
+            'catalogName' => NULL,
+            'porgId' => NULL,
+            'userHasAppManage' => FALSE,
+            'userHasSubManage' => FALSE,
+            'userHasSubView' => FALSE,
+            'applifecycleEnabled' => FALSE,
+            'appImageUploadEnabled' => FALSE,
+            'notifications_access' => FALSE,
+            'analytics_access' => FALSE,
+            'node' => NULL,
+            'subscriptions' => NULL,
+            'credentials' => NULL,
+        ],
+    ];
+
+    $definitions['application_analytics'] = [
+        'variables' => [
+            'catalogId' => NULL,
+            'catalogName' => NULL,
+            'porgId' => NULL,
+            'userHasAppManage' => FALSE,
+            'userHasSubManage' => FALSE,
+            'userHasSubView' => FALSE,
+            'applifecycleEnabled' => FALSE,
+            'notifications_access' => FALSE,
+            'appImageUploadEnabled' => FALSE,
+            'node' => NULL,
+        ],
+    ];
+
+    $definitions['application_activity'] = [
+        'variables' => [
+            'catalogId' => NULL,
+            'catalogName' => NULL,
+            'porgId' => NULL,
+            'userHasAppManage' => FALSE,
+            'userHasSubManage' => FALSE,
+            'userHasSubView' => FALSE,
+            'applifecycleEnabled' => FALSE,
+            'appImageUploadEnabled' => FALSE,
+            'analytics_access' => FALSE,
+            'notifications_access' => FALSE,
+            'node' => NULL,
+            'events' => [],
+        ],
+    ];
+
+    $definitions['app_credentials'] = [
+        'variables' => [
+            'node' => NULL,
+            'clipboard' => NULL,
+            'userHasAppManage' => FALSE,
+            'allowNewCredentials' => FALSE,
+            'allowClientidReset' => FALSE,
+            'allowClientsecretReset' => FALSE,
+        ],
+    ];
+
+    $definitions['app_subscriptions'] = [
+        'variables' => [
+            'node' => NULL,
+            'userHasAppManage' => FALSE,
+            'userHasSubView' => FALSE,
+            'userHasSubManage' => FALSE,
+            'showVersions' => FALSE,
+            'billing_enabled' => FALSE,
+        ],
+        'template' => 'app-subscriptions',
+    ];
+
+    return $definitions;
   }
+
+
 
   /**
    * Implements hook_ENTITY_TYPE_presave().
@@ -364,7 +466,7 @@ class ApicAppHooks {
       'description' => t("The description given to the application"),
     ];
     $app['lifecycle_state'] = [
-      'name' => t("Lifecycle State"),
+      'name' => t("Lifecycle state"),
       'description' => t("The current lifecycle state of the application"),
     ];
     $app['image_url'] = [

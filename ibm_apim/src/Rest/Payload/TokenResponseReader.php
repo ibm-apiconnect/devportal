@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Rest\Payload;
 
@@ -19,6 +9,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\ibm_apim\Rest\Exception\RestResponseParseException;
 use Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * Response to POST to /token.
@@ -60,7 +51,7 @@ class TokenResponseReader extends RestResponseReader {
     } else if ( $token_response->getCode() === 201) {
       return $token_response;
     } else {
-      throw new RestResponseParseException('Unexpected response from GET /token: ' . $token_response->getCode() . '. Message: ' . serialize($token_response));
+      throw new RestResponseParseException('Unexpected response from GET /token: ' . $token_response->getCode() . '. Message: ' . SerializationUtility::encodeData($token_response));
     }
     return $token_response;
   }

@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\entity;
 
@@ -216,7 +206,7 @@ final class ApicEntityDefinitionUpdateManager implements ContainerInjectionInter
    *
    * @throws \Drupal\Core\Entity\Exception\FieldStorageDefinitionUpdateForbiddenException
    */
-  private function doFieldUpdate(string $op, FieldStorageDefinitionInterface $storage_definition = NULL, FieldStorageDefinitionInterface $original_storage_definition = NULL): void {
+  private function doFieldUpdate(string $op, ?FieldStorageDefinitionInterface $storage_definition = NULL, ?FieldStorageDefinitionInterface $original_storage_definition = NULL): void {
     if ($storage_definition !== NULL) {
       switch ($op) {
         case EntityDefinitionUpdateManagerInterface::DEFINITION_CREATED:

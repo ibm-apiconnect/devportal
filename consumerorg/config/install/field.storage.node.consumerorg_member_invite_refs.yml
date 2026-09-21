@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - consumerorg
+    - node
+id: node.consumerorg_member_invite_refs
+field_name: consumerorg_member_invite_refs
+entity_type: node
+type: entity_reference
+settings:
+  target_type: consumerorg_member_invite
+module: core
+locked: false
+cardinality: -1
+translatable: false
+persist_with_no_fields: false
+

@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2025
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -21,6 +11,7 @@ use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\auth_apic\Form\ApicUserProfileForm;
 use Drupal\auth_apic\Form\ApicUserRegisterForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\user\Entity\User;
 
 class AuthApicHooks {
   /**
@@ -42,8 +33,8 @@ class AuthApicHooks {
       if (isset($form['modules']['Lightweight Directory Access Protocol'])) {
         unset($form['modules']['Lightweight Directory Access Protocol']);
       }
-      if (isset($form['modules']['IBM API Developer Portal']['ibmsocial_login'])) {
-        unset($form['modules']['IBM API Developer Portal']['ibmsocial_login']);
+      if (isset($form['modules']['IBM CMS Portal']['ibmsocial_login'])) {
+        unset($form['modules']['IBM CMS Portal']['ibmsocial_login']);
       }
       if (isset($form['modules']['IBM API Connect']['ibmsocial_login'])) {
         unset($form['modules']['IBM API Connect']['ibmsocial_login']);
@@ -137,4 +128,245 @@ class AuthApicHooks {
       }
     }
   }
- }
+
+  /**
+   * Implements hook_token_info().
+   *
+   * Declares APIC-related user tokens.
+   */
+  #[Hook('token_info')]
+  public function tokenInfo(): array {
+    $definitions = [
+      'first_name' => t('First name'),
+      'last_name' => t('Last name'),
+      'apic_realm' => t('APIC Realm'),
+      'apic_state' => t('APIC State'),
+      'apic_url' => t('APIC URL'),
+      'consumerorg_url' => t('Consumer Organization URL'),
+      'apic_user_registry_url' => t('APIC User Registry URL'),
+      'apic_idp' => t('APIC Identity Provider'),
+      'apic_catalog_id' => t('APIC Catalog ID'),
+      'avatars_avatar_generator' => t('Avatar Generator'),
+      'codesnippet' => t('Code Snippet Language'),
+      'consumer_organization' => t('Consumer Organization'),
+      'first_time_login' => t('First Time Login'),
+      'language' => t('Preferred Language'),
+      'field_last_password_reset' => t('Last Password Reset'),
+      'avatars_user_picture' => t('User Picture Upload'),
+      'field_password_expiration' => t('Password Expiration'),
+      'field_pending_expire_sent' => t('Pending Expiration Mail Count'),
+    ];
+
+    $tokens = ['user' => []];
+
+    foreach ($definitions as $key => $label) {
+      $tokens['user'][$key] = [
+        'name' => $label,
+        'description' => $label,
+      ];
+    }
+
+    return ['tokens' => $tokens];
+  }
+
+  /**
+   * Helper method to get token value for a user.
+   *
+   * @param User $account The user account
+   * @param string $name The token name (may include nested parts like 'created:long')
+   */
+  private function getTokenValue(User $account, string $name) {
+    $value = NULL;
+
+    switch ($name) {
+      case 'apic_realm':
+        $registry_url = $account->get('apic_user_registry_url')->value ?? NULL;
+        if ($registry_url) {
+          try {
+            $registry = \Drupal::service('ibm_apim.user_registry')->get($registry_url);
+            $value = $registry?->getRealm();
+          }
+          catch (\Throwable $e) {}
+        }
+        break;
+
+      case 'apic_catalog_id':
+        try {
+          $value = \Drupal::service('ibm_apim.site_config')->getEnvId();
+        }
+        catch (\Throwable $e) {}
+        break;
+
+      case 'language':
+        if ($account->hasField('preferred_langcode') && !$account->get('preferred_langcode')->isEmpty()) {
+          $value = $account->get('preferred_langcode')->value;
+        }
+        elseif ($account->hasField('langcode') && !$account->get('langcode')->isEmpty()) {
+          $value = $account->get('langcode')->value;
+        }
+        break;
+
+      case 'consumerorg_url':
+        if ($account->hasField('consumerorg_url') && !$account->get('consumerorg_url')->isEmpty()) {
+          $values = $account->get('consumerorg_url')->getValue();
+          if (!empty($values[0]['value'])) {
+            $value = $values[0]['value'];
+          }
+        }
+        break;
+
+      case 'apic_idp':
+        if ($account->hasField('apic_idp') && !$account->get('apic_idp')->isEmpty()) {
+          $value = $account->get('apic_idp')->value;
+        }
+        break;
+
+      case 'avatars_avatar_generator':
+        if ($account->hasField('avatars_avatar_generator') && !$account->get('avatars_avatar_generator')->isEmpty()) {
+          $value = $account->get('avatars_avatar_generator')->value;
+        }
+        break;
+
+      case 'display-name':
+        $value = $account->getDisplayName();
+        break;
+
+      case 'account-name':
+      case 'name':
+        $value = $account->getAccountName();
+        break;
+
+      case 'mail':
+        $value = $account->getEmail();
+        break;
+
+      case 'url':
+        $value = $account->toUrl('canonical', ['absolute' => TRUE])->toString();
+        break;
+
+      case 'edit-url':
+        $value = $account->toUrl('edit-form', ['absolute' => TRUE])->toString();
+        break;
+
+      case 'last-login':
+        $timestamp = $account->getLastLoginTime();
+        if ($timestamp) {
+          $value = \Drupal::service('date.formatter')->format($timestamp, 'medium');
+        }
+        break;
+
+      case 'created':
+        $timestamp = $account->getCreatedTime();
+        if ($timestamp) {
+          $value = \Drupal::service('date.formatter')->format($timestamp, 'medium');
+        }
+        break;
+
+      default:
+
+        if (strpos($name, ':') !== FALSE) {
+          [$base_token, $format] = explode(':', $name, 2);
+
+          $timestamp = NULL;
+          if ($base_token === 'created') {
+            $timestamp = $account->getCreatedTime();
+          }
+          elseif ($base_token === 'last-login') {
+            $timestamp = $account->getLastLoginTime();
+          }
+
+          if ($timestamp) {
+            $date_formatter = \Drupal::service('date.formatter');
+            switch ($format) {
+              case 'short':
+              case 'medium':
+              case 'long':
+                $value = $date_formatter->format($timestamp, $format);
+                break;
+              case 'raw':
+                $value = $timestamp;
+                break;
+              case 'since':
+                $value = $date_formatter->formatTimeDiffSince($timestamp);
+                break;
+              case 'html_date':
+              case 'html_datetime':
+              case 'html_month':
+              case 'html_time':
+              case 'html_week':
+              case 'html_year':
+              case 'html_yearless_date':
+                $value = $date_formatter->format($timestamp, 'custom', 'Y-m-d');
+                break;
+              default:
+                if (strpos($format, 'custom:') === 0) {
+                  $custom_format = substr($format, 7);
+                  $value = $date_formatter->format($timestamp, 'custom', $custom_format);
+                }
+                else {
+                  $value = $date_formatter->format($timestamp, $format);
+                }
+                break;
+            }
+          }
+        }
+        elseif ($account->hasField($name) && !$account->get($name)->isEmpty()) {
+          $field = $account->get($name);
+          $value = is_array($field->getValue())
+            ? ($field->value ?? $field->getValue()[0]['value'] ?? NULL)
+            : $field->value;
+        }
+        break;
+    }
+
+    return $value;
+  }
+
+  /**
+   * Implements hook_tokens().
+   *
+   * Provides replacements for APIC user tokens.
+   */
+  #[Hook('tokens')]
+  public function tokens(string $type, array $tokens, array $data = [], array $options = []): array {
+    if (!in_array($type, ['user', 'current-user'], TRUE)) {
+      return [];
+    }
+
+    $account = $data['user'] ?? User::load(\Drupal::currentUser()->id());
+    if (!$account instanceof User) {
+      return [];
+    }
+
+    $replacements = [];
+
+    foreach ($tokens as $name => $original) {
+      $value = $this->getTokenValue($account, $name);
+      if ($value !== NULL) {
+        $replacements[$original] = $value;
+      }
+    }
+
+    $token_service = \Drupal::token();
+    if ($token_service && method_exists($token_service, 'findWithPrefix')) {
+      $original_tokens = $token_service->findWithPrefix($tokens, 'original');
+
+      if ($original_tokens && !empty($original_tokens)) {
+        $original_user = $data['user_original'] ?? $account;
+
+        if ($original_user instanceof User) {
+
+          foreach ($original_tokens as $name => $original) {
+            $value = $this->getTokenValue($original_user, $name);
+            if ($value !== NULL) {
+              $replacements[$original] = $value;
+            }
+          }
+        }
+      }
+    }
+
+    return $replacements;
+  }
+
+}

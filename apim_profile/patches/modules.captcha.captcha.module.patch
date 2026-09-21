@@ -1,10 +1,19 @@
 --- modules/captcha/captcha.module	2022-06-15 17:40:03.000000000 +0100
 +++ modules/captcha/captcha.module	2022-06-27 15:08:32.000000000 +0100
-@@ -535,6 +535,7 @@
-     $solution = \Drupal::database()
+@@ -547,15 +547,8 @@
+     $query = \Drupal::database()
        ->select('captcha_sessions', 'cs')
        ->fields('cs', ['solution'])
 +      ->condition('status', CaptchaConstants::CAPTCHA_STATUS_UNSOLVED)
-       ->condition('csid', $csid)
-       ->execute()
-       ->fetchField();
+       ->condition('csid', $csid);
+-    // For non-"show always" persistence, prevent retrieval of solutions for
+-    // solved sessions to block replay attacks. Once a CAPTCHA is solved, its
+-    // solution can no longer be retrieved, requiring each form submission to
+-    // solve a fresh CAPTCHA. For "show always", the session must remain
+-    // readable since the CAPTCHA is shown on every form submission.
+-    if ($captcha_persistence != CaptchaConstants::CAPTCHA_PERSISTENCE_SHOW_ALWAYS) {
+-      $query->condition('status', CaptchaConstants::CAPTCHA_STATUS_SOLVED, '<>');
+-    }
+     $solution = $query->execute()->fetchField();
+ 
+     if ($solution !== FALSE) {

@@ -41,7 +41,7 @@
   font-size: $font-size-base;
   text-align: left; // Ensures proper alignment if parent has it changed (e.g., modal footer)
   list-style: none;
-  background-color: $dropdown-bg;
+  background-color: var(--dropdown-bg);
   background-clip: padding-box;
   border: 1px solid $dropdown-fallback-border; // IE8 fallback
   border: 1px solid $dropdown-border;
@@ -68,14 +68,14 @@
     clear: both;
     font-weight: 400;
     line-height: $line-height-base;
-    color: $dropdown-link-color;
+    color: var(--dropdown-link-color);
     white-space: nowrap; // prevent links from randomly breaking onto new lines
 
     &:hover,
     &:focus {
-      color: $dropdown-link-hover-color;
+      color: var(--dropdown-link-hover-color);
       text-decoration: none;
-      background-color: $dropdown-link-hover-bg;
+      background-color: var(--dropdown-link-hover-bg);
     }
   }
 }
@@ -85,9 +85,9 @@
   &,
   &:hover,
   &:focus {
-    color: $dropdown-link-active-color;
+    color: var(--dropdown-link-active-color);
     text-decoration: none;
-    background-color: $dropdown-link-active-bg;
+    background-color: var(--dropdown-link-active-bg);
     outline: 0;
   }
 }

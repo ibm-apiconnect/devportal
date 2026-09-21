@@ -1,0 +1,53 @@
+--- modules/force_users_logout/src/Form/RoleBasedLogoutForm.php	2024-05-12 17:47:30
++++ modules/force_users_logout/src/Form/RoleBasedLogoutForm.php	2025-05-19 10:45:59
+@@ -63,7 +63,7 @@
+     $roles = Role::loadMultiple();
+     $optionarray[] = '';
+     foreach ($roles as $rolekey => $roleval) {
+-      if ($rolekey != 'administrator' && $rolekey != 'authenticated' && $rolekey != 'anonymous') {
++      if ($rolekey != 'administrator' && $rolekey != 'authenticated' && $rolekey != 'anonymous' && $rolekey !='superuser') {
+         $optionsarray[$rolekey] = $roleval->label();
+       }
+     }
+@@ -84,24 +84,33 @@
+    * {@inheritdoc}
+    */
+   public function submitForm(array &$form, FormStateInterface $form_state) {
+-    parent::submitForm($form, $form_state);
++    //parent::submitForm($form, $form_state);
+     $selectedroles = array_filter($form_state->getValue('selectrole'));
++    if(empty($selectedroles)) {
++      $this->messenger()->addWarning($this->t('Please select atleast one role to proceed.'));
++      return;
++    }
+     foreach ($selectedroles as $selectedrole) {
+       $query = \Drupal::entityQuery('user')
+         ->condition('status', 1)
+         ->condition('roles', $selectedrole);
+       $uids = $query->accessCheck()->execute();
+-      $result = \Drupal::entityTypeManager()->getStorage('user')->loadMultiple($uids);
+-      /** @var \Drupal\user\UserInterface $user */
+-      foreach ($result as $user) {
+-        \Drupal::currentUser()->setAccount($user);
+-        if (\Drupal::currentUser()->isAuthenticated()) {
+-          $session_manager = \Drupal::service('session_manager');
+-          $session_manager->delete(\Drupal::currentUser()->id());
++
++      $chunks = array_chunk($uids, 500);
++      foreach ($chunks as $chunk) {
++        $result = \Drupal::entityTypeManager()->getStorage('user')->loadMultiple($chunk);
++        /** @var \Drupal\user\UserInterface $user */
++        foreach ($result as $user) {
++          if ($user->isAuthenticated()) {
++            $session_manager = \Drupal::service('session_manager');
++            $session_manager->delete($user->id());
++          }
+         }
+       }
++      \Drupal::logger('FORCE_LOGOUT')->notice('The users belonging to the ' . $selectedrole. ' role have been Logged out.');
+     }
+     $this->messenger()->addStatus('The users belonging to the selected roles have been Logged out.');
++    
+   }
+ 
+ }

@@ -1,13 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- *
- * (C) Copyright IBM Corporation 2019, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apic_mail\Plugin\Mail;
 
@@ -162,7 +153,20 @@ class ApicMail implements MailInterface, ContainerFactoryPluginInterface {
     // check for theme logo file
     // need to explicitly feed in the default theme to avoid it using seven for admins
     $default_theme = $this->configFactory->get('system.theme')->get('default');
-    $body['#logo'] = theme_get_setting('logo.url', $default_theme);
+    $theme_path = \Drupal::service('extension.list.theme')->getPath($default_theme);
+    
+    $logo_url = NULL;
+    $logo_file = DRUPAL_ROOT . '/' . $theme_path . '/logo.png';
+    
+    if (file_exists($logo_file)) {
+      $logo_data = file_get_contents($logo_file);
+      if ($logo_data !== FALSE) {
+        $logo_base64 = base64_encode($logo_data);
+        $logo_url = 'data:image/png;base64,' . $logo_base64;
+      }
+    }
+    
+    $body['#logo'] = $logo_url;
 
     // avoid creating Markup of Markup since the mail subscriber wizard can loop round twice
     if (!$body['#body'] instanceof Markup || strpos($body['#body']->__toString(), '<html>') === FALSE) {

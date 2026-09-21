@@ -13,8 +13,8 @@ Feature: Application Rendering
       | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.mail) |
     Given I am logged in as "@data(andre.mail)"
     Given applications:
-      | title    | id    | org_id      |
-      | MyApp | 1234567@now | @data(andre.consumerorg.id) |
+      | title | id          | org_id                      | state     |
+      | MyApp | 1234567@now | @data(andre.consumerorg.id) | published |
     And I am at "/application"
     Then I should see the text "MyApp"
     And there are no errors
@@ -37,8 +37,8 @@ Feature: Application Rendering
       | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.mail) |
     Given I am logged in as "@data(andre.mail)"
     Given applications:
-      | title    | id    | org_id      |
-      | MyApp | 1234567@now | @data(andre.consumerorg.id) |
+      | title | id          | org_id                      | state     |
+      | MyApp | 1234567@now | @data(andre.consumerorg.id) | published |
     And I am at "/application"
     Then I should see the text "MyApp"
     And there are no errors
@@ -69,8 +69,8 @@ Feature: Application Rendering
       | name      | title     | id     | document             |
       | pet-store | Pet Store | 123456 | PetStoreProduct.json |
     Given applications:
-      | title | id      | org_id                      |
-      | MyApp2 | 1234567@now | @data(andre.consumerorg.id) |
+      | title  | id          | org_id                      |  state    |
+      | MyApp2 | 1234567@now | @data(andre.consumerorg.id) | published |
     Given subscriptions:
       | org_id                      | app_id  | sub_id | product   | plan    |
       | @data(andre.consumerorg.id) | 1234567@now | abcde@now  | 123456 | default |
@@ -107,8 +107,8 @@ Feature: Application Rendering
       | name      | title     | id     | document             |
       | pet-store | Pet Store | 123456 | PetStoreProduct.json |
     Given applications:
-      | title | id      | org_id                      |
-      | MyApp2 | 1234567@now | @data(andre.consumerorg.id) |
+      | title  | id          | org_id                      |  state    |
+      | MyApp2 | 1234567@now | @data(andre.consumerorg.id) | published |
     Given subscriptions:
       | org_id                      | app_id  | sub_id | product   | plan    |
       | @data(andre.consumerorg.id) | 1234567@now | abcde@now  | 123456 | default |
@@ -139,8 +139,8 @@ Feature: Application Rendering
       | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.mail) |
     Given I am logged in as "@data(andre.mail)"
     Given applications:
-      | title    | id    | org_id      |
-      | MyApp | 1234567@now | @data(andre.consumerorg.id) |
+      | title | id          | org_id                      | state     |
+      | MyApp | 1234567@now | @data(andre.consumerorg.id) | published |
     And I am at "/application"
     Then I should see the text "MyApp"
     And there are no errors

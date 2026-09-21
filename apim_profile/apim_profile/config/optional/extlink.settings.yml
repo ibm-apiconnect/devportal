@@ -12,7 +12,7 @@ extlink_include: ''
 extlink_class: ext
 extlink_label: '(link is external)'
 extlink_img_class: false
-extlink_css_exclude: ''
+extlink_css_exclude: '.registry-button'
 extlink_css_explicit: ''
 extlink_mailto_class: mailto
 extlink_mailto_label: '(link sends email)'

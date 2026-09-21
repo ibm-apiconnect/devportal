@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\apic_api;
 
@@ -23,6 +13,7 @@ use Drupal\node\NodeInterface;
 use Drupal\product\Product;
 use Drupal\ibm_apim\Controller\IbmApimContentController;
 use Throwable;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 /**
  * Class to work with the API content type, takes input from the JSON returned by
@@ -88,7 +79,7 @@ class Api {
 
     if ($oldNode !== NULL && $oldNode->id()) {
       $existingCategories = [];
-      $oldApiData = unserialize($oldNode->api_swagger->value, ['allowed_classes' => FALSE]);
+      $oldApiData = SerializationUtility::decodeData($oldNode->api_swagger->value,  TRUE, FALSE);
       if (isset($oldApiData['x-ibm-configuration']['categories'])) {
         $existingCategories = $oldApiData['x-ibm-configuration']['categories'];
       }
@@ -369,7 +360,7 @@ class Api {
         if (!isset($api['consumer_api']['x-ibm-configuration']) || empty($api['consumer_api']['x-ibm-configuration'])) {
           $api['consumer_api']['x-ibm-configuration'] = '';
         }
-        $node->set('api_ibmconfiguration', serialize($api['consumer_api']['x-ibm-configuration']));
+        $node->set('api_ibmconfiguration', SerializationUtility::encodeData($api['consumer_api']['x-ibm-configuration']));
         $oaiVersion = '2';
         if (isset($api['consumer_api']['openapi']) && $this->utils->startsWith($api['consumer_api']['openapi'], '3.')) {
           $oaiVersion = '3';
@@ -388,7 +379,21 @@ class Api {
               unset($api['consumer_api'][$key]);
             }
           }
-          $node->set('api_swagger', serialize(apic_api_remove_empty_elements($api['consumer_api'])));
+          $node->set('api_swagger', SerializationUtility::encodeData(apic_api_remove_empty_elements($api['consumer_api'])));
+
+          // Store raw metadata in apic_metadata field
+          $metadata = NULL;
+          if (isset($api['consumer_api']['info']['metadata'])) {
+            $metadata = $api['consumer_api']['info']['metadata'];
+          } elseif (isset($api['metadata'])) {
+            $metadata = $api['metadata'];
+          }
+
+          if ($metadata !== NULL && !empty($metadata)) {
+            $node->set('apic_metadata', SerializationUtility::encodeData($metadata));
+          } else {
+            $node->set('apic_metadata', NULL);
+          }
 
           // stored as base64 encoded string so can be passed through to explorer without PHP messing up empty objects / arrays
           if (!array_key_exists('encoded_consumer_api', $api) || empty($api['encoded_consumer_api'])) {
@@ -517,7 +522,7 @@ class Api {
             if ($wsdlContentType === 'application/zip') {
               $data = apic_api_get_string_from_zip(base64_decode($api['wsdl']['content']));
             }
-            $serialized = Xss::filter(serialize($data));
+            $serialized = Xss::filter(SerializationUtility::encodeData($data));
             if (($data !== NULL && !empty($data)) && ($node->api_wsdl->value !== $serialized)) {
               try {
                 $node->set('api_wsdl', $serialized);
@@ -851,7 +856,7 @@ class Api {
         $productNodes = Node::loadMultiple($chunk);
         foreach ($productNodes as $productNode) {
           foreach ($productNode->product_apis->getValue() as $arrayValue) {
-            $apis = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+            $apis = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
             foreach ($apis as $prodRef) {
               $refArray[] = $prodRef['name'];
             }
@@ -1100,7 +1105,7 @@ class Api {
     if ($categoriesEnabled === TRUE) {
       $node = Node::load($nid);
       if ($node !== NULL) {
-        $api = unserialize($node->api_swagger->value, ['allowed_classes' => FALSE]);
+        $api = SerializationUtility::decodeData($node->api_swagger->value, TRUE, FALSE);
         if (isset($api['x-ibm-configuration']['categories'])) {
           $this->apicTaxonomy->process_api_categories($api, $node);
           $node->save();

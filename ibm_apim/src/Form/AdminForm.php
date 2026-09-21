@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Form;
 
@@ -82,7 +72,7 @@ class AdminForm extends ConfigFormBase {
     $apim_host = $this->siteConfig->parseApimHost();
 
     $form['intro'] = [
-      '#markup' => t('This form allows the configuration of different settings of this IBM API Developer Portal.'),
+      '#markup' => t('This form allows the configuration of different settings of this IBM CMS Portal.'),
       '#weight' => -30,
     ];
     $form['apim_host'] = [
@@ -112,6 +102,18 @@ class AdminForm extends ConfigFormBase {
       '#weight' => -14,
       '#description' => t('If checked then a placeholder image will be shown for the Applications and APIs that do not have one explicitly set. Uncheck to not show an image at all.'),
     ];
+
+    // Only show dark mode setting if the dark_mode_toggle module is installed
+    if (\Drupal::moduleHandler()->moduleExists('dark_mode_toggle')) {
+      $form['config']['enable_dark_mode'] = [
+        '#type' => 'checkbox',
+        '#title' => t('Enable dark mode toggle'),
+        // Default to TRUE if config doesn't exist
+        '#default_value' => $config->get('enable_dark_mode') ?? TRUE,
+        '#weight' => -13.5,
+        '#description' => t('If checked then users will be able to toggle between light and dark themes. The dark mode toggle will appear in the site header.'),
+      ];
+    }
 
     $form['config']['show_register_app'] = [
       '#type' => 'checkbox',
@@ -161,25 +163,9 @@ class AdminForm extends ConfigFormBase {
       '#description' => t('If checked then APIs will be automatically tagged with their lifecycle "Phase".'),
     ];
 
-    $form['config']['show_cors_warnings'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Display CORS warnings for unenforced APIs'),
-      '#default_value' => $config->get('show_cors_warnings'),
-      '#weight' => -10,
-      '#description' => t('If checked then unenforced APIs will have a warning about needing to check CORS (Cross-Origin Response Sharing) has been implemented. Uncheck to suppress the warnings.'),
-    ];
-
-    $form['config']['render_api_schema_view'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Render API schema objects'),
-      '#default_value' => $config->get('render_api_schema_view'),
-      '#weight' => -10,
-      '#description' => t('If checked then API schema objects will be displayed as navigable objects. If unchecked then they will be displayed as raw JSON.'),
-    ];
-
     $form['config']['show_analytics'] = [
       '#type' => 'checkbox',
-      '#title' => t('Display Analytics'),
+      '#title' => t('Display analytics'),
       '#default_value' => $config->get('show_analytics'),
       '#weight' => -10,
       '#description' => t('Display API Consumer analytics in the portal. If unchecked then all analytics links will be removed.'),
@@ -195,7 +181,7 @@ class AdminForm extends ConfigFormBase {
 
     $form['config']['soap_swagger_download'] = [
       '#type' => 'checkbox',
-      '#title' => t('Allow Download of Open API documents for SOAP APIs'),
+      '#title' => t('Allow download of Open API documents for SOAP APIs'),
       '#default_value' => $config->get('soap_swagger_download'),
       '#weight' => -10,
       '#description' => t('If checked API consumers will be able to download the Open API documents for SOAP APIs as well as REST APIs.'),
@@ -207,6 +193,14 @@ class AdminForm extends ConfigFormBase {
       '#default_value' => $config->get('optimise_oauth_ux'),
       '#weight' => -10,
       '#description' => t('If checked then certain OAuth flows (such as implicit or access code) which cannot be completed from the test tool for technical reasons are optimised to improve usability.'),
+    ];
+
+    $form['config']['show_subscription_tos'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Show Terms of Service in subscription wizard'),
+      '#default_value' => $config->get('show_subscription_tos') ?? TRUE,
+      '#weight' => -10,
+      '#description' => t('If checked, the Terms of Service will be displayed in the subscription confirmation step when a product has ToS defined. Users will be required to accept the ToS before subscribing.'),
     ];
 
     $form['config']['show_mtls_header'] = [
@@ -338,7 +332,7 @@ class AdminForm extends ConfigFormBase {
     ];
     $form['products']['product_recommendations']['enabled'] = [
       '#type' => 'checkbox',
-      '#title' => t('Enable API Product Recommendations'),
+      '#title' => t('Enable API Product recommendations'),
       '#default_value' => (bool) $config->get('product_recommendations.enabled'),
       '#weight' => -15,
       '#attributes' => [
@@ -356,7 +350,7 @@ class AdminForm extends ConfigFormBase {
       '#attributes' => [
         'id' => 'product_recommendations_count',
       ],
-      '#description' => t('How many API Product Recommendations are shown to the end users.'),
+      '#description' => t('How many API Product recommendations are shown to the end users.'),
       '#states' => [
         'enabled' => [
           ':input[id="product_recommendations_enabled"]' => ['checked' => TRUE],
@@ -396,7 +390,7 @@ class AdminForm extends ConfigFormBase {
     // code snippets options
     $form['codesnippets'] = [
       '#type' => 'fieldset',
-      '#title' => t('API Code Snippets'),
+      '#title' => t('API code snippets'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     ];
@@ -475,6 +469,12 @@ class AdminForm extends ConfigFormBase {
       '#default_value' => $codesnippets['csharp'],
       '#weight' => 10,
     ];
+    $form['codesnippets']['codesnippets_powershell'] = [
+      '#type' => 'checkbox',
+      '#title' => t('PowerShell'),
+      '#default_value' => $codesnippets['powershell'],
+      '#weight' => 11,
+    ];
 
     $form['explorer'] = [
       '#type' => 'fieldset',
@@ -486,21 +486,21 @@ class AdminForm extends ConfigFormBase {
       '#type' => 'number',
       '#min' => 1,
       '#max' => 10,
-      '#title' => 'Example Array Items',
+      '#title' => t('Example Array Items'),
       '#required' => true,
       '#maxlength' => 2,
       '#description' => t('Set the number of example items that should be generated for arrays'),
-      '#default_value' => (int) $config->get('example_array_items') ?: 3,
+      '#default_value' => (int) $config->get('example_array_items') ?: 1,
       '#required' => TRUE,
       '#weight' => 30,
     ];
     $form['explorer']['api_max_depth'] = [
       '#type' => 'number',
-      '#min' => 9,
+      '#min' => 2,
       '#max' => 25,
-      '#title' => t('Example Max Depth'),
+      '#title' => t('Example max depth'),
       '#description' => t('Set the max depth of example items'),
-      '#default_value' => (int) $config->get('api_max_depth') ?: 9,
+      '#default_value' => (int) $config->get('api_max_depth') ?: 5,
       '#required' => TRUE,
       '#weight' => 30,
     ];
@@ -520,7 +520,7 @@ class AdminForm extends ConfigFormBase {
     // code snippets options
     $form['certificates'] = [
       '#type' => 'fieldset',
-      '#title' => t('Application Certificates'),
+      '#title' => t('Application certificates'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     ];
@@ -541,7 +541,7 @@ class AdminForm extends ConfigFormBase {
 
     $form['proxy'] = [
       '#type' => 'fieldset',
-      '#title' => t('Proxy Configuration (Experimental)'),
+      '#title' => t('Proxy configuration (experimental)'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     ];
@@ -551,7 +551,7 @@ class AdminForm extends ConfigFormBase {
     ];
     $form['proxy']['use_proxy'] = [
       '#type' => 'checkbox',
-      '#title' => t('Enable Proxy Support'),
+      '#title' => t('Enable proxy support'),
       '#default_value' => $config->get('use_proxy'),
       '#weight' => 20,
     ];
@@ -609,7 +609,7 @@ class AdminForm extends ConfigFormBase {
     ];
     $form['proxy']['proxy_auth'] = [
       '#type' => 'textfield',
-      '#title' => t('Proxy Authentication'),
+      '#title' => t('Proxy authentication'),
       '#description' => t('If the proxy requires authentication then provide the \'username:password\'.'),
       '#size' => 25,
       '#maxlength' => 128,
@@ -619,6 +619,40 @@ class AdminForm extends ConfigFormBase {
     ];
 
     return parent::buildForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   * Validate that at least one code snippet language is selected
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
+    parent::validateForm($form, $form_state);
+
+    $languages = [
+      'codesnippets_curl',
+      'codesnippets_ruby',
+      'codesnippets_python',
+      'codesnippets_php',
+      'codesnippets_java',
+      'codesnippets_node',
+      'codesnippets_go',
+      'codesnippets_swift',
+      'codesnippets_c',
+      'codesnippets_csharp',
+      'codesnippets_powershell',
+    ];
+
+    $atLeastOneSelected = FALSE;
+    foreach ($languages as $language) {
+      if ($form_state->getValue($language)) {
+        $atLeastOneSelected = TRUE;
+        break;
+      }
+    }
+
+    if (!$atLeastOneSelected) {
+      $form_state->setErrorByName('codesnippets', $this->t('At least one code snippet language must be selected.'));
+    }
   }
 
   /**
@@ -638,6 +672,7 @@ class AdminForm extends ConfigFormBase {
       'swift' => (bool) $form_state->getValue('codesnippets_swift'),
       'c' => (bool) $form_state->getValue('codesnippets_c'),
       'csharp' => (bool) $form_state->getValue('codesnippets_csharp'),
+      'powershell' => (bool) $form_state->getValue('codesnippets_powershell'),
     ];
     $categories = [
       'enabled' => (bool) $form_state->getValue('categories_enabled'),
@@ -648,21 +683,21 @@ class AdminForm extends ConfigFormBase {
     $this->config('ibm_apim.settings')
       ->set('autocreate_apiforum', (bool) $form_state->getValue('autocreate_apiforum'))
       ->set('show_placeholder_images', (bool) $form_state->getValue('show_placeholder_images'))
+      ->set('enable_dark_mode', (bool) $form_state->getValue('enable_dark_mode'))
       ->set('show_register_app', (bool) $form_state->getValue('show_register_app'))
       ->set('show_versions', (bool) $form_state->getValue('show_versions'))
       ->set('show_anonymous_apis', (bool) $form_state->getValue('show_anonymous_apis'))
       ->set('enable_api_test', (bool) $form_state->getValue('enable_api_test'))
       ->set('validate_apis', (bool) $form_state->getValue('validate_apis'))
       ->set('autotag_with_phase', (bool) $form_state->getValue('autotag_with_phase'))
-      ->set('show_cors_warnings', (bool) $form_state->getValue('show_cors_warnings'))
       ->set('show_analytics', (bool) $form_state->getValue('show_analytics'))
       ->set('remove_IBM_keys', (bool) $form_state->getValue('remove_IBM_keys'))
       ->set('soap_swagger_download', (bool) $form_state->getValue('soap_swagger_download'))
       ->set('optimise_oauth_ux', (bool) $form_state->getValue('optimise_oauth_ux'))
+      ->set('show_subscription_tos', (bool) $form_state->getValue('show_subscription_tos'))
       ->set('show_mtls_header', (bool) $form_state->getValue('show_mtls_header'))
       ->set('application_image_upload', (bool) $form_state->getValue('application_image_upload'))
       ->set('hide_admin_registry', (bool) $form_state->getValue('hide_admin_registry'))
-      ->set('render_api_schema_view', (bool) $form_state->getValue('render_api_schema_view'))
       ->set('allow_consumerorg_creation', (bool) $form_state->getValue('allow_consumerorg_creation'))
       ->set('allow_consumerorg_rename', (bool) $form_state->getValue('allow_consumerorg_rename'))
       ->set('allow_consumerorg_change_owner', (bool) $form_state->getValue('allow_consumerorg_change_owner'))
@@ -679,8 +714,8 @@ class AdminForm extends ConfigFormBase {
       ->set('use_proxy', (bool) $form_state->getValue('use_proxy'))
       ->set('proxy_for_api', implode(',', $form_state->getValue('proxy_for_api')))
       ->set('proxy_type', $form_state->getValue('proxy_type'))
-      ->set('proxy_url', $form_state->getValue('proxy_url'))
-      ->set('proxy_auth', $form_state->getValue('proxy_auth'))
+      ->set('proxy_url', $this->sanitizeIfNeeded($form_state->getValue('proxy_url')))
+      ->set('proxy_auth', $this->sanitizeIfNeeded($form_state->getValue('proxy_auth')))
       ->set('categories', $categories)
       ->set('codesnippets', $codesnippets)
       ->set('router_type', $form_state->getValue('router_type'))
@@ -745,6 +780,25 @@ class AdminForm extends ConfigFormBase {
 
     // clear all caches
     drupal_flush_all_caches();
+  }
+
+  /**
+   * Helper method to sanitize a value only if needed
+   *
+   * @param string|null $value The value to sanitize
+   * @return string|null The sanitized value if needed, otherwise the original value
+   */
+  private function sanitizeIfNeeded(?string $value): ?string {
+    if ($value === null) {
+      return null;
+    }
+    
+    // Only apply htmlspecialchars if the value would be changed
+    if ($value !== htmlspecialchars($value, ENT_QUOTES)) {
+      return htmlspecialchars($value, ENT_QUOTES);
+    }
+    
+    return $value;
   }
 
 }

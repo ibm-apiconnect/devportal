@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -400,5 +390,249 @@ function consumerorg_update_10002() {
       $view->set('hidden', $view_hidden);
       $view->save();
     }
+  }
+}
+
+/**
+ * Add apic_metadata field to store raw metadata from API Manager
+ * 
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function consumerorg_update_10003() {
+  // Check view displays
+  $viewDisplayFiles = ['node.consumerorg.default', 'node.consumerorg.teaser'];
+  $formatter_manager = \Drupal::service('plugin.manager.field.formatter');
+  
+  foreach ($viewDisplayFiles as $file) {
+    $viewDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load($file);
+  
+    if ($viewDisplay !== NULL) {
+      $changed = FALSE;
+      $content = $viewDisplay->get('content');
+      
+      foreach ($content as $fieldName => $component) {
+        if (is_array($component) && isset($component['type'])) {
+          $type = $component['type'];
+          $definitions = $formatter_manager->getDefinitions();
+          if (!isset($definitions[$type])) {
+            \Drupal::logger('consumerorg')->notice('View Display - Field: @field, Type: @type, Not Supported in File: @file', [
+              '@field' => $fieldName,
+              '@type' => $type,
+              '@file' => $file,
+            ]);
+  
+            // Reset to Basic String
+            $content[$fieldName]['type'] = 'basic_string';
+            $changed = TRUE;
+          }
+        }
+      }
+      
+      if ($changed) {
+        $viewDisplay->set('content', $content);
+        $viewDisplay->save();
+        \Drupal::logger('product')->notice('Saved view display changes for @file', ['@file' => $file]);
+      }
+    }
+  }
+
+  // Check form displays
+  $formDisplayFiles = ['node.consumerorg.default'];
+  $widget_manager = \Drupal::service('plugin.manager.field.widget');
+  
+  foreach ($formDisplayFiles as $file) {
+    $formDisplay = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load($file);
+  
+    if ($formDisplay !== NULL) {
+      $changed = FALSE;
+      $content = $formDisplay->get('content');
+      
+      foreach ($content as $fieldName => $component) {
+        if (is_array($component) && isset($component['type'])) {
+          $type = $component['type'];
+          $definitions = $widget_manager->getDefinitions();
+          if (!isset($definitions[$type])) {
+            \Drupal::logger('consumerorg')->notice('Form Display - Field: @field, Type: @type, Not Supported in File: @file', [
+              '@field' => $fieldName,
+              '@type' => $type,
+              '@file' => $file,
+            ]);
+  
+            // Reset to string_textfield for form widgets
+            $content[$fieldName]['type'] = 'string_textfield';
+            $changed = TRUE;
+          }
+        }
+      }
+      
+      if ($changed) {
+        $formDisplay->set('content', $content);
+        $formDisplay->save();
+        \Drupal::logger('consumerorg')->notice('Saved form display changes for @file', ['@file' => $file]);
+      }
+    }
+  }
+  
+  // Check if field storage already exists
+  $fieldStorage = FieldStorageConfig::loadByName('node', 'apic_metadata');
+  if (!$fieldStorage) {
+    $fieldStorage = FieldStorageConfig::create([
+      'field_name' => 'apic_metadata',
+      'entity_type' => 'node',
+      'type' => 'string_long',
+      'required' => FALSE,
+      'translatable' => FALSE,
+      'cardinality' => 1,
+      'settings' => ['case_sensitive' => FALSE],
+    ]);
+    $fieldStorage->save();
+  }
+
+  // Check if field config already exists for consumerorg
+  $fieldConfig = FieldConfig::loadByName('node', 'consumerorg', 'apic_metadata');
+  if (!$fieldConfig) {
+    $fieldConfig = FieldConfig::create([
+      'field_name' => 'apic_metadata',
+      'entity_type' => 'node',
+      'bundle' => 'consumerorg',
+      'label' => t('APIC Metadata'),
+      'description' => t('Raw metadata from API Manager'),
+      'required' => FALSE,
+      'translatable' => FALSE,
+    ]);
+    $fieldConfig->save();
+  }
+  
+  \Drupal::logger('consumerorg')->notice('Added apic_metadata field to consumerorg content type');
+}
+
+/**
+ * Install the consumerorg_member_invite entity type and create its database table.
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function consumerorg_update_10004() {
+  $database = \Drupal::database();
+  
+  try {
+    // Check if the entity type is already installed
+    $entityTypeManager = \Drupal::entityTypeManager();
+    $entityType = $entityTypeManager->getDefinition('consumerorg_member_invite', FALSE);
+    
+    if ($entityType === NULL) {
+      // Install the entity type
+      \Drupal::entityDefinitionUpdateManager()->installEntityType(
+        $entityTypeManager->getDefinition('consumerorg_member_invite')
+      );
+      \Drupal::logger('consumerorg')->notice('Successfully installed consumerorg_member_invite entity type');
+    }
+    else {
+      // Entity type exists, ensure table schema is up to date
+      $entityDefUpManager = \Drupal::service('ibm_apim.apic_definition_update_manager');
+      $entityDefUpManager->applyUpdates();
+      \Drupal::logger('consumerorg')->notice('Updated consumerorg_member_invite entity schema');
+    }
+    
+    // Verify the table was created
+    if ($database->schema() !== NULL && $database->schema()->tableExists('consumerorg_member_invite')) {
+      \Drupal::logger('consumerorg')->notice('consumerorg_member_invite table created successfully');
+    }
+    else {
+      \Drupal::logger('consumerorg')->error('Failed to create consumerorg_member_invite table');
+    }
+    
+  } catch (\Exception $e) {
+    \Drupal::logger('consumerorg')->error('Error installing consumerorg_member_invite entity: @message', [
+      '@message' => $e->getMessage()
+    ]);
+  }
+}
+
+/**
+ * Fix nullable columns in consumerorg_member_invite table.
+ */
+function consumerorg_update_10005() {
+  $database = \Drupal::database();
+  
+  if (!$database->schema()->tableExists('consumerorg_member_invite')) {
+    return t('Table consumerorg_member_invite does not exist yet.');
+  }
+  
+  $schema = $database->schema();
+  
+  // Make email, user_url, and user columns nullable
+  $schema->changeField('consumerorg_member_invite', 'email', 'email', [
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => FALSE,
+  ]);
+  
+  $schema->changeField('consumerorg_member_invite', 'user_url', 'user_url', [
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => FALSE,
+  ]);
+  
+  $schema->changeField('consumerorg_member_invite', 'user', 'user', [
+    'type' => 'text',
+    'size' => 'big',
+    'not null' => FALSE,
+  ]);
+  
+  return t('Updated consumerorg_member_invite columns to be nullable.');
+}
+
+/**
+ * Migrate member and invitation data from node fields to entities.
+ *
+ * This uses the Batch API to process large datasets efficiently.
+ */
+function consumerorg_update_10006(&$sandbox) {
+  // Verify the entity type and table exist before migrating
+  $database = \Drupal::database();
+  if (!$database->schema()->tableExists('consumerorg_member_invite')) {
+    throw new \Exception('The consumerorg_member_invite table does not exist. Please ensure update 10016 ran successfully.');
+  }
+  
+  $entityTypeManager = \Drupal::entityTypeManager();
+  $entityType = $entityTypeManager->getDefinition('consumerorg_member_invite', FALSE);
+  if ($entityType === NULL) {
+    throw new \Exception('The consumerorg_member_invite entity type is not installed. Please ensure update 10016 ran successfully.');
+  }
+  
+  $migration_service = \Drupal::service('consumerorg.member_migration');
+  return $migration_service->migrateBatch($sandbox);
+}
+
+/**
+ * Install the consumerorg_members view.
+ */
+function consumerorg_update_10007() {
+  $config_path = \Drupal::service('extension.list.module')->getPath('consumerorg') . '/config/install';
+  $config_source = new \Drupal\Core\Config\FileStorage($config_path);
+  
+  $config_name = 'views.view.consumerorg_members';
+  $config_storage = \Drupal::service('config.storage');
+  
+  // Check if the view already exists
+  if (!$config_storage->exists($config_name)) {
+    $config_data = $config_source->read($config_name);
+    if ($config_data) {
+      \Drupal::configFactory()
+        ->getEditable($config_name)
+        ->setData($config_data)
+        ->save(TRUE);
+      
+      \Drupal::logger('consumerorg')->notice('Successfully installed consumerorg_members view');
+      return t('Installed consumerorg_members view.');
+    }
+    else {
+      \Drupal::logger('consumerorg')->error('Failed to read consumerorg_members view configuration');
+      return t('Failed to install consumerorg_members view - configuration file not found.');
+    }
+  }
+  else {
+    \Drupal::logger('consumerorg')->notice('consumerorg_members view already exists, skipping installation');
+    return t('consumerorg_members view already exists.');
   }
 }

@@ -1,0 +1,22 @@
+--- modules/social_media_links/src/Plugin/Block/SocialMediaLinksBlock.php
++++ modules/social_media_links/src/Plugin/Block/SocialMediaLinksBlock.php
+@@ -389,7 +389,7 @@
+       $platforms[$platform_id]['attributes'] = new Attribute($config['link_attributes']);
+ 
+       if (!empty($platform['instance']->getDescription())) {
+-        $platforms[$platform_id]['attributes']->setAttribute('aria-label', $platform['instance']->getDescription());
++        // $platforms[$platform_id]['attributes']->setAttribute('aria-label', $platform['instance']->getDescription());
+         $platforms[$platform_id]['attributes']->setAttribute('title', $platform['instance']->getDescription());
+       }
+     }
+--- modules/social_media_links/modules/social_media_links_field/src/Plugin/Field/FieldFormatter/SocialMediaLinksFieldDefaultFormatter.php
++++ modules/social_media_links/modules/social_media_links_field/src/Plugin/Field/FieldFormatter/SocialMediaLinksFieldDefaultFormatter.php
+@@ -75,7 +75,7 @@
+       $platforms[$platform_id]['attributes'] = new Attribute($link_attributes);
+ 
+       if (!empty($platform['instance']->getDescription())) {
+-        $platforms[$platform_id]['attributes']->setAttribute('aria-label', $platform['instance']->getDescription());
++        // $platforms[$platform_id]['attributes']->setAttribute('aria-label', $platform['instance']->getDescription());
+         $platforms[$platform_id]['attributes']->setAttribute('title', $platform['instance']->getDescription());
+       }
+     }

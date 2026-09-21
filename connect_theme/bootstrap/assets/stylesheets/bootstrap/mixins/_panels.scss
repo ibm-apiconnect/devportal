@@ -1,24 +1,56 @@
 // Panels
 
 @mixin panel-variant($border, $heading-text-color, $heading-bg-color, $heading-border) {
-  border-color: $border;
+  @if str-index(inspect($border), '--') == 1 {
+    border-color: var(#{$border});
+  } @else {
+    border-color: $border;
+  }
 
   & > .panel-heading {
-    color: $heading-text-color;
-    background-color: $heading-bg-color;
-    border-color: $heading-border;
+    @if str-index(inspect($heading-text-color), '--') == 1 {
+      color: var(#{$heading-text-color});
+    } @else {
+      color: $heading-text-color;
+    }
+    @if str-index(inspect($heading-bg-color), '--') == 1 {
+      background-color: var(#{$heading-bg-color});
+    } @else {
+      background-color: $heading-bg-color;
+    }
+    @if str-index(inspect($heading-border), '--') == 1 {
+      border-color: var(#{$heading-border});
+    } @else {
+      border-color: $heading-border;
+    }
 
     + .panel-collapse > .panel-body {
-      border-top-color: $border;
+      @if str-index(inspect($border), '--') == 1 {
+        border-top-color: var(#{$border});
+      } @else {
+        border-top-color: $border;
+      }
     }
     .badge {
-      color: $heading-bg-color;
-      background-color: $heading-text-color;
+      @if str-index(inspect($heading-bg-color), '--') == 1 {
+        color: var(#{$heading-bg-color});
+      } @else {
+        color: $heading-bg-color;
+      }
+      @if str-index(inspect($heading-text-color), '--') == 1 {
+        background-color: var(#{$heading-text-color});
+      } @else {
+        background-color: $heading-text-color;
+      }
     }
   }
   & > .panel-footer {
     + .panel-collapse > .panel-body {
-      border-bottom-color: $border;
+      @if str-index(inspect($border), '--') == 1 {
+        border-bottom-color: var(#{$border});
+      } @else {
+        border-bottom-color: $border;
+      }
     }
   }
 }

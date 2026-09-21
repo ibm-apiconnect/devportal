@@ -6,7 +6,8 @@
 .route-forumpage {
 
   ul.forum-actions-wrapper {
-    margin: 10px 0 10px -5px;
+    margin: 10px 0;
+    margin-inline-start: -5px;
     padding-left: 0;
     list-style: none;
     li {
@@ -18,7 +19,7 @@
 
   table thead,
   .table thead th{
-    border-bottom: 1px solid $ui-03;
+    border-bottom: 1px solid var(--ui-03);
   }
 
   th {
@@ -32,14 +33,14 @@
   }
   th:first-child,
   tbody td:first-child {
-    text-align: left;
-    padding-left: 1rem;
+    text-align: start;
+    padding-inline-start: 1rem;
   }
 
   tbody tr {
-    border-bottom: 1px solid $table-row-border;
+    border-bottom: 1px solid var(--table-row-border);
     &:hover {
-      background-color: rgba($table-row-hover, 0.1);
+      background-color: var(--table-row-hover);
     }
     td {
       padding: 1rem 0;
@@ -53,7 +54,7 @@
 
   article.js-comment {
     display:flex;
-    border-top: 1px solid $table-row-border;
+    border-top: 1px solid var(--table-row-border);
     padding: 1rem 0;
   }
   .forum footer {
@@ -74,7 +75,7 @@
 .forumWrapper .forumContent {
   width: calc(100% - 250px);
   display: inline-block;
-  background-color: $ui-background;
+  background-color: var(--ui-02);
   padding: 1rem;
   margin-top: 2rem;
 }
@@ -83,7 +84,7 @@
   width: 220px;
   display: inline-block;
   vertical-align: top;
-  margin-left: 1rem;
+  margin-inline-start: 1rem;
   margin-top: 1rem;
 
   p {
@@ -98,6 +99,60 @@
   }
 
   .block-social-media-links {
-    margin-left: 12px;
+    margin-inline-start: 12px;
+  }
+}
+
+/* Stack sidebar below content and improve forum post readability on tablets and mobile
+ * At this breakpoint, the sidebar moves below the main content area and forum post
+ * footers (containing user info and submission date) stack vertically for better readability.
+ */
+ @media screen and (max-width: 768px) {
+  .forumWrapper .forumContent {
+    width: 100%;
+    display: block;
+    margin-inline-start: 0;
+  }
+  .forumWrapper .forumSidebar {
+    width: 100%;
+    display: block;
+    margin-inline-start: 0;
+    margin-top: 2rem;
+  }
+  .page-node-type-forum .forum footer {
+    flex-direction: column;
+    min-width: auto;
+  }
+  .page-node-type-forum .submittedOn {
+    margin-top: 1rem;
+  }
+  // Add spacing between image and title
+  .page-node-type-forum h2 {
+    margin-inline-start: 1rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+  }
+  .bx--form-item input.form-text,
+  .form-item-title-0-value input.form-text {
+    max-width: 100%;
+    width: 100%; // Override inline size attribute
+    box-sizing: border-box;
+  }
+}
+
+/* Reduce padding on very small screens to maximize content area */
+@media screen and (max-width: 640px) {
+  .forumWrapper .forumContent {
+    padding: 0.5rem;
+  }
+}
+
+@media screen and (max-width: 1024px) {
+  .bx--form-item input.form-text,
+  .form-item-title-0-value input.form-text {
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
   }
 }

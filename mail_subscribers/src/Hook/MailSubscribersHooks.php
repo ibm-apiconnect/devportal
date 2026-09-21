@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2025
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -60,11 +50,19 @@ class MailSubscribersHooks {
       $message['subject'] = $params['subject'];
 
       // Set the body.
-      $message['body'] = $params['body'];
+      if (isset($params['body'])) {
+        $message['body'] = is_array($params['body']) ? $params['body'] : [$params['body']];
+      } 
 
       // Add additional headers.
       if (!array_key_exists('headers', $message)) {
         $message['headers'] = [];
+      }
+      if (!array_key_exists('headers', $params)) {
+        $params['headers'] = [];
+      } elseif (!is_array($params['headers'])) {
+      // Convert string to single-element array
+        $params['headers'] = [$params['headers']];
       }
       $message['headers'] = array_merge($message['headers'], $params['headers']);
     }
@@ -84,8 +82,8 @@ class MailSubscribersHooks {
       ];
     }
     $type = [
-      'name' => t('Mail Subscribers e-mail message'),
-      'description' => t('Tokens for Mail Subscribers e-mail message.'),
+      'name' => t('Mail subscribers e-mail message'),
+      'description' => t('Tokens for Mail subscribers e-mail message.'),
       'needs-data' => 'mail_subscribers_email_message',
     ];
     return [
@@ -123,12 +121,41 @@ class MailSubscribersHooks {
    * @return array
    */
   #[Hook('theme')]
-  public function theme(): array {
+public function theme(array $existing, string $type, string $theme, string $path): array {
     $themeTemplates = [];
-    $themeTemplates['mail_subscribers_ctools_wizard_trail'] = [
-      'template' => 'mail-subscribers-ctools-wizard-trail',
-      'base hook' => 'ctools_wizard_trail',
+
+    // Module path
+    $modulePath = \Drupal::service('extension.list.module')->getPath('mail_subscribers');
+
+    // Wizard forms
+    $forms = [
+        'mail_subscribers_wizard_choose_api',
+        'mail_subscribers_wizard_choose_consumerorg',
+        'mail_subscribers_wizard_choose_plan',
+        'mail_subscribers_wizard_choose_product',
+        'mail_subscribers_wizard_choose_role',
+        'mail_subscribers_wizard_confirm_send',
+        'mail_subscribers_wizard_enter_content',
+        'mail_subscribers_wizard_result',
     ];
+
+    foreach ($forms as $form_id) {
+        // The **theme hook name** must match the form ID exactly
+        $themeTemplates[$form_id] = [
+            'render element' => 'form',
+            'template' => 'form-' . str_replace('_', '-', $form_id),
+            'path' => $modulePath . '/templates',
+        ];
+    }
+
+    // Wizard trail override
+    $themeTemplates['mail_subscribers_ctools_wizard_trail'] = [
+        'template' => 'mail-subscribers-ctools-wizard-trail',
+        'base hook' => 'ctools_wizard_trail',
+        'path' => $modulePath . '/templates',
+    ];
+
     return $themeTemplates;
-  }
+}
+
  }

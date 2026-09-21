@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\apic_app\Entity;
 
@@ -142,9 +132,33 @@ class ApplicationSubscription extends ContentEntityBase implements ApplicationSu
       ->setDescription(t('The URL of the product this Subscription applies to'))
       ->setReadOnly(TRUE);
 
+    $fields['product_title'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Product title'))
+      ->setDescription(t('The display title of the product this Subscription applies to'))
+      ->setReadOnly(TRUE);
+
     $fields['plan'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Plan name'))
       ->setDescription(t('The name of the plan this Subscription applies to'))
+      ->setReadOnly(TRUE);
+
+    $fields['plan_title'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Plan title'))
+      ->setDescription(t('The display title of the plan this Subscription applies to'))
+      ->setReadOnly(TRUE);
+
+    $fields['product_title_missing'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Product title missing'))
+      ->setDescription(t('Whether the product title could not be resolved'))
+      ->setSetting('unsigned', TRUE)
+      ->setDefaultValue(0)
+      ->setReadOnly(TRUE);
+
+    $fields['plan_title_missing'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Plan title missing'))
+      ->setDescription(t('Whether the plan title could not be resolved'))
+      ->setSetting('unsigned', TRUE)
+      ->setDefaultValue(0)
       ->setReadOnly(TRUE);
 
     $fields['state'] = BaseFieldDefinition::create('string')

@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\themegenerator;
 
@@ -32,6 +22,9 @@ class Generator {
 
     if ($name !== NULL) {
       $name = trim($name);
+      if (!preg_match('/^[a-zA-Z0-9_-]+$/', $name)) {
+        throw new \InvalidArgumentException('Theme name contains invalid characters. Only alphanumeric characters, hyphens, and underscores are allowed.');
+      }
       $tempDir = \Drupal::service('file_system')->getTempDirectory();
       if ($type !== 'scss') {
         $type = 'css';
@@ -84,6 +77,20 @@ class Generator {
           $tgtFile = $targetDir . '/screenshot.png';
           copy($srcFile, $tgtFile);
 
+          // Copy additional SVG files to images directory
+          $additionalSvgs = ['explorerapis.svg', 'signup.svg', 'createapp.svg', 'check-usage.svg', 'case-study-banner.svg', 'explorerapis_dark.svg', 'signup_dark.svg', 'createapp_dark.svg', 'check-usage_dark.svg', 'case-study-banner_dark.svg'];
+          foreach ($additionalSvgs as $svgFile) {
+            $srcFile = $srcDir . '/' . $svgFile;
+            if (file_exists($srcFile)) {
+              // Create images directory if it doesn't exist
+              if (!is_dir($targetDir . '/images')) {
+                mkdir($targetDir . '/images', 0755, true);
+              }
+              $tgtFile = $targetDir . '/images/' . $svgFile;
+              copy($srcFile, $tgtFile);
+            }
+          }
+
         }
         else {
           \Drupal::logger('themegenerator')
@@ -95,7 +102,18 @@ class Generator {
       }
 
       # Copy Error Images files needed for CSS
-      self::recursiveCopy(DRUPAL_ROOT . "/" . \Drupal::service('extension.list.theme')->getPath('connect_theme') . '/images/ibmcarbon/svg/ErrorPages', $targetDir . '/images/ibmcarbon/svg/ErrorPages', $name);
+      $connectThemePath = DRUPAL_ROOT . "/" . \Drupal::service('extension.list.theme')->getPath('connect_theme');
+      self::recursiveCopy($connectThemePath . '/images/ibmcarbon/svg/ErrorPages', $targetDir . '/images/ibmcarbon/svg/ErrorPages', $name);
+
+      $ibmCarbonSvgTargetDir = $targetDir . '/images/ibmcarbon/svg';
+      if (!is_dir($ibmCarbonSvgTargetDir) && !mkdir($concurrentDirectory = $ibmCarbonSvgTargetDir, 0755, TRUE) && !is_dir($concurrentDirectory)) {
+        throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+      }
+
+      copy($connectThemePath . '/images/ibmcarbon/svg/view.svg', $ibmCarbonSvgTargetDir . '/view.svg');
+      copy($connectThemePath . '/images/ibmcarbon/svg/view--off.svg', $ibmCarbonSvgTargetDir . '/view--off.svg');
+      copy($connectThemePath . '/images/ibmcarbon/svg/asleep.svg', $ibmCarbonSvgTargetDir . '/asleep.svg');
+      copy($connectThemePath . '/images/ibmcarbon/svg/light.svg', $ibmCarbonSvgTargetDir . '/light.svg');
 
       self::editTheme(DRUPAL_ROOT . '/' . $baseDir, $name);
 

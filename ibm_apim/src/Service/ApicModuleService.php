@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Service;
 
@@ -109,6 +99,7 @@ class ApicModuleService implements ApicModuleInterface {
       foreach ($paths as $extension => $path) {
         $this->logger->debug('%function: Recursively deleting %path', ['%function' => __FUNCTION__, '%path' => $path]);
         $this->utils->file_delete_recursive($path);
+        \Drupal::service('ibm_apim.utils')->logAuditEvent($extensionType == 'module' ? 'PORTAL_DELETE_SITE_MODULE' : 'PORTAL_DELETE_SITE_THEME', 'success', 'data/drupal/' . $extensionType, substr($GLOBALS['real_base_url'], 8) . ':data/drupal/' . $extensionType . '/' . $extension);
       }
       $this->utils->clear_empty_extension_folders($extensionType);
       // Rebuild module list after removing the files to remove its also removed from the list

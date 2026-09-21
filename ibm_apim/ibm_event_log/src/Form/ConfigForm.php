@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_event_log\Form;
 
@@ -55,7 +45,7 @@ class ConfigForm extends ConfigFormBase {
     }
 
     $form['intro'] = [
-      '#markup' => t('IBM Notifications Event Log Settings'),
+      '#markup' => t('IBM Notifications event log settings'),
       '#weight' => -20,
     ];
 
@@ -67,7 +57,7 @@ class ConfigForm extends ConfigFormBase {
     ];
     $form['retention']['retention_days'] = [
       '#type' => 'number',
-      '#title' => t('Retention Days'),
+      '#title' => t('Retention days'),
       '#description' => t('Provide the number of days to keep events for.'),
       '#min' => EventLogService::MIN_RETENTION,
       '#max' => EventLogService::MAX_RETENTION,

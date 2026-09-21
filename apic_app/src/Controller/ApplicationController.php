@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\apic_app\Controller;
 
@@ -33,6 +23,7 @@ use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 /**
  * Controller routines for application routes.
@@ -117,7 +108,7 @@ class ApplicationController extends ControllerBase {
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse
    */
-  public function applicationView(NodeInterface $appId = NULL): RedirectResponse {
+  public function applicationView(?NodeInterface $appId = NULL): RedirectResponse {
     return $this->redirect('entity.node.canonical', ['node' => $appId->id()]);
   }
 
@@ -136,7 +127,7 @@ class ApplicationController extends ControllerBase {
    * @return array|Response
    * @throws \Drupal\Core\TempStore\TempStoreException|\JsonException
    */
-  public function activity(NodeInterface $node = NULL) {
+  public function activity(?NodeInterface $node = NULL) {
     if (isset($node)) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
     }
@@ -270,7 +261,7 @@ class ApplicationController extends ControllerBase {
    * @return array|Response
    * @throws \Drupal\Core\TempStore\TempStoreException|\JsonException
    */
-  public function subscriptions(NodeInterface $node = NULL) {
+  public function subscriptions(?NodeInterface $node = NULL) {
     if (isset($node)) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $node->id());
     }
@@ -302,7 +293,7 @@ class ApplicationController extends ControllerBase {
       $analyticsClientUrl = $portal_analytics_service->getClientEndpoint();
     }
     if (!isset($analyticsClientUrl)) {
-      \Drupal::service('messenger')->addError(t('Analytics Client URL is not set.'));
+      \Drupal::service('messenger')->addError(t('Analytics client URL is not set.'));
     }
     if (isset($node)) {
       $node = Node::load($node->id());
@@ -367,7 +358,7 @@ class ApplicationController extends ControllerBase {
                 if ($moduleHandler->moduleExists('product')) {
                   $productPlans = [];
                   foreach ($product->product_plans->getValue() as $arrayValue) {
-                    $product_plan = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+                    $product_plan = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
                     $productPlans[$product_plan['name']] = $product_plan;
                   }
                   if (isset($productPlans[$sub->plan()])) {

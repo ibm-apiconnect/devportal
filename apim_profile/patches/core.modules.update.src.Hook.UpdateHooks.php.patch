@@ -1,43 +1,80 @@
---- core/modules/update/src/Hook/UpdateHooks.php 2025-01-06 22:41:17
-+++ core/modules/update/src/Hook/UpdateHooks.php    2025-01-15 09:50:48
-@@ -44,6 +44,8 @@
-             ':themes_page' => Url::fromRoute('system.themes_page')->toString(),
-             ':update-page' => Url::fromRoute('update.report_update')->toString(),
-           ]) . '</dd>';
-+          $output .= '<dt>' . t('Adding new modules and themes through the Add new pages') . '</dt>';
-+          $output .= '<dd>' . t('You can also add new modules and themes in the same fashion, through the <a href=":install">Add new modules and themes page</a>, or by clicking the <em>Add new module/theme</em> links at the top of the <a href=":modules_page">Extend page</a> and the <a href=":themes_page">Appearance page</a>. In this case, you are prompted to provide either the URL to the download, or to upload a packaged release file from your local computer.', [':modules_page' => Url::fromRoute('system.modules_list')->toString(), ':themes_page' => Url::fromRoute('system.themes_page')->toString(), ':install' => Url::fromRoute('update.report_install')->toString()]) . '</dd>';
-         }
+--- core/modules/update/src/Hook/UpdateHooks.php	2025-06-26 19:26:54
++++ core/modules/update/src/Hook/UpdateHooks.php	2025-08-08 08:20:29
+@@ -25,17 +25,32 @@
+       case 'help.page.update':
+         $output = '';
+         $output .= '<h2>' . $this->t('About') . '</h2>';
+-        $output .= '<p>' . $this->t('The Update Status module periodically checks for new versions of your site\'s software (including contributed modules and themes), and alerts administrators to available updates. The Update Status system is also used by some other modules to manage updates and downloads; for example, the Interface Translation module uses the Update Status to download translations from the localization server. Note that whenever the Update Status system is used, anonymous usage statistics are sent to Drupal.org. If desired, you may uninstall the Update Status module from the <a href=":modules">Extend page</a>; if you do so, functionality that depends on the Update Status system will not work. For more information, see the <a href=":update">online documentation for the Update Status module</a>.', [
++        $output .= '<p>' . $this->t('The Update Manager module periodically checks for new versions of your site\'s software (including contributed modules and themes), and alerts administrators to available updates. The Update Manager system is also used by some other modules to manage updates and downloads; for example, the Interface Translation module uses the Update Manager to download translations from the localization server. Note that whenever the Update Manager system is used, anonymous usage statistics are sent to Drupal.org. If desired, you may uninstall the Update Manager module from the <a href=":modules">Extend page</a>; if you do so, functionality that depends on the Update Manager system will not work. For more information, see the <a href=":update">online documentation for the Update Manager module</a>.', [
+           ':update' => 'https://www.drupal.org/documentation/modules/update',
+           ':modules' => Url::fromRoute('system.modules_list')->toString(),
+         ]) . '</p>';
++        // Only explain the Update manager if it has not been uninstalled.
++        if (_update_manager_access()) {
++          $output .= '<p>' . $this->t('The Update Manager also allows administrators to add and update modules and themes through the administration interface.') . '</p>';
++        }
+         $output .= '<h2>' . $this->t('Uses') . '</h2>';
+         $output .= '<dl>';
+         $output .= '<dt>' . $this->t('Checking for available updates') . '</dt>';
+-        $output .= '<dd>' . $this->t('The <a href=":update-report">Available updates report</a> displays core, contributed modules, and themes for which there are new releases available for download. On the report page, you can also check manually for updates. You can configure the frequency of update checks, which are performed during cron runs, and whether notifications are sent on the <a href=":update-settings">Update Status settings page</a>.', [
++        $output .= '<dd>' . $this->t('The <a href=":update-report">Available updates report</a> displays core, contributed modules, and themes for which there are new releases available for download. On the report page, you can also check manually for updates. You can configure the frequency of update checks, which are performed during cron runs, and whether notifications are sent on the <a href=":update-settings">Update Manager settings page</a>.', [
+           ':update-report' => Url::fromRoute('update.status')->toString(),
+           ':update-settings' => Url::fromRoute('update.settings')->toString(),
+         ]) . '</dd>';
++        // Only explain the Update manager if it has not been uninstalled.
++        if (_update_manager_access()) {
++          $output .= '<dt>' . $this->t('Performing updates through the Update page') . '</dt>';
++          $output .= '<dd>' . $this->t('The Update Manager module allows administrators to perform updates directly from the <a href=":update-page">Update page</a>. It lists all available updates, and you can confirm whether you want to download them. If you don\'t have sufficient access rights to your web server, you could be prompted for your FTP/SSH password. Afterwards the files are transferred into your site installation, overwriting your old files. Direct links to the Update page are also displayed on the <a href=":modules_page">Extend page</a> and the <a href=":themes_page">Appearance page</a>.', [
++            ':modules_page' => Url::fromRoute('system.modules_list')->toString(),
++            ':themes_page' => Url::fromRoute('system.themes_page')->toString(),
++            ':update-page' => Url::fromRoute('update.report_update')->toString(),
++          ]) . '</dd>';
++          $output .= '<dt>' . $this->t('Adding new modules and themes through the Add new pages') . '</dt>';
++          $output .= '<dd>' . $this->t('You can also add new modules and themes in the same fashion, through the <a href=":install">Add new modules and themes page</a>, or by clicking the <em>Add new module/theme</em> links at the top of the <a href=":modules_page">Extend page</a> and the <a href=":themes_page">Appearance page</a>. In this case, you are prompted to provide either the URL to the download, or to upload a packaged release file from your local computer.', [':modules_page' => Url::fromRoute('system.modules_list')->toString(), ':themes_page' => Url::fromRoute('system.themes_page')->toString(), ':install' => Url::fromRoute('update.report_install')->toString()]) . '</dd>';
++        }
          $output .= '</dl>';
          return $output;
-@@ -52,10 +54,7 @@
-         return '<p>' . t('Here you can find information about available updates for your installed modules and themes. Note that each module or theme is part of a "project", which may or may not have the same name, and might include multiple modules or themes within it.') . '</p>';
-
+ 
+@@ -43,10 +58,7 @@
+         return '<p>' . $this->t('Here you can find information about available updates for your installed modules and themes. Note that each module or theme is part of a "project", which may or may not have the same name, and might include multiple modules or themes within it.') . '</p>';
+ 
        case 'system.modules_list':
--        return '<p>' . t('Regularly review <a href=":updates">available updates</a> and update as required to maintain a secure and current site. Always run the <a href=":update-php">update script</a> each time you update software.', [
+-        return '<p>' . $this->t('Regularly review <a href=":updates">available updates</a> and update as required to maintain a secure and current site. Always run the <a href=":update-php">update script</a> each time you update software.', [
 -          ':update-php' => Url::fromRoute('system.db_update')->toString(),
 -          ':updates' => Url::fromRoute('update.status')->toString(),
 -        ]) . '</p>';
-+        return '<p>' . t('Regularly review and install <a href=":updates">available updates</a> to maintain a secure and current site.', [':updates' => Url::fromRoute('update.status')->toString()]) . '</p>';
++        return '<p>' . $this->t('Regularly review and install <a href=":updates">available updates</a> to maintain a secure and current site.', [':updates' => Url::fromRoute('update.status')->toString()]) . '</p>';
      }
+     return NULL;
    }
-
-@@ -73,8 +72,10 @@
+@@ -62,12 +74,18 @@
+       $route_name = \Drupal::routeMatch()->getRouteName();
+       switch ($route_name) {
          // These pages don't need additional nagging.
-         case 'update.theme_update':
-         case 'update.module_update':
++        case 'update.theme_update':
++        case 'update.module_update':
 +        case 'update.module_install':
          case 'update.status':
-         case 'update.report_update':
++        case 'update.report_update':
 +        case 'update.report_install':
          case 'update.settings':
          case 'system.status':
+         case 'system.modules_uninstall':
          case 'system.theme_install':
-@@ -188,7 +189,7 @@
+         case 'system.theme_uninstall':
++        case 'update.confirmation_page':
+         case 'system.batch_page.html':
+           return;
+ 
+@@ -135,8 +153,10 @@
        // If configured time between notifications elapsed, send email about
        // updates possibly available.
        \Drupal::moduleHandler()->loadInclude('update', 'inc', 'update.fetch');
 -      _update_cron_notify();
 +      //_update_cron_notify();
      }
-     // Clear garbage from disk.
-     update_clear_update_disk_cache();
++    // Clear garbage from disk.
++    update_clear_update_disk_cache();
+   }
+ 
+   /**

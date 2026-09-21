@@ -7,9 +7,9 @@
 -  color: #fff;
 -  border-radius: 6px;
 -  background-color: black;
-+  color: #000;
-+  border: 1px solid #000;
-+  background-color: #fff;
++  color: var(--cds-text-01, #161616);
++  border: 1px solid var(--cds-ui-04, #8d8d8d);
++  background-color: var(--cds-ui-01, #ffffff);
    font-size: medium;
    font-weight: normal;
  }

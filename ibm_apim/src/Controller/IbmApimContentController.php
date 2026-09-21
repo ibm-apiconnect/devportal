@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2023, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Controller;
 
@@ -255,13 +245,14 @@ class IbmApimContentController extends ControllerBase {
   /**
    * @param $node the node object to set the icon for
    * @param $attachmentPath The path to the attachment file
-   * @param $description A description of the attachment
+   * @param $description A description of the attachment (nullable)
    *
    * @return string A success message
    */
-  public static function addAttachment($node, string $attachmentPath, string $description = ''): string {
+  public static function addAttachment($node, string $attachmentPath, ?string $description = ''): string {
     $responseMessage = '';
-    $nodeType = $node->getType();
+    $nodeType = $node->getType();    
+    $description = $description ?? '';
     $fileRepository = \Drupal::service('file.repository');
     $fileSystem = \Drupal::service('file_system');
     $attachmentData = file_get_contents($attachmentPath);

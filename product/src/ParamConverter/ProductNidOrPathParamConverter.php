@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\product\ParamConverter;
 
@@ -24,7 +14,9 @@ class ProductNidOrPathParamConverter implements ParamConverterInterface {
     $returnValue = NULL;
     if ($value !== NULL && !empty($value)) {
       $lang_code = \Drupal::languageManager()->getCurrentLanguage()->getId();
-      if ((int) $value > 0) {
+      // Check if value is purely numeric (node ID) vs a string that starts with a number
+      // This prevents "1234-product-name:1.0.0" from being treated as node ID 1234
+      if (ctype_digit($value)) {
         $node = Node::load($value);
         if ($node !== NULL) {
           // ensure use the translated version of api nodes

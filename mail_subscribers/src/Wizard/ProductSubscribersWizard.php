@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\mail_subscribers\Wizard;
 
@@ -28,7 +18,7 @@ class ProductSubscribersWizard extends FormWizardBase {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string
    */
   public function getWizardLabel() {
-    return t('Mail Product Subscribers Wizard');
+    return t('Mail product subscribers wizard');
   }
 
   /**
@@ -58,7 +48,7 @@ class ProductSubscribersWizard extends FormWizardBase {
     ];
 
     $steps['choosesubs'] = [
-      'title' => t('Select Subscribers'),
+      'title' => t('Select subscribers'),
       'form' => ChooseRoleStep::class,
     ];
 

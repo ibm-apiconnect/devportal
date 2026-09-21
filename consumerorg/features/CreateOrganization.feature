@@ -34,9 +34,63 @@ Feature: Create consumer organization
     And there are messages
     And I should see the text "Consumer organization created successfully."
     And there are no errors
+    Then the custom hook with key "consumerorg_pre_create" should have been invoked
+    Then the custom hook with key "consumerorg_create" should have been invoked
+
+  Scenario: As Andre I can create a new consumer organization, needs to fail due to pre_hook
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+    And I am logged in as "@data(andre.name)"
+    Given the Drupal state "consumerorg_pre_create_throw_exception" is set to "TRUE"
+    And I am at "/myorg/create"
+    When I enter "New org1" for "title[0][value]"
+    And I press the "Save" button
+    Then I should see the unexpected error message
+
+  Scenario: As Andre I can update my consumer organization
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+    And I am logged in as "@data(andre.name)"
+    And I am at "/myorg"
+    Then I should see the text "Andre One Consumerorg"
+    When I click the button "Edit organization"
+    And I should see the text "Update the consumer organization"
+    When I enter "New org1" for "title[0][value]"
+    And I press the "Save" button
+    Then the custom hook with key "consumerorg_pre_update" should have been invoked
+    Then the custom hook with key "consumerorg_update" should have been invoked
+
+  Scenario: As Andre I can update my consumer organization, needs to fail due to pre_hook
+    Given I am not logged in
+    Given users:
+      | name              | mail              | pass                  | status |
+      | @data(andre.name) | @data(andre.mail) | @data(andre.password) | 1      |
+    Given consumerorgs:
+      | title                     | name                     | id                     | owner             |
+      | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.name) |
+    And I am logged in as "@data(andre.name)"
+    And I am at "/myorg"
+    Then I should see the text "Andre One Consumerorg"
+    Given the Drupal state "consumerorg_pre_update_throw_exception" is set to "TRUE"
+    When I click the button "Edit organization"
+    And I should see the text "Update the consumer organization"
+    When I enter "New org1" for "title[0][value]"
+    And I press the "Save" button
+    Then I should see the unexpected error message
 
   # Note that this a negative test for an admin user (uid=1) that manually sets their url to the /myorg/create page
   Scenario: Sign in as the admin user (uid==1) and try to view the My Organization page
+    Given I am not logged in
     Given users:
       | name              | mail              | pass                  | status |
       | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |

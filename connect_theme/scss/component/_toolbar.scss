@@ -1,3 +1,4 @@
+
 /**
  * Toolbar module styling.
  */
@@ -60,8 +61,22 @@ body.toolbar-fixed {
     top: 48px;
   }
 
+  // Position new admin top-bar below navigation bar
+  [data-drupal-admin-styles].top-bar {
+    top: 48px !important;
+    inset-block-start: 48px !important;
+  }
+
   [data-admin-toolbar="collapsed"] .toolbar-loading .apicStickyHeader {
     left: 0;
+  }
+}
+
+// Position new admin top-bar below navigation bar on larger screens
+@media (min-width: 64rem) {
+  [data-drupal-admin-styles].top-bar {
+    top: 48px !important;
+    inset-block-start: 48px !important;
   }
 }
 

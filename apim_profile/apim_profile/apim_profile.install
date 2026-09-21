@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -196,7 +186,6 @@ function apim_profile_install() {
     'jquery_ui_resizable',
     'layout_builder',
     'navigation',
-    'navigation_top_bar',
     'jquery_ui',
     'jquery_ui_draggable',
     'jquery_ui_accordion',
@@ -206,6 +195,7 @@ function apim_profile_install() {
     'maxlength',
     'expand_collapse_formatter',
     'file_upload_secure_validator',
+    'force_users_logout',
   ];
 
   $our_modules = [
@@ -230,6 +220,10 @@ function apim_profile_install() {
     'ibm_event_log',
     'case_study',
     'ibm_apic_session_check',
+    'ibm_apic_news',
+    'ibm_tooltip',
+    'ibm_csp_extension',
+    'ibm_apic_getting_started',
   ];
   // enable our modules
   $module_installer = \Drupal::service('module_installer');
@@ -382,6 +376,17 @@ function apim_profile_install() {
   // rebuild access permissions
   node_access_rebuild();
 
+  // Configure extlink module to exclude .registry-button links
+  $config = \Drupal::service('config.factory')->getEditable('extlink.settings');
+  $current_exclude = $config->get('extlink_css_exclude');
+  
+  if (!empty($current_exclude)) {
+    $updated_exclude = $current_exclude . ", .registry-button";
+  } else {
+    $updated_exclude = '.registry-button';
+  }
+  $config->set('extlink_css_exclude', $updated_exclude)->save(TRUE);
+
   // enable paranoia last to avoid it blocking other config setup
   //$module_installer->install(['paranoia']);
 }
@@ -416,16 +421,13 @@ function apim_profile_default_apic_config() {
     ->set('enable_api_test', TRUE)
     ->set('validate_apis', TRUE)
     ->set('autotag_with_phase', FALSE)
-    ->set('show_cors_warnings', TRUE)
     ->set('show_analytics', TRUE)
     ->set('remove_IBM_keys', FALSE)
     ->set('soap_swagger_download', FALSE)
-    ->set('render_api_schema_view', TRUE)
     ->set('optimise_oauth_ux', TRUE)
     ->set('show_mtls_header', TRUE)
     ->set('application_image_upload', TRUE)
     ->set('hide_admin_registry', FALSE)
-    ->set('render_api_schema_view', TRUE)
     ->set('allow_consumerorg_creation', TRUE)
     ->set('allow_consumerorg_rename', TRUE)
     ->set('allow_consumerorg_delete', TRUE)
@@ -443,8 +445,8 @@ function apim_profile_default_apic_config() {
     ->set('certificate_strip_newlines', TRUE)
     ->set('certificate_strip_prefix', TRUE)
     ->set('payment_method_encryption_profile', 'socialblock')
-    ->set('api_max_depth', 9)
-    ->set('example_array_items', 3)
+    ->set('api_max_depth', 5)
+    ->set('example_array_items', 1)
     ->set('audit_endpoint', '')
     ->set('audit_blocking',FALSE)
     ->save();
@@ -1575,7 +1577,7 @@ function apim_profile_update_8102() {
     ->set('extlink_class', 'ext')
     ->set('extlink_label', '(link is external)')
     ->set('extlink_img_class', FALSE)
-    ->set('extlink_css_exclude', '')
+    ->set('extlink_css_exclude', '.registry-button')
     ->set('extlink_css_explicit', '')
     ->set('extlink_mailto_class', 'mailto')
     ->set('extlink_mailto_label', '(link sends email)')
@@ -3418,7 +3420,7 @@ function apim_profile_update_10041() {
 function apim_profile_update_10042() {
   user_role_revoke_permissions('administrator', ['access tour']);
   module_uninstall(['tour', 'admin_toolbar', 'admin_toolbar_tools']);
-  module_install(['layout_builder', 'navigation', 'navigation_top_bar', 'jquery_ui_resizable']);
+  module_install(['layout_builder', 'navigation', 'jquery_ui_resizable']);
   user_role_grant_permissions('administrator', ['access navigation', 'configure navigation layout']);
 }
 
@@ -3692,8 +3694,7 @@ function apim_profile_update_11002() {
 /*
  * update default permissions for content_author, forum_moderator
  */
-function apim_profile_update_10909() {
-  \Drupal::service('update.update_hook_registry')->markFutureUpdateEquivalent(11003, '10.99.99.99');
+function apim_profile_update_11003() {
   $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
   if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
     return $equivalent_update->toSkipMessage();
@@ -3849,17 +3850,24 @@ function apim_profile_update_dependencies(): array {
   ];
 }
 
-/**
- * Enable ibm_apic_session_check module on upgrade.
- */
+
 function apim_profile_update_11004() {
   $module_installer = \Drupal::service('module_installer');
-  $module_installer->install(['ibm_apic_session_check']);
+  $modules_to_install = [];
+
+  if (!\Drupal::moduleHandler()->moduleExists('ibm_apic_session_check')) {
+    $modules_to_install[] = 'ibm_apic_session_check';
+  }
+
+  if (!\Drupal::moduleHandler()->moduleExists('force_users_logout')) {
+    $modules_to_install[] = 'force_users_logout';
+  }
+
+  if (!empty($modules_to_install)) {
+    $module_installer->install($modules_to_install);
+  }
 }
 
-/**
- * Disable jsDelivery in CDN fo rbootstrap lib (entreprise7pro-bootstrap).
- */
 function apim_profile_update_11005() {
   $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
   if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
@@ -3869,4 +3877,116 @@ function apim_profile_update_11005() {
     ->getEditable('connect_theme.settings')
     ->set('cdn_provider', '')
     ->save();
+}
+
+function apim_profile_update_11006() {
+  $module_installer = \Drupal::service('module_installer');
+  $modules_to_install = [];
+
+  if (!\Drupal::moduleHandler()->moduleExists('ibm_apic_news')) {
+    $modules_to_install[] = 'ibm_apic_news';
+  }
+
+  if (!empty($modules_to_install)) {
+    $module_installer->install($modules_to_install);
+  }
+}
+
+function apim_profile_update_11007() {
+  $module_installer = \Drupal::service('module_installer');
+  $modules_to_install = [];
+
+  if (!\Drupal::moduleHandler()->moduleExists('ibm_tooltip')) {
+    $modules_to_install[] = 'ibm_tooltip';
+  }
+
+  if (!empty($modules_to_install)) {
+    $module_installer->install($modules_to_install);
+  }
+}
+
+function apim_profile_update_11008() {
+  $module_installer = \Drupal::service('module_installer');
+  $modules_to_install = [];
+
+  if (\Drupal::moduleHandler()->moduleExists('csp') && !\Drupal::moduleHandler()->moduleExists('ibm_csp_extension')) {
+    $modules_to_install[] = 'ibm_csp_extension';
+  }
+
+  if (!empty($modules_to_install)) {
+    $module_installer->install($modules_to_install);
+  }
+}
+
+/**
+ * Update extlink configuration to exclude .registry-button links.
+ */
+function apim_profile_update_11009() {
+  $config = \Drupal::service('config.factory')->getEditable('extlink.settings');
+  $current_exclude = $config->get('extlink_css_exclude');
+  
+  if (!empty($current_exclude)) {
+    if (strpos($current_exclude, '.registry-button') === false) {
+      $updated_exclude = $current_exclude . ", .registry-button";
+    } else {
+      $updated_exclude = $current_exclude;
+    }
+  } else {
+    $updated_exclude = '.registry-button';
+  }
+  $config->set('extlink_css_exclude', $updated_exclude)->save(TRUE);
+}
+
+function apim_profile_update_11010() {
+  $module_installer = \Drupal::service('module_installer');
+  $modules_to_install = [];
+
+  if (!\Drupal::moduleHandler()->moduleExists('ibm_apic_getting_started')) {
+    $modules_to_install[] = 'ibm_apic_getting_started';
+  }
+
+  if (!empty($modules_to_install)) {
+    $module_installer->install($modules_to_install);
+  }
+}
+
+/**
+ * Update homepage blocks for new homepage (12.1.0.1)
+ */
+function apim_profile_update_11011(): void {
+  \Drupal::moduleHandler()->loadInclude('apim_profile', 'inc', 'apim_profile.homepage');
+  \Drupal::moduleHandler()->loadInclude('apim_profile', 'inc', 'apim_profile.import_nodes');
+  
+  // Force update block contents (Getting Started, Get Help, Welcome Banner)
+  apim_profile_force_update_homepage_blocks();
+  
+  // Update block weights and configuration (including IBM News)
+  apim_profile_update_block_configuration();
+  
+  // Force update footer links
+  apim_profile_force_update_footerlinks();
+}
+
+/**
+ * Install and enable the dark_mode_toggle module.
+ */
+function apim_profile_update_11012(): void {
+  $module_installer = \Drupal::service('module_installer');
+  
+  // Check if dark_mode_toggle module exists and is not already installed
+  if (!\Drupal::moduleHandler()->moduleExists('dark_mode_toggle')) {
+    try {
+      // Install the dark_mode_toggle module
+      $module_installer->install(['dark_mode_toggle']);
+      
+      // Enable the dark mode toggle in settings
+      $config = \Drupal::configFactory()->getEditable('ibm_apim.settings');
+      $config->set('enable_dark_mode', TRUE)->save();
+      
+      \Drupal::logger('apim_profile')->notice('Dark mode toggle module has been installed and enabled by default');
+    }
+    catch (\Exception $e) {
+      \Drupal::logger('apim_profile')->error('Failed to install dark_mode_toggle module: @message', ['@message' => $e->getMessage()]);
+    }
+  }
 }

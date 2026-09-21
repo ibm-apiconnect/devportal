@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\apic_app\Service;
 
@@ -329,6 +319,9 @@ class ApplicationRestService implements ApplicationRestInterface {
         $data['metadata'] = $customFieldValues;
       }
 
+      // Calling all modules implementing 'hook_apic_app_pre_create':
+      \Drupal::moduleHandler()->invokeAll('apic_app_pre_create', ['app' => $data]);
+
       $result = $this->postApplication($url, json_encode($data, JSON_THROW_ON_ERROR));
 
       if ($result !== NULL && $result->code >= 200 && $result->code < 300) {
@@ -390,6 +383,14 @@ class ApplicationRestService implements ApplicationRestInterface {
         'product_url' => $fullProductUrl,
         'plan' => $planName,
       ];
+
+      // Calling all modules implementing 'hook_apic_app_pre_subscribe':
+      \Drupal::moduleHandler()->invokeAll('apic_app_pre_subscribe', [
+        'data' => $data,
+        'appId' => $appUrl,
+        'product_url' => $productUrl,
+        'plan' => $planName,
+      ]);
 
       $result = $this->postSubscription($url, json_encode($data, JSON_THROW_ON_ERROR));
 
@@ -464,7 +465,7 @@ class ApplicationRestService implements ApplicationRestInterface {
     $consumerOrg = $org['url'];
 
     if (!isset($consumerOrg)) {
-      \Drupal::messenger()->addError('Consumer organization not set.');
+      \Drupal::messenger()->addError(t('Consumer organization not set.'));
       return NULL;
     }
 

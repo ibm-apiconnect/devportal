@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\apic_app\Form;
 
@@ -25,6 +15,8 @@ use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
 
 /**
  * Form to update an application credential's description.
@@ -101,13 +93,16 @@ class CredentialsUpdateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL): array {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    if ($appId !== NULL) {
-      $this->node = $appId;
+    $route_match = \Drupal::routeMatch();
+    if ($route_match->getParameter('appId') !== NULL) {
+      // The AppIdParamConverter has already converted the appId to a node
+      $this->node = $route_match->getParameter('appId');
     }
-    if ($credId !== NULL) {
-      $this->cred = $credId;
+    if ($route_match->getParameter('credId') !== NULL) {
+      // The AppIdParamConverter has already converted the appId to a node
+      $this->cred = $route_match->getParameter('credId');
     }
 
     $form['intro'] = ['#markup' => '<p>' . t('Use this form to update an existing set of credentials for this application.') . '</p>'];
@@ -165,11 +160,28 @@ class CredentialsUpdateForm extends FormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $appUrl = $this->node->apic_url->value;
     $title = $form_state->getValue('title');
+    if (isset($title)) {
+      $title = Html::escape(trim($title));
+    }
+
     $summary = $form_state->getValue('summary');
+    if (isset($summary)) {
+      $summary = Xss::filter(trim($summary));
+    }
+    
     $url = $appUrl . '/credentials/' . $this->cred->uuid();
     $data = ['title' => $title, 'summary' => $summary];
+    // Calling all modules implementing 'hook_apic_app_creds_pre_update':
+    $moduleHandler = \Drupal::moduleHandler();
     $result = $this->restService->patchCredentials($url, json_encode($data, JSON_THROW_ON_ERROR));
+    $moduleHandler->invokeAll('apic_app_creds_pre_update', [
+      'node' => $this->node,
+      'data' => $result->data,
+      'credId' => $this->cred->uuid(),
+    ]);
+
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
+
       $resultData = $result->data;
       $this->messenger->addMessage(t('Application credentials updated.'));
       // update the stored app with the new creds
@@ -218,7 +230,6 @@ class CredentialsUpdateForm extends FormBase {
       $eventLogService->createIfNotExist($eventEntity);
 
       // Calling all modules implementing 'hook_apic_app_creds_update':
-      $moduleHandler = \Drupal::moduleHandler();
       $moduleHandler->invokeAll('apic_app_creds_update', [
         'node' => $this->node,
         'data' => $result->data,

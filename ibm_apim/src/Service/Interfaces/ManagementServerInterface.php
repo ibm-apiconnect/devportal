@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Service\Interfaces;
 
@@ -83,6 +73,7 @@ interface ManagementServerInterface {
    *    Response from POST /users/register call
    */
   public function postUsersRegister(ApicUser $user);
+
 
   /**
    * Invited user register.
@@ -185,7 +176,7 @@ interface ManagementServerInterface {
    *
    * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    */
-  public function postMemberInvitation(ConsumerOrg $org, string $email_address, string $role = NULL);
+  public function postMemberInvitation(ConsumerOrg $org, string $email_address, ?string $role = NULL);
 
   /**
    * Delete a member invitation.

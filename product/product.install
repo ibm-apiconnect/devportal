@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -622,4 +612,189 @@ function product_update_dependencies(): array {
       ],
     ],
   ];
+}
+
+/**
+ * Add apic_metadata field to store raw metadata from API Manager
+ * 
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function product_update_101100() {
+  // Check view displays
+  $viewDisplayFiles = ['node.product.default', 'node.product.card', 'node.product.subscribewizard', 'node.product.teaser'];
+  $formatter_manager = \Drupal::service('plugin.manager.field.formatter');
+  
+  foreach ($viewDisplayFiles as $file) {
+    $viewDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load($file);
+  
+    if ($viewDisplay !== NULL) {
+      $changed = FALSE;
+      $content = $viewDisplay->get('content');
+      
+      foreach ($content as $fieldName => $component) {
+        if (is_array($component) && isset($component['type'])) {
+          $type = $component['type'];
+          $definitions = $formatter_manager->getDefinitions();
+          if (!isset($definitions[$type])) {
+            \Drupal::logger('product')->notice('View Display - Field: @field, Type: @type, Not Supported in File: @file', [
+              '@field' => $fieldName,
+              '@type' => $type,
+              '@file' => $file,
+            ]);
+  
+            // Reset to Basic String
+            $content[$fieldName]['type'] = 'basic_string';
+            $changed = TRUE;
+          }
+        }
+      }
+      
+      if ($changed) {
+        $viewDisplay->set('content', $content);
+        $viewDisplay->save();
+        \Drupal::logger('product')->notice('Saved view display changes for @file', ['@file' => $file]);
+      }
+    }
+  }
+
+  // Check form displays
+  $formDisplayFiles = ['node.product.default'];
+  $widget_manager = \Drupal::service('plugin.manager.field.widget');
+  
+  foreach ($formDisplayFiles as $file) {
+    $formDisplay = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load($file);
+  
+    if ($formDisplay !== NULL) {
+      $changed = FALSE;
+      $content = $formDisplay->get('content');
+      
+      foreach ($content as $fieldName => $component) {
+        if (is_array($component) && isset($component['type'])) {
+          $type = $component['type'];
+          $definitions = $widget_manager->getDefinitions();
+          if (!isset($definitions[$type])) {
+            \Drupal::logger('product')->notice('Form Display - Field: @field, Type: @type, Not Supported in File: @file', [
+              '@field' => $fieldName,
+              '@type' => $type,
+              '@file' => $file,
+            ]);
+  
+            // Reset to string_textfield for form widgets
+            $content[$fieldName]['type'] = 'string_textfield';
+            $changed = TRUE;
+          }
+        }
+      }
+      
+      if ($changed) {
+        $formDisplay->set('content', $content);
+        $formDisplay->save();
+        \Drupal::logger('product')->notice('Saved form display changes for @file', ['@file' => $file]);
+      }
+    }
+  }
+
+  // Check if field storage already exists
+  $fieldStorage = FieldStorageConfig::loadByName('node', 'apic_metadata');
+  if (!$fieldStorage) {
+    $fieldStorage = FieldStorageConfig::create([
+      'field_name' => 'apic_metadata',
+      'entity_type' => 'node',
+      'type' => 'string_long',
+      'required' => FALSE,
+      'translatable' => FALSE,
+      'cardinality' => 1,
+      'settings' => ['case_sensitive' => FALSE],
+    ]);
+    $fieldStorage->save();
+  }
+
+  // Check if field config already exists for product
+  $fieldConfig = FieldConfig::loadByName('node', 'product', 'apic_metadata');
+  if (!$fieldConfig) {
+    $fieldConfig = FieldConfig::create([
+      'field_name' => 'apic_metadata',
+      'entity_type' => 'node',
+      'bundle' => 'product',
+      'label' => t('APIC Metadata'),
+      'description' => t('Raw metadata from API Manager'),
+      'required' => FALSE,
+      'translatable' => FALSE,
+    ]);
+    $fieldConfig->save();
+  }
+  
+  \Drupal::logger('product')->notice('Added apic_metadata field to product content type');
+}
+
+/**
+ * Add API Type filter to the products view
+ */
+function product_update_110100() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+  
+  $api_type_filter = [
+    'id' => 'api_type_filter',
+    'table' => 'node_field_data',
+    'field' => 'api_type_filter',
+    'relationship' => 'none',
+    'group_type' => 'group',
+    'admin_label' => '',
+    'operator' => 'in',
+    'value' => [],
+    'group' => 1,
+    'exposed' => TRUE,
+    'expose' => [
+      'operator_id' => 'api_type_filter_op',
+      'label' => 'API Type',
+      'description' => '',
+      'use_operator' => FALSE,
+      'operator' => 'api_type_filter_op',
+      'identifier' => 'api_type_filter',
+      'required' => FALSE,
+      'remember' => TRUE,
+      'multiple' => FALSE,
+      'remember_roles' => [
+        'authenticated' => 'authenticated',
+        'anonymous' => '0',
+        'forum_moderator' => '0',
+        'content_author' => '0',
+        'administrator' => '0',
+      ],
+      'reduce' => FALSE,
+    ],
+    'is_grouped' => FALSE,
+    'group_info' => [
+      'label' => '',
+      'description' => '',
+      'identifier' => '',
+      'optional' => TRUE,
+      'widget' => 'select',
+      'multiple' => FALSE,
+      'remember' => FALSE,
+      'default_group' => 'All',
+      'default_group_multiple' => [],
+      'group_items' => [],
+    ],
+    'plugin_id' => 'api_type_filter',
+  ];
+
+  $config = \Drupal::configFactory()->getEditable('views.view.products');
+  $filters = $config->get('display.default.display_options.filters');
+  
+  // Handle case where filters might be null
+  if (!is_array($filters)) {
+    $filters = [];
+  }
+  
+  // Only add if it doesn't already exist
+  if (!isset($filters['api_type_filter'])) {
+    $filters['api_type_filter'] = $api_type_filter;
+    $config->set('display.default.display_options.filters', $filters)->save();
+    \Drupal::service('cache.render')->invalidateAll();
+    \Drupal::logger('product')->notice('Added API Type filter to products view');
+  }
 }

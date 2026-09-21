@@ -93,17 +93,23 @@ $button-height: 48px !default;
 /// @type Value
 /// @access public
 /// @group button
-$button-padding: calc(0.875rem - 3px) 60px calc(0.875rem - 3px) 12px !default;
+$button-padding-block: calc(0.875rem - 3px) !default;
+$button-padding-inline-start: 12px !default;
+$button-padding-inline-end: 60px !default;
 
 /// @type Value
 /// @access public
 /// @group button
-$button-padding-field: calc(0.675rem - 3px) 60px calc(0.675rem - 3px) 12px !default;
+$button-padding-field-block: calc(0.675rem - 3px) !default;
+$button-padding-field-inline-start: 12px !default;
+$button-padding-field-inline-end: 60px !default;
 
 /// @type Value
 /// @access public
 /// @group button
-$button-padding-sm: calc(0.375rem - 3px) 60px calc(0.375rem - 3px) 12px !default;
+$button-padding-sm-block: calc(0.375rem - 3px) !default;
+$button-padding-sm-inline-start: 12px !default;
+$button-padding-sm-inline-end: 60px !default;
 
 /// @type Number
 /// @access public

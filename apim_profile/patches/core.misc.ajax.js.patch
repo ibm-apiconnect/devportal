@@ -8,3 +8,23 @@
        const $element = $(this.element);
        if (this.element.tagName === 'A') {
          this.url = $element.attr('href');
+@@ -1003,11 +1004,18 @@
+     this.progress.element = $(
+       Drupal.theme('ajaxProgressThrobber', this.progress.message),
+     );
+-    if ($(this.element).closest('[data-drupal-ajax-container]').length) {
++    
++    // Check if the element has use-ajax attribute, needs to be set than as a child
++    if ($(this.element).hasClass('use-ajax')) {
++      // Append inside the element with data-tutorial-id
++      $(this.element).append(this.progress.element);
++    } else if ($(this.element).closest('[data-drupal-ajax-container]').length) {
++      // Default behavior: append after ajax container
+       $(this.element)
+         .closest('[data-drupal-ajax-container]')
+         .after(this.progress.element);
+     } else {
++      // Default behavior: append after element
+       $(this.element).after(this.progress.element);
+     }
+   };

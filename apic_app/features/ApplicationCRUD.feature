@@ -83,11 +83,11 @@ Feature: ApplicationCRUD
       | @data(andre.mail) | @data(andre.mail) | @data(andre.password) | 1      |
       | @data(admin.name) | @data(admin.mail) | @data(admin.password) | 1      |
     Given consumerorgs:
-      | title                     | name                     | id                     | owner             |
+      | title                          | name                          | id                          | owner             |
       | @data(andre.consumerorg.title) | @data(andre.consumerorg.name) | @data(andre.consumerorg.id) | @data(andre.mail) |
     Given applications:
-      | title    | id    | org_id      |
-      | MyNewApp | 1234567@now | @data(andre.consumerorg.id) |
+      | title    | id          | org_id                      | state     |
+      | MyNewApp | 1234567@now | @data(andre.consumerorg.id) | published |
     Given I am logged in as "@data(admin.name)"
     And I am editing the "application" node "MyNewApp"
     Then The field "#edit-title-0-value" should be disabled
@@ -106,3 +106,17 @@ Feature: ApplicationCRUD
     And I should not see the text "Lifecycle State"
     And I should not see the text "Subscriptions"
     And there are no errors
+
+  @mocked
+  Scenario: Create application with metadata serialization
+    Given I am not logged in
+    Given users:
+      | name  | pass     | mail              | status |
+      | Andre | Qwert123IsBadPassword! | andre@example.com | 1      |
+    Given consumerorgs:
+      | title       | name        | id     | owner |
+      | andreconsumerorg | andreconsumerorg | 123456 | Andre |
+    Given I am logged in as "Andre"
+    Given I do not have any applications
+    Given I create an application with metadata
+    And I do not have any applications

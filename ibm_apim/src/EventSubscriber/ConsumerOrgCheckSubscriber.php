@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\EventSubscriber;
 
@@ -79,6 +69,7 @@ class ConsumerOrgCheckSubscriber implements EventSubscriberInterface
       \Drupal::routeMatch()->getRouteName() === 'system.js_asset' ||
       \Drupal::routeMatch()->getRouteName() === 'auth_apic.invitation' ||
       \Drupal::routeMatch()->getRouteName() === 'user.logout' ||
+      \Drupal::routeMatch()->getRouteName() === 'ibm_apic_session_check.status' ||
       !\Drupal::currentUser()->isAuthenticated() ||
       (int) \Drupal::currentUser()->id() === 0 ||
       (int) \Drupal::currentUser()->id() === 1 ||

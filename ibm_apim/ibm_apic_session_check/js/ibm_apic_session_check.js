@@ -1,19 +1,13 @@
 (function (Drupal) {
-  /********************************************************* {COPYRIGHT-TOP} ***
-   * Licensed Materials - Property of IBM
-   * 5725-L30, 5725-Z22
-   *
-   * (C) Copyright IBM Corporation 2025
-   *
-   * All Rights Reserved.
-   * US Government Users Restricted Rights - Use, duplication or disclosure
-   * restricted by GSA ADP Schedule Contract with IBM Corp.
-   ********************************************************** {COPYRIGHT-END} **/
 
   Drupal.behaviors.sessionCheck = {
     attach: function (context, settings) {
       if (!context.__sessionCheckAttached) {
         context.__sessionCheckAttached = true;
+
+        if (!drupalSettings?.ibm_apic_session_check?.isLoggedIn) {
+          return;
+        }
 
         const basePath = settings.ibm_apic_session_check?.basePath || "/";
         const endpoint = basePath + "session-check";
@@ -34,7 +28,9 @@
                 wasLoggedIn = false;
                 localStorage.setItem("wasLoggedIn", "false");
                 localStorage.setItem("userLoggedOut", "true");
-                window.location.href = window.location.pathname;
+                
+                // Redirect to the same page, which will trigger the login redirect with preserved params
+                window.location.href = window.location.pathname + window.location.search;
               } else if (data.logged_in && !wasLoggedIn) {
                 wasLoggedIn = true;
                 localStorage.setItem("wasLoggedIn", "true");

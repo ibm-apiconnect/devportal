@@ -1,46 +1,242 @@
+
 .page-node-type-case-study h1.page-header {
   display: none;
 }
 
-.apicCardMain .apicCaseStudyDesc
-{
-  padding: 0.75rem 0;
+/* start of the banner */
+.case-study-banner {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #fff;
+  text-align: center;
+}
+
+/* background image */
+.case-study-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('../images/case-study-banner-bg.svg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  z-index: 0;
+}
+
+.case-study-banner > * {
+  position: relative;
+  z-index: 1;
+}
+
+.case-study-banner-content {
+  padding: 40px 20px;
+  max-width: 100%;
+}
+
+.case-study-banner-content>p {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  font-size: 28px;
+  width: 100%;
+  max-width: 754px;
+  line-height: 36px;
+  font-weight: 400;
+  padding: 0 20px;
+  font-family: 'IBM Plex Sans';
+  letter-spacing: 0;
+  margin-bottom: 40px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.case-study-banner .case-study-banner-content>a{
+  display: inline-block;
+  background-color: var(--home-button-secondary-bg);
+  color: var(--home-button-secondary-color);
+  text-align: center;
+  font-size: 16px;
+  padding: 12px 48px;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.case-study-banner .case-study-banner-content>a:hover{
+  background-color: var(--home-button-secondary-hover-bg);
+}
+
+@media (max-width: 1200px) {
+  .case-study-banner {
+    height: 280px;
+  }
+  
+  .case-study-banner-content {
+    padding: 30px 20px;
+  }
+  
+  .case-study-banner-content>p {
+    font-size: 24px;
+    line-height: 32px;
+    margin-bottom: 32px;
+    padding: 0 16px;
+  }
+  
+  .case-study-banner .case-study-banner-content>a {
+    font-size: 14px;
+    padding: 10px 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .case-study-banner {
+    height: 240px;
+  }
+  
+  .case-study-banner-content {
+    padding: 24px 16px;
+  }
+  
+  .case-study-banner-content>p {
+    font-size: 20px;
+    line-height: 28px;
+    margin-bottom: 24px;
+    padding: 0 16px;
+  }
+  
+  .case-study-banner .case-study-banner-content>a {
+    font-size: 14px;
+    padding: 10px 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .case-study-banner {
+    height: 220px;
+  }
+  
+  .case-study-banner-content {
+    padding: 20px 12px;
+  }
+  
+  .case-study-banner-content>p {
+    font-size: 18px;
+    line-height: 24px;
+    margin-bottom: 20px;
+    padding: 0 8px;
+  }
+  
+  .case-study-banner .case-study-banner-content>a {
+    font-size: 13px;
+    padding: 8px 24px;
+  }
+}
+/* end of case study banner */
+
+.apicCardMain {
+  padding: 0;
+  background: var(--layer-02);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Home page */
+.featuredCaseStudiesNode .apicCardMain .apicCaseStudyDesc {
+  padding: 1rem 2rem 2rem 2rem;
+  flex: 1;
+  width: unset;
+  white-space: unset;
+}
+/* Card */
+.apicCardMain .apicCaseStudyDesc {
+  padding: .5rem 2rem 2rem 2rem;
+}
+
+.bx--card .apicCardMain .apicCaseStudyTitle.bx--about__title--name {
+  width: auto;
 }
 
 .apicCardMain .apicCaseStudyTitle.bx--about__title--name span{
-  display: flex;
-  font-size: 0.875rem;
-  line-height: 18px;
-  word-break: break-word;
-  font-weight: 600;
+  display: block;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 400;
   font-family: 'IBM Plex Sans', sans-serif;
-  padding-top: 10px;
+  padding-block: 1rem 0.5rem;
+  padding-inline: 2rem 1rem;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-wrap: break-word;
 }
 
 .apicCardMain .apicCaseStudyDesc,  .apicCardMain .apicCaseStudyDesc p{
-  font-size:0.875rem;
-  line-height: 1;
-  height: 6rem;
+  font-size: 16px;
+  line-height: 22px;
+  height: 1rem;
+  color: var(--text-secondary);
+  font-family: 'IBM Plex Sans', sans-serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 300px;
+}
+
+.bx--card .apicCaseStudyDesc.apicFade {
+  max-width: none;
+}
+
+.apicCardMain .apicCaseStudyLink {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 1rem 1rem 1rem;
 }
 
 .apicCardMain .apicCaseStudyLink svg {
-  justify-self: end;
+  fill: var(--icon-primary);
+  transition: transform 0.2s ease;
 }
 
-
-.apicCardMain .apicCaseStudyLink svg {
-  margin-left: 90%;
-  fill: currentColor;
+.apicCard.apicCaseStudyCard:hover .apicCaseStudyLink svg {
+  transform: translateX(4px);
 }
 
+/* Purple border section - full width at top of card */
 .apicCardMain .apicCaseStudyImage {
-  height:150px;
+  width: 100%;
+  height: 200px;
+  background: var(--case-study-card-bg);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 24px 24px 0 24px;
+  border-radius: 4px 4px 0 0;
 }
 
+.path-case-studies .apicCardMain .apicCaseStudyImage {
+  background: transparent;
+}
+
+/* White background image container - centered within purple section */
 .apicCardMain .apicCaseStudyImage img {
-  justify-self: center;
-  max-height: 150px;
+  max-width: 100%;
+  max-height: 176px;
   width: auto;
+  height: auto;
+  object-fit: contain;
+  background: var(--card-bg);
+  position: relative;
+  z-index: 1;
+  padding: 16px;
 }
 
 .apicCaseStudyCard .apicCardMain .apicCaseStudyImage .field {
@@ -50,17 +246,13 @@
 /* make the case study card clickable */
 .bx--card .apicCard.apicCaseStudyCard {
   position: relative;
-  max-height: 19rem;
-  }
-
-.apicCaseStudyCard a.apicCaseStudyLink::before {
-    content: "";
-    position: absolute;
-    top: 0px;
-    right: 0px;
-    bottom: 0px;
-    left: 0px;
-  }
+  width: 100%;
+  max-width: 500px;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  padding: 0;
+}
 
 /* case study page */
 .page-node-type-case-study .container,
@@ -69,16 +261,16 @@
 }
 
 .apicCaseStudy .apicCaseStudyHeader {
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--body-bg);
 }
 
 .apicCaseStudy .apicCaseStudyHeader {
-  background: white;
+  background: var(--page-header-bg);
   padding: 0.5rem 2rem;
 }
 
 h1.CaseStudyName {
-  color: #161616;
+  color: var(--text-primary);
   font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
   font-size: 2rem;
   line-height: 40px;
@@ -153,8 +345,8 @@ h1.CaseStudyName {
   max-width: 18.75rem;
   min-height: 18.75rem;
   max-height: 25rem;
-  background-color: #ffffff;
-  border: 1px solid #ffffff;
+  background-color: var(--layer-02);
+  border: 1px solid var(--layer-02);
   margin-bottom: 2px;
 }
 
@@ -172,17 +364,216 @@ h1.CaseStudyName {
 }
 
 .featuredCaseStudiesBlockHeader {
-  display: inline-block;
-  width: calc(100% / 4 - 8px);
+  display: flex;
+  width: 100%;
   min-width: 250px;
   vertical-align: top;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.featuredCaseStudiesBlockHeader>h3{
+  margin: 0;
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: lighter;
+}
+
+.featuredCaseStudiesBlockHeader>a{
+  color: var(--home-link-color);
 }
 
 .featuredCaseStudies.featuredCaseStudiesBlockWrapper {
-  margin: 1.5rem 2rem;
+  padding: 80px 40px;
 }
 
 .featuredCaseStudiesContainer {
   display: inline-block;
-  width: 75%;
+  padding-top: 32px;
+}
+
+.featuredCaseStudiesContainer .featuredCaseStudiesNode {
+  margin: 0 0 32px 0;
+  margin-inline-end: 16px;
+  height: 400px;
+}
+
+.featuredCaseStudiesContainer .bx--card .apicCard.apicCaseStudyCard {
+  height: 400px;
+}
+
+.case-study-slider-wrapper {
+  position: relative;
+  overflow: hidden;
+  padding-top: 32px;
+}
+
+.case-study-slider-track {
+  display: flex;
+  transition: transform 0.3s ease-in-out;
+}
+
+.case-study-slider-wrapper .case-study-slide {
+  flex: 0 0 calc((100% - 96px) / 3);
+  max-width: calc((100% - 96px) / 3);
+  margin: 0 16px;
+}
+
+/* Navigation buttons */
+.case-study-slider-btn {
+  position: absolute;
+  top: 34%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.case-study-slider-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.case-study-slider-prev {
+  left: 0.5rem;
+}
+
+.case-study-slider-next {
+  right: 0.5rem;
+}
+
+.case-study-slider-btn svg {
+  width: 32px;
+  height: 32px;
+}
+
+.case-study-slider-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.625rem;
+  margin-top: 1.5rem;
+}
+
+.case-study-slider-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--layer-selected-03);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s ease;
+}
+
+.case-study-slider-dot:hover {
+  background: var(--layer-selected-hover-03);
+}
+
+.case-study-slider-dot.active {
+  background: var(--layer-active-03);
+}
+
+@media (max-width: 1200px) {
+  .case-study-slider-wrapper .bx--card .apicCard.apicCaseStudyCard {
+    max-width: 100%;
+    height: 400px;
+  }
+  
+  .case-study-slider-wrapper .apicCardMain .apicCaseStudyImage {
+    height: 180px;
+    padding: 40px 20px 0 20px;
+  }
+  
+  .case-study-slider-wrapper .apicCardMain .apicCaseStudyImage img {
+    width: 100%;
+    max-width: 320px;
+    height: 140px;
+  }
+  
+  .featuredCaseStudiesContainer .bx--card .apicCard.apicCaseStudyCard {
+    height: 400px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+  .case-study-slider-wrapper .case-study-slide {
+    flex: 0 0 calc((100% - 64px) / 2);
+    max-width: calc((100% - 64px) / 2);
+    margin: 0 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .case-study-slider-wrapper .case-study-slide {
+    flex: 0 0 calc(100% - 32px);
+    max-width: calc(100% - 32px);
+    margin: 0 16px;
+  }
+  
+  .case-study-slider-wrapper .bx--card .apicCard.apicCaseStudyCard {
+    height: 400px;
+  }
+  
+  .featuredCaseStudiesContainer .bx--card .apicCard.apicCaseStudyCard {
+    height: 400px;
+  }
+  
+  .case-study-slider-wrapper .apicCardMain .apicCaseStudyImage {
+    height: 160px;
+    padding: 30px 16px 0 16px;
+  }
+  
+  .case-study-slider-wrapper .apicCardMain .apicCaseStudyTitle.bx--about__title--name span {
+    font-size: 18px;
+    line-height: 24px;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-wrap: break-word;
+  }
+  
+  .case-study-slider-wrapper .apicCardMain .apicCaseStudyDesc,
+  .case-study-slider-wrapper .apicCardMain .apicCaseStudyDesc p {
+    font-size: 14px;
+    line-height: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    word-wrap: break-word;
+  }
+}
+
+.case-study-slider-wrapper.featuredCaseStudiesContainer {
+  display: block;
+}
+
+.case-study-slider-wrapper .featuredCaseStudiesNode {
+  border: none;
+  padding: 0;
+  height: 400px;
+}
+
+.case-study-slider-wrapper .bx--card {
+  border: none;
+  background-color: transparent;
+}
+
+.case-study-slider-wrapper .apicCard.apicCaseStudyCard {
+  border: none;
+  max-height: 400px;
+  padding: 0;
+  filter: drop-shadow(0px 2px 6px rgba(0, 0, 0, 0.3));
+  border-radius: 0px 0px 3px 3px;
 }

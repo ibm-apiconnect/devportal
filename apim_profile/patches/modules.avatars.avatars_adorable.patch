@@ -1,0 +1,48 @@
+--- modules/avatars/avatars_adorable/src/Adorable.php	2026-06-12 10:05:42
++++ modules/avatars/avatars_adorable/src/Adorable.php	2026-06-12 10:05:06
+@@ -41,9 +41,6 @@
+    * {@inheritdoc}
+    */
+   public function setIsSecure($secure_request = TRUE) {
+-    if ($secure_request) {
+-      throw new AvatarException('Adorable does not support secure requests.');
+-    }
+     return parent::setIsSecure($secure_request);
+   }
+ 
+@@ -51,19 +48,16 @@
+    * {@inheritdoc}
+    */
+   public function getUrl() {
+-    $url = ($this->isSecure() ? 'https://' : 'http://') . $this->getHostName() . '/avatars/';
+-
+-    // Width can be omitted.
+-    if (is_numeric($this->width)) {
+-      $url .= $this->width . '/';
+-    }
+-
+     $identifier = $this->getIdentifier();
+     if (!strlen($identifier)) {
+       throw new AvatarException('Missing avatar identifier/hash');
+     }
+ 
+-    $url .= $this->identifierIsPreHashed() ? $identifier : $this->hashIdentifier($identifier);
++    $hash = $this->identifierIsPreHashed() ? $identifier : $this->hashIdentifier($identifier);
++    $size = is_numeric($this->width) ? $this->width : 256;
++    
++    $url = ($this->isSecure() ? 'https://' : 'http://') . $this->getHostName() . '/7.x/avataaars/png';
++    $url .= '?seed=' . urlencode($hash) . '&size=' . $size;
+ 
+     return $url;
+   }
+--- modules/avatars/avatars_adorable/src/AdorableInterface.php	2026-06-12 10:05:45
++++ modules/avatars/avatars_adorable/src/AdorableInterface.php	2026-06-12 10:05:13
+@@ -12,7 +12,7 @@
+    *
+    * @var string
+    */
+-  const ADORABLE_HOSTNAME = 'api.adorable.io';
++  const ADORABLE_HOSTNAME = 'api.dicebear.com';
+ 
+   /*
+    * Maximum width images output by the endpoint.

@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Wizard;
 
@@ -55,12 +45,12 @@ class SubscriptionWizard extends FormWizardBase {
     $steps = [];
 
     $steps['chooseplan'] = [
-      'title' => t('Select Plan'),
+      'title' => t('Select plan'),
       'form' => ChoosePlanStep::class,
     ];
 
     $steps['chooseapp'] = [
-      'title' => t('Select Application'),
+      'title' => t('Select application'),
       'form' => ChooseApplicationStep::class,
     ];
 

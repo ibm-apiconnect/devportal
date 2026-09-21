@@ -1,3 +1,4 @@
+ 
 h1 {
   font-size: 2.625rem;
   font-weight: 300;
@@ -3254,6 +3255,10 @@ pre code {
     width: 100%;
   }
 
+  .apicMainContent .col-sm-12 {
+    float: none !important;
+  }
+
   .col-sm-pull-0 {
     right: auto;
   }
@@ -3895,9 +3900,9 @@ th {
 .table>thead>tr>td,
 .table>tbody>tr>td,
 .table>tfoot>tr>td {
-  padding: 8px;
+  padding: 10px;
   line-height: 1.5;
-  vertical-align: top;
+  vertical-align: middle;
   border-top: 1px solid #ddd;
 }
 
@@ -5873,7 +5878,7 @@ tbody.collapse.in {
 }
 
 .nav {
-  padding-left: 0;
+  padding-inline-start: 0;
   margin-bottom: 0;
   list-style: none;
 }
@@ -9683,7 +9688,7 @@ html.js .ajax-new-content:empty {
 }
 
 .bx--card .apicApiCardMain .bx--about__title--name a .apicApiName {
-  padding-right: 0.625rem;
+  padding-inline-end: 0.625rem;
   max-width: 10rem;
 }
 
@@ -9723,7 +9728,6 @@ html.js .ajax-new-content:empty {
 .bx--card .apicApiCount {
   border-top: 1px solid #ffffff;
   margin: 0 1rem;
-  padding: 1rem 0;
 }
 
 .bx--card .votingapi-widgets .form-item {
@@ -9910,26 +9914,19 @@ html.js .ajax-new-content:empty {
  * File (and Image Widget) styles.
  */
 .file {
-  display: table;
   font-size: 75%;
   font-weight: 700;
-  margin: 5px 0;
   width: 100%;
+  display: block;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 1rem 0;
+  box-shadow: none;
 }
 
 .file>span {
-  background: #fff;
   color: #0f62fe;
-  border-bottom: 1px solid #8d8d8d;
-  border-top: 1px solid #8d8d8d;
-}
-
-.file>span:first-child {
-  border-left: 1px solid #8d8d8d;
-}
-
-.file>span:last-child {
-  border-right: 1px solid #8d8d8d;
 }
 
 .file>.tabledrag-changed {
@@ -9949,31 +9946,36 @@ html.js .ajax-new-content:empty {
 }
 
 .file-icon {
-  display: table-cell;
-  font-size: 150%;
-  padding: 0.25em 0.5em;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.4rem;
+  font-size: 1rem;
   vertical-align: middle;
 }
 
 .file-link {
-  display: table-cell;
+  display: inline;
+  font-weight: 500;
+  font-size: 1rem;
   vertical-align: middle;
-  width: 100%;
 }
 
 .file-link a,
 .file-link a:hover,
 .file-link a:focus,
 .file-link a:active {
-  color: inherit;
+  color: #0f62fe;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .file-size {
-  display: table-cell;
+  display: inline;
+  font-size: 0.9rem;
   padding: 0 1em;
-  text-align: right;
-  white-space: pre;
   vertical-align: middle;
 }
 
@@ -10617,7 +10619,9 @@ input[type="checkbox"].bx--checkbox {
   font-weight: 400;
   font-size: 0.875rem;
   height: 48px;
-  padding: calc(0.875rem - 3px) 60px calc(0.875rem - 3px) 12px;
+  padding-block: calc(0.875rem - 3px);
+  padding-inline-start: 12px;
+  padding-inline-end: 60px;
   text-align: center;
   text-decoration: none;
   transition-duration: 250ms;
@@ -10962,6 +10966,14 @@ input[type="checkbox"].bx--checkbox {
   clear: both;
 }
 
+.bx--global-light-ui .field--type-text-with-summary,
+.bx--global-light-ui .field--type-text-long,
+.bx--global-light-ui .field--type-string-long {
+  white-space: pre-line;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
 .context-user-login .form-actions .button.button--primary,
 .context-user-login .form-actions .button.btn-primary,
 .context-user-password .form-actions .button.button--primary,
@@ -11044,7 +11056,6 @@ input[type="checkbox"].bx--checkbox {
 .route-consumerorgbilling-delete-payment .main-container .row,
 .route-change-pwd-pagechange-password-form.pass-reset .main-container .row,
 .route-apic-appdisplay-creds .main-container .row,
-form.user-pass-reset,
 .apic-user-form{
   background-color: #ffffff;
   border: unset;
@@ -11989,7 +12000,8 @@ footer.footer {
   display: flex;
   padding: 20px 5%;
   margin-top: 1.5rem;
-  width: 100%;
+  margin-inline-start: var(--drupal-displace-offset-left, var(--admin-toolbar-sidebar-width)) !important;
+  width: calc(100% - var(--drupal-displace-offset-left, 0px));
   align-items: center;
   justify-content: center;
 }
@@ -12010,7 +12022,7 @@ footer.footer ul.contextual-links {
 
 footer.footer ul.nav>li>a,
 footer.footer ul.nav>li>a:visited {
-  margin-right: 20px;
+  margin-inline-end: 20px;
   display: inline-block;
   color: #525252;
 }
@@ -12022,7 +12034,7 @@ footer.footer ul.nav>li>a:hover {
 footer.footer ul.nav li+li:before {
   content: " \00b7";
   color: #ffffff;
-  margin-right: 20px;
+  margin-inline-end: 20px;
 }
 
 @media (max-width: 480px) {
@@ -12141,7 +12153,6 @@ a .glyphicon.icon-after {
 .bx--global-light-ui .modal-content {
   border-radius: 0;
   border: none;
-  overflow-y: auto;
   box-shadow: unset;
 }
 
@@ -12361,7 +12372,9 @@ nav.block-login .menu.nav {
 }
 
 .navbar .ibmapimSearch {
-  padding: 0 0.75rem 0 0.25rem;
+  padding-block: 0;
+  padding-inline-end: .75rem;
+  padding-inline-start: .25rem;
   padding-top: 5px;
   padding-bottom: 5px;
   border: 2px solid transparent;
@@ -13478,7 +13491,8 @@ body.toolbar-loading.toolbar {
 .route-mail-subscribersapi-wizardstep .apicMainContent .subscription-wizard-choose-plan .button.apicTertiary,
 .route-mail-subscribersall-wizard .apicMainContent .subscription-wizard-choose-plan .button.apicTertiary,
 .route-mail-subscribersall-wizardstep .apicMainContent .subscription-wizard-choose-plan .button.apicTertiary {
-  margin: 0 0 1rem 3rem;
+  margin-bottom: 1rem;
+  margin-inline-start: 3rem;
 }
 
 .route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail,
@@ -13498,7 +13512,7 @@ body.toolbar-loading.toolbar {
   display: flex;
   justify-content: left;
   align-items: center;
-  padding-left: 1rem;
+  padding-inline-start: 1rem;
 }
 
 .route-ibm-apimsubscription-wizard .apicMainContent .wizard-trail .bx--progress,
@@ -13638,7 +13652,8 @@ body.toolbar-loading.toolbar {
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  margin: 0.625rem 0.5rem 0 0;
+  margin-top: 0.625rem;
+  margin-inline-end: 0.5rem;
   fill: #0f62fe;
 }
 
@@ -13950,9 +13965,9 @@ body.toolbar-loading.toolbar {
 .route-ibm-apimsubscription-wizardstep .apicMainContent .apicSubscribeAppsList .apicSubAppCard {
   margin: 1px;
   padding: 0;
-  position: relative !important;
+  /* position: relative !important;
   top: unset !important;
-  left: unset !important;
+  left: unset !important; */
 }
 
 .route-ibm-apimsubscription-wizardnoplan .apicMainContent .apicSubscribeAppsList .apicSubAppCard .apicAppCard,
@@ -14362,6 +14377,15 @@ body.route-productapi nav.tabs {
   padding: 0 15px;
 }
 
+.path-frontpage .apicMainContent.container .region.region-highlighted {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10; 
+  padding: 0 15px;
+}
+
 .page-node-type-api .col-sm-12,
 .page-node-type-eventstream .col-sm-12,
 .route-productapi .col-sm-12 {
@@ -14485,6 +14509,7 @@ apiconnect-explorer ul {
   width: 24px;
   height: 24px;
   border-radius: 50%;
+  margin-left: -6px;
 }
 
 .path-search .region-content nav.tabs {
@@ -14705,6 +14730,7 @@ td.checkbox {
 .apicMyOrg .apicMyOrgMembers .apicMyOrgStatus {
   color: #24a148;
   font-size: 0.875rem;
+  font-weight: 400;
 }
 
 .apicMyOrg .memberSection,

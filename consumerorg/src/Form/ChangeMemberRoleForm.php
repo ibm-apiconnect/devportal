@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\consumerorg\Form;
 
@@ -203,7 +193,7 @@ class ChangeMemberRoleForm extends FormBase {
               }
             }
             $form['new_role'] = [
-              '#title' => t('New Role'),
+              '#title' => t('New role'),
               '#type' => 'radios',
               '#description' => t('Select the new role for this member.'),
               '#options' => $roles_array,
@@ -261,7 +251,7 @@ class ChangeMemberRoleForm extends FormBase {
       $new_role = $new_role[0]['value'];
     }
     if ($new_role === NULL || empty($new_role)) {
-      $form_state->setErrorByName('New Role', $this->t('New role name is a required field.'));
+      $form_state->setErrorByName('New role', $this->t('New role name is a required field.'));
     }
   }
 

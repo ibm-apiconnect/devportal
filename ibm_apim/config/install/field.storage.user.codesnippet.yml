@@ -43,6 +43,9 @@ settings:
     -
       value: csharp
       label: 'C#'
+    -
+      value: powershell
+      label: PowerShell
   allowed_values_function: ''
 module: options
 locked: false

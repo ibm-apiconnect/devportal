@@ -1,5 +1,0 @@
-services:
-  consumerorg.commands:
-    class: Drupal\consumerorg\Commands\ConsumerOrgCommands
-    tags:
-      - { name: drush.command }

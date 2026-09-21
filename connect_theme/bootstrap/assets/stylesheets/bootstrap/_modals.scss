@@ -50,7 +50,7 @@
 // Actual modal
 .modal-content {
   position: relative;
-  background-color: $modal-content-bg;
+  background-color: var(--modal-content-bg);
   background-clip: padding-box;
   border: 1px solid $modal-content-fallback-border-color; //old browsers fallback (ie8 etc)
   border: 1px solid $modal-content-border-color;
@@ -68,7 +68,7 @@
   bottom: 0;
   left: 0;
   z-index: $zindex-modal-background;
-  background-color: $modal-backdrop-bg;
+  background-color: var(--modal-backdrop-bg);
   // Fade for backdrop
   &.fade { @include opacity(0); }
   &.in { @include opacity($modal-backdrop-opacity); }

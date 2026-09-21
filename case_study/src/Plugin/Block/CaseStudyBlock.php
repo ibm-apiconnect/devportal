@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\case_study\Plugin\Block;
 
@@ -25,7 +15,7 @@ use Drupal\file\Entity\File;
 #[Block(
   id: "casestudy_block",
   admin_label: new TranslatableMarkup("Case studies"),
-  category: new TranslatableMarkup("IBM API Developer Portal (Case study)")
+  category: new TranslatableMarkup("IBM CMS Portal (Case study)")
 )]
 
 class CaseStudyBlock extends BlockBase {

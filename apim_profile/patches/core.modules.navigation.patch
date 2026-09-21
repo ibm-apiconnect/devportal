@@ -1,22 +1,84 @@
---- core/modules/navigation/js/admin-toolbar-wrapper.js 2025-03-05 21:15:52
-+++ core/modules/navigation/js/admin-toolbar-wrapper.js        2025-04-23 15:00:39
-@@ -148,6 +148,13 @@
-         let firstState =
-           localStorage.getItem('Drupal.navigation.sidebarExpanded') !== 'false';
+--- core/modules/navigation/js/admin-toolbar-wrapper.js	2025-06-30 22:50:43
++++ core/modules/navigation/js/admin-toolbar-wrapper.js	2025-06-30 22:52:49
+@@ -83,33 +83,34 @@
+       });
+     }
  
-+        if (firstState && window.matchMedia('(min-width: 1024px)').matches) {
-+          document.documentElement.setAttribute(
-+            'data-admin-toolbar',
-+            'expanded',
-+          );
+-    /**
+-     * Initialize Drupal.displace()
+-     *
+-     * We add the displace attribute to a separate full width element because we
+-     * don't want this element to have transitions. Note that this element and the
+-     * navbar share the same exact width.
+-     *
+-     * @param {HTMLElement} el - The admin toolbar wrapper.
+-     */
+-    const initDisplace = (el) => {
+-      const displaceElement = el.querySelector(
+-        '.admin-toolbar__displace-placeholder',
+-      );
+-      const edge = document.documentElement.dir === 'rtl' ? 'right' : 'left';
+-      displaceElement?.setAttribute(`data-offset-${edge}`, '');
+-      Drupal.displace(true);
+-    };
+-
+     // Any triggers on page. Inside or outside sidebar.
+     // For now button in sidebar + mobile header and background.
+ 
+     Drupal.behaviors.navigationProcessToolbarTriggers = {
+       attach: (context) => {
+-        once('navigation-displace', '.admin-toolbar', context).forEach(
+-          initDisplace,
++        // Instead of relying on a separate initDisplace function and 'once' on the wrapper,
++        // we query the placeholder directly. This ensures it works with BigPipe/Ajax.
++        const placeholders = context.querySelectorAll(
++          '.admin-toolbar__displace-placeholder',
+         );
+ 
++        if (placeholders.length) {
++          let hasChanged = false;
++          const edge = document.documentElement.dir === 'rtl' ? 'right' : 'left';
++          const attributeName = `data-offset-${edge}`;
++
++          placeholders.forEach((el) => {
++            if (!el.hasAttribute(attributeName)) {
++              el.setAttribute(attributeName, '');
++              hasChanged = true;
++            }
++          });
++
++          if (hasChanged) {
++            Drupal.displace(true);
++          }
 +        }
 +
-         // We need to display closed sidebar on init on mobile.
-         if (window.matchMedia('(max-width: 1023px)').matches) {
-           firstState = false;
---- core/modules/navigation/layouts/navigation.html.twig        2025-03-05 21:15:52
-+++ core/modules/navigation/layouts/navigation.html.twig       2025-04-23 15:05:00
-@@ -85,8 +85,3 @@
+         const triggers = once(
+           'admin-toolbar-trigger',
+           '[aria-controls="admin-toolbar"]',
+@@ -141,6 +142,13 @@
+             localStorage.getItem('Drupal.navigation.sidebarExpanded') !==
+             'false';
+ 
++          if (firstState && window.matchMedia('(min-width: 1024px)').matches) {
++            document.documentElement.setAttribute(
++              'data-admin-toolbar',
++              'expanded',
++            );
++          }
++
+           // We need to display closed sidebar on init on mobile.
+           if (window.matchMedia('(max-width: 1023px)').matches) {
+             firstState = false;
+@@ -178,4 +186,4 @@
+       },
+     };
+   }
+-)(Drupal, once);
++)(Drupal, once);
+\ No newline at end of file
+--- core/modules/navigation/layouts/navigation.html.twig 	2025-06-30 23:07:14
++++ core/modules/navigation/layouts/navigation.html.twig	2025-06-30 23:08:03
+@@ -87,8 +87,3 @@
    </div>
  </aside>
  <div class="admin-toolbar-overlay" aria-controls="admin-toolbar" data-drupal-admin-styles></div>

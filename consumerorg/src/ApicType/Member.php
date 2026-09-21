@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\consumerorg\ApicType;
 
@@ -213,10 +203,10 @@ class Member {
     if (array_key_exists('org_url', $content)) {
       $this->setOrgUrl($content['org_url']);
     }
-    if (array_key_exists('created_at', $content)) {
+    if (array_key_exists('created_at', $content) && $content['created_at'] !== NULL) {
       $this->setCreatedAt(strtotime($content['created_at']));
     }
-    if (array_key_exists('updated_at', $content)) {
+    if (array_key_exists('updated_at', $content) && $content['updated_at'] !== NULL) {
       $this->setUpdatedAt(strtotime($content['updated_at']));
     }
     if (array_key_exists('user', $content)) {

@@ -1,25 +1,18 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2021, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\Tests\ibm_apim\Unit\mocks;
 
+use Drupal\ibm_apim\External\SerializationUtility;
+use PHPUnit\Framework\MockObject\MockBuilder;
+
 abstract class AbstractMockNodeBuilder {
-  private $fieldBuilder;
+  private MockBuilder $fieldBuilder;
   protected $node;
   protected $unitScope;
 
-  public function __construct($phpUnitScope) {
-    $this->node = $phpUnitScope->getMockBuilder('\Drupal\node\Entity\Node')->disableOriginalConstructor()->getMock();
-    $this->fieldBuilder = $phpUnitScope->getMockBuilder('\Drupal\Core\Field\FieldItemList')->disableOriginalConstructor();
+  public function __construct($phpUnitScope, $nodeMock, $fieldBuilderMock) {
+    $this->node = $nodeMock;
+    $this->fieldBuilder = $fieldBuilderMock;
     $this->unitScope = $phpUnitScope;
   }
 
@@ -27,8 +20,14 @@ abstract class AbstractMockNodeBuilder {
     $mapGet = function($property, $value) {
       return [$property, $this->withValue($value)];
     };
+
+    $createValueMap = function($mappedValues) {
+      return $this->returnValueMap($mappedValues);
+    };
+    $boundValueMap = $createValueMap->bindTo($this->unitScope, $this->unitScope);
+
     $this->node->method('__get')
-      ->will($this->unitScope->returnValueMap(
+      ->will($boundValueMap(
         array_map($mapGet, array_keys($mockValues), $mockValues)
       ));
 
@@ -36,7 +35,7 @@ abstract class AbstractMockNodeBuilder {
       return [$property, isset($value)];
     };
     $this->node->method('__isset')
-      ->will($this->unitScope->returnValueMap(
+      ->will($boundValueMap(
         array_map($mapIsset, array_keys($mockValues), $mockValues)
       ));
   }

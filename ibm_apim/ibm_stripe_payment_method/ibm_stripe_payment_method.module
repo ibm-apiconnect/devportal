@@ -1,17 +1,8 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 
 function ibm_stripe_payment_method_form_alter(&$form, &$form_state, $form_id) {
@@ -34,7 +25,7 @@ function ibm_stripe_payment_method_form_alter(&$form, &$form_state, $form_id) {
  */
 function ibm_stripe_payment_method_consumerorg_payment_method_create_alter(&$form, $integration, $billing) {
   $stripeConfig = \Drupal::config('ibm_stripe_payment_method.settings');
-  $billingProviderConfig = unserialize(\Drupal::config('ibm_apim.settings')->get('billing_providers'), ['allowed_classes' => FALSE]);
+  $billingProviderConfig = SerializationUtility::decodeData(\Drupal::config('ibm_apim.settings')->get('billing_providers'), TRUE, FALSE);
 
   // check whether we should be using stripe for this billing provider
   if (isset($billingProviderConfig) && $billingProviderConfig[$billing['name']] === 'ibm_stripe_payment_method') {

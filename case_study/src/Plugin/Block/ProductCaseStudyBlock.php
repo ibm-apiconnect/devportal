@@ -12,8 +12,8 @@ use Drupal\node\Entity\Node;
  */
 #[Block(
   id: "productcasestudy_block",
-  admin_label: new TranslatableMarkup("Product Case Studies"),
-  category: new TranslatableMarkup("IBM API Developer Portal (Case study)"),
+  admin_label: new TranslatableMarkup("Product case studies"),
+  category: new TranslatableMarkup("IBM CMS Portal (Case study)"),
 )]
 
 class ProductCaseStudyBlock extends BlockBase {

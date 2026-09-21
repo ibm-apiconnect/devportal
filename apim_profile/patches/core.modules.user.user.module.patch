@@ -1,11 +1,10 @@
---- core/modules/user/user.module	2019-05-08 16:00:55.000000000 +0000
-+++ core/modules/user/user.module	2019-05-23 15:55:02.603576790 +0000
-@@ -194,7 +194,16 @@
+--- core/modules/user/user.module	2025-07-01 19:14:39
++++ core/modules/user/user.module	2025-07-01 19:19:18
+@@ -63,7 +63,15 @@
  function user_load_by_name($name) {
    $users = \Drupal::entityTypeManager()->getStorage('user')
-     ->loadByProperties(['name' => $name]);
+     ->loadByProperties(['mail' => $mail]);
 -  return $users ? reset($users) : FALSE;
-+
 +  if (sizeof($users) > 1) {
 +    throw new \Exception(sprintf('Attempt to load user by name (%s) returned multiple responses (%d). Unable to continue please contact your system administrator', $name, sizeof($users)));
 +  }
@@ -16,26 +15,26 @@
 +    return FALSE;
 +  }
  }
-
+ 
  /**
-@@ -1035,11 +1044,12 @@
-  */
- function user_role_revoke_permissions($rid, array $permissions = []) {
+@@ -609,11 +617,12 @@
+ function user_role_revoke_permissions($rid, array $permissions = []): void {
    // Revoke permissions for the role.
--  $role = Role::load($rid);
+   $role_storage = \Drupal::entityTypeManager()->getStorage('user_role');
+-  $role = $role_storage->loadOverrideFree($rid);
 -  foreach ($permissions as $permission) {
 -    $role->revokePermission($permission);
-+  if ($role = Role::load($rid)) {
+-  }
++  if ($role = $role_storage->loadOverrideFree($rid)) {
 +    foreach ($permissions as $permission) {
 +      $role->revokePermission($permission);
 +    }
-+    $role->trustData()->save();
-   }
--  $role->trustData()->save();
+   $role->trustData()->save();
++  }
  }
-
+ 
  /**
-@@ -1159,7 +1169,7 @@
+@@ -716,7 +725,7 @@
    $request_time = \Drupal::time()->getRequestTime();
    foreach ($values as $field => $value) {
      // Set cookie for 365 days.
@@ -43,13 +42,13 @@
 +    setrawcookie('Drupal.visitor.' . $field, rawurlencode($value), $request_time + 31536000, '/', '', TRUE, TRUE);
    }
  }
-
-@@ -1170,7 +1180,7 @@
+ 
+@@ -727,7 +736,7 @@
   *   A cookie name such as 'homepage'.
   */
- function user_cookie_delete($cookie_name) {
+ function user_cookie_delete($cookie_name): void {
 -  setrawcookie('Drupal.visitor.' . $cookie_name, '', \Drupal::time()->getRequestTime() - 3600, '/');
 +  setrawcookie('Drupal.visitor.' . $cookie_name, '', \Drupal::time()->getRequestTime() - 3600, '/', '', TRUE, TRUE);
  }
-
+ 
  /**

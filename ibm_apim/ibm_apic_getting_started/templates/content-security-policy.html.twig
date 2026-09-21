@@ -1,0 +1,121 @@
+{# /********************************************************* {COPYRIGHT-TOP}
+*** * Licensed Materials - Property of IBM * 5725-L30, 5725-Z22 * * (C)
+Copyright IBM Corporation 2025 * * All Rights Reserved. * US Government Users
+Restricted Rights - Use, duplication or disclosure * restricted by GSA ADP
+Schedule Contract with IBM Corp.
+********************************************************** {COPYRIGHT-END} **/
+/** * @file 
+* Content Security Policy tutorial template. 
+* * Available variables: 
+* - tutorial: The tutorial definition. 
+* - images_path: Path to the tutorial images. 
+*/ #} 
+
+{% set header_content %}
+<p>
+  <strong>Content Security Policy (CSP)</strong> is a security standard that helps prevent a range of attacks including Cross Site Scripting (XSS) and data injection attacks by controlling the resources (scripts, images, styles, fonts, etc.) the browser is allowed to load for a website.
+</p>
+
+<p>
+  In Developer Portal, the Content Security Policy module allows site administrators to configure request headers, offering two main modes: <strong>Report Only</strong> and <strong>Enforced</strong>. The module supports defining specific sources per content type, offering fine-grained control of your site's security.
+</p>
+
+<p>In this tutorial, we'll show you <strong>how to enforce content security policy</strong> to support your specific security requirements.</p>
+{% endset %} 
+
+{% set steps_content %} 
+{# Step 1: Navigate to CSP configuration #}
+<li class="gs-step" data-step="Navigate to CSP configuration">
+  <h3>How to enable CSP enforcement</h3>
+  <p>In the Portal admin menu, go to:</p>
+  <div class="path-instruction">
+    <strong>Configuration → System → Content Security Policy</strong>
+  </div>
+  
+  <img
+    src="{{ images_path }}/config-csp-path.png"
+    alt="CSP configuration path"
+    class="img-responsive"
+    loading="lazy"
+  />
+</li>
+
+{# Step 2: Choose Mode #}
+<li class="gs-step" data-step="Choose Mode">
+  <h3>Choose mode</h3>
+  <p>Select the appropriate mode by clicking the specific check box:</p>
+  
+  <ul class="instruction-list">
+    <li>
+      <strong>Report Only mode:</strong> Useful for monitoring the CSP errors without affecting frontend behavior.
+      <ul>
+        <li>Monitors and logs potential violations without blocking content.</li>
+        <li>Adds the Content-Security-Policy-Report-Only header to requests.</li>
+      </ul>
+    </li>
+    <li>
+      <strong>Enforced mode:</strong> Useful for strict control of all site sources. Choose this once you are very sure of the policies and the data sources work well with the site.
+      <ul>
+        <li>Enforces the defined policy and blocks any content from non-whitelisted sources.</li>
+        <li>Adds the Content-Security-Policy header to requests.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <img
+    src="{{ images_path }}/reportonly-enforce.png"
+    alt="Report Only and Enforce mode options"
+    class="img-responsive"
+    loading="lazy"
+  />
+</li>
+
+{# Step 3: Define allowed domains #}
+<li class="gs-step" data-step="Define allowed domains">
+  <h3>Define allowed domains</h3>
+  <p>Define allowed domains under each policy directive:</p>
+  
+  <ul class="instruction-list">
+    <li>
+      <i>self</i> is mandatory as we need to allow all sources from same domain. Other sources can be safely found by enabling the <strong>Report Only</strong> mode.
+    </li>
+    <li>
+      Each policy has configurable checkboxes to set the type of sources.
+    </li>
+    <li>
+      <strong>Drupal Content Security Policy</strong> module automatically whitelists external sources included under all (drupal and custom) module configurations. Those will be included in <strong>Auto Sources</strong>.
+    </li>
+    <li>
+      <strong>Additional sources</strong> can be added manually in the text area provided for each directive.
+    </li>
+  </ul>
+
+  <img
+    src="{{ images_path }}/policy-directives.png"
+    alt="Policy directives configuration"
+    class="img-responsive"
+    loading="lazy"
+  />
+</li>
+
+{# Step 4: Save configuration #}
+<li class="gs-step" data-step="Save configuration">
+  <h3>Save configuration</h3>
+  <p>Click on <strong>Save configuration</strong> to apply your changes.</p>
+
+  <img
+    src="{{ images_path }}/config-saved.png"
+    alt="Configuration saved"
+    class="img-responsive"
+    loading="lazy"
+  />
+  
+  <div class="success-message">
+    <p>Congratulations! A secure policy will now be set for all the sources of your website providing more safety.</p>
+  </div>
+</li>
+{% endset %} 
+
+{% include 'tutorial-base.html.twig' with { 'tutorial': tutorial,
+'images_path': images_path, 'header_content': header_content, 'steps_content':
+steps_content } %}

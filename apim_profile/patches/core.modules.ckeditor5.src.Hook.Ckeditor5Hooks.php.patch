@@ -1,0 +1,11 @@
+--- core/modules/ckeditor5/src/Hook/Ckeditor5Hooks.php
++++ core/modules/ckeditor5/src/Hook/Ckeditor5Hooks.php
+@@ -432,7 +432,7 @@
+         // new "styles" setting for the List plugin to false.
+         $ol_type = HTMLRestrictions::fromString('<ol type>');
+         $ul_type = HTMLRestrictions::fromString('<ul type>');
+-        if (!array_key_exists('styles', $settings['plugins']['ckeditor5_list']['properties'])) {
++        if (isset($settings['plugins']['ckeditor5_list']['properties']) && !array_key_exists('styles', $settings['plugins']['ckeditor5_list']['properties'])) {
+           $settings['plugins']['ckeditor5_list']['properties']['styles'] =
+             $ol_type->diff($source_edited)->allowsNothing() ||
+             $ul_type->diff($source_edited)->allowsNothing() ||

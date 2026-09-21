@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 use Drupal\block\Entity\Block;
 use Drupal\block_content\Entity\BlockContent;
@@ -133,20 +123,6 @@ function apim_profile_create_homepage_blocks() {
     ];
     $variant_plugin->addBlock($add_welcome_block);
 
-    // Add getting started block
-    $add_gsg_block = [
-      'id' => 'block_content:' . $gsg_block_content->uuid(),
-      'label' => 'Getting Started',
-      'provider' => 'block_content',
-      'view_mode' => 'full',
-      'status' => TRUE,
-      'region' => 'col_1',
-      'weight' => 2,
-      'context_mapping' => [],
-      'label_display' => FALSE,
-    ];
-    $variant_plugin->addBlock($add_gsg_block);
-
     // Add featured APIs block
     $add_featured_block = [
       'id' => 'featuredcontent',
@@ -164,6 +140,37 @@ function apim_profile_create_homepage_blocks() {
     ];
     $variant_plugin->addBlock($add_featured_block);
 
+    // Add case study block
+    $add_casestudy_block = [
+      'id' => 'casestudy_block',
+      'plugin' => 'casestudy_block',
+      'label' => 'Case Studies',
+      'provider' => 'case_study',
+      'region' => 'col_1',
+      'numberOfTiles' => 4,
+      'selectionType' => 'CREATED',
+      'customNodes' => [],
+      'theme' => 'connect_theme',
+      'weight' => 2,
+      'context_mapping' => [],
+      'label_display' => FALSE,
+    ];
+    $variant_plugin->addBlock($add_casestudy_block);
+
+    // Add getting started block
+    $add_gsg_block = [
+      'id' => 'block_content:' . $gsg_block_content->uuid(),
+      'label' => 'Getting Started',
+      'provider' => 'block_content',
+      'view_mode' => 'full',
+      'status' => TRUE,
+      'region' => 'col_1',
+      'weight' => 3,
+      'context_mapping' => [],
+      'label_display' => FALSE,
+    ];
+    $variant_plugin->addBlock($add_gsg_block);
+
     // add socialblock
     $add_social_block = [
       'id' => 'social_block',
@@ -177,7 +184,7 @@ function apim_profile_create_homepage_blocks() {
       'forumsList' => ["1"],
       'numberOfTiles' => 9,
       'theme' => 'connect_theme',
-      'weight' => 3,
+      'weight' => 4,
       'context_mapping' => [],
       'label_display' => FALSE,
     ];
@@ -403,17 +410,22 @@ function get_localized_welcomebanner_content($langcode): string {
  */
 function get_localized_gsb_content($langcode): string {
   $html = '<div class="startguide">';
-  $html .= '<div class="gsstep title">' . t('<h4>Let\'s get started!</h4>', [], ['langcode' => $langcode]) . '</div>';
-  $html .= '<div class="gsstep signup">' . t('<h5>Sign up</h5>', [], ['langcode' => $langcode]);
-  $html .= '<p>' . t('<a href="@link">Create a new account</a> and get started with our APIs. It\'s free to join.', ['@link' => 'user/register'], ['langcode' => $langcode]) . '</p>';
-  $html .= '<div class="placeholder"></div></div>';
-  $html .= '<div class="gsstep explore">' . t('<h5>Explore our APIs</h5>', [], ['langcode' => $langcode]);
-  $html .= '<p>' . t('Take a look at our <a href="@link">API products</a> and quickly find APIs to construct a fully featured application', ['@link' => 'product'], ['langcode' => $langcode]) . '</p>';
-  $html .= '<div class="placeholder"></div></div>';
-  $html .= '<div class="gsstep subscribe">';
-  $html .= t('<h5>Create</h5>', [], ['langcode' => $langcode]);
-  $html .= '<p>' . t('Select a plan and create your application to make use of our APIs.', [], ['langcode' => $langcode]) . '</p>';
-  $html .= '<div class="placeholder"></div></div></div>';
+  $html .= '<div class="gsstep title">';
+  $html .= t('<h4>Let\'s get started!</h4>', [], ['langcode' => $langcode]);
+  $html .= '<p>' . t('Here is the step-by-step guide to get access to our APIs and incorporate our functionality into your projects.', ['@link' => 'product'], ['langcode' => $langcode]) . '</p></div>';
+  $html .= '<div class="gsstep explore"><div class="placeholder"></div>';
+  $html .= t('<h4>Explore APIs</h4>', [], ['langcode' => $langcode]);
+  $html .= '<p>' . t('Take a look at our <a href="@link">API products</a> and quickly find APIs to construct a fully featured application.', ['@link' => 'product'], ['langcode' => $langcode]) . '</p></div>';
+  $html .= '<div class="gsstep signup"><div class="placeholder"></div>';
+  $html .= t('<h4>Sign up</h4>', [], ['langcode' => $langcode]);
+  $html .= '<p>' . t('<a href="@link">Create a new account</a> and get started with our APIs. It\'s free to join.', ['@link' => 'user/register'], ['langcode' => $langcode]) . '</p></div>';
+  $html .= '<div class="gsstep subscribe"><div class="placeholder"></div>';
+  $html .= t('<h4>Create</h4>', [], ['langcode' => $langcode]);
+  $html .= '<p>' . t('Select a plan and create your application to make use of our APIs.', [], ['langcode' => $langcode]) . '</p></div>';
+  $html .= '<div class="gsstep check-usage"><div class="placeholder"></div>';
+  $html .= t('<h4>Check usage</h4>', [], ['langcode' => $langcode]);
+  $html .= '<p>' . t('Check usage for different APIs that your application has made from your application.', [], ['langcode' => $langcode]) . '</p></div>';
+  $html .= '</div>';
   return $html;
 }
 
@@ -424,15 +436,18 @@ function get_localized_gsb_content($langcode): string {
  */
 function get_localized_gethelp_content($langcode): string {
   $forward_svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 16 16" width="16" height="16" fill="currentColor" xml:space="preserve">
-<g>
-    <path  d="M9.3 3.7L13.1 7.5 1 7.5 1 8.5 13.1 8.5 9.3 12.3 10 13 15 8 10 3z"/>
-</g>
-</svg>';
-  $html = '<div class="get_help" ><div class="column col1"><h3>' . t('Getting Help', [], ['langcode' => $langcode]) . '</h3><div>' . t('Be sure to check out these extra help resources.', [], ['langcode' => $langcode]) . '</div></div>';
-  $html .= '<div class="column col2"><h4>' . t('Get Started', [], ['langcode' => $langcode]) . '</h4><div>' . t('Get started with our APIs by creating an account and exploring the documentation to find what\'s right for you.', [], ['langcode' => $langcode]) . '</div><div><a href="user/register">' . t('Create an Account', [], ['langcode' => $langcode]) . $forward_svg . '</a></div></div>';
-  $html .= '<div class="column col3"><h4>' . t('Forum', [], ['langcode' => $langcode]) . '</h4><div>' . t('Ask a question in the forums or search to forum history to see if it\'s been asked before.', [], ['langcode' => $langcode]) . '</div><div><a href="forum">' . t('Join the discussion', [], ['langcode' => $langcode]) . $forward_svg . '</a></div></div>';
-  $html .= '<div class="column col4"><h4>' . t('Contact Us', [], ['langcode' => $langcode]) . '</h4><div>' . t('Can\'t find the answer to your question? Need more help? Have some feedback? Let us know!', [], ['langcode' => $langcode]) . '</div><div><a href="contact">' . t('Email us', [], ['langcode' => $langcode]) . $forward_svg . '</a></div></div></div>';
+   viewBox="0 0 16 16" width="16" height="16" fill="currentColor" xml:space="preserve" aria-label="Forward arrow" role="img">
+      <g>
+          <path  d="M9.3 3.7L13.1 7.5 1 7.5 1 8.5 13.1 8.5 9.3 12.3 10 13 15 8 10 3z"/>
+      </g>
+    </svg>';
+
+  $html = '<div class="what_will_you_build"><div class="build_content"><h3>' . t('What will you build?', [], ['langcode' => $langcode]) . '</h3><p>' . t('We understand that having the right tools is essential to bring your ideas to life. Use the Developer Portal to get access to our APIs and start creating now.', [], ['langcode' => $langcode]) . '</p></div><div class="build_button"><a class="button cta-btn" href="product">' . t('Get started', [], ['langcode' => $langcode]) . '</a></div></div>';
+  
+  $html .= '<div class="get_help">';
+  $html .= '<div class="helper_col get_started_col"><h4>' . t('Get Started', [], ['langcode' => $langcode]) . '</h4><div>' . t('Get started with our APIs by creating an account and exploring the documentation to find what\'s right for you.', [], ['langcode' => $langcode]) . '</div><div><a href="user/register">' . t('Create an Account', [], ['langcode' => $langcode]) . $forward_svg . '</a></div></div>';
+  $html .= '<div class="helper_col forum_col"><h4>' . t('Forum', [], ['langcode' => $langcode]) . '</h4><div>' . t('Ask a question in the forums or search to forum history to see if it\'s been asked before.', [], ['langcode' => $langcode]) . '</div><div><a href="forum">' . t('Join the discussion', [], ['langcode' => $langcode]) . $forward_svg . '</a></div></div>';
+  $html .= '<div class="helper_col contact_us-_ol"><h4>' . t('Contact Us', [], ['langcode' => $langcode]) . '</h4><div>' . t('Can\'t find the answer to your question? Need more help? Have some feedback? Let us know!', [], ['langcode' => $langcode]) . '</div><div><a href="contact">' . t('Email us', [], ['langcode' => $langcode]) . $forward_svg . '</a></div></div></div>';
   return $html;
 }
 
@@ -713,6 +728,20 @@ function apim_profile_main_menu_links() {
   $forum_link->save();
   add_forum_link_translations($forum_link);
 
+  // Create News menu link if ibm_apic_news module is enabled
+  if (\Drupal::moduleHandler()->moduleExists('ibm_apic_news')) {
+    $news_link = MenuLinkContent::create([
+      'title' => t('News'),
+      'description' => t('Portal homepage'),
+      'link' => ['uri' => 'internal:/news'],
+      'menu_name' => $menu_name,
+      'expanded' => TRUE,
+      'weight' => 27,
+    ]);
+    $news_link->save();
+    add_news_link_translations($news_link);
+  }
+
   // update weight of the blogs link
   $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
   $blog_menu_id = 'views_view:views.blog.blog_all';
@@ -721,6 +750,34 @@ function apim_profile_main_menu_links() {
   $menu_link_manager->updateDefinition($blog_menu_id, $blogs_link);
   $cache = \Drupal::cache('menu');
   $cache->deleteAll();
+}
+
+/**
+ * @param $link
+ */
+function add_news_link_translations($link, $overwrite = true): void {
+  $languages = \Drupal::languageManager()->getLanguages();
+
+  foreach ($languages as $language) {
+    $lang = $language->getId();
+    if ($lang === 'en' || ($link->hasTranslation($lang) && !$overwrite)) {
+      continue;
+    }
+    if ($link->hasTranslation($lang)) {
+      $link->removeTranslation($lang);
+    }
+    $translation = [
+      'title' => t('News', [], ['langcode' => $lang]),
+      'description' => t('Portal homepage', [], ['langcode' => $lang]),
+      'link' => ['uri' => 'internal:/news'],
+      'menu_name' => 'main',
+      'expanded' => TRUE,
+      'weight' => 27,
+    ];
+    $link->addTranslation($lang, $translation);
+  }
+
+  $link->save();
 }
 
 /**
@@ -966,5 +1023,198 @@ function apim_profile_update_login_menu_links() {
   $register_link = reset($register_link);
   if (!empty($register_link)) {
     add_create_account_link_translations($register_link, FALSE);
+  }
+}
+
+/**
+ * Update homepage block weights
+ *
+ * Adjusts block weights to match the new homepage design:
+ * - Case Study block: weight 3 -> 2
+ * - Getting Started block: weight 2 -> 3
+ * - IBM News block: weight 3 -> 3 
+ * - Social Block: weight 3 -> 4
+ * - Get Help block: weight 5 -> 5
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_update_block_configuration() {
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('page_manager')) {
+    return;
+  }
+
+  $page = Page::load('welcome');
+  if ($page !== NULL) {
+    $page_variants = $page->getVariants();
+    if (!empty($page_variants)) {
+      $page_variant = reset($page_variants);
+      $variant_plugin = $page_variant->getVariantPlugin();
+      $variant_settings = $page_variant->get('variant_settings');
+      
+      // Find Getting Started and Get Help block UUIDs by label
+      $getting_started_uuid = NULL;
+      $get_help_uuid = NULL;
+      $content = $page_variant->calculateDependencies()['content'] ?? [];
+      $block_content_storage = \Drupal::entityTypeManager()->getStorage('block_content');
+      
+      foreach ($content as $block_content_id) {
+        // id = block_content:basic:UUID
+        $parts = explode(':', $block_content_id);
+        if (count($parts) >= 3) {
+          $raw_block_content_id = $parts[2];
+          $block_content_array = $block_content_storage->loadByProperties(['uuid' => $raw_block_content_id]);
+          $block_content = reset($block_content_array);
+          
+          if ($block_content !== NULL && $block_content !== FALSE) {
+            $label = $block_content->get('info')->value;
+            if ($label === 'Getting Started [en]') {
+              $getting_started_uuid = $raw_block_content_id;
+            }
+            elseif ($label === 'Get Help [en]') {
+              $get_help_uuid = $raw_block_content_id;
+            }
+          }
+        }
+      }
+      
+      $needs_save = FALSE;
+      
+      if (isset($variant_settings['blocks'])) {
+        foreach ($variant_settings['blocks'] as $block_id => $block_settings) {
+          // Update Case Study block weight to 2
+          if (isset($block_settings['id']) && $block_settings['id'] === 'casestudy_block') {
+            if (isset($block_settings['weight']) && $block_settings['weight'] != 2) {
+              $variant_plugin->updateBlock($block_id, ['weight' => 2]);
+              $needs_save = TRUE;
+            }
+          }
+          // Update Getting Started block weight to 3
+          if ($getting_started_uuid !== NULL &&
+              isset($block_settings['id']) &&
+              $block_settings['id'] === 'block_content:' . $getting_started_uuid) {
+            if (isset($block_settings['weight']) && $block_settings['weight'] != 3) {
+              $variant_plugin->updateBlock($block_id, ['weight' => 3]);
+              $needs_save = TRUE;
+            }
+          }
+          // Update IBM News block weight to 3
+          if (isset($block_settings['id']) && $block_settings['id'] === 'home_page_news_block') {
+            if (isset($block_settings['weight']) && $block_settings['weight'] != 3) {
+              $variant_plugin->updateBlock($block_id, ['weight' => 3]);
+              $needs_save = TRUE;
+            }
+          }
+          // Update Social block weight to 4
+          if (isset($block_settings['id']) && $block_settings['id'] === 'social_block') {
+            if (isset($block_settings['weight']) && $block_settings['weight'] != 4) {
+              $variant_plugin->updateBlock($block_id, ['weight' => 4]);
+              $needs_save = TRUE;
+            }
+          }
+          // Update Get Help block weight to 5
+          if ($get_help_uuid !== NULL &&
+              isset($block_settings['id']) &&
+              $block_settings['id'] === 'block_content:' . $get_help_uuid) {
+            if (isset($block_settings['weight']) && $block_settings['weight'] != 5) {
+              $variant_plugin->updateBlock($block_id, ['weight' => 5]);
+              $needs_save = TRUE;
+            }
+          }
+        }
+      }
+
+      if ($needs_save) {
+        $page_variant->save();
+      }
+    }
+  }
+}
+
+/**
+ * Force update homepage block contents (Getting Started, Get Help, Welcome Banner)
+ * This function updates the content regardless of whether translations exist.
+ *
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apim_profile_force_update_homepage_blocks() {
+  // Update Welcome Banner block
+  $welcomebannerblock = Block::load('welcomebanner');
+  if ($welcomebannerblock !== NULL) {
+    $plugin = $welcomebannerblock->get('plugin');
+    if ($plugin !== NULL) {
+      $parts = explode(':', $plugin);
+      $block_content_id = $parts[1];
+      $query = \Drupal::entityQuery('block_content');
+      $query->condition('uuid.value', $block_content_id);
+      $nids = $query->accessCheck()->execute();
+      if (isset($nids) && !empty($nids)) {
+        $blockid = array_shift($nids);
+        $block_content = BlockContent::load($blockid);
+        if ($block_content !== NULL) {
+          // Force update English content
+          $block_content->set('body', [
+            'value' => get_localized_welcomebanner_content('en'),
+            'format' => 'full_html',
+          ]);
+          $block_content->save();
+          // Force update all translations (overwrite = TRUE)
+          add_welcome_block_translations($block_content, TRUE);
+        }
+      }
+    }
+  }
+
+  // Update Getting Started block
+  $gsgblock = Block::load('getting_started');
+  if ($gsgblock !== NULL) {
+    $plugin = $gsgblock->get('plugin');
+    if ($plugin !== NULL) {
+      $parts = explode(':', $plugin);
+      $block_content_id = $parts[1];
+      $query = \Drupal::entityQuery('block_content');
+      $query->condition('uuid.value', $block_content_id);
+      $nids = $query->accessCheck()->execute();
+      if (isset($nids) && !empty($nids)) {
+        $blockid = array_shift($nids);
+        $block_content = BlockContent::load($blockid);
+        if ($block_content !== NULL) {
+          // Force update English content
+          $block_content->set('body', [
+            'value' => get_localized_gsb_content('en'),
+            'format' => 'full_html',
+          ]);
+          $block_content->save();
+          // Force update all translations (overwrite = TRUE)
+          add_getting_started_block_content_translations($block_content, TRUE);
+        }
+      }
+    }
+  }
+
+  // Update Get Help block
+  $gethelpblock = Block::load('get_help');
+  if ($gethelpblock !== NULL) {
+    $plugin = $gethelpblock->get('plugin');
+    if ($plugin !== NULL) {
+      $parts = explode(':', $plugin);
+      $block_content_id = $parts[1];
+      $query = \Drupal::entityQuery('block_content');
+      $query->condition('uuid.value', $block_content_id);
+      $nids = $query->accessCheck()->execute();
+      if (isset($nids) && !empty($nids)) {
+        $blockid = array_shift($nids);
+        $block_content = BlockContent::load($blockid);
+        if ($block_content !== NULL) {
+          // Force update English content
+          $block_content->set('body', [
+            'value' => get_localized_gethelp_content('en'),
+            'format' => 'full_html',
+          ]);
+          $block_content->save();
+          // Force update all translations (overwrite = TRUE)
+          add_get_help_block_content_translations($block_content, TRUE);
+        }
+      }
+    }
   }
 }

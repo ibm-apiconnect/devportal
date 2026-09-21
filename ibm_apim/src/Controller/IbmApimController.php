@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Controller;
 
@@ -89,7 +79,7 @@ class IbmApimController extends ControllerBase {
         $version .= '( ' . $yaml['build'] . ' )';
       }
     }
-    $markup = '<p>' . t('IBM API Developer Portal version %ver', ['%ver' => $version]) . '</p>';
+    $markup = '<p>' . t('IBM CMS Portal version %ver', ['%ver' => $version]) . '</p>';
     $moduleHandler = \Drupal::service('module_handler');
     if ($moduleHandler->moduleExists('apic_api')) {
       $filename = \Drupal::service('extension.list.module')->getPath('apic_api') . '/explorer/app/version.json';

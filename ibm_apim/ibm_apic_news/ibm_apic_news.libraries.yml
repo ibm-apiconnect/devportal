@@ -1,0 +1,6 @@
+news_style:
+  version: 1.x
+  css:
+    component:
+      css/ibm_apic_news.css: { }
+

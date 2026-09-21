@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\auth_apic\Form;
 
@@ -191,7 +181,14 @@ class ApicUserDeleteForm extends ConfirmFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     if ($org_url = $form_state->getValue('org_to_delete')) {
-      $this->logger->info('Deleting %org_url as part of user deletion', ['%org_url' => $org_url]);
+      // URLs should not be sanitized as they are used for internal lookups
+      // However, we should sanitize them for logging purposes
+      $sanitized_org_url = $org_url;
+      if ($sanitized_org_url !== htmlspecialchars($sanitized_org_url, ENT_QUOTES)) {
+        $sanitized_org_url = htmlspecialchars($sanitized_org_url, ENT_QUOTES);
+      }
+      
+      $this->logger->info('Deleting %org_url as part of user deletion', ['%org_url' => $sanitized_org_url]);
       $org_delete_response = $this->orgService->delete($this->orgService->get($org_url), \Drupal::currentUser()->id()); // TODO - delete by url
 
       if ($org_delete_response->success()) {
@@ -199,8 +196,8 @@ class ApicUserDeleteForm extends ConfirmFormBase {
         $this->messenger->addStatus(t('Organization successfully deleted.'));
       }
       else {
-        $this->logger->error('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $org_url]);
-        $this->messenger->addError(t('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $org_url]));
+        $this->logger->error('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $sanitized_org_url]);
+        $this->messenger->addError(t('Error deleting organization (%org_url). Please contact your system administrator for assistance.', ['%org_url' => $sanitized_org_url]));
         ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'error deleting org');
         return;
       }

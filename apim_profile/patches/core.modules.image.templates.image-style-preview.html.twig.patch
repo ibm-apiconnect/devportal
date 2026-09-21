@@ -1,0 +1,36 @@
+--- core/modules/image/templates/image-style-preview.html.twig	2025-07-30 16:35:24
++++ core/modules/image/templates/image-style-preview.html.twig	2025-07-30 16:30:58
+@@ -34,24 +34,26 @@
+   {# Preview of the original image. #}
+   <div class="preview-image-wrapper">
+       {{ 'Source image'|t }}
+-      <div class="preview-image original-image" style="width: {{ preview.original.width }}px; height: {{ preview.original.height }}px;">
++      <div class="preview-image original-image"  data-preview-width="{{ preview.original.width }}"
++     data-preview-height="{{ preview.original.height }}">
+         <a href="{{ original.url }}">
+           {{ original.rendered }}
+         </a>
+-      <div class="height" style="height: {{ preview.original.height }}px"><span>{{ original.height }}px</span></div>
+-      <div class="width" style="width: {{ preview.original.width }}px"><span>{{ original.width }}px</span></div>
++      <div class="height"  data-preview-height="{{ preview.original.height }}"><span>{{ original.height }}px</span></div>
++      <div class="width" data-preview-width="{{ preview.original.width }}"><span>{{ original.width }}px</span></div>
+     </div>
+   </div>
+ 
+   {# Derivative of the image style. #}
+   <div class="preview-image-wrapper">
+     {{ 'Derivative image'|t }}
+-    <div class="preview-image modified-image" style="width: {{ preview.derivative.width }}px; height: {{ preview.derivative.height }}px;">
+-      <a href="{{ derivative.url }}?{{ cache_bypass }}">
++    <div class="preview-image modified-image" data-preview-width="{{ preview.derivative.width }}"
++       data-preview-height="{{ preview.derivative.height }}">
++      <a href="{{ derivative.url }}?{{ cache_bypass }}&itok={{ itok }}">
+         {{ derivative.rendered }}
+       </a>
+-      <div class="height" style="height: {{ preview.derivative.height }}px"><span>{{ derivative.height }}px</span></div>
+-      <div class="width" style="width: {{ preview.derivative.width }}px"><span>{{ derivative.width }}px</span></div>
++      <div class="height"  data-preview-height="{{ preview.derivative.height }}"><span>{{ derivative.height }}px</span></div>
++      <div class="width" data-preview-width="{{ preview.derivative.width }}"><span>{{ derivative.width }}px</span></div>
+     </div>
+   </div>
+ </div>

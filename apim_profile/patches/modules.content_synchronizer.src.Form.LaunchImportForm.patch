@@ -1,0 +1,29 @@
+--- modules/content_synchronizer/src/Form/LaunchImportForm.php	2025-09-10 21:37:56
++++ modules/content_synchronizer/src/Form/LaunchImportForm.php	2025-09-15 11:35:27
+@@ -7,6 +7,7 @@
+ use Drupal\content_synchronizer\Processors\ImportProcessor;
+ use Drupal\Core\Form\FormBase;
+ use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\Messenger\MessengerInterface;
+ 
+ /**
+  * Launch Import Form.
+@@ -63,7 +64,18 @@
+         '#type' => 'submit',
+         '#value' => $this->t('Import selected entities'),
+         '#button_type' => 'primary',
++        '#states' => [
++          'disabled' => [
++            ':input[name="entities_to_import[]"]' => ['checked' => FALSE],
++          ],
++        ],
+       ];
++
++      $has_entities = !empty($this->import->getRootsEntities());
++      if (!$has_entities) {
++        $form['launch']['#disabled'] = TRUE;
++        $this->messenger()->addWarning($this->t('No entities are available to import. Please upload a valid export archive.'));
++      }
+     }
+ 
+     return $form;

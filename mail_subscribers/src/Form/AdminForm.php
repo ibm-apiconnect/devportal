@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\mail_subscribers\Form;
 
@@ -139,7 +129,7 @@ class AdminForm extends ConfigFormBase {
       $form['entity_deletion_heading'] = [
         '#type' => 'markup',
         '#markup' => Markup::create(
-          '<label class="form-item__label">' . $this->t('Email Lists') . '</label>'),
+          '<label class="form-item__label">' . $this->t('Email lists') . '</label>'),
       ];
 
       // Build the table.
@@ -157,26 +147,49 @@ class AdminForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
-
+    $settings=[];
+   
     // Set the submitted configuration setting
     $this->config('mail_subscribers.settings')
       ->set('throttle', (int) $form_state->getValue('throttle'))
       ->set('spool_expire', (int) $form_state->getValue('spool_expire'))
       ->set('debug', (bool) $form_state->getValue('debug'))
       ->save();
-
+      $settings['throttle'] = $form_state->getValue('throttle');
+      $settings['spool_expire'] = $form_state->getValue('spool_expire');
+      $settings['debug'] = $form_state->getValue('debug');
+    
     // only save the from details if differ from site defaults
     $siteConfig = \Drupal::config('system.site');
-    if ($form_state->getValue('from_name') !== $siteConfig->get('name')) {
+    
+    // Sanitize from_name before saving
+    $fromName = $form_state->getValue('from_name');
+    $fromName = htmlspecialchars($fromName, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+    
+    if ($fromName !== $siteConfig->get('name')) {
       $this->config('mail_subscribers.settings')
-        ->set('from_name', $form_state->getValue('from_name'))
+        ->set('from_name', $fromName)
         ->save();
+        $settings['from_name'] = $fromName;
     }
-    if ($form_state->getValue('from_mail') !== $siteConfig->get('mail')) {
+    
+    // Sanitize from_mail before saving
+    $fromMail = $form_state->getValue('from_mail');
+    $fromMail = filter_var($fromMail, FILTER_SANITIZE_EMAIL);
+    
+    // Validate email format
+    if (!filter_var($fromMail, FILTER_VALIDATE_EMAIL)) {
+      $this->messenger()->addError($this->t('The email address format is invalid.'));
+      return;
+    }
+    
+    if ($fromMail !== $siteConfig->get('mail')) {
       $this->config('mail_subscribers.settings')
-        ->set('from_mail', $form_state->getValue('from_mail'))
+        ->set('from_mail', $fromMail)
         ->save();
+        $settings['from_mail'] = $fromMail;
     }
+    \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_MAIL_SUBSCRIBERS_SETTINGS_UPDATE' , 'success', 'admin/config/system/mail_subscribers' , 'data/drupal/mail_subscribers',$settings);
 
     parent::submitForm($form, $form_state);
   }

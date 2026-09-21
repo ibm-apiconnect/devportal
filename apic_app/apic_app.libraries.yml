@@ -10,3 +10,16 @@ basic:
       css/application.css: { }
   js:
     js/application.js: { }
+  dependencies:
+    - apic_app/modal_fix
+
+modal_fix:
+  version: 1.x
+  js:
+    js/modal-fix.js: { }
+  dependencies:
+    - core/jquery
+    - core/once
+    - core/drupal
+    - core/drupal.dialog
+    - core/drupal.dialog.ajax

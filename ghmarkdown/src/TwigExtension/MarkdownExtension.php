@@ -1,19 +1,10 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ghmarkdown\TwigExtension;
 
 use Drupal\ghmarkdown\cebe\markdown\GithubMarkdown;
+use Drupal\Core\Render\Markup;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 
@@ -37,16 +28,16 @@ class MarkdownExtension extends AbstractExtension {
    */
   public function getFilters(): array {
     return [
-      new TwigFilter('markdown', array($this, 'filterParseMarkdown'), array('is_safe' => array('html'))),
+      new TwigFilter('markdown', array($this, 'filterParseMarkdown')),
     ];
   }
 
   /**
    * Filter to parse markdown
    */
-  public static function filterParseMarkdown($txt): string {
+  public static function filterParseMarkdown($txt): Markup {
     $parser = new GithubMarkdown();
-    return $parser->parse($txt);
+    return Markup::create($parser->parse($txt));
   }
 
 }

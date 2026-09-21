@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\auth_apic\UserManagement;
 
@@ -32,6 +22,7 @@ use Drupal\ibm_apim\UserManagement\ApicAccountInterface;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 class ApicLoginService implements ApicLoginServiceInterface {
 
@@ -188,7 +179,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
       $this->logger->error('failed to authenticate with APIM server');
       // Not successfully authenticated with management server, do not sign in.
       $loginResponse->setSuccess(FALSE);
-      $loginResponse->setMessage(serialize($apic_me->getData()));
+      $loginResponse->setMessage(SerializationUtility::encodeData($apic_me->getData()));
     }
     else {
       if ($meUser !== NULL && !$this->userLoginPermitted($meUser)) {
@@ -320,6 +311,7 @@ class ApicLoginService implements ApicLoginServiceInterface {
       // user has no consumer orgs, ensure we reset any data
       $this->logger->notice('no consumer orgs set on login');
       $account->set('consumerorg_url', NULL);
+      $account->set('consumer_organization', NULL);
       $account->save();
       $this->userUtils->setCurrentConsumerorg(NULL);
     }
@@ -327,12 +319,15 @@ class ApicLoginService implements ApicLoginServiceInterface {
       // If this is the first sign in for this user, user_consumerorg_url will not be populated.
       // We rely on this field to be able to set the current dev org and populate the consumerorg selector.
       $consumerorg_urls = [];
+      $consumer_organizations = [];
       foreach ($apicMeConsumerorgs as $nextApicConsumerorg) {
         $consumerorg_urls[] = ['value' => $nextApicConsumerorg->getUrl()];
+        $consumer_organizations[] = ['value' => $nextApicConsumerorg->getTitle()];
       }
 
       // Update field and save
       $account->set('consumerorg_url', $consumerorg_urls);
+      $account->set('consumer_organization', $consumer_organizations);
       $account->save();
 
       // We may not have a consumerorg in our database for this user. Check and create as required.

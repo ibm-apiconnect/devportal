@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -30,7 +20,7 @@ use Drupal\Core\Session\AccountInterface;
  * @Block(
  *   id = "consumer_org_select",
  *   admin_label = @Translation("Consumer organization Selection"),
- *   category = @Translation("IBM API Developer Portal")
+ *   category = @Translation("IBM CMS Portal")
  * )
  */
 class ConsumerOrgSelectorBlock extends BlockBase {

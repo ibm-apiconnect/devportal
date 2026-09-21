@@ -1,0 +1,49 @@
+{#
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ * Base template for all tutorials.
+ *
+ * Available variables:
+ * - tutorial: The tutorial definition.
+ * - images_path: Path to the tutorial images.
+ * - content: The tutorial-specific content.
+ */
+#}
+
+<article class="tutorial {{ tutorial.id }}-tutorial">
+  <header class="tutorial-header">
+    <h1><strong>{{ tutorial.title }}</strong></h1>
+    <div class="tutorial-info">{{ header_content|raw }}</div>
+    
+  </header>
+
+  <br>
+
+  <section class="getting-started-wrapper">
+    <div class="gs-header">
+      <strong>Progress: </strong>
+      <div id="gs-progress" class="gs-progress-text"></div>
+    </div>
+
+    <ol class="gs-list">
+      {{ steps_content|raw }}
+    </ol>
+
+    {# Navigation Controls #}
+    <div class="gs-actions">
+      <button type="button" class="button button--small" id="gs-prev">Previous</button>
+      <button type="button" class="button button--small button--primary" id="gs-next">Next</button>
+    </div>
+  </section>
+</article>

@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2025
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -29,6 +19,7 @@ use Drupal\product\Product;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /* Permissions that can be granted
  * Note that we also use permissions defined in product.module
@@ -74,11 +65,10 @@ function apic_api_preprocess_node(&$variables): void {
     // get global settings first
     $config = \Drupal::config('ibm_apim.settings');
     $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
-    $renderApiSchemaView = (boolean) $config->get('render_api_schema_view');
     $api_max_depth = $config->get('api_max_depth');
     $variables['#cache']['max-age'] = 0;
     if ($api_max_depth === NULL || !is_int($api_max_depth) || $api_max_depth < 2 || $api_max_depth > 25) {
-      $api_max_depth = 9;
+      $api_max_depth = 5;
     }
     $variables['apiMaxDepth'] = $api_max_depth;
     if ($ibmApimShowPlaceholderImages === NULL) {
@@ -124,7 +114,7 @@ function apic_api_preprocess_node(&$variables): void {
     }
     $variables['custom_fields'] = $diff;
 
-    $swagger = unserialize($variables['node']->api_swagger->value, ['allowed_classes' => FALSE]);
+    $swagger = SerializationUtility::decodeData($variables['node']->api_swagger->value, TRUE, FALSE);
     $enforced = TRUE;
     if (isset($swagger['x-ibm-configuration']) && is_array($swagger['x-ibm-configuration']) && !empty($swagger['x-ibm-configuration']) && array_key_exists('enforced', $swagger['x-ibm-configuration'])) {
       $enforced = $swagger['x-ibm-configuration']['enforced'];
@@ -140,7 +130,6 @@ function apic_api_preprocess_node(&$variables): void {
         throw new AccessDeniedHttpException();
       }
 
-      $showCorsWarnings = (boolean) $config->get('show_cors_warnings');
       $removeIBMKeys = (boolean) $config->get('remove_IBM_keys');
       $soapSwaggerDownload = (boolean) $config->get('soap_swagger_download');
       $soapCodeSnippets = (boolean) $config->get('soap_codesnippets');
@@ -150,7 +139,7 @@ function apic_api_preprocess_node(&$variables): void {
       $certificateStripPrefix = (boolean) $config->get('certificate_strip_prefix');
       $codeSnippetLangs = [];
       $routerType = $config->get('router_type', 'hash');
-      $exampleArrayItems = (int) $config->get('example_array_items') ?: 3;
+      $exampleArrayItems = (int) $config->get('example_array_items') ?: 1;
       $codeSnippets = $config->get('codesnippets');
       $firstEnabled = NULL;
       foreach ($codeSnippets as $lang => $enabled) {
@@ -364,7 +353,7 @@ function apic_api_preprocess_node(&$variables): void {
       ];
 
       $variables['#attached']['library'][] = 'apic_api/explorer';
-      $variables['#attached']['drupalSettings']['api']['explorer']['apis'] = [unserialize($variables['node']->api_swagger->value, ['allowed_classes' => FALSE])];
+      $variables['#attached']['drupalSettings']['api']['explorer']['apis'] = [SerializationUtility::decodeData($variables['node']->api_swagger->value, TRUE, FALSE)];
       $encodedSwagger = $variables['node']->api_encodedswagger->value;
       if ($encodedSwagger !== NULL && !empty($encodedSwagger)) {
         $variables['#attached']['drupalSettings']['api']['explorer']['encodedApis'] = [$encodedSwagger];
@@ -373,7 +362,6 @@ function apic_api_preprocess_node(&$variables): void {
       $variables['#attached']['drupalSettings']['api']['explorer']['options'] = [
         'apiTypeDocs' => $apiTypeDocs,
         'showApiVersion' => $ibmApimShowVersions,
-        'showCorsWarnings' => $showCorsWarnings,
         'removeIBMKeys' => $removeIBMKeys,
         'showSoapSwaggerDownload' => $soapSwaggerDownload,
         'optimiseOauthUX' => $optimiseOauthUX,
@@ -410,9 +398,6 @@ function apic_api_preprocess_node(&$variables): void {
       }
       if ($apiImageUrl !== NULL && $apiImageUrl !== '') {
         $variables['#attached']['drupalSettings']['api']['explorer']['options']['apiImageUrl'] = $apiImageUrl;
-      }
-      if ($renderApiSchemaView === TRUE) {
-        $variables['#attached']['drupalSettings']['api']['explorer']['options']['renderSchemaView'] = TRUE;
       }
     }
     elseif ($variables['view_mode'] === 'embedded') {

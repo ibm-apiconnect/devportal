@@ -33,7 +33,7 @@ always to be rendered regardless of whether they have a title or not.
 #}
 {%- if title is not empty or required or is_checkbox or is_radio -%}
   <label{{ attributes.addClass(classes) }}>
-    {{ element }}<span class="children">{{ title }}</span>
+    {{ element }}<span class="children">{{ title }}</span>{% if required %}<span class="visually-hidden">{% trans %}(required){% endtrans %}</span>{% endif %}
     {%- if description -%}
       <p class="help-block">{{ description }}</p>
     {%- endif -%}

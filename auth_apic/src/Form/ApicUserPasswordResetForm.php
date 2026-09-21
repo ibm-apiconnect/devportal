@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\auth_apic\Form;
 
@@ -23,6 +13,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\user\Entity\User;
 use Drupal\Core\Messenger\Messenger;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 /**
  * Form controller for the user password forms.
@@ -150,7 +141,7 @@ class ApicUserPasswordResetForm extends FormBase {
 
     $form['token'] = [
       '#type' => 'hidden',
-      '#value' => serialize($resetPasswordObject),
+      '#value' => SerializationUtility::encodeJWTToken($resetPasswordObject),
     ];
 
     $form['pass'] = [
@@ -171,7 +162,9 @@ class ApicUserPasswordResetForm extends FormBase {
       $user_url = explode("/", $resetPasswordObject->getPayload()['sub']);
       $user_id = end($user_url);
       $database = \Drupal::database();
-      $query = $database->query("SELECT entity_id FROM user__apic_url WHERE apic_url_value LIKE '%$user_id'");
+      // Use parameterized query to prevent SQL injection
+      $query = $database->query("SELECT entity_id FROM user__apic_url WHERE apic_url_value LIKE :user_id",
+        [':user_id' => '%' . $database->escapeLike($user_id) . '%']);
       $result = $query->fetchAll();
       if (is_array($result) && sizeof($result) === 1) {
         $entity_id = $result[0]->entity_id;
@@ -268,7 +261,13 @@ class ApicUserPasswordResetForm extends FormBase {
       _password_policy_user_profile_form_update_fields($form, $form_state);
     }
 
-    $resetPasswordObject = unserialize($token, ['allowed_classes' => TRUE]);
+    $resetPasswordObject = SerializationUtility::decodeJWTToken($token);
+    
+    \Drupal::logger('auth_apic')->info('<pre><code>@data</code></pre>', [
+      '@data' => "The user object is:\n" . print_r($resetPasswordObject, TRUE),
+    ]);
+    
+    
     $responseCode = $this->apicPassword->resetPassword($resetPasswordObject, $password);
 
     if ($responseCode >= 200 && $responseCode < 300) {

@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Contains \Drupal\apic_letter_avatar\Plugin\AvatarGenerator\LetterAvatar.

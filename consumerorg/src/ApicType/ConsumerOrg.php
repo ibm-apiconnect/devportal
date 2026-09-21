@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\consumerorg\ApicType;
 
@@ -118,6 +108,12 @@ class ConsumerOrg {
    * @var array
    */
   private array $custom_fields = [];
+
+  /**
+   * @var array|null
+   */
+  private ?array $metadata = [];
+
 
   /**
    * @return string
@@ -727,6 +723,15 @@ class ConsumerOrg {
     }
     $this->custom_fields[$field] = $value;
   }
+
+  public function setMetadata(array $metadata): void {
+    $this->metadata = $metadata;
+  }
+
+  public function getMetadata(): ?array {
+      return $this->metadata;
+  }
+
 
 
 }

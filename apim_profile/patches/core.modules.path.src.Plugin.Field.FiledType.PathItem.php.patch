@@ -1,0 +1,20 @@
+--- core/modules/path/src/Plugin/Field/FieldType/PathItem.php	2026-01-22 16:50:10.456760225
++++ core/modules/path/src/Plugin/Field/FieldType/PathItem.php	2026-01-22 16:50:01.533760259
+@@ -110,7 +110,16 @@
+       else {
+         $path_alias = $path_alias_storage->load($pid);
+ 
+-        if ($alias != $path_alias->getAlias()) {
++        if (!$path_alias) {
++          $path_alias = $path_alias_storage->create([
++            'path' => '/' . $entity->toUrl()->getInternalPath(),
++            'alias' => $this->alias,
++            'langcode' => $alias_langcode,
++          ]);
++          $path_alias->save();
++          $this->pid = $path_alias->id();
++        }
++        elseif ($alias != $path_alias->getAlias()) {
+           $path_alias->setAlias($alias);
+           $path_alias->save();
+         }

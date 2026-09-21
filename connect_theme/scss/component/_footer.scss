@@ -1,13 +1,14 @@
 
 // Footer.
 footer.footer {
-  color: $footer-default-color;
-  background-color: $footer-default-bg;
-  border-top: 2px solid $footer-default-bordercolor;
-  height: 96px;
+  color: var(--footer-default-color);
+  background-color: var(--footer-default-bg);
+  border-top: 2px solid var(--footer-default-bordercolor);
+  height: auto;
+  min-height: 150px;
   display: flex;
-  padding: 20px 5%;
-  margin-top: 1.5rem;
+  padding: 0px 5%;
+  margin-top: 0;
   width: 100%;
   align-items: center;
   justify-content: center;
@@ -17,7 +18,7 @@ footer.footer {
     width: 100%;
   }
 
-  ul {
+  ul:not(.dropdown-menu) {
     display: flex;
     flex-direction: row;
   }
@@ -28,21 +29,21 @@ footer.footer {
 
   ul.nav > li > a,
   ul.nav > li > a:visited {
-    margin-right: 20px;
+    margin-inline-end: 20px;
     display: inline-block;
-    color: $footer-link-color;
+    color: var(--footer-link-color);
   }
   ul.nav > li > a:hover {
-    color: $footer-link-color;
+    color: var(--footer-link-color);
   }
   ul.nav li+li:before {
     content: " \00b7";
-    color: $card-border-color;
-    margin-right: 20px;
+    color: var(--footer-link-color);
+    margin-inline-end: 20px;
   }
 
   @media (max-width: $screen-xs-min) {
-    ul {
+    ul:not(.dropdown-menu) {
       flex-direction: column;
     }
     ul.nav li+li:before {

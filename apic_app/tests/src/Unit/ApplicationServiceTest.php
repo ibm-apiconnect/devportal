@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2021, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\Tests\apic_app\Unit;
 
@@ -32,6 +22,8 @@ class ApplicationServiceTest extends UnitTestCase {
   private $dependencyInjection;
 
   private $applicationService;
+
+  private $applicationBuilder;
 
   protected function setup(): void {
     $this->mockUserUtils = $this->createStub(\Drupal\ibm_apim\Service\UserUtils::class);
@@ -117,4 +109,31 @@ class MockEntityTypeManager {
     $productBuilder = new MockProductNodeBuilder($this->phpUnitRef);
     return $productBuilder->setApicUrl('url')->build();
   }
+
+    /**
+   * Tests metadata setter/getter for Application entity.
+   */
+  public function testApplicationMetadataStoredAndRetrieved(): void {
+    $application = $this->applicationBuilder->build();
+
+    $metadata = [
+      'environment' => 'test',
+      'custom_key' => 'custom_val',
+    ];
+
+    $application->setMetadata($metadata);
+
+    $this->assertEquals($metadata, $application->getMetadata());
+    $this->assertEquals('test', $application->getMetadata()['environment']);
+  }
+
+  /**
+   * Tests that metadata defaults to empty array when not set.
+   */
+  public function testApplicationMetadataDefaultsToEmptyArray(): void {
+    $application = $this->applicationBuilder->build();
+
+    $this->assertEquals([], $application->getMetadata());
+  }
+
 }

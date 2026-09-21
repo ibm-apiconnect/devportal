@@ -1,24 +1,27 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
+use Drupal\file\FileInterface;
+/**
+ * Implements hook_theme().
+ */
+function connect_theme_theme($existing, $type, $theme, $path) {
+  return [
+    'dark_mode_toggle' => [
+      'variables' => [],
+      'template' => 'dark-mode-toggle',
+    ],
+  ];
+}
+
 
 /**
  * Alter attachments (typically assets) to a page before it is rendered.
  *
  * Use this hook when you want to remove or alter attachments on the page, or
- * add attachments to the page that depend on another module's attachments (this
+ * add attachments to the page that depend on another module's attachments (this)
  * hook runs after hook_page_attachments().
  *
  * @param array &$attachments
@@ -32,6 +35,9 @@ function connect_theme_page_attachments_alter(array &$attachments) {
   }
 
   $theme = 'connect_theme';
+
+  // Attach library to remove dir attribute from article elements
+  $attachments['#attached']['library'][] = "$theme/remove_article_dir";
 
   // Attach module dependant libraries.
   // These libraries are declared in your themeName.libraries.yml and we only
@@ -74,21 +80,54 @@ function connect_theme_preprocess_html(&$variables) {
   }
 }
 
+/**
+ * Added CSS for no topics in a forum.
+ */
+function connect_theme_preprocess_forums(&$variables) {
+    if (empty($variables['forums']) && empty($variables['topics'])) {
+    // Attach extra CSS only when no topics or sub-forums
+    $variables['#attached']['library'][] = 'connect_theme/no_forum_topic_styles';
+  }
+}
 
 /**
  * Preprocess variables for page templates.
  */
-/* -- Delete this line if you want to use this function
 function connect_theme_preprocess_page(&$variables) {
   if (function_exists('ibm_apim_entry_trace')) {
     ibm_apim_entry_trace(__FUNCTION__, NULL);
+  }
+
+  // Add dark mode toggle to navigation_right region if enabled
+  // Only add if the dark_mode_toggle module is installed
+  if (\Drupal::moduleHandler()->moduleExists('dark_mode_toggle')) {
+    $config = \Drupal::config('ibm_apim.settings');
+    // Default to TRUE if config doesn't exist
+    $dark_mode_enabled = $config->get('enable_dark_mode') ?? TRUE;
+    
+    if ($dark_mode_enabled) {
+      $dark_mode_toggle = [
+        '#theme' => 'dark_mode_toggle',
+        '#weight' => 100, // Place at the end of the region
+      ];
+      
+      // Add to navigation_right region
+      if (isset($variables['page']['navigation_right'])) {
+        $variables['page']['navigation_right']['dark_mode_toggle'] = $dark_mode_toggle;
+      }
+      else {
+        // Create the region if it doesn't exist
+        $variables['page']['navigation_right'] = [
+          'dark_mode_toggle' => $dark_mode_toggle,
+        ];
+      }
+    }
   }
 
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_exit_trace(__FUNCTION__, NULL);
   }
 }
-// */
 
 /**
  * Preprocess variables for field templates.
@@ -105,6 +144,21 @@ function connect_theme_preprocess_field(&$variables) {
 
   if (function_exists('ibm_apim_exit_trace')) {
     ibm_apim_exit_trace(__FUNCTION__, NULL);
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Adds aria-label to textarea fields that lack a programmatically associated
+ * label (WCAG 1.3.1 / 4.1.2 - input_label_exists).
+ */
+function connect_theme_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  // Contact form: message textarea label is missing the 'for' attribute link.
+  if ($form_id === 'contact_message_feedback_form') {
+    if (isset($form['message']['widget'][0]['value'])) {
+      $form['message']['widget'][0]['value']['#attributes']['aria-label'] = t('Message');
+    }
   }
 }
 
@@ -219,6 +273,21 @@ function connect_theme_preprocess_comment(&$variables) {
 // */
 
 /**
+ * Implements hook_preprocess_links__language_block().
+ *
+ * Injects current_langcode into the links template so the correct
+ * <option> is marked selected server-side.
+ */
+function connect_theme_preprocess_links__language_block(&$variables) {
+  $request = \Drupal::request();
+  $lang_from_query   = $request->query->get('language');
+  $lang_from_session = $request->getSession()->get('language_interface') ?? NULL;
+  $lang_from_current = \Drupal::languageManager()->getCurrentLanguage()->getId();
+  $lang_default      = \Drupal::languageManager()->getDefaultLanguage()->getId();
+  $variables['current_langcode'] = $lang_from_query ?: ($lang_from_session ?: ($lang_from_current ?: $lang_default));
+}
+
+/**
  * Preprocess variables for block templates.
  */
 function connect_theme_preprocess_block(&$variables) {
@@ -229,6 +298,11 @@ function connect_theme_preprocess_block(&$variables) {
   if ($variables['plugin_id'] === 'system_menu_block:account') {
     $variables['#cache']['max-age'] = 0;
   }
+  // Hide the label for the language switcher block and vary cache per language.
+  if ($variables['base_plugin_id'] === 'language_block') {
+    $variables['label'] = '';
+    $variables['#cache']['contexts'][] = 'languages:language_interface';
+  }
   if ($variables['plugin_id'] === 'contact_block') {
     $variables['attributes']['aria-label'] = t('Contact form');
   }
@@ -238,6 +312,16 @@ function connect_theme_preprocess_block(&$variables) {
   }
   if ($variables['base_plugin_id'] === 'system_menu_block') {
     $variables['attributes']['class'][] = "block-" . $variables['derivative_plugin_id'];
+  }
+
+  // Check if dark mode is enabled for the dark mode toggle block
+  if (isset($variables['elements']['#id']) && $variables['elements']['#id'] === 'connect_theme_darkmodetoggle') {
+    $config = \Drupal::config('ibm_apim.settings');
+    $dark_mode_enabled = $config->get('enable_dark_mode');
+    // Hide the block if dark mode is disabled
+    if (!$dark_mode_enabled) {
+      $variables['#access'] = FALSE;
+    }
   }
 
   $variables['base_path'] = base_path();
@@ -257,16 +341,61 @@ function connect_theme_preprocess_menu(&$variables) {
 
   $variables['base_path'] = base_path();
   $variables['directory'] = \Drupal::service('extension.list.theme')->getPath('connect_theme');
+  $variables['user_picture'] = '';
   $current_user = \Drupal::currentUser();
   if (!$current_user->isAnonymous()) {
     $entity = User::load($current_user->id());
-    if ($entity !== NULL && $entity->user_picture->isEmpty() === FALSE) {
-      $image = $entity->user_picture;
-      $uri = $image->entity->getFileUri();
-      $variables['user_picture'] =  \Drupal::service('file_url_generator')->generateAbsoluteString($uri);
-    }
-    else {
-      $variables['user_picture'] = '';
+    $variables['user_picture'] = '';
+
+    if ($entity !== NULL && $entity->hasField('avatars_user_picture')) {
+      // Get the avatar generator value for logging
+      $generator_value = $entity->hasField('avatars_avatar_generator')
+        ? $entity->get('avatars_avatar_generator')->value
+        : 'none';
+      
+      \Drupal::logger('connect_theme')->info('Avatar render for user @uid: generator=@gen', [
+        '@uid' => $entity->id(),
+        '@gen' => $generator_value ?? 'null',
+      ]);
+      
+      // Render the entire user entity in 'compact' mode, just like the profile page does
+      // This ensures the avatars module processes the avatar correctly
+      $view_builder = \Drupal::entityTypeManager()->getViewBuilder('user');
+      $user_build = $view_builder->view($entity, 'compact');
+      
+      // Set cache to 0 to prevent stale avatars
+      $user_build['#cache']['max-age'] = 0;
+      
+      $rendered = \Drupal::service('renderer')->renderPlain($user_build);
+      
+      \Drupal::logger('connect_theme')->info('Rendered user HTML length: @len', [
+        '@len' => strlen($rendered),
+      ]);
+      
+      // Extract ALL image URLs from rendered HTML
+      if (preg_match_all('/src="([^"]+)"/', $rendered, $all_matches)) {
+        \Drupal::logger('connect_theme')->info('Found @count image URLs: @urls', [
+          '@count' => count($all_matches[1]),
+          '@urls' => implode(' | ', $all_matches[1])
+        ]);
+        
+        // Prefer avatar_kit URLs (generated avatars) over pictures URLs (uploaded images)
+        // Generated avatars are stored in avatar_kit/[generator]/ subdirectories
+        $selected_url = end($all_matches[1]); // Default to last URL
+        foreach ($all_matches[1] as $url) {
+          if (strpos($url, 'avatar_kit/') !== FALSE) {
+            $selected_url = $url;
+            \Drupal::logger('connect_theme')->info('Found avatar_kit URL, using it: @url', ['@url' => $url]);
+            break; // Use the first avatar_kit URL found
+          }
+        }
+        
+        $variables['user_picture'] = $selected_url;
+        \Drupal::logger('connect_theme')->info('Final avatar URL selected: @url', ['@url' => $selected_url]);
+      }
+      else {
+        \Drupal::logger('connect_theme')->warning('No avatar URL found in rendered output for user @uid', ['@uid' => $entity->id()]);
+      }
     }
   }
   else {

@@ -3,10 +3,18 @@
 // [converter] $parent hack
 @mixin bg-variant($parent, $color) {
   #{$parent} {
-    background-color: $color;
+    @if str-index(inspect($color), '--') == 1 {
+      background-color: var(#{$color});
+    } @else {
+      background-color: $color;
+    }
   }
   a#{$parent}:hover,
   a#{$parent}:focus {
-    background-color: darken($color, 10%);
+    @if str-index(inspect($color), '--') == 1 {
+      background-color: var(#{$color});
+    } @else {
+      background-color: darken($color, 10%);
+    }
   }
 }

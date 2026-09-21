@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Service;
 
@@ -301,6 +291,9 @@ class ApicUserService {
     $user->setUrl($apicuser['url']);
     $user->setApicUserRegistryUrl($apicuser['user_registry_url']);
     $user->setState($apicuser['state']);
+    if (isset($apicuser['identity_provider']) && $apicuser['identity_provider'] !== NULL) {
+      $user->setApicIdp($apicuser['identity_provider']);
+    }
     $customFields = $this->getMetadataFields();
     foreach ($customFields as $field) {
       if (isset($apicuser['metadata'][$field])) {

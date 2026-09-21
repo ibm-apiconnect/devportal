@@ -1,23 +1,16 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Controller;
 
+use Drupal\consumerorg\ApicType\Member;
 use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Url;
+use Drupal\ibm_apim\ApicType\ApicUser;
+use Drupal\ibm_apim\External\SerializationUtility;
 use Drupal\ibm_apim\Service\Billing;
 use Drupal\ibm_apim\Service\MyOrgService;
 use Drupal\ibm_apim\Service\SiteConfig;
@@ -288,6 +281,7 @@ class MyOrgController extends ControllerBase {
     $analytics_access = FALSE;
     $consumerorgTitle = '';
     $cOrgMembers = [];
+    $members = [];
 
     $org = $this->userUtils->getCurrentConsumerorg();
     // load the current consumerorg node to pass through to the twig template
@@ -300,7 +294,24 @@ class MyOrgController extends ControllerBase {
       $node = Node::load($nid);
       if ($node !== NULL) {
         $consumerorgTitle = $node->getTitle();
+        
+        // Process members (excluding owner) for member count check
+        $myorgOwnerUrl = $node->consumerorg_owner->value;
         $cOrgMembers = $node->consumerorg_members->getValue();
+        if ($cOrgMembers !== NULL) {
+          $orgService = \Drupal::service('ibm_apim.myorgsvc');
+          $whitelist = [Member::class, ApicUser::class];
+          foreach ($cOrgMembers as $arrayValue) {
+            $orgMember = new Member();
+            $orgMember->createFromArray(SerializationUtility::decodeData($arrayValue['value'], TRUE, $whitelist));
+            
+            $memberUserUrl = $orgMember->getUserUrl();
+            if ($myorgOwnerUrl !== $memberUserUrl) {
+              $newMember = $orgService->prepareOrgMemberForDisplay($orgMember);
+              $members[$newMember['id']] = $newMember;
+            }
+          }
+        }
       }
     }
 
@@ -339,6 +350,17 @@ class MyOrgController extends ControllerBase {
       $analytics_access = TRUE;
     }
 
+    // Get configuration settings for consumer org actions
+    $config = \Drupal::config('ibm_apim.settings');
+    $hasSettingsManagePerm = $this->userUtils->checkHasPermission('settings:manage');
+    $allowConsumerorgChangeOwner = (boolean) $config->get('allow_consumerorg_change_owner');
+    $allowConsumerorgRename = (boolean) $config->get('allow_consumerorg_rename');
+    $allowConsumerorgDelete = (boolean) $config->get('allow_consumerorg_delete');
+
+    $canTransferOwner = $hasSettingsManagePerm && $allowConsumerorgChangeOwner;
+    $canRenameOrg = $hasSettingsManagePerm && $allowConsumerorgRename;
+    $canDeleteOrg = $hasSettingsManagePerm && $allowConsumerorgDelete;
+
     $events = $this->eventLogService->getFeedForConsumerOrg($org['url'], 50);
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -348,10 +370,13 @@ class MyOrgController extends ControllerBase {
       ],
       '#theme' => 'ibm_apim_activity',
       '#consumerorgTitle' => $consumerorgTitle,
-      '#myorg_members' => $cOrgMembers,
+      '#myorg_members' => $members,
       '#node' => $nodeArray,
       '#events' => $events,
       '#analytics_access' => $analytics_access,
+      '#myorg_can_transfer_owner' => $canTransferOwner,
+      '#myorg_can_rename_org' => $canRenameOrg,
+      '#myorg_can_delete_org' => $canDeleteOrg,
       '#tabs' => $tabs,
     ];
   }

@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\Tests\auth_apic\Unit\UserManagement {
 
@@ -341,7 +331,7 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       $service = $this->generateServiceUnderTest();
       $response = $service->login($user);
       self::assertFalse($response->success());
-      self::assertEquals('a:1:{i:0;s:9:"something";}', $response->getMessage()); // urgh
+      self::assertEquals('["something"]', $response->getMessage()); // urgh
     }
 
     /**
@@ -1057,5 +1047,83 @@ namespace Drupal\Tests\auth_apic\Unit\UserManagement {
       return $tokenResponse;
     }
 
+    /**
+     * Tests that consumer_organization field is set to NULL when no consumer orgs
+     *
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \JsonException
+     */
+    public function testProcessMeConsumerOrgsNoOrgs(): void {
+      $user = new ApicUser();
+      $user->setUsername('testuser');
+      $user->setConsumerorgs([]);
+  
+      $account = $this->createAccountBase();
+      $account->set('consumerorg_url', NULL)->willReturn(NULL)->shouldBeCalled();
+      $account->set('consumer_organization', NULL)->willReturn(NULL)->shouldBeCalled();
+      $account->save()->shouldBeCalled();
+  
+      $this->userUtils->setCurrentConsumerorg(NULL)->shouldBeCalled();
+      $this->logger->notice('no consumer orgs set on login')->shouldBeCalled();
+  
+      $service = $this->generateServiceUnderTest();
+      $reflectionClass = new \ReflectionClass(ApicLoginService::class);
+      $method = $reflectionClass->getMethod('processMeConsumerOrgs');
+      $method->setAccessible(true);
+      $method->invoke($service, $user, $account->reveal());
+
+      $this->expectNotToPerformAssertions();
+    }
+  
+    /**
+     * Tests that consumer_organization field is properly set when consumer orgs exist
+     *
+     * @throws \Drupal\Core\Entity\EntityStorageException
+     * @throws \Drupal\Core\TempStore\TempStoreException
+     * @throws \JsonException
+     */
+    public function testProcessMeConsumerOrgsWithOrgs(): void {
+      $org1 = new ConsumerOrg();
+      $org1->setUrl('/consumer-orgs/1234/5678/9abc');
+      $org1->setTitle('Org 1');
+      
+      $org2 = new ConsumerOrg();
+      $org2->setUrl('/consumer-orgs/2345/6789/0def');
+      $org2->setTitle('Org 2');
+      
+      $user = new ApicUser();
+      $user->setUsername('testuser');
+      $user->setConsumerorgs([$org1, $org2]);
+  
+      $account = $this->createAccountBase();
+      
+      $expectedOrgUrls = [
+        ['value' => '/consumer-orgs/1234/5678/9abc'],
+        ['value' => '/consumer-orgs/2345/6789/0def']
+      ];
+      $account->set('consumerorg_url', $expectedOrgUrls)->willReturn(NULL)->shouldBeCalled();
+      
+      $expectedOrgTitles = [
+        ['value' => 'Org 1'],
+        ['value' => 'Org 2']
+      ];
+      $account->set('consumer_organization', $expectedOrgTitles)->willReturn(NULL)->shouldBeCalled();
+      
+      $account->save()->shouldBeCalled();
+  
+      $this->userUtils->setCurrentConsumerorg()->shouldBeCalled();
+      $this->userUtils->setOrgSessionData()->shouldBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg($org1, $user)->shouldBeCalled();
+      $this->consumerOrgLogin->createOrUpdateLoginOrg($org2, $user)->shouldBeCalled();
+  
+      $service = $this->generateServiceUnderTest();
+      $reflectionClass = new \ReflectionClass(ApicLoginService::class);
+      $method = $reflectionClass->getMethod('processMeConsumerOrgs');
+      $method->setAccessible(true);
+      $method->invoke($service, $user, $account->reveal());
+
+      $this->expectNotToPerformAssertions();
+    }
   }
 }

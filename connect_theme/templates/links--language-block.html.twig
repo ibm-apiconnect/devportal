@@ -1,0 +1,74 @@
+{#
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ * Language switcher — renders as a Bootstrap dropdown using the navbar's
+ * existing .dropdown / .dropdown-menu pattern. language-switcher.js handles
+ * chevron rotation on open/close.
+ */
+#}
+{% if links %}
+  {{ attach_library('connect_theme/language_switcher') }}
+
+  {# Resolve active language label #}
+  {% set active_label = '' %}
+  {% for key, item in links %}
+    {% if key == current_langcode %}{% set active_label = item.text %}{% endif %}
+  {% endfor %}
+  {% if not active_label %}{% set active_label = links|first.text %}{% endif %}
+
+  <ul class="nav language-switcher-nav">
+    <li class="dropdown language-switcher-dropdown">
+      <button type="button"
+              class="dropdown-toggle language-switcher-trigger"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false">
+        {{ active_label }}
+        <svg focusable="false" preserveAspectRatio="xMidYMid meet"
+             xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+             stroke="currentColor" stroke-width="1"
+             width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M8 5L3 10 3.7 10.7 8 6.4 12.3 10.7 13 10z"/>
+        </svg>
+      </button>
+      <ul class="dropdown-menu" role="listbox">
+        {# Active language first #}
+        {% for key, item in links %}
+          {% if key == current_langcode %}
+            <li role="option" aria-selected="true" data-langcode="{{ key }}"
+                class="language-switcher-option active">
+              <a href="?language={{ key }}">
+                {{ item.text }}
+                <svg focusable="false" preserveAspectRatio="xMidYMid meet"
+                     xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                     width="16" height="16" viewBox="0 0 32 32" aria-hidden="true">
+                  <path d="M13 24L4 15l1.4-1.4 7.6 7.6 14-14L28.4 8z"/>
+                </svg>
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
+        {# Remaining languages in original order #}
+        {% for key, item in links %}
+          {% if key != current_langcode %}
+            <li role="option" aria-selected="false" data-langcode="{{ key }}"
+                class="language-switcher-option">
+              <a href="?language={{ key }}">{{ item.text }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </li>
+  </ul>
+{% endif %}

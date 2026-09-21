@@ -1,0 +1,86 @@
+ibm_apic_getting_started.tutorials:
+  path: "/admin/getting-started"
+  defaults:
+    _controller: '\Drupal\ibm_apic_getting_started\Controller\TutorialsController::page'
+    _title: "Getting started"
+  requirements:
+    _permission: "access content"
+
+
+# Legacy route for backward compatibility
+ibm_apic_getting_started.generate_subtheme:
+  path: "/admin/getting-started/customize-portal-theme"
+  defaults:
+    _controller: '\Drupal\ibm_apic_getting_started\Controller\TutorialsController::panel'
+    _title: "Customizing portal theme"
+    tutorial_id: "customize-portal-theme"
+  requirements:
+    _permission: "administer site configuration"
+  options:
+    _admin_route: TRUE
+
+ibm_apic_getting_started.install_custom_module:
+  path: "/admin/getting-started/install-custom-module"
+  defaults:
+    _controller: '\Drupal\ibm_apic_getting_started\Controller\TutorialsController::panel'
+    _title: "Install custom module"
+    tutorial_id: "install-custom-module"
+  requirements:
+    _permission: "administer site configuration"
+  options:
+    _admin_route: TRUE
+
+ibm_apic_getting_started.customize_hero_image:
+  path: "/admin/getting-started/customize-hero-image"
+  defaults:
+    _controller: '\Drupal\ibm_apic_getting_started\Controller\TutorialsController::panel'
+    _title: "Customize front page"
+    tutorial_id: "customize-hero-image"
+  requirements:
+    _permission: "administer site configuration"
+  options:
+    _admin_route: TRUE
+
+ibm_apic_getting_started.customize_front_page:
+  path: "/admin/getting-started/customize-front-page"
+  defaults:
+    _controller: '\Drupal\ibm_apic_getting_started\Controller\TutorialsController::panel'
+    _title: "Customize front page"
+    tutorial_id: "customize-front-page"
+  requirements:
+    _permission: "administer site configuration"
+  options:
+    _admin_route: TRUE
+
+ibm_apic_getting_started.taxonomy:
+  path: "/admin/getting-started/taxonomy"
+  defaults:
+    _controller: '\Drupal\ibm_apic_getting_started\Controller\TutorialsController::panel'
+    _title: "Grouping products by category"
+    tutorial_id: "taxonomy"
+  requirements:
+    _permission: "administer site configuration"
+  options:
+    _admin_route: TRUE
+
+ibm_apic_getting_started.email_subscribers:
+  path: "/admin/getting-started/email-subscribers"
+  defaults:
+    _controller: '\Drupal\ibm_apic_getting_started\Controller\TutorialsController::panel'
+    _title: "Emailing subscribers"
+    tutorial_id: "email-subscribers"
+  requirements:
+    _permission: "administer site configuration"
+  options:
+    _admin_route: TRUE
+
+ibm_apic_getting_started.content_security_policy:
+  path: "/admin/getting-started/content-security-policy"
+  defaults:
+    _controller: '\Drupal\ibm_apic_getting_started\Controller\TutorialsController::panel'
+    _title: "Enforcing content security policy"
+    tutorial_id: "content-security-policy"
+  requirements:
+    _permission: "administer site configuration"
+  options:
+    _admin_route: TRUE

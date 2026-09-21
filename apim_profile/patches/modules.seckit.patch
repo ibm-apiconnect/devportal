@@ -1,0 +1,125 @@
+--- modules/seckit/src/Form/SecKitSettingsForm.php	2025-07-24 08:33:23
++++ modules/seckit/src/Form/SecKitSettingsForm.php	2025-07-24 08:34:59
+@@ -798,7 +798,7 @@
+     }
+     // Check the value of CSP report-uri seems valid.
+     $report_uri = $form_state->getValue(['seckit_xss', 'csp', 'report-uri']);
+-    if (UrlHelper::isExternal($report_uri)) {
++    if ($report_uri && UrlHelper::isExternal($report_uri)) {
+       // UrlHelper::isValid will reject URIs beginning with '//' (i.e. without a
+       // scheme). So add a fake scheme just for validation.
+       if (strpos($report_uri, '//') === 0) {
+@@ -810,7 +810,7 @@
+     }
+     else {
+       // Check that the internal path seems valid.
+-      if (!(bool) $this->pathValidator->getUrlIfValidWithoutAccessCheck($report_uri)) {
++      if ($report_uri && !(bool) $this->pathValidator->getUrlIfValidWithoutAccessCheck($report_uri)) {
+         $form_state->setErrorByName('seckit_xss][csp][report-uri', $this->t('The CSP report-uri seems relative but does not seem to be a valid path.'));
+       }
+     }
+@@ -830,7 +830,7 @@
+     ];
+     foreach ($csp_textareas as $csp_textarea) {
+       $value = $form_state->getValue(['seckit_xss', 'csp', $csp_textarea]);
+-      if ($value !== str_replace(["\r", "\n"], '', (string) $value)) {
++      if ($value && $value !== str_replace(["\r", "\n"], '', (string) $value)) {
+         $form_state->setErrorByName('seckit_xss][csp][' . $csp_textarea, t('CSP directives cannot contain newlines.'));
+       }
+     }
+--- modules/seckit/js/seckit.listener.js	2024-09-11 10:45:15
++++ modules/seckit/js/seckit.listener.js	2025-07-24 08:37:36
+@@ -5,7 +5,6 @@
+ Drupal.behaviors.seckit = {
+   attach: function (context) {
+     seckit_listener_hsts(context);
+-    seckit_listener_csp(context);
+     seckit_listener_origin(context);
+     seckit_listener_clickjacking_x_frame(context);
+     seckit_listener_clickjacking_noscript(context);
+@@ -14,12 +13,6 @@
+       $('#edit-seckit-ssl-hsts', context).click(function () {
+         seckit_listener_hsts(context);
+       });
+-      $('#edit-seckit-xss-csp-checkbox', context).click(function () {
+-        seckit_listener_csp(context);
+-      });
+-      $('#edit-seckit-xss-csp-policy-uri', context).blur(function () {
+-        seckit_listener_csp(context);
+-      });
+       $('#edit-seckit-csrf-origin', context).click(function () {
+         seckit_listener_origin(context);
+       });
+@@ -62,72 +55,6 @@
+ 
+ /**
+  * Adds/removes attributes for input fields in
+- * Content Security Policy fieldset.
+- */
+-function seckit_listener_csp(context) {
+-  (function ($) {
+-    var checkbox_status = $('#edit-seckit-xss-csp-checkbox').is(':checked');
+-    var policy_uri_status = $('#edit-seckit-xss-csp-policy-uri').val().length === 0;
+-    if (checkbox_status) {
+-      $('#edit-seckit-xss-csp-report-only', context).removeAttr('disabled');
+-      $('#edit-seckit-xss-csp-policy-uri', context).removeAttr('disabled');
+-      if (!policy_uri_status) {
+-        _seckit_csp_add_attributes(context);
+-      }
+-      else {
+-        _seckit_csp_remove_attributes(context);
+-      }
+-    }
+-    else {
+-      $('#edit-seckit-xss-csp-report-only', context).attr('disabled', 'disabled');
+-      $('#edit-seckit-xss-csp-policy-uri', context).attr('disabled', 'disabled');
+-      _seckit_csp_add_attributes(context);
+-    }
+-  })(jQuery);
+-}
+-
+-/**
+- * Removes attributes for CSP input fields.
+- */
+-function _seckit_csp_remove_attributes(context) {
+-  (function ($) {
+-    $('#edit-seckit-xss-csp-default-src', context).removeAttr('disabled');
+-    $('#edit-seckit-xss-csp-script-src', context).removeAttr('disabled');
+-    $('#edit-seckit-xss-csp-object-src', context).removeAttr('disabled');
+-    $('#edit-seckit-xss-csp-style-src', context).removeAttr('disabled');
+-    $('#edit-seckit-xss-csp-img-src', context).removeAttr('disabled');
+-    $('#edit-seckit-xss-csp-media-src', context).removeAttr('disabled');
+-    $('#edit-seckit-xss-csp-frame-src', context).removeAttr('disabled');
+-    $('#edit-seckit-xss-csp-frame-ancestors', context).removeAttr('disabled');
+-    $('#edit-seckit-xss-csp-child-src', context).removeAttr('disabled');
+-    $('#edit-seckit-xss-csp-font-src', context).removeAttr('disabled');
+-    $('#edit-seckit-xss-csp-connect-src', context).removeAttr('disabled');
+-    $('#edit-seckit-xss-csp-report-uri', context).removeAttr('disabled');
+-  })(jQuery);
+-}
+-
+-/**
+- * Adds attributes for CSP input fields.
+- */
+-function _seckit_csp_add_attributes(context) {
+-  (function ($) {
+-    $('#edit-seckit-xss-csp-default-src', context).attr('disabled', 'disabled');
+-    $('#edit-seckit-xss-csp-script-src', context).attr('disabled', 'disabled');
+-    $('#edit-seckit-xss-csp-object-src', context).attr('disabled', 'disabled');
+-    $('#edit-seckit-xss-csp-style-src', context).attr('disabled', 'disabled');
+-    $('#edit-seckit-xss-csp-img-src', context).attr('disabled', 'disabled');
+-    $('#edit-seckit-xss-csp-media-src', context).attr('disabled', 'disabled');
+-    $('#edit-seckit-xss-csp-frame-src', context).attr('disabled', 'disabled');
+-    $('#edit-seckit-xss-csp-frame-ancestors', context).attr('disabled', 'disabled');
+-    $('#edit-seckit-xss-csp-child-src', context).attr('disabled', 'disabled');
+-    $('#edit-seckit-xss-csp-font-src', context).attr('disabled', 'disabled');
+-    $('#edit-seckit-xss-csp-connect-src', context).attr('disabled', 'disabled');
+-    $('#edit-seckit-xss-csp-report-uri', context).attr('disabled', 'disabled');
+-  })(jQuery);
+-}
+-
+-/**
+- * Adds/removes attributes for input fields in
+  * Cross-site Request Forgery fieldset for HTTP Origin.
+  */
+ function seckit_listener_origin(context) {

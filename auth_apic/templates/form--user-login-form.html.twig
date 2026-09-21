@@ -14,34 +14,37 @@
 #}
 {% set ur_count_class = user_registry_count ? 'ur-count-' ~ user_registry_count %}
 {% set ur_managed_class = user_managed_registry_present ? 'ur-managed-true' : 'ur-managed-false' %}
-{% set registry_url = element['#registry_url']['registry_url'] %}
+{% set registry_url = form['#registry_url']['registry_url'] %}
+
 <div class='apic-user-form apic-user-form-login {{ ur_count_class }} {{ ur_managed_class }}'>
   <div class='apic-login-wrapper'>
     <div class='apic-portal-title'>{{ site_name }}</div>
-    <h3 class='apic-user-form-header'>{{ 'Sign in'|t }}</h3>
-    {% if element['#message'] and element['#message']['message'] %}
-      <div class='apic-user-form-text'>{{ element['#message']['message'] }}</div>
+    <h1 class='apic-user-form-header'>{% trans %}Sign in{% endtrans %}</h1>
+
+    {% if form['#message'] and form['#message']['message'] %}
+      <div class='apic-user-form-text'>{{ form['#message']['message'] }}</div>
     {% endif %}
-    <form{{ attributes }}>
-      <div class='apic-user-form-wrapper'>
-        {{ children }}
-      </div>
-    </form>
+
+    <div class='apic-user-form-wrapper'>
+      {{ form }}
+    </div>
+
     <div class='apic-user-form-footer'>
       <div class='apic-user-forgot-password'>
-        <a href=" {{ path('user.pass', {'registry_url':registry_url} ) }} ">
+        <a href="{{ path('user.pass', {'registry_url': registry_url}) }}">
           {% if user_managed_registry_present %}
-            {{ 'Forgot password?'|t }}
+            {% trans %}Forgot password?{% endtrans %}
           {% elseif not hide_admin_registry %}
-            {{ 'Forgot your \'admin\' password?'|t }}
+            {% trans %}Forgot your 'admin' password?{% endtrans %}
           {% endif %}
         </a>
       </div>
+
       {% if user_managed_registry_present and enable_signup_link %}
         <div class='apic-user-form-text'>
-          {{ 'Don\'t have an account?'|t }}
-          <a href=" {{ path('user.register') }} ">
-            {{ 'Sign up'|t }}
+          {% trans %}Don't have an account?{% endtrans %}
+          <a href="{{ path('user.register') }}">
+            {% trans %}Sign up{% endtrans %}
           </a>
         </div>
       {% endif %}

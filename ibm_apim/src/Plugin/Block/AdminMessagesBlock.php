@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Plugin\Block;
 
@@ -66,6 +56,22 @@ class AdminMessagesBlock extends BlockBase {
       \Drupal::messenger()->addError(t('Session expired. Please sign in again.'));
       \user_cookie_delete('ibm_apim_session_expired_on_token');
     }
+
+    $corg_create_status = \Drupal::request()->cookies->get('Drupal_visitor_corg_create_status_msg');
+    if (isset($corg_create_status) && !empty($corg_create_status)) {
+      $message_data = json_decode($corg_create_status, true);
+
+      if (isset($message_data) && !empty($message_data['text'])) {
+        if ($message_data['error']) {
+          \Drupal::messenger()->addError($message_data['text']);
+        } else {
+          \Drupal::messenger()->addMessage($message_data['text']);
+        }
+      }
+      // Clear cookie after use
+      user_cookie_delete('corg_create_status_msg');
+    }
+
 
     $status_messages = \Drupal::state()->get('ibm_apim.status_messages');
     $messages = [];

@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Service;
 
@@ -21,6 +11,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\ibm_event_log\Entity\EventLog;
 use Drupal\node\Entity\Node;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * Class to work with the Event Log entity type
@@ -127,7 +118,7 @@ class EventLogService {
         'artifact_url' => $apicEvent->getArtifactUrl(),
         'app_url' => $apicEvent->getAppUrl(),
         'artifact_type' => $apicEvent->getArtifactType(),
-        'data' => serialize($apicEvent->getData()),
+        'data' => SerializationUtility::encodeData($apicEvent->getData()),
         'user_url' => $apicEvent->getUserUrl(),
       ]);
       $event->enforceIsNew();
@@ -290,7 +281,7 @@ class EventLogService {
     $message = t('An unknown event');
     switch ($event->getArtifactType()) {
       case 'application':
-        $data = unserialize($event->getData(), ['allowed_classes' => FALSE]);
+        $data = SerializationUtility::decodeData($event->getData(), TRUE, FALSE);
         if ($event->getEvent() === 'create') {
           $message = t('A new application named "@appName" was created.', ['@appName' => $data['name']]);
         }
@@ -302,7 +293,7 @@ class EventLogService {
         }
         break;
       case 'credential':
-        $data = unserialize($event->getData(), ['allowed_classes' => FALSE]);
+        $data = SerializationUtility::decodeData($event->getData(), TRUE, FALSE);
         if ($event->getEvent() === 'create') {
           $message = t('A new credential "@credName" for application named "@appName" was created.', [
             '@appName' => $data['appName'],
@@ -335,7 +326,7 @@ class EventLogService {
         }
         break;
       case 'subscription':
-        $data = unserialize($event->getData(), ['allowed_classes' => FALSE]);
+        $data = SerializationUtility::decodeData($event->getData(), TRUE, FALSE);
         // get the product title from the DB
         $productName = $data['productUrl'];
         $query = \Drupal::entityQuery('node');
@@ -372,7 +363,7 @@ class EventLogService {
         }
         break;
       case 'consumer_org':
-        $data = unserialize($event->getData(), ['allowed_classes' => FALSE]);
+        $data = SerializationUtility::decodeData($event->getData(), TRUE, FALSE);
         if ($event->getEvent() === 'create') {
           $message = t('A new consumer organization named "@orgName" was created.', ['@orgName' => $data['orgName']]);
         }
@@ -390,7 +381,7 @@ class EventLogService {
         }
         break;
       case 'member':
-        $data = unserialize($event->getData(), ['allowed_classes' => FALSE]);
+        $data = SerializationUtility::decodeData($event->getData(), TRUE, FALSE);
         if ($event->getEvent() === 'create') {
           $message = t('"@member" was added to the consumer organization named "@orgName".', [
             '@member' => $data['member'],
@@ -411,7 +402,7 @@ class EventLogService {
         }
         break;
       case 'invitation':
-        $data = unserialize($event->getData(), ['allowed_classes' => FALSE]);
+        $data = SerializationUtility::decodeData($event->getData(), TRUE, FALSE);
         if ($event->getEvent() === 'create') {
           $message = t('"@member" was invited to the consumer organization named "@orgName".', [
             '@member' => $data['member'],
@@ -433,7 +424,7 @@ class EventLogService {
         }
         break;
       case 'payment_method':
-        $data = unserialize($event->getData(), ['allowed_classes' => FALSE]);
+        $data = SerializationUtility::decodeData($event->getData(), TRUE, FALSE);
         if ($event->getEvent() === 'create') {
           $message = t('A new payment method "@method" was added to the consumer organization named "@orgName".', [
             '@method' => $data['method'],

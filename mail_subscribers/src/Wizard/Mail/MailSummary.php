@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\mail_subscribers\Wizard\Mail;
 
@@ -66,9 +56,9 @@ class MailSummary extends FormBase {
     //Only show this if the email list wasnt loaded
     if ($cached_values['objectType'] !== 'all' && (!isset($cached_values['predefined']) || $cached_values['predefined'] !== true)) {
       $form['name'] = [
-        '#title' => 'Name',
+        '#title' => t('Name'),
         '#type' => 'textfield',
-        '#description' => 'If you want to save the list, enter a name. Leave it blank otherwise.',
+        '#description' => t('If you want to save the list, enter a name. Leave it blank otherwise.'),
         '#weight' => 0
       ];
     }
@@ -128,7 +118,7 @@ class MailSummary extends FormBase {
 
       $list = EmailList::create($fields);
       $list->save();
-      \Drupal::messenger()->addMessage('Successfully saved email list: ' . $name);
+      \Drupal::messenger()->addMessage(t('Successfully saved email list: ') . $name);
     }
 
     $form_state->setRedirect('<front>');

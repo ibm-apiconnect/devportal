@@ -1,0 +1,11 @@
+--- modules/metatag/src/Plugin/metatag/Tag/Expires.php	2025-05-29 18:22:14
++++ modules/metatag/src/Plugin/metatag/Tag/Expires.php	2025-07-03 10:27:55
+@@ -8,7 +8,7 @@
+  * @MetatagTag(
+  *   id = "expires",
+  *   label = @Translation("Expires"),
+- *   description = @Translation("Control when the browser's internal cache of the current page should expire. The date must to be an <a href='https://www.csgnetwork.com/timerfc1123calc.html'>RFC-1123</a>-compliant date string that is represented in Greenwich Mean Time (GMT), e.g. 'Thu, 01 Sep 2016 00:12:56 GMT'. Set to '0' to stop the page being cached entirely."),
++ *   description = @Translation("Control when the browser's internal cache of the current page should expire. The date must to be an <a href='https://datatracker.ietf.org/doc/html/rfc1123'>RFC-1123</a>-compliant date string that is represented in Greenwich Mean Time (GMT), e.g. 'Thu, 01 Sep 2016 00:12:56 GMT'. Set to '0' to stop the page being cached entirely."),
+  *   name = "expires",
+  *   group = "advanced",
+  *   weight = 11,

@@ -9,6 +9,7 @@ dependencies:
     - field.field.node.consumerorg.apic_tags
     - field.field.node.consumerorg.apic_pathalias
     - field.field.node.consumerorg.consumerorg_members
+    - field.field.node.consumerorg.consumerorg_member_invite_refs
     - field.field.node.consumerorg.consumerorg_invites
     - field.field.node.consumerorg.consumerorg_roles
     - field.field.node.consumerorg.consumerorg_name
@@ -110,5 +111,6 @@ hidden:
   apic_provider_id: true
   apic_pathalias: true
   consumerorg_memberlist: true
+  consumerorg_member_invite_refs: true
   consumerorg_id: true
   consumerorg_url: true

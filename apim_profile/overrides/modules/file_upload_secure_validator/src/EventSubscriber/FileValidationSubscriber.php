@@ -1,5 +1,7 @@
 <?php
 
+
+
 namespace Drupal\file_upload_secure_validator\EventSubscriber;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -62,6 +64,10 @@ class FileValidationSubscriber implements EventSubscriberInterface {
 
         // Get mime type from filename.
         $mimeByFilename = $file->getMimeType();
+        if (empty($mimeByFilename)) {
+          $mimeByFilename = \Drupal::service('file.mime_type.guesser.extension')->guessMimeType($file->getFileUri());
+          $file->setMimeType($mimeByFilename);
+        }
         // Get mime type from fileinfo.
         try {
           $mimeByFileinfo = (new FileinfoMimeTypeGuesser())->guessMimeType($file->getFileUri());

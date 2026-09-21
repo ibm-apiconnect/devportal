@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Controller;
 
@@ -272,7 +262,7 @@ class IbmApimThemeInstallController extends ThemeController {
     if (isset($theme)) {
       $themes = $this->themeHandler->listInfo();
       // this theme is using scss and may need it build into css
-      $theme_path = \Drupal::service('extension.list.theme')->getPath($themes[$theme]->info['name']);
+      $theme_path = \Drupal::service('extension.list.theme')->getPath($theme);
       $filename = $theme_path . '/compile-scss.yml';
       if (file_exists($filename)) {
         $scss_compile_settings = yaml_parse_file($filename);

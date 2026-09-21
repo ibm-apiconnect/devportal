@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Form;
 
@@ -99,11 +89,11 @@ class CustomModulesDeleteForm extends FormBase {
 
     $form['preamble'] = [
       '#type' => 'item',
-      '#description' => 'This form allows you to delete any modules you have installed. Any modules shipped with IBM API Developer Portal cannot be deleted. For a module to appear in the list it, and all of its sub-modules, need to be disabled.',
+      '#description' => $this->t('This form allows you to delete any modules you have installed. Any modules shipped with IBM CMS Portal cannot be deleted. For a module to appear in the list it, and all of its sub-modules, need to be disabled.'),
     ];
     $header = [
       'module' => $this->t('Module'),
-      'machine_name' => $this->t('Machine Name'),
+      'machine_name' => $this->t('Machine name'),
       'info' => $this->t('Information'),
     ];
     $options = $this->utils->getDisabledCustomExtensions('module');

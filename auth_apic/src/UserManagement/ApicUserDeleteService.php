@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\auth_apic\UserManagement;
 
@@ -95,7 +85,7 @@ class ApicUserDeleteService implements ApicUserDeleteInterface {
   /**
    * @inheritDoc
    */
-  public function deleteLocalAccount(ApicUser $user = NULL): bool {
+  public function deleteLocalAccount(?ApicUser $user = NULL): bool {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     }

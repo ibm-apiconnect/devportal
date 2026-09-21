@@ -1,0 +1,11 @@
+--- core/themes/claro/templates/classy/misc/progress-bar.html.twig	2025-07-29 20:49:35
++++ core/themes/claro/templates/classy/misc/progress-bar.html.twig	2025-07-29 20:49:42
+@@ -16,7 +16,7 @@
+   {% if label %}
+     <div class="progress__label">{{ label }}</div>
+   {% endif %}
+-  <div class="progress__track"><div class="progress__bar" style="width: {{ percent }}%"></div></div>
++  <div class="progress__track"><div class="progress__bar"></div></div>
+   <div class="progress__percentage">{{ percent }}%</div>
+   <div class="progress__description">{{ message }}</div>
+ </div>

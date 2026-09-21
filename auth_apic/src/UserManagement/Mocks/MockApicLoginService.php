@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\auth_apic\UserManagement\Mocks;
 
@@ -18,6 +8,7 @@ use Drupal\auth_apic\UserManagerResponse;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\user\Entity\User;
 use Drupal\apictest\ApicTestUtils;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 class MockApicLoginService implements ApicLoginServiceInterface {
 
@@ -30,7 +21,7 @@ class MockApicLoginService implements ApicLoginServiceInterface {
       return $this->oidcLogin($user);
     }
 
-    \Drupal::logger('mock_auth_apic')->debug('MOCKED: MockApicLoginService->login() with @user',['@user' => \serialize($user)]);
+    \Drupal::logger('mock_auth_apic')->debug('MOCKED: MockApicLoginService->login() with @user',['@user' => SerializationUtility::encodeData($user)]);
     //\Drupal::messenger()->addStatus('MOCKED: MockApicLoginService->login()');
     // otherwise we are a non-oidc user.
     $password = $user->getPassword();
@@ -168,7 +159,7 @@ class MockApicLoginService implements ApicLoginServiceInterface {
     }
 
     if ($authCode === 'fail') {
-      \Drupal::messenger()->addError('Error while authenticating user. Please contact your system administrator.');
+      \Drupal::messenger()->addError(t('Error while authenticating user. Please contact your system administrator.'));
     }
     elseif ($authCode === 'noorgenabledonboarding') {
       return 'consumerorg.create';

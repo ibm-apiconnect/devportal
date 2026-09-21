@@ -1,4 +1,16 @@
 {#
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+ 
 /**
  * @file
  * Default theme implementation to display a single page.
@@ -123,7 +135,7 @@
       page.sidebar_second and page.sidebar_first is empty ? 'col-sm-9',
       page.sidebar_first is empty and page.sidebar_second is empty ? 'col-sm-12'
       ] %}
-      <section{{ content_attributes.addClass(content_classes) }} aria-label="{{ 'Main content'|t }}">
+      <section{{ content_attributes.addClass(content_classes) }} aria-label="{% trans %}Page content{% endtrans %}">
 
         {# Highlighted #}
         {% if page.highlighted %}
@@ -155,7 +167,7 @@
 
         {# Content #}
         {% block content %}
-          <a id="main-content"></a>
+          <a id="main-content" tabindex="-1"></a>
           {% if path('<current>') == path('system.401') %}
             {% include 'page--system--401--content.html.twig' %}
           {% elseif path('<current>') == path('system.403') %}

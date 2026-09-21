@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\consumerorg\Form;
 
@@ -153,7 +143,7 @@ class ChangeOrgOwnerForm extends FormBase {
             }
           }
           $form['new_owner'] = [
-            '#title' => t('New Owner'),
+            '#title' => t('New owner'),
             '#type' => 'select',
             '#description' => t('Select the user to take ownership.'),
             '#options' => $values,
@@ -198,7 +188,7 @@ class ChangeOrgOwnerForm extends FormBase {
 
             $form['role'] = [
               '#type' => 'radios',
-              '#title' => t('Assign Previous Owner\'s Role'),
+              '#title' => t('Assign previous owner\'s role'),
               '#default_value' => $default_role,
               '#options' => $roles_array,
               '#description' => t('Select the new role for the previous owner.'),

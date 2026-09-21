@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -25,6 +15,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\encrypt\Entity\EncryptionProfile;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 class SocialBlockForm extends ConfigFormBase {
 
@@ -63,73 +55,21 @@ class SocialBlockForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state): array {
 
     $form = parent::buildForm($form, $form_state);
+    $settings = $this->getSettings($form_state);
 
-    $config = $this->config('socialblock.settings');
-    $data = $config->get('credentials');
-
-    if ($data !== NULL && !empty($data)) {
-      $encryptionProfile = EncryptionProfile::load('socialblock');
-      if ($encryptionProfile !== NULL) {
-        $settings = unserialize(\Drupal::service('encryption')->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
-      }
-      else {
-        $form_state->setError($form, t('The "socialblock" encryption profile is missing.'));
-        $settings = [];
-      }
+    if (!isset($settings['blueSkyUserName'])) {
+      $settings['blueSkyUserName'] = '';
     }
-    else {
-      $settings = [];
+    if (!isset($settings['blueSkyAppPassword'])) {
+      $settings['blueSkyAppPassword'] = '';
     }
 
-    if (!isset($settings['consumerKey'])) {
-      $settings['consumerKey'] = '';
-    }
-    if (!isset($settings['consumerSecret'])) {
-      $settings['consumerSecret'] = '';
-    }
-    if (!isset($settings['accessToken'])) {
-      $settings['accessToken'] = '';
-    }
-    if (!isset($settings['accessTokenSecret'])) {
-      $settings['accessTokenSecret'] = '';
-    }
+    $form = $this->buildBlueSkyForm($form, $settings);
 
-    $form['consumerKey'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Twitter Application Consumer Key'),
-      '#default_value' => $settings['consumerKey'],
-      '#description' => $this->t('The Consumer Key displayed in \'Keys and Access Tokens\' in your Twitter application'),
-      '#required' => TRUE,
-      //'#attributes' => ['autocomplete' => 'off']
+    $form['top_actions'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['custom-top-buttons']],
     ];
-
-    $form['consumerSecret'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Twitter Application Consumer Secret'),
-      '#default_value' => $settings['consumerSecret'],
-      '#description' => $this->t('The Consumer Secret displayed in \'Keys and Access Tokens\' in your Twitter application'),
-      '#required' => TRUE,
-      //'#attributes' => ['autocomplete' => 'off']
-    ];
-
-    $form['accessToken'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Twitter Application Access Token'),
-      '#default_value' => $settings['accessToken'],
-      '#description' => $this->t('The Access Token displayed in \'Keys and Access Tokens\' in your Twitter application'),
-      '#required' => TRUE,
-      //'#attributes' => ['autocomplete' => 'off']
-    ];
-
-    $form['accessTokenSecret'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Twitter Application Access Token Secret'),
-      '#default_value' => $settings['accessTokenSecret'],
-      '#description' => $this->t('The Access Token Secret displayed in \'Keys and Access Tokens\' in your Twitter application'),
-      '#required' => TRUE,
-      //'#attributes' => ['autocomplete' => 'off']
-    ];
-
     return $form;
   }
 
@@ -137,59 +77,59 @@ class SocialBlockForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
-
+    $trigger = $form_state->getTriggeringElement();
     $credentials = [];
+    //Connect to Bluesky
+      if ($form_state->getValue('blueSkyUserName') !== NULL && $form_state->getValue('blueSkyAppPassword') !== NULL ) {
+        $blueSkyUserName = $form_state->getValue('blueSkyUserName');
+        $blueSkyUserName = $this->toBasicAscii($blueSkyUserName);
+        $blueSkyAppPassword = $form_state->getValue('blueSkyAppPassword');
+        $blueSkyAppPassword = $this->toBasicAscii($blueSkyAppPassword);
 
-    $consumerKey = $form_state->getValue('consumerKey');
-    $consumerSecret = $form_state->getValue('consumerSecret');
-    $accessToken = $form_state->getValue('accessToken');
-    $accessTokenSecret = $form_state->getValue('accessTokenSecret');
+        $credentials['blueSkyUserName'] = $blueSkyUserName !== NULL ? trim($blueSkyUserName) : '';
+        $credentials['blueSkyAppPassword'] = $blueSkyAppPassword !== NULL ? trim($blueSkyAppPassword) : '';
 
-    $credentials['consumerKey'] = $consumerKey !== NULL ? trim($consumerKey) : '';
-    $credentials['consumerSecret'] = $consumerSecret !== NULL ? trim($consumerSecret) : '';
-    $credentials['accessToken'] = $accessToken !== NULL ? trim($accessToken) : '';
-    $credentials['accessTokenSecret'] = $accessTokenSecret !== NULL ? trim($accessTokenSecret) : '';
+        $noCred = empty($blueSkyUserName) || empty($blueSkyAppPassword);
 
-    $noCred = empty($consumerKey) || empty($consumerSecret) || empty($accessToken) || empty($accessTokenSecret);
-    $response = socialblock_call_twitter_api($credentials, 'application/rate_limit_status', []);
-
-    if ($noCred || empty($response)) {
-      $form_state->setError($form, t('The credentials you have entered are invalid'));
-      $this->config('socialblock.settings')->delete();
-    }
-
+        $response = socialblock_call_bluesky_api($credentials, 'app.bsky.actor.getProfile', [
+          'actor' => $blueSkyUserName
+        ]);
+        if ($noCred || empty($response)) {
+          $form_state->setError($form, t('The credentials you have entered are invalid'));
+          
+          //Remove Values From Config
+          $settings = $this->getSettings($form_state);
+          unset($settings['blueSkyUserName']);
+          unset($settings['blueSkyAppPassword']);
+          $this->setSettings($settings);
+        }
+      }
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
-    $config = $this->config('socialblock.settings');
-
-    $credentials = [];
-    $consumerKey = $form_state->getValue('consumerKey');
-    $consumerSecret = $form_state->getValue('consumerSecret');
-    $accessToken = $form_state->getValue('accessToken');
-    $accessTokenSecret = $form_state->getValue('accessTokenSecret');
-
-    $credentials['consumerKey'] = $consumerKey !== NULL ? trim($consumerKey) : '';
-    $credentials['consumerSecret'] = $consumerSecret !== NULL ? trim($consumerSecret) : '';
-    $credentials['accessToken'] = $accessToken !== NULL ? trim($accessToken) : '';
-    $credentials['accessTokenSecret'] = $accessTokenSecret !== NULL ? trim($accessTokenSecret) : '';
-
-
-    $encryptionProfile = EncryptionProfile::load('socialblock');
-    if ($encryptionProfile !== NULL) {
-      $encrypted = \Drupal::service('encryption')->encrypt(serialize($credentials), $encryptionProfile);
+    $credentials = $this->getSettings($form_state) ?? [];
+    if ($form_state->getValue('consumerKey') !== NULL && $form_state->getValue('consumerSecret') !== NULL && $form_state->getValue('accessToken') !== NULL && $form_state->getValue('accessTokenSecret') !== NULL) {
+      $consumerKey = $form_state->getValue('consumerKey');
+      $consumerSecret = $form_state->getValue('consumerSecret');
+      $accessToken = $form_state->getValue('accessToken');
+      $accessTokenSecret = $form_state->getValue('accessTokenSecret');
+  
+      $credentials['consumerKey'] = $consumerKey !== NULL ? trim($consumerKey) : '';
+      $credentials['consumerSecret'] = $consumerSecret !== NULL ? trim($consumerSecret) : '';
+      $credentials['accessToken'] = $accessToken !== NULL ? trim($accessToken) : '';
+      $credentials['accessTokenSecret'] = $accessTokenSecret !== NULL ? trim($accessTokenSecret) : '';
     }
-    else {
-      $this->messenger->addError(t('The "socialblock" encryption profile is missing.'));
-      $encrypted = [];
+    elseif ($form_state->getValue('blueSkyUserName') !== NULL && $form_state->getValue('blueSkyAppPassword') !== NULL ) {
+      $blueSkyUserName = $form_state->getValue('blueSkyUserName');
+      $blueSkyAppPassword = $form_state->getValue('blueSkyAppPassword');
+
+      $credentials['blueSkyUserName'] = $blueSkyUserName !== NULL ? trim($blueSkyUserName) : '';
+      $credentials['blueSkyAppPassword'] = $blueSkyAppPassword !== NULL ? trim($blueSkyAppPassword) : '';
     }
-
-    $config->set('credentials', $encrypted);
-    $config->save();
-
+    $this->setSettings($credentials);
     // run cron to populate the cache
     socialblock_cron();
 
@@ -206,5 +146,64 @@ class SocialBlockForm extends ConfigFormBase {
     return ['socialblock.settings', 'socialblock.validate'];
 
   }
+  
 
+  public function buildBlueSkyForm(array $form, array $settings) {
+    $form['blueSkyUserName'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Bluesky Username'),
+      '#default_value' => $settings['blueSkyUserName'],
+      '#description' => $this->t('Your full Bluesky handle as shown in your profile'),
+      '#required' => TRUE,
+      '#default_value' => $settings['blueSkyUserName'] ?? '',
+    ];
+
+    $form['blueSkyAppPassword'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Bluesky App Password'),
+      '#default_value' => $settings['blueSkyAppPassword'],
+      '#description' => $this->t('The App Password generated in the \'App Passwords\' section of your Bluesky account settings'),
+      '#required' => TRUE,
+      '#default_value' => $settings['blueSkyAppPassword'] ?? '',
+    ];
+    return $form;
+  }
+
+  public function getSettings($form_state) {
+    $config = $this->config('socialblock.settings');
+    $data = $config->get('credentials');
+
+    if ($data !== NULL && !empty($data)) {
+      $encryptionProfile = EncryptionProfile::load('socialblock');
+      if ($encryptionProfile !== NULL) {
+        return SerializationUtility::decodeData(\Drupal::service('encryption')->decrypt($data, $encryptionProfile), TRUE, FALSE);
+      }
+      else {
+        $form_state->setError($form, t('The "socialblock" encryption profile is missing.'));
+        return [];
+      }
+    }
+    return [];
+  }
+
+  public function setSettings($credentials) {
+    $config = $this->config('socialblock.settings');
+    $encryptionProfile = EncryptionProfile::load('socialblock');
+    if ($encryptionProfile !== NULL) {
+      $encrypted = \Drupal::service('encryption')->encrypt(SerializationUtility::encodeData($credentials), $encryptionProfile);
+    }
+    else {
+      $this->messenger->addError(t('The "socialblock" encryption profile is missing.'));
+      $encrypted = [];
+    }
+    $config->set('credentials', $encrypted);
+    $config->save();
+  }
+
+  public function toBasicAscii($text) {
+    $text = mb_convert_encoding($text, 'UTF-8', 'auto');
+    $text = preg_replace('/[\x00-\x1F\x7F\x{200B}-\x{200D}\x{202A}-\x{202E}\x{2060}-\x{206F}\x{FEFF}]/u', '', $text);
+    $text = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text);
+    return $text;
+  }
 }

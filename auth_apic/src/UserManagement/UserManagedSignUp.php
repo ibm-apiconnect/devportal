@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\auth_apic\UserManagement;
 
@@ -72,24 +62,41 @@ class UserManagedSignUp implements SignUpInterface {
       } else {
         $user->setState('pending');
       }
-      $register_response = $this->accountService->registerApicUser($user);
+      try {
+        $register_response = $this->accountService->registerApicUser($user);
 
-      if ($register_response !== NULL) {
-        $userManagerResponse->setSuccess(TRUE);
+        if ($register_response !== NULL) {
+          $userManagerResponse->setSuccess(TRUE);
 
-        $this->logger->notice('sign-up processed for @username', [
-          '@username' => $user->getUsername(),
-        ]);
-        if ($this->siteConfig->isAccountapprovalsEnabled()) {
-          $userManagerResponse->setMessage(t('Your account was created successfully and is pending approval. You will receive an email with further instructions.'));
-        } else {
-          $userManagerResponse->setMessage(t('Your account was created successfully. You will receive an email with activation instructions.'));
+          $this->logger->notice('sign-up processed for @username', [
+            '@username' => $user->getUsername(),
+          ]);
+          if ($this->siteConfig->isAccountapprovalsEnabled()) {
+            $userManagerResponse->setMessage(t('Your account was created successfully and is pending approval. You will receive an email with further instructions.'));
+          }
+          else {
+            $userManagerResponse->setMessage(t('Your account was created successfully. You will receive an email with activation instructions.'));
+          }
+        }
+        else {
+          $this->logger->error('error registering drupal account for @username', ['@username' => $user->getUsername()]);
+          $userManagerResponse->setSuccess(FALSE);
+          $userManagerResponse->setMessage(t('There was an error registering your account. Please contact your system administrator.'));
         }
       }
-      else {
-        $this->logger->error('error registering drupal account for @username', ['@username' => $user->getUsername()]);
-        $userManagerResponse->setSuccess(FALSE);
-        $userManagerResponse->setMessage(t('There was an error registering your account. Please contact your system administrator.'));
+      catch (\Exception $e) {
+        // User already exists - show generic success message to avoid information disclosure.
+        $this->logger->notice('sign-up attempted for existing user @username: @message', [
+          '@username' => $user->getUsername(),
+          '@message' => $e->getMessage(),
+        ]);
+        $userManagerResponse->setSuccess(TRUE);
+        if ($this->siteConfig->isAccountapprovalsEnabled()) {
+          $userManagerResponse->setMessage(t('Your account was created successfully and is pending approval. You will receive an email with further instructions.'));
+        }
+        else {
+          $userManagerResponse->setMessage(t('Your account was created successfully. You will receive an email with activation instructions.'));
+        }
       }
     }
     else {
@@ -105,5 +112,6 @@ class UserManagedSignUp implements SignUpInterface {
     }
     return $userManagerResponse;
   }
+
 
 }

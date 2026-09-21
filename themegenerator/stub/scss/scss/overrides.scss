@@ -6,4 +6,9 @@
 // import everything from connect_theme as a starting point
 @import "connect-styles";
 
+
 // place further styling overrides here
+
+// Dark mode support
+@import "connect-dark-theme";
+@import "dark-mode-toggle";

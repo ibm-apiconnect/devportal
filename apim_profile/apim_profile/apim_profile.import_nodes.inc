@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
@@ -54,6 +44,19 @@ function apim_profile_update_footerlinks() {
   $contactMenu = reset($contactMenu);
   if (!empty($contactMenu)) {
     add_contact_menu_translations($contactMenu, FALSE);
+  }
+}
+
+/**
+ * Force update footer links with new translations
+ * This function updates all translations regardless of whether they exist.
+ */
+function apim_profile_force_update_footerlinks() {
+  $contactMenu = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/contact']);
+  $contactMenu = reset($contactMenu);
+  if (!empty($contactMenu)) {
+    // Force update with overwrite = TRUE
+    add_contact_menu_translations($contactMenu, TRUE);
   }
 }
 

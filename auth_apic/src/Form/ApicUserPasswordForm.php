@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\auth_apic\Form;
 
@@ -33,6 +23,7 @@ use Drupal\user\UserNameValidator;
 use Drupal\Component\Utility\EmailValidatorInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 
 /**
@@ -283,7 +274,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     $flood_config = $this->configFactory->get('user.flood');
     if (!$this->flood->isAllowed('user.password_request_ip', $flood_config->get('ip_limit'), $flood_config->get('ip_window'))) {
-      $this->logger->notice('Flood Control: Blocking password reset attempt from IP: @ip_address', [
+      $this->logger->notice('Flood control: Blocking password reset attempt from IP: @ip_address', [
         '@ip_address' => $this->getRequest()
           ->getClientIP(),
       ]);
@@ -330,7 +321,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
         $identifier = $account->id() . '-' . $this->getRequest()->getClientIP();
       }
       if (!$this->flood->isAllowed('user.password_request_user', $flood_config->get('user_limit'), $flood_config->get('user_window'), $identifier)) {
-        $this->logger->notice('Flood Control: Blocking password reset attempt for user ID: @account_id', ['@account_id' => $account->id()]);
+        $this->logger->notice('Flood control: Blocking password reset attempt for user ID: @account_id', ['@account_id' => $account->id()]);
         $form_state->setErrorByName('name', $this->t('Too many password recovery requests. You have been temporarily blocked. Try again later or contact the site administrator.'));
         return;
       }
@@ -386,7 +377,7 @@ class ApicUserPasswordForm extends UserPasswordForm {
     }
     else {
       // If result is NULL, there will be errors/warnings set by the REST code so nothing for us to do except log it
-      $this->logger->notice('Forgot password: response from management server @result', ['@result' => serialize($result)]);
+      $this->logger->notice('Forgot password: response from management server @result', ['@result' => SerializationUtility::encodeData($result)]);
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

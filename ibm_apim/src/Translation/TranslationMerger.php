@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Translation;
 
@@ -22,6 +12,9 @@ namespace Drupal\ibm_apim\Translation;
  * @package Drupal\ibm_apim\Translation
  *
  */
+
+use Drupal\ibm_apim\External\SerializationUtility;
+
 class TranslationMerger {
 
   private $projects;
@@ -267,7 +260,7 @@ class TranslationMerger {
 
       // this means we haven't found any translations. Notify of this as it suggests something has been missed in our file processing/ translation process.
       // this is not added to the list of strings otherwise we might load an empty string as the translation.
-      $notfound = is_array($item->getSource()) ? serialize($item->getSource()) : $item->getSource();
+      $notfound = is_array($item->getSource()) ? SerializationUtility::encodeData($item->getSource()) : $item->getSource();
       echo 'NO TRANSLATION FOUND FOR: ' . $notfound . "\n";
 
     } // items

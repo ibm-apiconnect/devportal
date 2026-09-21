@@ -1,3 +1,4 @@
+
 /**
  * Node styling.
  */
@@ -56,11 +57,13 @@ article footer {
 
 .apicTeaserMain h2 a {
   display: flex;
-  padding-right: 10px;
+  padding-inline-end: 10px;
 }
 
 .apicTeaserMain h2 a span:first-of-type {
-  padding-right: 4px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  padding-inline-end: 4px;
   margin-bottom: 0;
 }
 
@@ -82,6 +85,8 @@ article footer {
   }
 
   .apicTeaserMain h2 a {
+    overflow-wrap: break-word;
+    word-break: break-word;
     flex-direction: column;
   }
 
@@ -148,12 +153,12 @@ article footer {
   margin-bottom: 0;
 }
 .field--widget-text-textarea-with-summary .filter-wrapper {
-  background-color: $ui-background;
+  background-color: var(--ui-02);
   border: 0;
 }
 /* comments */
 .js-comment .field.field--name-user-picture {
-  float: left;
+  float: inline-start;
   width: 40px;
   padding-top: 0;
   img {
@@ -166,7 +171,7 @@ article footer {
   background: $interactive-01;
   padding: .25rem .5rem;
   font-size: 1rem;
-  margin-right: 10px;
+  margin-inline-end: 10px;
 }
 
 /* only solution could find to hide the blog links in comments */
@@ -181,7 +186,7 @@ article footer {
 .js-comment > h3,
 .js-comment .submitted,
 .js-comment .content {
-  margin-left: 50px;
+  margin-inline-start: 50px;
   padding-top: 0;
 }
 .js-comment .content p{
@@ -194,10 +199,10 @@ article footer {
   padding-top: 10px;
 }
 .blog-post footer {
-  float: left;
+  float: inline-start;
 }
 .blog-post .submitted {
-  float: right;
+  float:  inline-end;
   padding-top: 0.5rem;
 }
 .blog-post .content {
@@ -208,7 +213,7 @@ article footer {
   min-width: 300px;
 }
 .forumPost article[typeof="schema:Person"] {
-  float: left;
+  float: inline-start;
 }
 .forumPost .quickedit-field [typeof="schema:Person"] {
   float: none;
@@ -221,7 +226,7 @@ article footer {
 }
 /* embedded docs in products */
 .Pane.vertical.Pane1 {
-  border-right: 1px solid $ui-03;
+  border-right: 1px solid var(--border-subtle-00);
 }
 .apicProduct .embeddedDocPagesNav a.selected {
   color: $interactive-01;
@@ -231,13 +236,36 @@ article footer {
 }
 .apicProduct .embeddedDocPagesNav a,
 .apicProduct .embeddedDocPagesNav div.bx--side-nav__link {
-  color: $text-01;
+  color: var(--text-01);
 }
 .apicProduct .embeddedDocPagesNav ul .tocItem a:hover,
 .apicProduct .embeddedDocPagesNav ul .tocItem a.selected {
-  background-color: $ui-03;
+  background-color: var(--ui-03);
 }
 
 .route-productview footer.footer.container {
   margin-top: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .forumContent .leftContent {
+    width: 100%;
+    min-width: auto;
+  }
+  .page-node-type-forum article.js-comment {
+    flex-direction: column;
+  }
+  article footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  /* Add bottom margin when stacked, remove right margin */
+  article footer article {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }  
+  /* Ensure proper spacing between user picture and adjacent content */
+  article footer .field--name-user-picture {
+    margin-inline-end: 1rem;
+  }
 }

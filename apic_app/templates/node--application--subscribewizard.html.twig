@@ -14,13 +14,14 @@
   view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
   'bx--card'
 ] -%}
+{%- set is_disabled = apic_state|lower|clean_class == 'disabled' or apic_state|lower|clean_class == 'pending' -%}
 {{ attach_library('ibm_apim/core') }}
 {{ attach_library('apic_app/basic') }}
 <div class="apicSubAppCard">
-  <button id="node-{{ node.id }}" {{ attributes.addClass(classes).removeAttribute('role') }} type="submit" name="selectedApplication"
-          value="{{ node.id }}" aria-label="{{ node.title[0].value }}">
+  {% if is_disabled %}
+  <div id="node-{{ node.id }}" {{ attributes.addClass(classes).removeAttribute('role').removeAttribute('dir') }} aria-label="{{ node.title[0].value }}" aria-disabled="true">
     <div class="apicAppCard">
-      {% if content.application_image is defined and content.application_image|render|trim is not empty %}
+      {% if showPlaceholders and content.application_image is defined and content.application_image|render|trim is not empty %}
         <div class="apicCardIcon bx--about__icon">
           {{ content.application_image }}
         </div>
@@ -45,10 +46,83 @@
             {% endfor %}
           </div>
         {% endif %}
-
       </div>
+      {% if applifecycleEnabled %}
+        <div class="applicationType {{ content.application_lifecycle_state['#items'][0].value|clean_class }}">
+          {% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %}
+            {% trans %}Development{% endtrans %}
+          {% elseif content.application_lifecycle_state['#items'][0].value|upper == 'PRODUCTION' %}
+            {% trans %}Production{% endtrans %}
+          {% else %}
+            {{ content.application_lifecycle_state['#items'][0].value }}
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+    <div class="bx--card-footer apicAppFooter">
+        {% if apic_state|lower|clean_class == 'pending' %}
+        <div class="bx--card-footer__app-status">
+          <div class="apicAppStatus pending">
+            <div class="apicStatusText">
+              {% trans %}This application is pending{% endtrans %}
+            </div>
+          </div>
+        </div>
+        {% elseif apic_state|lower|clean_class == 'disabled' %}
+        <div class="bx--card-footer__app-status">
+          <div class="apicAppStatus disabled">
+            <div class="apicStatusText">
+              {% trans %}This application is disabled{% endtrans %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <button id="node-{{ node.id }}" {{ attributes.addClass(classes).removeAttribute('role').removeAttribute('dir') }} type="submit" name="selectedApplication"
+          value="{{ node.id }}" aria-label="{{ node.title[0].value }}">
+    <div class="apicAppCard">
+      {% if showPlaceholders and content.application_image is defined and content.application_image|render|trim is not empty %}
+        <div class="apicCardIcon bx--about__icon">
+          {{ content.application_image }}
+        </div>
+      {% elseif showPlaceholders %}
+        <div class="apicCardIcon">
+          <img class="bx--about__icon" src="{{- placeholderUrl -}}" alt=""/>
+        </div>
+      {% endif %}
+      <div class="apicAppCardMain">
+        <div class="bx--about__title--name">
+          <span id="node-{{ node.id }}-title" class="apicAppName apicTruncate"
+                title="{{ node.title.value|striptags }}">{{- label -}}</span>
+        </div>
+        <div class="apicAppDesc apicFade"
+             title="{{- content.apic_summary['#items'][0].value|striptags -}}">{{ content.apic_summary['#items'][0].value|striptags }}</div>
+        {% if custom_fields is defined and custom_fields is not empty %}
+          <div class="customFields">
+            {% for custom_field in custom_fields %}
+              <div class="{{ custom_field|clean_class }}">
+                {{ content[custom_field] }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+      {% if applifecycleEnabled %}
+        <div class="applicationType {{ content.application_lifecycle_state['#items'][0].value|clean_class }}">
+          {% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %}
+            {% trans %}Development{% endtrans %}
+          {% elseif content.application_lifecycle_state['#items'][0].value|upper == 'PRODUCTION' %}
+            {% trans %}Production{% endtrans %}
+          {% else %}
+            {{ content.application_lifecycle_state['#items'][0].value }}
+          {% endif %}
+        </div>
+      {% endif %}
     </div>
     <div class="bx--card-footer apicAppFooter">
     </div>
   </button>
+  {% endif %}
 </div>

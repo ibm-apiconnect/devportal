@@ -1,3 +1,6 @@
+// Prevent duplicate font loading
+$css--font-face: false;
+
 // import connect variables
 @import "connect-variables";
 
@@ -5,69 +8,114 @@
 $font-family-base: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
 
 // Brown color palette
-$gold-01: #74521b;
-$gold-02: #5b421c;
-$gold-03: #ffb000;
+$brown-10: #f7f3e9;
+$brown-20: #e8ddc0;
+$brown-30: #d4c59a;
+$brown-40: #b8a172;
+$brown-50: #9c6d1e;
+$brown-60: #74521b;
+$brown-70: #5b421c;
+$brown-80: #4b3511;
+$brown-90: #3a2a0d;
+$brown-gray: #2c2821;
 
 $white-01: #fff;
+$white-02: #fbf8f8;
 
 $gray-01: #eaeaea;
-$gray-02: #f5e8db;
-$gray-03: #ffd191;
-$gray-04: #ffb000;
-$gray-05: #9c6d1e;
+$gray-02: #d8d8d8;
+$gray-03: #c0bfc0;
+$gray-04: #949394;
+$gray-05: #464646;
+$gray-06: #6f6f6f;
+$gray-07: #525252;
+$gray-08: #393939;
+$gray-09: #262626;
 
-$dark-gray-01: #42301b;
-$black-01: #2f261c;
-
+$black-01: #000;
 
 // theme variables
 // these are the variables to override for custom theme creation
-// Global body
+//** Global body
 $body-bg: $white-01;
+// Dark mode
+$dark-body-bg: $gray-09;
+$dark-page-header-bg: $gray-09;
 
+//** Panel background
+$panel-bg: $white-01;
+// Dark mode
+$dark-panel-bg: $brown-gray;
 
-// Global text color
+//** Text
 $text-color: $black-01;
 $label-color: $black-01;
-//** Global textual link color.
-$link-color: $gold-01;
-//** Link hover color
-$link-hover-color: $gold-02;
 
-$brand-primary: $gold-01;
-$brand-primary-light: $gold-03;
-$brand-primary-dark: $gold-02;
+//** Highlight
+$highlight: $brown-20;
+// Dark mode
+$dark-highlight: $brown-90;
 
-// Placeholder text color
-$input-color-placeholder: $gray-05;
+//** Link
+$link-color: $brown-70;
+$link-hover-color: $brown-60;
+// Dark mode
+$dark-link-color: $brown-40;
+$dark-link-hover-color: $brown-30;
 
-// Navbar variable overrides
+//** Focus
+$focus: $brown-60;
+$interactive-focus: $brown-60;
+$focus-inset: $white-01;
+$focus-inverse: $white-01;
+// Dark mode
+$dark-focus: $brown-50;
+$dark-interactive-focus: $brown-50;
+$dark-focus-inset: $white-01;
+$dark-focus-inverse: $white-01;
+
+//** Brand
+$brand-primary: $brown-70;
+$brand-primary-light: $brown-50;
+$brand-primary-dark: $brown-60;
+$brand-primary-link-color: $brown-70;
+$brand-primary-icon-interactive: $brown-70;
+// Dark mode
+$dark-brand-primary-link-color: $brown-40;
+$dark-brand-primary-icon-interactive: $brown-50;
+
+//** Navbar
 $navbar-default-color: $white-01;
-$navbar-default-bg: $gold-01;
-
+$navbar-default-bg: $brand-primary;
 $navbar-default-link-color: $white-01;
 $navbar-default-link-hover-color: $white-01;
 $navbar-default-link-active-color: $white-01;
-$navbar-default-link-active-bg: $gold-01;
-$navbar-default-link-hover-bg: $gold-03;
+$navbar-default-link-active-bg: $brand-primary;
+$navbar-default-link-hover-bg: $brown-60;
+$navbar-default-toggle-icon-bar-bg: $brand-primary-dark;
+// Dark mode
+$dark-navbar-default-bg: $brown-80;
+$dark-navbar-default-link-hover-bg: $brown-70;
 
-$navbar-default-toggle-icon-bar-bg: $gold-01;
+//** Footer
+$footer-default-bg: $brown-70;
+$footer-default-color: $gray-05;
+$footer-default-bordercolor: $brand-primary;
+$footer-divider: $white-01;
+// Dark mode
+$dark-footer-default-bg: $brown-80;
+$dark-footer-divider: $white-01;
 
-// footer variable overrides
-$footer-default-bg: $gold-01;
-$footer-default-color: $white-01;
-$footer-default-bordercolor: $brand-primary-light;
-
-$footer-link-color: $white-01;
-
-// tabs
+//** Tabs
 $tab-primary-background: $brand-primary;
 $tab-primary-text: $white-01;
+$tab-border-color-active: $brown-70;
+// Dark mode
+$dark-tab-border-color-active: $brown-50;
 
-// forms
-$default-header: $dark-gray-01;
-$default-bg-light: $white-01;
+//** Forms
+$default-header: $gray-05;
+$default-bg-light: $white-02;
 $default-border: $gray-03;
 $default-line: $gray-05;
 $default-submitted: $gray-04;
@@ -80,54 +128,87 @@ $input-border-radius: 0;
 $input-bg: $gray-01;
 $input-border: $gray-01;
 $input-color: $black-01;
+$input-focus: $brown-60;
+// Placeholder text color
+$input-color-placeholder: $gray-04;
+$modal-input-bg: $gray-01;
+$modal-input-border: $gray-01;
 
-// buttons
+// Dark mode
+$dark-default-bg-light: $brown-gray;
+$dark-input-border: $gray-04;
+$dark-input-focus: $brown-50;
+$dark-modal-input-border: $gray-07;
+
+//** Buttons
 $btn-border-radius-base: 0;
 $btn-border-radius-large: 0;
 $btn-border-radius-small: 0;
-$btn-default-color: $gold-01;
-$btn-default-bg: $white-01;
-$btn-default-border: $gold-01;
+$btn-default-color: $brown-70; // secondary button
+$btn-default-bg: $white-01; // secondary button
+$btn-default-border: $brown-70; // secondary button
+$btn-default-hover-bg: $white-01; // secondary button
 $btn-primary-color: $white-01;
-$btn-primary-bg: $gold-01;
+$btn-primary-bg: $brown-70;
+$btn-primary-hover-bg: $brown-80;
+$btn-primary-active-bg: $brown-80;
 $btn-primary-border: transparent;
 $btn-success-color: $white-01;
-$btn-success-bg: $gold-01;
+$btn-success-bg: $brown-70;
 $btn-success-border: transparent;
 $btn-link-disabled-color: $brand-primary;
+$tile-btn-bg: $white-02;
+$tile-btn-border: $white-02;
+$tile-btn-color: $brown-70;
+$tile-btn-color-hover: $brown-70;
+$btn-tertiary-hover-bg: $brown-70;
+$btn-tertiary-color: $brown-70;
+$btn-tertiary-active-bg: $brown-70;
+// Dark mode
+$dark-btn-primary-bg: $brown-70;
+$dark-btn-primary-hover-bg: $brown-80;
+$dark-btn-primary-active-bg: $brown-80;
+$dark-tile-btn-bg: $brown-gray;
+$dark-tile-btn-color: $brown-40;
+$dark-tile-btn-color-hover: $brown-40;
 
-$tile-btn-bg: $white-01;
-$tile-btn-border: $white-01;
-$tile-btn-color: $text-color;
-
-// checkboxes and radio buttons
+//** Checkboxes and radio buttons
 $check-radio-bg: $white-01;
 $check-radio-border: $gray-05;
 $check-radio-bg-checked: $brand-primary;
 $check-radio-border-checked: $brand-primary;
 $check-radio-color-checked: $white-01;
+// Dark mode
+$dark-check-radio-bg-checked: $brown-40;
 
-// tooltips
+//** Tooltips
 $tooltip-color: $white-01;
 $tooltip-bg: $gray-05;
 
-// modals
+//** Modals
 $modal-content-bg: $white-01;
 $modal-content-border-color: $brand-primary;
 $modal-backdrop-bg: $white-01;
 $modal-backdrop-opacity: .5;
 $modal-header-border-color: transparent;
 $modal-content-color: $gray-05;
-//** Modal footer border color
 $modal-footer-border-color: $gray-04;
 
-//** card settings
+//** Card settings
 $card-bg: $gray-01;
-$card-border-color: $gray-04;
+$card-title-color: $brown-70;
+$card-border-color: $gray-01;
 $card-footer-bg: $gray-03;
 $disabled-bg: $gray-05;
+$case-study-card-bg: $brand-primary;
+// Dark mode
+$dark-card-title-color: $brown-40;
+$dark-card-border-color: $gray-06;
+$dark-card-footer-bg: $gray-07;
+$dark-case-study-card-bg: $case-study-card-bg;
 
-//** table settings
+//** Table settings
+$table-header-bg: $gray-04;
 $table-header-border: $brand-primary;
 $table-row-border: $gray-04;
 $table-row-hover: $gray-03;
@@ -135,14 +216,86 @@ $table-row-bg-light: $gray-01;
 $table-row-bg-gray: $gray-02;
 $table-zebra-stripe: $gray-02;
 
+
+
+//** Home page
+$home-banner-bg: $brown-10;
+$home-banner-button-bg: $brown-60;
+$home-banner-button-color: $text-on-color;
+$home-banner-title-color: $black-01;
+$home-build-button-bg: $brown-60;
+$home-button-secondary-bg: $brown-20;
+$home-button-secondary-color: $black-01;
+$home-button-secondary-hover-bg: $brown-40;
+$home-link-color: $brown-70;
+// Dark mode
+$dark-home-button-secondary-bg: $brown-20;
+$dark-home-button-secondary-color: $black-01;
+$dark-home-button-secondary-hover-bg: $home-button-secondary-hover-bg;
+$dark-home-banner-bg: $brown-70;
+$dark-home-banner-button-bg: $brown-20;
+$dark-home-banner-button-color: $black-01;
+$dark-home-banner-title-color: $text-on-color;
+$dark-home-build-button-bg: $brown-70;
+$dark-home-link-color: $brown-40;
+
+//** HTTP method
+$http-post: $brown-70;
+$http-delete: $brown-70;
+$http-head: $brown-70;
+$http-options: $brown-70;
+$http-patch: $brown-70;
+$http-put: $brown-70;
+$http-trace: $brown-70;
+
+$dark-http-post: $brown-40;
+$dark-http-delete: $brown-40;
+$dark-http-head: $brown-40;
+$dark-http-options: $brown-40;
+$dark-http-patch: $brown-40;
+$dark-http-put: $brown-40;
+$dark-http-trace: $brown-40;
+
 // import everything from connect_theme as a starting point
 @import "connect-styles";
 
-// place further styling overrides here
-
-//* styling to change the default welcome banner
-
-.welcomebanner {
+.welcomebanner::before {
   background-image: none;
-  background-color: $gold-03;
+}
+
+// getting started section
+.startguide {
+  .gsstep.explore div.placeholder {
+    background-image: url(../images/explorerapis.svg);
+  }
+  .gsstep.signup div.placeholder {
+    background-image: url(../images/signup.svg);
+  }
+  .gsstep.subscribe div.placeholder {
+    background-image: url(../images/createapp.svg);
+  }
+  .gsstep.check-usage div.placeholder {
+    background-image: url(../images/check-usage.svg);
+  }
+}
+
+.case-study-banner::before {
+  background: url('../images/case-study-banner.svg') center / cover no-repeat;
+}
+
+body[data-dmt-mode="dark"] {
+  .startguide {
+    .gsstep.explore div.placeholder {
+      background-image: url(../images/explorerapis_dark.svg);
+    }
+    .gsstep.signup div.placeholder {
+      background-image: url(../images/signup_dark.svg);
+    }
+    .gsstep.subscribe div.placeholder {
+      background-image: url(../images/createapp_dark.svg);
+    }
+    .gsstep.check-usage div.placeholder {
+      background-image: url(../images/check-usage_dark.svg);
+    }
+  }
 }

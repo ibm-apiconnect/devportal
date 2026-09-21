@@ -1,3 +1,4 @@
+
 /**
  * progress indicator styling
  */
@@ -6,9 +7,9 @@
   background-color: #ffffff;
   border-bottom: 1px solid #e0e0e0;
   display: flex;
-  justify-content: left;
+  justify-content: start;
   align-items: center;
-  padding-left: 2rem;
+  padding-inline-start: 2rem;
 }
 
 .wizard-trail .bx--progress {
@@ -63,7 +64,8 @@
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  margin: 0.625rem 0.5rem 0 0;
+  margin-top: 0.625rem;
+  margin-inline-end: 0.5rem;
   fill: #0f62fe;
 }
 

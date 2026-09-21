@@ -1,14 +1,4 @@
 <?php
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\ibm_apim\Form;
 
@@ -45,7 +35,7 @@ class DevelForm extends ConfigFormBase {
     $config = $this->config('ibm_apim.devel_settings');
 
     $form['intro'] = [
-      '#markup' => t('IBM API Developer Portal Development Settings'),
+      '#markup' => t('IBM CMS Portal Development Settings'),
       '#weight' => -20,
     ];
 

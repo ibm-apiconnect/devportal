@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2025
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -29,6 +19,7 @@ use Drupal\product\Product;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 class ProductHooks {
   /**
@@ -229,7 +220,8 @@ class ProductHooks {
       // for each subscription to a product-specific realm
       $options = ['target' => 'default'];
       $query = Database::getConnection($options['target'])
-        ->query("SELECT * FROM apic_app_application_subs WHERE consumerorg_url = '" . $orgUrl . "'", [], $options);
+        ->query("SELECT * FROM apic_app_application_subs WHERE consumerorg_url = :orgUrl",
+          [':orgUrl' => $orgUrl], $options);
       $subResults = $query->fetchAll();
       foreach ($subResults as $sub) {
         if ($sub !== NULL && $sub->product_url !== NULL) {
@@ -244,7 +236,8 @@ class ProductHooks {
         ->query("SELECT tags.consumerorg_tags_value as consumerorg_tags_value
   FROM `node__consumerorg_url` id
   INNER JOIN `node__consumerorg_tags` tags ON id.entity_id = tags.entity_id
-  WHERE (id.consumerorg_url_value = '" . $orgUrl . "')", [], $options);
+  WHERE (id.consumerorg_url_value = :orgUrl)",
+          [':orgUrl' => $orgUrl], $options);
       $doResults = $query->fetchAll();
       $tags = [];
       foreach ($doResults as $do) {
@@ -310,11 +303,21 @@ class ProductHooks {
   public function viewsDataAlter(array &$data) {
     $data['node__apic_url']['subscription_status_filter'] = [
       'group' => 'APIC Filters',
-      'title' => t('Subscription Status'),
+      'title' => t('Subscription status'),
       'filter' => [
-        'title' => t('Subscription Status'),
+        'title' => t('Subscription status'),
         'field' => 'title',
         'id' => 'subscription_status_filter',
+      ],
+    ];
+    
+    $data['node_field_data']['api_type_filter'] = [
+      'group' => 'APIC Filters',
+      'title' => t('API Type'),
+      'filter' => [
+        'title' => t('API Type'),
+        'field' => 'nid',
+        'id' => 'api_type_filter',
       ],
     ];
   }
@@ -361,6 +364,20 @@ class ProductHooks {
    */
   #[Hook('form_alter')]
   public function formAlter(array &$form, FormStateInterface $form_state, $form_id) {
+    if (strpos($form_id, 'vote_apic_rating') !== FALSE && isset($form['#attributes']['aria-label'])) {
+      $form['#attributes']['aria-label'] = $form['#attributes']['aria-label'] . ' ' . $form_id;
+    }
+    
+    // Fix label 'for' attribute for views exposed form filters
+    if (strpos($form_id, 'views_exposed_form') !== FALSE && strpos($form_id, 'products') !== FALSE) {
+      if (isset($form['term_node_tid_depth']) && isset($form['term_node_tid_depth']['#id'])) {
+        $actual_id = $form['term_node_tid_depth']['#id'];
+        if (isset($form['term_node_tid_depth']['#title_display']) && $form['term_node_tid_depth']['#title_display'] !== 'invisible') {
+          $form['term_node_tid_depth']['#attributes']['id'] = $actual_id;
+        }
+      }
+    }
+    
     switch ($form_id) {
       // remove link to delete our content type
       case 'node_type_edit_form':
@@ -409,27 +426,65 @@ class ProductHooks {
    */
   #[Hook('theme')]
   public function theme($existing, $type, $theme, $path): array {
-    return [
-      'productrecommendations_block' => [
-        'variables' => [
-          'productRecommendations' => NULL,
-        ],
-      ],
-      'product_select' => [
-        'variables' => [
-          'apiNid' => NULL,
-          'products' => NULL,
-        ],
-      ],
-      'product_wrapper' => [
-        'variables' => [
-          'api' => NULL,
-          'product' => NULL,
-          'showPlaceholders' => TRUE,
-          'showVersions' => TRUE,
-        ],
+    $definitions = [];
+
+    // Node view mode templates for product content type.
+    $template_map = [
+      'full' => 'node--product',
+      'teaser' => 'node--product--teaser',
+      'card' => 'node--product--card',
+      'subscribewizard' => 'node--product--subscribewizard',
+    ];
+
+    $theme_name = \Drupal::theme()->getActiveTheme()->getName();
+    $theme_path = \Drupal::service('extension.list.theme')->getPath($theme_name);
+    $module_path = \Drupal::service('extension.list.module')->getPath('product');
+
+    foreach ($template_map as $view_mode => $template_file) {
+      $template_path = '';
+
+      if (file_exists($theme_path . '/templates/node/' . $template_file . '.html.twig')) {
+        $template_path = $theme_path . '/templates/node';
+      }
+      elseif (file_exists($theme_path . '/templates/' . $template_file . '.html.twig')) {
+        $template_path = $theme_path . '/templates';
+      }
+      else {
+        $template_path = $module_path . '/templates';
+      }
+
+      $definitions['node__product__' . $view_mode] = [
+        'base hook' => 'node',
+        'template' => $template_file,
+        'path' => $template_path,
+      ];
+    }
+
+    // Existing theme hooks (keep these as-is)
+    $definitions['productrecommendations_block'] = [
+      'variables' => [
+        'productRecommendations' => NULL,
       ],
     ];
+
+    $definitions['product_select'] = [
+      'variables' => [
+        'apiNid' => NULL,
+        'products' => NULL,
+      ],
+    ];
+
+    $definitions['product_wrapper'] = [
+      'variables' => [
+        'api' => NULL,
+        'product' => NULL,
+        'showPlaceholders' => TRUE,
+        'showVersions' => TRUE,
+        'postmanEnabled' => FALSE,
+      ],
+    ];
+
+    return $definitions;
   }
 
   /**
@@ -471,7 +526,7 @@ class ProductHooks {
     ];
     $product['plans'] = [
       'name' => t("Plans"),
-      'description' => t("A comma separated list of Plans names within the product."),
+      'description' => t("A comma separated list of plans names within the product."),
     ];
     $product['image_url'] = [
       'name' => t("Image URL"),
@@ -541,7 +596,7 @@ class ProductHooks {
           case 'apis':
             $apisList = [];
             foreach ($product->product_apis->getValue() as $arrayValue) {
-              $apis = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+              $apis = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
               foreach ($apis as $prodRef) {
                 $apisList[] = $prodRef;
               }
@@ -551,7 +606,7 @@ class ProductHooks {
           case 'plans':
             $plansList = [];
             foreach ($product->product_plans->getValue() as $arrayValue) {
-              $plan = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+              $plan = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
 
               $plansList[] = $plan['name'];
             }

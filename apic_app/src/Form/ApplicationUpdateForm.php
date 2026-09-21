@@ -1,18 +1,10 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\apic_app\Form;
 
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
 use Drupal\apic_app\Service\ApplicationService;
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\apic_app\Service\CertificateService;
@@ -26,6 +18,7 @@ use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 /**
  * Form to update an application.
@@ -119,10 +112,12 @@ class ApplicationUpdateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    if ($appId !== NULL) {
-      $this->node = $appId;
+    $route_match = \Drupal::routeMatch();
+    if ($route_match->getParameter('appId') !== NULL) {
+      // The AppIdParamConverter has already converted the appId to a node
+      $this->node = $route_match->getParameter('appId');
     }
     $form['#parents'] = [];
     $max_weight = 500;
@@ -184,6 +179,12 @@ class ApplicationUpdateForm extends FormBase {
 
     $form['title']['#required'] = TRUE;
 
+    // Ensure the description textarea has an accessible label (WCAG 1.3.1 / 4.1.2).
+    // buildForm() bypasses the normal entity form pipeline so the label must be set manually.
+    if (isset($form['apic_summary']['widget'][0]['value'])) {
+      $form['apic_summary']['widget'][0]['value']['#attributes']['aria-label'] = $this->t('Description');
+    }
+
     $form['actions']['#type'] = 'actions';
     $form['actions']['#weight'] = $max_weight + 1;
     $form['actions']['submit'] = [
@@ -226,8 +227,7 @@ class ApplicationUpdateForm extends FormBase {
     if (is_array($name) && isset($name[0]['value'])) {
       $name = $name[0]['value'];
     }
-    $name = trim($name);
-    if (!isset($name) || empty($name)) {
+    if (!isset($name) || empty(trim($name))) {
       $form_state->setErrorByName('title', $this->t('Application name is a required field.'));
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -245,10 +245,13 @@ class ApplicationUpdateForm extends FormBase {
     if (is_array($name) && isset($name[0]['value'])) {
       $name = $name[0]['value'];
     }
-    $name = trim($name);
+    $name = Html::escape(trim($name));
     $summary = $form_state->getValue('apic_summary');
     if (is_array($summary) && isset($summary[0]['value'])) {
       $summary = $summary[0]['value'];
+    }
+    if (isset($summary)) {
+      $summary = Xss::filter($summary);
     }
     $oauthEndpoints = [];
     $oauth = $form_state->getValue('application_redirect_endpoints');
@@ -282,16 +285,21 @@ class ApplicationUpdateForm extends FormBase {
       $customFields = $this->applicationService->getCustomFields();
       $customFieldValues = $this->utils->handleFormCustomFields($customFields, $form_state);
       if (!empty($customFieldValues) && isset($this->node->get("application_data")->getValue()[0]['value'])) {
-        $appData = unserialize($this->node->get("application_data")->getValue()[0]['value'], ['allowed_classes' => FALSE]);
+        $appData = SerializationUtility::decodeData($this->node->get("application_data")->getValue()[0]['value'], TRUE, FALSE);
         $metadata = $appData['metadata'] ?? [];
         foreach ($customFieldValues as $customField => $value) {
           $metadata[$customField] = json_encode($value, JSON_THROW_ON_ERROR);
         }
         $data['metadata'] = $metadata;
       }
+
+      // Calling all modules implementing 'hook_apic_app_pre_update':
+      $moduleHandler = \Drupal::service('module_handler');
+      $moduleHandler->invokeAll('apic_app_pre_update', [$this->node, $data]);
+
       $result = $this->restService->patchApplication($url, json_encode($data, JSON_THROW_ON_ERROR));
       if (isset($result) && $result->code >= 200 && $result->code < 300) {
-
+        
         $this->node->setTitle($this->utils->truncate_string($name));
         $this->node->set('apic_summary', $summary);
         $this->node->set('application_redirect_endpoints', $oauthEndpoints);
@@ -327,7 +335,6 @@ class ApplicationUpdateForm extends FormBase {
         ]);
 
         // Calling all modules implementing 'hook_apic_app_update':
-        $moduleHandler = \Drupal::service('module_handler');
         $moduleHandler->invokeAll('apic_app_update', [$this->node, $result->data]);
 
         \Drupal::service('apic_app.application')->invalidateCaches();

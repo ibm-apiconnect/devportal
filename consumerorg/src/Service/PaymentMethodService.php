@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\consumerorg\Service;
 
@@ -20,6 +10,7 @@ use Drupal\ibm_event_log\ApicType\ApicEvent;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * Class to work with the Consumerorg content type, takes input from the JSON returned by
@@ -55,7 +46,7 @@ class PaymentMethodService {
         $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
         if ($encryptionProfile !== NULL) {
           $encryptionService = \Drupal::service('encryption');
-          $configuration = $encryptionService->encrypt(serialize($configuration), $encryptionProfile);
+          $configuration = $encryptionService->encrypt(SerializationUtility::encodeData($configuration), $encryptionProfile);
         }
       } else {
         \Drupal::logger('consumerorg')->warning('create: No payment method encryption profile set', []);
@@ -296,7 +287,7 @@ class PaymentMethodService {
         $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
         $encryptionService = \Drupal::service('encryption');
         if ($encryptionProfile !== NULL) {
-          $configuration = unserialize($encryptionService->decrypt($configuration, $encryptionProfile), ['allowed_classes' => FALSE]);
+          $configuration = SerializationUtility::decodeData($encryptionService->decrypt($configuration, $encryptionProfile), TRUE, FALSE);
         }
       } else {
         \Drupal::logger('consumerorg')->warning('decryptConfiguration: No payment method encryption profile set', []);

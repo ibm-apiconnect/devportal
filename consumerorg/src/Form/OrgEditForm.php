@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\consumerorg\Form;
 
@@ -197,8 +187,22 @@ class OrgEditForm extends FormBase {
       $name = $name[0]['value'];
     }
     $name = trim($name);
+    // Sanitize the organization title only if it contains characters that need escaping
+    $originalName = $name;
+    $sanitizedName = htmlspecialchars($originalName, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+    // Only use the sanitized value if it's different from the original
+    if ($originalName !== $sanitizedName) {
+      $name = $sanitizedName;
+    }
+    
     if (!isset($name) || empty($name)) {
       $form_state->setErrorByName('title', $this->t('Organization title is a required field.'));
+    }
+    
+    // Check for URLs in the title
+    $pattern = '/(https?|ftp|ftps|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|]|www\.[A-Z0-9.-]+\.[A-Z]{2,4}/i';
+    if (preg_match($pattern, $name)) {
+      $form_state->setErrorByName('title', $this->t('Organization title cannot contain URLs'));
     }
   }
 
@@ -222,9 +226,43 @@ class OrgEditForm extends FormBase {
     else {
       $customFields = $this->consumerOrgService->getCustomFields();
       $values = $form_state->getValues();
+      
+      // Sanitize title field only if it contains characters that need escaping
+      if (isset($values['title']) && is_array($values['title']) && isset($values['title'][0]['value'])) {
+        $originalValue = $values['title'][0]['value'];
+        $sanitizedValue = htmlspecialchars($originalValue, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+        // Only use the sanitized value if it's different from the original
+        if ($originalValue !== $sanitizedValue) {
+          $values['title'][0]['value'] = $sanitizedValue;
+        }
+      }
+      
       if (!empty($customFields)) {
         $customFieldValues = \Drupal::service('ibm_apim.utils')->handleFormCustomFields($customFields, $form_state);
         $values = array_replace($values, $customFieldValues);
+        
+        // Sanitize custom field values only if they contain characters that need escaping
+        foreach ($customFields as $fieldName) {
+          if (isset($values[$fieldName])) {
+            if (is_array($values[$fieldName]) && isset($values[$fieldName][0]['value'])) {
+              // Only sanitize if the value contains characters that need escaping
+              $originalValue = $values[$fieldName][0]['value'];
+              $sanitizedValue = htmlspecialchars($originalValue, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+              // Only use the sanitized value if it's different from the original
+              if ($originalValue !== $sanitizedValue) {
+                $values[$fieldName][0]['value'] = $sanitizedValue;
+              }
+            } elseif (is_string($values[$fieldName])) {
+              // Only sanitize if the value contains characters that need escaping
+              $originalValue = $values[$fieldName];
+              $sanitizedValue = htmlspecialchars($originalValue, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+              // Only use the sanitized value if it's different from the original
+              if ($originalValue !== $sanitizedValue) {
+                $values[$fieldName] = $sanitizedValue;
+              }
+            }
+          }
+        }
       }
       $response = $this->consumerOrgService->edit($this->currentOrg, $values);
       if ($response->success()) {

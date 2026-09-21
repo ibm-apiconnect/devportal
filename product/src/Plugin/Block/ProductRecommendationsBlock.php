@@ -1,5 +1,4 @@
 <?php
-
 namespace Drupal\product\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
@@ -15,8 +14,8 @@ use Drupal\Core\Plugin\Context\ContextDefinition;
  */
 #[Block(
   id: "productrecommendations_block",
-  admin_label: new TranslatableMarkup("API Product Recommendations"),
-  category: new TranslatableMarkup("API Product Recommendations"),
+  admin_label: new TranslatableMarkup("API Product recommendations"),
+  category: new TranslatableMarkup("API Product recommendations"),
 )]
 
 class ProductRecommendationsBlock extends BlockBase {

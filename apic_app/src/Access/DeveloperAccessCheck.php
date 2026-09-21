@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 namespace Drupal\apic_app\Access;
 
@@ -28,10 +18,19 @@ class DeveloperAccessCheck implements AccessInterface {
    *
    * @return \Drupal\Core\Access\AccessResult|\Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultNeutral
    */
-  public function access(NodeInterface $application = NULL) {
+  public function access(?NodeInterface $application = NULL) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $allowed = FALSE;
     $current_user = \Drupal::currentUser();
+    
+    $config = \Drupal::config('ibm_apim.settings');
+    $show_register_app = (boolean) $config->get('show_register_app');
+    
+    if (!$show_register_app && !isset($application)) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, FALSE);
+      return AccessResult::forbidden('Application registration is disabled.');
+    }
+    
     // block anonymous and admin
     if (!$current_user->isAnonymous() && (int) $current_user->id() !== 1) {
 

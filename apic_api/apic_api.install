@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
@@ -1320,3 +1310,117 @@ function apic_api_update_dependencies(): array {
     ],
   ];
 }
+
+/**
+ * Add apic_metadata field to store raw metadata from API Manager
+ * 
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_api_update_10006() {
+  // Check view displays
+  $viewDisplayFiles = ['node.api.default', 'node.api.card', 'node.api.embedded', 'node.api.teaser'];
+  $formatter_manager = \Drupal::service('plugin.manager.field.formatter');
+  
+  foreach ($viewDisplayFiles as $file) {
+    $viewDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load($file);
+  
+    if ($viewDisplay !== NULL) {
+      $changed = FALSE;
+      $content = $viewDisplay->get('content');
+      
+      foreach ($content as $fieldName => $component) {
+        if (is_array($component) && isset($component['type'])) {
+          $type = $component['type'];
+          $definitions = $formatter_manager->getDefinitions();
+          if (!isset($definitions[$type])) {
+            \Drupal::logger('apic_api')->notice('View Display - Field: @field, Type: @type, Not Supported in File: @file', [
+              '@field' => $fieldName,
+              '@type' => $type,
+              '@file' => $file,
+            ]);
+  
+            // Reset to Basic String
+            $content[$fieldName]['type'] = 'basic_string';
+            $changed = TRUE;
+          }
+        }
+      }
+      
+      if ($changed) {
+        $viewDisplay->set('content', $content);
+        $viewDisplay->save();
+        \Drupal::logger('apic_api')->notice('Saved view display changes for @file', ['@file' => $file]);
+      }
+    }
+  }
+
+  // Check form displays
+  $formDisplayFiles = ['node.api.default'];
+  $widget_manager = \Drupal::service('plugin.manager.field.widget');
+  
+  foreach ($formDisplayFiles as $file) {
+    $formDisplay = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load($file);
+  
+    if ($formDisplay !== NULL) {
+      $changed = FALSE;
+      $content = $formDisplay->get('content');
+      
+      foreach ($content as $fieldName => $component) {
+        if (is_array($component) && isset($component['type'])) {
+          $type = $component['type'];
+          $definitions = $widget_manager->getDefinitions();
+          if (!isset($definitions[$type])) {
+            \Drupal::logger('proapic_apiduct')->notice('Form Display - Field: @field, Type: @type, Not Supported in File: @file', [
+              '@field' => $fieldName,
+              '@type' => $type,
+              '@file' => $file,
+            ]);
+  
+            // Reset to string_textfield for form widgets
+            $content[$fieldName]['type'] = 'string_textfield';
+            $changed = TRUE;
+          }
+        }
+      }
+      
+      if ($changed) {
+        $formDisplay->set('content', $content);
+        $formDisplay->save();
+        \Drupal::logger('product')->notice('Saved form display changes for @file', ['@file' => $file]);
+      }
+    }
+  }
+  
+  // Check if field storage already exists
+  $fieldStorage = FieldStorageConfig::loadByName('node', 'apic_metadata');
+  if (!$fieldStorage) {
+    $fieldStorage = FieldStorageConfig::create([
+      'field_name' => 'apic_metadata',
+      'entity_type' => 'node',
+      'type' => 'string_long',
+      'required' => FALSE,
+      'translatable' => FALSE,
+      'cardinality' => 1,
+      'settings' => ['case_sensitive' => FALSE],
+    ]);
+    $fieldStorage->save();
+  }
+
+  // Check if field config already exists for api
+  $fieldConfig = FieldConfig::loadByName('node', 'api', 'apic_metadata');
+  if (!$fieldConfig) {
+    $fieldConfig = FieldConfig::create([
+      'field_name' => 'apic_metadata',
+      'entity_type' => 'node',
+      'bundle' => 'api',
+      'label' => t('APIC Metadata'),
+      'description' => t('Raw metadata from API Manager'),
+      'required' => FALSE,
+      'translatable' => FALSE,
+    ]);
+    $fieldConfig->save();
+  }
+  
+  \Drupal::logger('apic_api')->notice('Added apic_metadata field to api content type');
+}
+

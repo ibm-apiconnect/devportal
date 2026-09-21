@@ -1,15 +1,5 @@
 <?php
 
-/********************************************************* {COPYRIGHT-TOP} ***
- * Licensed Materials - Property of IBM
- * 5725-L30, 5725-Z22
- *
- * (C) Copyright IBM Corporation 2018, 2024
- *
- * All Rights Reserved.
- * US Government Users Restricted Rights - Use, duplication or disclosure
- * restricted by GSA ADP Schedule Contract with IBM Corp.
- ********************************************************** {COPYRIGHT-END} **/
 
 /**
  * @file
@@ -832,4 +822,659 @@ function apic_app_update_dependencies(): array {
       ],
     ],
   ];
+}
+
+/**
+ * Update hook to import or update the 'application_subscriptions' view using module handler.
+ */
+function apic_app_update_11001() {
+  // Get the module path using the module handler service.
+  $module_handler = \Drupal::service('module_handler');
+  $module_path = $module_handler->getModule('apic_app')->getPath();
+
+  // Path to the YAML config file in the module.
+  $config_path = DRUPAL_ROOT . '/' . $module_path . '/config/install/views.view.application_subscriptions.yml';
+
+  if (!file_exists($config_path)) {
+    throw new \Exception('View YAML not found at: ' . $config_path);
+  }
+
+  // Read and decode the YAML file.
+  $yaml_content = file_get_contents($config_path);
+  $data = \Drupal\Component\Serialization\Yaml::decode($yaml_content);
+
+  if (empty($data)) {
+    throw new \Exception('Invalid or empty YAML content for application_subscriptions.');
+  }
+
+  // Import as configuration.
+  $config = \Drupal::configFactory()->getEditable('views.view.application_subscriptions');
+  $config->setData($data)->save();
+  // Invalidate render cache to reflect config changes.
+  \Drupal::service('cache.render')->invalidateAll();
+}
+
+/**
+ * Add apic_metadata field to store raw metadata from API Manager
+ * 
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function apic_app_update_11002() {
+  // Check view displays
+  $viewDisplayFiles = ['node.application.default', 'node.application.card', 'node.application.subscribewizard', 'node.application.teaser'];
+  $formatter_manager = \Drupal::service('plugin.manager.field.formatter');
+  
+  foreach ($viewDisplayFiles as $file) {
+    $viewDisplay = \Drupal::entityTypeManager()->getStorage('entity_view_display')->load($file);
+  
+    if ($viewDisplay !== NULL) {
+      $changed = FALSE;
+      $content = $viewDisplay->get('content');
+      
+      foreach ($content as $fieldName => $component) {
+        if (is_array($component) && isset($component['type'])) {
+          $type = $component['type'];
+          $definitions = $formatter_manager->getDefinitions();
+          if (!isset($definitions[$type])) {
+            \Drupal::logger('apic_app')->notice('View Display - Field: @field, Type: @type, Not Supported in File: @file', [
+              '@field' => $fieldName,
+              '@type' => $type,
+              '@file' => $file,
+            ]);
+  
+            // Reset to Basic String
+            $content[$fieldName]['type'] = 'basic_string';
+            $changed = TRUE;
+          }
+        }
+      }
+      
+      if ($changed) {
+        $viewDisplay->set('content', $content);
+        $viewDisplay->save();
+        \Drupal::logger('apic_app')->notice('Saved view display changes for @file', ['@file' => $file]);
+      }
+    }
+  }
+
+  // Check form displays
+  $formDisplayFiles = ['node.application.default'];
+  $widget_manager = \Drupal::service('plugin.manager.field.widget');
+  
+  foreach ($formDisplayFiles as $file) {
+    $formDisplay = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load($file);
+  
+    if ($formDisplay !== NULL) {
+      $changed = FALSE;
+      $content = $formDisplay->get('content');
+      
+      foreach ($content as $fieldName => $component) {
+        if (is_array($component) && isset($component['type'])) {
+          $type = $component['type'];
+          $definitions = $widget_manager->getDefinitions();
+          if (!isset($definitions[$type])) {
+            \Drupal::logger('apic_app')->notice('Form Display - Field: @field, Type: @type, Not Supported in File: @file', [
+              '@field' => $fieldName,
+              '@type' => $type,
+              '@file' => $file,
+            ]);
+  
+            // Reset to string_textfield for form widgets
+            $content[$fieldName]['type'] = 'string_textfield';
+            $changed = TRUE;
+          }
+        }
+      }
+      
+      if ($changed) {
+        $formDisplay->set('content', $content);
+        $formDisplay->save();
+        \Drupal::logger('product')->notice('Saved form display changes for @file', ['@file' => $file]);
+      }
+    }
+  }
+  
+  // Check if field storage already exists
+  $fieldStorage = FieldStorageConfig::loadByName('node', 'apic_metadata');
+  if (!$fieldStorage) {
+    $fieldStorage = FieldStorageConfig::create([
+      'field_name' => 'apic_metadata',
+      'entity_type' => 'node',
+      'type' => 'string_long',
+      'required' => FALSE,
+      'translatable' => FALSE,
+      'cardinality' => 1,
+      'settings' => ['case_sensitive' => FALSE],
+    ]);
+    $fieldStorage->save();
+  }
+
+  // Check if field config already exists for application
+  $fieldConfig = FieldConfig::loadByName('node', 'application', 'apic_metadata');
+  if (!$fieldConfig) {
+    $fieldConfig = FieldConfig::create([
+      'field_name' => 'apic_metadata',
+      'entity_type' => 'node',
+      'bundle' => 'application',
+      'label' => t('APIC Metadata'),
+      'description' => t('Raw metadata from API Manager'),
+      'required' => FALSE,
+      'translatable' => FALSE,
+    ]);
+    $fieldConfig->save();
+  }
+  
+  \Drupal::logger('apic_app')->notice('Added apic_metadata field to application content type');
+}
+
+/**
+ * Update application_subscriptions view to add configurable sorting options.
+ */
+function apic_app_update_11003() {
+  // Get the module path using the module handler service.
+  $module_handler = \Drupal::service('module_handler');
+  $module_path = $module_handler->getModule('apic_app')->getPath();
+
+  // Path to the YAML config file in the module.
+  $config_path = DRUPAL_ROOT . '/' . $module_path . '/config/install/views.view.application_subscriptions.yml';
+
+  if (!file_exists($config_path)) {
+    throw new \Exception('View YAML not found at: ' . $config_path);
+  }
+
+  // Read and decode the YAML file.
+  $yaml_content = file_get_contents($config_path);
+  $data = \Drupal\Component\Serialization\Yaml::decode($yaml_content);
+
+  if (empty($data)) {
+    throw new \Exception('Invalid or empty YAML content for application_subscriptions.');
+  }
+
+  $config = \Drupal::configFactory()->getEditable('views.view.application_subscriptions');
+
+  $dependencies = $config->get('dependencies') ?? [];
+  $module_dependencies = $dependencies['module'] ?? [];
+  if (!in_array('better_exposed_filters', $module_dependencies, TRUE)) {
+    $module_dependencies[] = 'better_exposed_filters';
+  }
+  $dependencies['module'] = $module_dependencies;
+  $config->set('dependencies', $dependencies);
+
+  // Update only sorts/exposed_form to avoid overwriting local changes.
+  $display_options = $config->get('display.default.display_options') ?? [];
+  $display_options['sorts'] = $data['display']['default']['display_options']['sorts'] ?? [];
+  $display_options['exposed_form'] = $data['display']['default']['display_options']['exposed_form'] ?? [];
+  $config->set('display.default.display_options', $display_options);
+
+  $block_display_options = $config->get('display.block_1.display_options') ?? [];
+  $block_data = $data['display']['block_1']['display_options'] ?? [];
+  foreach (['exposed_form', 'exposed_block', 'use_ajax'] as $key) {
+    if (array_key_exists($key, $block_data)) {
+      $block_display_options[$key] = $block_data[$key];
+    }
+  }
+  $config->set('display.block_1.display_options', $block_display_options);
+
+  if (!empty($data['display']['default']['cache_metadata'])) {
+    $config->set('display.default.cache_metadata', $data['display']['default']['cache_metadata']);
+  }
+
+  if (!empty($data['display']['block_1']['cache_metadata'])) {
+    $config->set('display.block_1.cache_metadata', $data['display']['block_1']['cache_metadata']);
+  }
+
+  $config->save();
+
+  return t('Application subscriptions view updated with configurable sorting options.');
+}
+
+/**
+ * Add product/plan title fields to subscriptions and backfill values.
+ */
+function apic_app_update_11005(&$sandbox) {
+  $database = \Drupal::database();
+  $table = 'apic_app_application_subs';
+  $accountSwitcher = NULL;
+  try {
+    $accountSwitcher = \Drupal::service('account_switcher');
+  }
+  catch (\Throwable $e) {
+    $accountSwitcher = NULL;
+  }
+  $switchedUser = FALSE;
+  if ($accountSwitcher !== NULL) {
+    $originalUser = \Drupal::currentUser();
+    if ((int) $originalUser->id() !== 1) {
+      $accountSwitcher->switchTo(new UserSession(['uid' => 1]));
+      $switchedUser = TRUE;
+    }
+  }
+
+  try {
+    if (!isset($sandbox['initialized'])) {
+    $sandbox['initialized'] = TRUE;
+    $sandbox['fields_added'] = FALSE;
+    $sandbox['progress'] = 0;
+    $sandbox['total'] = 0;
+
+    if ($database->schema()->tableExists($table)) {
+      $sandbox['total'] = (int) $database->select($table, 's')
+        ->countQuery()
+        ->execute()
+        ->fetchField();
+    }
+  }
+
+  if ($sandbox['fields_added'] === FALSE) {
+    $entity_type = 'apic_app_application_subs';
+    $field_manager = \Drupal::service('entity_field.manager');
+    $definitions = $field_manager->getFieldStorageDefinitions($entity_type);
+
+    if (!isset($definitions['plan_title'])) {
+      $plan_title = BaseFieldDefinition::create('string')
+        ->setLabel(t('Plan title'))
+        ->setDescription(t('The display title of the plan'))
+        ->setReadOnly(TRUE);
+      \Drupal::entityDefinitionUpdateManager()
+        ->installFieldStorageDefinition('plan_title', $entity_type, 'apic_app', $plan_title);
+    }
+
+    if (!isset($definitions['product_title'])) {
+      $product_title = BaseFieldDefinition::create('string')
+        ->setLabel(t('Product title'))
+        ->setDescription(t('The display title of the product'))
+        ->setReadOnly(TRUE);
+      \Drupal::entityDefinitionUpdateManager()
+        ->installFieldStorageDefinition('product_title', $entity_type, 'apic_app', $product_title);
+    }
+
+    if (!isset($definitions['plan_title_missing'])) {
+      $plan_title_missing = BaseFieldDefinition::create('integer')
+        ->setLabel(t('Plan title missing'))
+        ->setDescription(t('Whether the plan title could not be resolved'))
+        ->setSetting('unsigned', TRUE)
+        ->setDefaultValue(0)
+        ->setReadOnly(TRUE);
+      \Drupal::entityDefinitionUpdateManager()
+        ->installFieldStorageDefinition('plan_title_missing', $entity_type, 'apic_app', $plan_title_missing);
+    }
+
+    if (!isset($definitions['product_title_missing'])) {
+      $product_title_missing = BaseFieldDefinition::create('integer')
+        ->setLabel(t('Product title missing'))
+        ->setDescription(t('Whether the product title could not be resolved'))
+        ->setSetting('unsigned', TRUE)
+        ->setDefaultValue(0)
+        ->setReadOnly(TRUE);
+      \Drupal::entityDefinitionUpdateManager()
+        ->installFieldStorageDefinition('product_title_missing', $entity_type, 'apic_app', $product_title_missing);
+    }
+
+
+    if ($database->schema()->tableExists($table)) {
+      $schema = $database->schema();
+      
+      // Ensure plan_title_missing field exists at database level
+      if (!$schema->fieldExists($table, 'plan_title_missing')) {
+        $schema->addField($table, 'plan_title_missing', [
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'default' => 0,
+          'description' => 'Whether the plan title could not be resolved',
+        ]);
+      }
+      
+      // Ensure plan_title field exists at database level
+      if (!$schema->fieldExists($table, 'plan_title')) {
+        $schema->addField($table, 'plan_title', [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+          'description' => 'The display title of the plan',
+        ]);
+      }
+      
+      // Ensure product_title_missing field exists at database level
+      if (!$schema->fieldExists($table, 'product_title_missing')) {
+        $schema->addField($table, 'product_title_missing', [
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'default' => 0,
+          'description' => 'Whether the product title could not be resolved',
+        ]);
+      }
+      
+      // Ensure product_title field exists at database level
+      if (!$schema->fieldExists($table, 'product_title')) {
+        $schema->addField($table, 'product_title', [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+          'description' => 'The display title of the product',
+        ]);
+      }
+      
+      // Now safely create indexes only if columns exist
+      if ($schema->fieldExists($table, 'plan_title_missing') &&
+          $schema->fieldExists($table, 'plan_title') &&
+          !$schema->indexExists($table, 'apic_app_subs_plan_title_sort')) {
+        $schema->addIndex(
+          $table,
+          'apic_app_subs_plan_title_sort',
+          ['plan_title_missing', ['plan_title', 191]],
+          [
+            'fields' => [
+              'plan_title_missing' => [
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+                'default' => 0,
+              ],
+              'plan_title' => [
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => FALSE,
+              ],
+            ],
+          ]
+        );
+      }
+      
+      if ($schema->fieldExists($table, 'product_title_missing') &&
+          $schema->fieldExists($table, 'product_title') &&
+          !$schema->indexExists($table, 'apic_app_subs_product_title_sort')) {
+        $schema->addIndex(
+          $table,
+          'apic_app_subs_product_title_sort',
+          ['product_title_missing', ['product_title', 191]],
+          [
+            'fields' => [
+              'product_title_missing' => [
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+                'default' => 0,
+              ],
+              'product_title' => [
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => FALSE,
+              ],
+            ],
+          ]
+        );
+      }
+    }
+
+    // Update the view configuration now that new fields exist.
+    $module_handler = \Drupal::service('module_handler');
+    $module_path = $module_handler->getModule('apic_app')->getPath();
+    $config_path = DRUPAL_ROOT . '/' . $module_path . '/config/install/views.view.application_subscriptions.yml';
+
+    if (!file_exists($config_path)) {
+      throw new \Exception('View YAML not found at: ' . $config_path);
+    }
+
+    $yaml_content = file_get_contents($config_path);
+    $data = \Drupal\Component\Serialization\Yaml::decode($yaml_content);
+
+    if (empty($data)) {
+      throw new \Exception('Invalid or empty YAML content for application_subscriptions.');
+    }
+
+    $config = \Drupal::configFactory()->getEditable('views.view.application_subscriptions');
+    $dependencies = $config->get('dependencies') ?? [];
+    $module_dependencies = $dependencies['module'] ?? [];
+    if (!in_array('better_exposed_filters', $module_dependencies, TRUE)) {
+      $module_dependencies[] = 'better_exposed_filters';
+    }
+    $dependencies['module'] = $module_dependencies;
+    $config->set('dependencies', $dependencies);
+
+    $display_options = $config->get('display.default.display_options') ?? [];
+    $display_options['sorts'] = $data['display']['default']['display_options']['sorts'] ?? [];
+    $display_options['exposed_form'] = $data['display']['default']['display_options']['exposed_form'] ?? [];
+    $config->set('display.default.display_options', $display_options);
+
+    $block_display_options = $config->get('display.block_1.display_options') ?? [];
+    $block_data = $data['display']['block_1']['display_options'] ?? [];
+    foreach (['exposed_form', 'exposed_block', 'use_ajax'] as $key) {
+      if (array_key_exists($key, $block_data)) {
+        $block_display_options[$key] = $block_data[$key];
+      }
+    }
+    $config->set('display.block_1.display_options', $block_display_options);
+
+    if (!empty($data['display']['default']['cache_metadata'])) {
+      $config->set('display.default.cache_metadata', $data['display']['default']['cache_metadata']);
+    }
+
+    if (!empty($data['display']['block_1']['cache_metadata'])) {
+      $config->set('display.block_1.cache_metadata', $data['display']['block_1']['cache_metadata']);
+    }
+
+    $config->save();
+    $sandbox['fields_added'] = TRUE;
+  }
+
+  if ($sandbox['total'] === 0) {
+    $sandbox['#finished'] = 1;
+    return t('Application subscriptions titles backfilled for sorting.');
+  }
+
+  $limit = 50;
+  $query = $database->select($table, 's')
+    ->fields('s', ['id', 'product_url', 'plan'])
+    ->orderBy('id')
+    ->range($sandbox['progress'], $limit);
+  $result = $query->execute();
+
+  $processed = 0;
+  foreach ($result as $record) {
+    $titleData = apic_app_resolve_subscription_titles_for_backfill($record->product_url, $record->plan);
+    $database->update($table)
+      ->fields([
+        'plan_title' => $titleData['plan_title'],
+        'product_title' => $titleData['product_title'],
+        'plan_title_missing' => $titleData['plan_title_missing'],
+        'product_title_missing' => $titleData['product_title_missing'],
+      ])
+      ->condition('id', $record->id)
+      ->execute();
+    $processed++;
+  }
+
+  $sandbox['progress'] += $processed;
+  $sandbox['#finished'] = min(1, $sandbox['progress'] / $sandbox['total']);
+
+    if ($sandbox['#finished'] === 1.0) {
+      return t('Application subscriptions titles backfilled for sorting.');
+    }
+  }
+  finally {
+    if ($switchedUser && $accountSwitcher !== NULL) {
+      $accountSwitcher->switchBack();
+    }
+  }
+}
+
+/**
+ * Update application_subscriptions view label for plan sort option.
+ */
+function apic_app_update_11006() {
+  $config = \Drupal::configFactory()->getEditable('views.view.application_subscriptions');
+  $display_options = $config->get('display.default.display_options') ?? [];
+  if (isset($display_options['sorts']['plan_title']['expose']['label'])) {
+    $display_options['sorts']['plan_title']['expose']['label'] = 'Plan';
+    $config->set('display.default.display_options', $display_options);
+    $config->save();
+  }
+
+  return t('Application subscriptions plan sort label updated.');
+}
+
+/**
+ * Resolve product/plan titles for backfill.
+ *
+ * @param string $productUrl
+ * @param string $plan
+ *
+ * @return array
+ *   Keys: product_title, plan_title, product_title_missing, plan_title_missing.
+ */
+function apic_app_resolve_subscription_titles_for_backfill(string $productUrl, string $plan): array {
+  $result = [
+    'product_title' => NULL,
+    'plan_title' => NULL,
+    'product_title_missing' => 1,
+    'plan_title_missing' => 1,
+  ];
+
+  if ($productUrl === '') {
+    return $result;
+  }
+
+  static $productCache = [];
+  if (!isset($productCache[$productUrl])) {
+    $productCache[$productUrl] = [
+      'product_title' => NULL,
+      'plan_titles' => [],
+    ];
+
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', 'product');
+    $query->condition('apic_url.value', $productUrl);
+    $query->accessCheck(FALSE);
+    $nids = $query->execute();
+
+    if (!empty($nids)) {
+      $nid = array_shift($nids);
+      $product = Node::load($nid);
+      if ($product !== NULL) {
+        $productCache[$productUrl]['product_title'] = $product->getTitle();
+        if ($product->hasField('product_plans')) {
+          foreach ($product->product_plans->getValue() as $arrayValue) {
+            $planData = \Drupal\ibm_apim\External\SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
+            if (is_array($planData) && isset($planData['name']) && isset($planData['title'])) {
+              $productCache[$productUrl]['plan_titles'][$planData['name']] = $planData['title'];
+            }
+          }
+        }
+      }
+    }
+  }
+
+  $cached = $productCache[$productUrl];
+  if (!empty($cached['product_title'])) {
+    $result['product_title'] = $cached['product_title'];
+    $result['product_title_missing'] = 0;
+  }
+  if ($plan !== '' && isset($cached['plan_titles'][$plan]) && $cached['plan_titles'][$plan] !== '') {
+    $result['plan_title'] = $cached['plan_titles'][$plan];
+    $result['plan_title_missing'] = 0;
+  }
+
+  return $result;
+}
+
+/**
+ * Add keyword search filter and reset button to application_subscriptions view.
+ */
+function apic_app_update_11007() {
+  // Get the module path using the module handler service.
+  $module_handler = \Drupal::service('module_handler');
+  $module_path = $module_handler->getModule('apic_app')->getPath();
+
+  // Path to the YAML config file in the module.
+  $config_path = DRUPAL_ROOT . '/' . $module_path . '/config/install/views.view.application_subscriptions.yml';
+
+  if (!file_exists($config_path)) {
+    throw new \Exception('View YAML not found at: ' . $config_path);
+  }
+
+  // Read and decode the YAML file.
+  $yaml_content = file_get_contents($config_path);
+  $data = \Drupal\Component\Serialization\Yaml::decode($yaml_content);
+
+  if (empty($data)) {
+    throw new \Exception('Invalid or empty YAML content for application_subscriptions.');
+  }
+
+  $config = \Drupal::configFactory()->getEditable('views.view.application_subscriptions');
+
+  // Update filters, filter_groups, and exposed_form settings from YAML
+  $display_options = $config->get('display.default.display_options') ?? [];
+  
+  // Update keyword filter
+  if (!isset($display_options['filters']['keyword']) &&
+      isset($data['display']['default']['display_options']['filters']['keyword'])) {
+    $display_options['filters']['keyword'] = $data['display']['default']['display_options']['filters']['keyword'];
+  }
+  
+  // Update filter_groups
+  if (isset($data['display']['default']['display_options']['filter_groups'])) {
+    $display_options['filter_groups'] = $data['display']['default']['display_options']['filter_groups'];
+  }
+  
+  // Update exposed_block
+  if (isset($data['display']['default']['display_options']['exposed_block'])) {
+    $display_options['exposed_block'] = $data['display']['default']['display_options']['exposed_block'];
+  }
+  
+  // Update exposed_form settings (including reset_button and BEF keyword config)
+  if (isset($data['display']['default']['display_options']['exposed_form'])) {
+    $yaml_exposed_form = $data['display']['default']['display_options']['exposed_form'];
+    
+    // Update reset_button
+    if (isset($yaml_exposed_form['options']['reset_button'])) {
+      $display_options['exposed_form']['options']['reset_button'] = $yaml_exposed_form['options']['reset_button'];
+    }
+    
+    // Update BEF keyword settings
+    if (isset($yaml_exposed_form['options']['bef']['keyword'])) {
+      $display_options['exposed_form']['options']['bef']['keyword'] = $yaml_exposed_form['options']['bef']['keyword'];
+    }
+  }
+  
+  $config->set('display.default.display_options', $display_options);
+
+  // Update cache metadata for default display
+  if (!empty($data['display']['default']['cache_metadata'])) {
+    $config->set('display.default.cache_metadata', $data['display']['default']['cache_metadata']);
+  }
+
+  // Update block_1 display
+  $block_display_options = $config->get('display.block_1.display_options') ?? [];
+  $block_data = $data['display']['block_1']['display_options'] ?? [];
+  
+  // Update exposed_form settings for block
+  if (isset($block_data['exposed_form'])) {
+    $yaml_block_exposed_form = $block_data['exposed_form'];
+    
+    // Update reset_button
+    if (isset($yaml_block_exposed_form['options']['reset_button'])) {
+      $block_display_options['exposed_form']['options']['reset_button'] = $yaml_block_exposed_form['options']['reset_button'];
+    }
+    
+    // Update BEF keyword settings
+    if (isset($yaml_block_exposed_form['options']['bef']['keyword'])) {
+      $block_display_options['exposed_form']['options']['bef']['keyword'] = $yaml_block_exposed_form['options']['bef']['keyword'];
+    }
+  }
+  
+  $config->set('display.block_1.display_options', $block_display_options);
+
+  // Update cache metadata for block_1 display
+  if (!empty($data['display']['block_1']['cache_metadata'])) {
+    $config->set('display.block_1.cache_metadata', $data['display']['block_1']['cache_metadata']);
+  }
+
+  $config->save();
+
+  // Invalidate render cache to reflect config changes.
+  \Drupal::service('cache.render')->invalidateAll();
+
+  return t('Added keyword search filter and reset button to application_subscriptions view.');
 }
