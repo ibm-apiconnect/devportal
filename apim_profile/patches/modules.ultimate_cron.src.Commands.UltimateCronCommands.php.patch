@@ -1,37 +1,72 @@
 --- modules/ultimate_cron/src/Commands/UltimateCronCommands.php 2024-02-15 16:40:25
 +++ modules/ultimate_cron/src/Commands/UltimateCronCommands.php    2024-02-15 16:40:17
-@@ -278,21 +278,24 @@
-
+@@ -257,6 +257,8 @@
+    * @aliases crun cron-run
+    */
+   public function run($name = NULL, array $options = ['force' => NULL, 'options' => NULL]) {
++    \Drupal::logger('ultimate_cron')->info('Starting Ultimate Cron run...');
++  
+     if ($o = $options['options']) {
+       $pairs = explode(',', $o);
+       foreach ($pairs as $pair) {
+@@ -264,24 +266,45 @@
+         CronPlugin::setGlobalOption(trim($key), trim($value));
+       }
+     }
+-
++  
      $force = $options['force'];
-
+-
 -    if (!$name) {
 -      throw new \Exception(dt("Running all cronjobs is not supported by Ultimate Cron's cron:run - please use Drupal Core's core:cron command!"));
++  
 +    $jobs = [];
 +    if ($name) {
 +      $job = CronJob::load($name);
 +      if (!$job) {
++         \Drupal::logger('ultimate_cron')->error('Cron job @name not found.', ['@name' => $name]);
 +        throw new \Exception(dt('@name not found', ['@name' => $name]));
 +      }
 +      $jobs[] = $job;
 +    } else {
 +      $jobs = CronJob::loadMultiple();
      }
-
-     // Run a specific job.
+-
+-    // Run a specific job.
 -    $job = CronJob::load($name);
 -
 -    if (!$job) {
 -      throw new \Exception(dt('@name not found', ['@name' => $name]));
++  
++     \Drupal::logger('ultimate_cron')->info('Found @count cron job(s) to consider.', ['@count' => count($jobs)]);
++  
++    // Run each eligible job
 +    foreach ($jobs as $job) {
++      $job_name = $job->id();
++  
 +      if ($force || $job->isScheduled()) {
-+        $job->run(t('Launched by drush'));
++         \Drupal::logger('ultimate_cron')->info('Starting cron job @job.', ['@job' => $job_name]);
++  
++        try {
++          $job->run(t('Launched by drush'));
++           \Drupal::logger('ultimate_cron')->info('Finished cron job @job.', ['@job' => $job_name]);
++        } catch (\Exception $e) {
++           \Drupal::logger('ultimate_cron')->error('Cron job @job FAILED: @message', [
++            '@job' => $job_name,
++            '@message' => $e->getMessage(),
++          ]);
++        }
++      } else {
++         \Drupal::logger('ultimate_cron')->info('Skipping cron job @job; not scheduled.', ['@job' => $job_name]);
 +      }
      }
-
+-
 -    if ($force || $job->isScheduled()) {
 -      $job->run(t('Launched by drush'));
 -    }
 -
++  
++     \Drupal::logger('ultimate_cron')->info('Ultimate Cron run complete.');
    }
-
+ 
    /**

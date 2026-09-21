@@ -13,6 +13,8 @@
 
 namespace Drupal\product;
 
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Language\LanguageInterface;
@@ -22,6 +24,7 @@ use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\ibm_apim\Controller\IbmApimContentController;
 use Throwable;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * Class to work with the Product content type, takes input from the JSON returned by
@@ -111,7 +114,6 @@ class Product {
       $oldAttachments = $oldNode->apic_attachments->getValue();
       $oldImage = $oldNode->apic_image->getValue();
       $oldPathAlias = $oldNode->apic_pathalias->getValue();
-      $oldNode->set('apic_pathalias', NULL);
 
       // duplicate node
       $node = $oldNode->createDuplicate();
@@ -191,7 +193,16 @@ class Product {
     }
 
     if ($node !== NULL && $oldPathAlias !== NULL && !empty($oldPathAlias)) {
-      $node->set('apic_pathalias', $oldPathAlias);
+      $currentPathAlias = $node->get('apic_pathalias')->getValue();
+      if ($currentPathAlias === NULL || empty($currentPathAlias)) {
+        // Clear the alias from the old node FIRST to avoid duplicate aliases
+        $oldNode->set('apic_pathalias', NULL);
+        $oldNode->save();
+        
+        // Now set the alias on the new node
+        $node->set('apic_pathalias', $oldPathAlias);
+        $node->save();
+      }
     }
 
     if ($node !== NULL && $oldTags !== NULL && !empty($oldTags)) {
@@ -365,7 +376,7 @@ class Product {
         }
         if ($product['catalog_product']['info']['description'] != '') {
           $node->set('apic_description', [
-            'value' => $product['catalog_product']['info']['description'],
+            'value' => Xss::filter($product['catalog_product']['info']['description']),
             'format' => $format,
           ]);
         } else {
@@ -382,7 +393,7 @@ class Product {
                   $translation = $node->addTranslation($lang, [
                     'title' => $truncated_title,
                     'apic_description' => [
-                        'value' => $product['catalog_product']['info']['x-ibm-languages']['description'][$lang],
+                        'value' => Xss::filter($product['catalog_product']['info']['x-ibm-languages']['description'][$lang]),
                         'format' => $format,
                     ]]);
                   $translation->save();
@@ -394,7 +405,7 @@ class Product {
                     $translation->setTitle($truncated_title);
                   }
                   $translation->set('apic_description', [
-                    'value' => $product['catalog_product']['info']['x-ibm-languages']['description'][$lang],
+                    'value' => Xss::filter($product['catalog_product']['info']['x-ibm-languages']['description'][$lang]),
                     'format' => $format,
                   ])->save();
                 }
@@ -462,7 +473,7 @@ class Product {
         }
         $this->utils->setNodeValue($node, 'product_contact_name', $product['catalog_product']['info']['contact']['name']);
         $this->utils->setNodeValue($node, 'product_contact_email', $product['catalog_product']['info']['contact']['email']);
-        $this->utils->setNodeValue($node, 'product_contact_url', $product['catalog_product']['info']['contact']['url']);
+        $this->utils->setNodeValue($node, 'product_contact_url', UrlHelper::stripDangerousProtocols($product['catalog_product']['info']['contact']['url']));
         if (!isset($product['catalog_product']['info']['license'])) {
           $product['catalog_product']['info']['license'] = [
             'name' => '',
@@ -470,7 +481,7 @@ class Product {
           ];
         }
         $this->utils->setNodeValue($node, 'product_license_name', $product['catalog_product']['info']['license']['name']);
-        $this->utils->setNodeValue($node, 'product_license_url', $product['catalog_product']['info']['license']['url']);
+        $this->utils->setNodeValue($node, 'product_license_url', UrlHelper::stripDangerousProtocols($product['catalog_product']['info']['license']['url']));
         $node->set('product_visibility', []);
         // If there is a 'visibility' block in the product use that to determine visibility,
         // otherwise use the one inside catalog_product
@@ -482,7 +493,7 @@ class Product {
         }
         if ($visBlock !== NULL) {
           foreach ($visBlock as $type => $visibility) {
-            $node->product_visibility[] = serialize([$type => $visibility]);
+            $node->product_visibility[] = SerializationUtility::encodeData([$type => $visibility]);
           }
         }
         else {
@@ -582,7 +593,10 @@ class Product {
           $node->set('product_plans', []);
           foreach ($product['catalog_product']['plans'] as $planName => $plan) {
             $plan['name'] = $planName;
-            $node->product_plans[] = serialize($plan);
+            if (isset($plan['description']) && !empty($plan['description'])) {
+              $plan['description'] = Xss::filter($plan['description']);
+              }
+            $node->product_plans[] = SerializationUtility::encodeData($plan);
           }
         }
         else {
@@ -591,7 +605,7 @@ class Product {
         $node->set('product_apis', []);
         if (isset($product['catalog_product']['apis'])) {
           foreach ($product['catalog_product']['apis'] as $api) {
-            $node->product_apis[] = serialize($api);
+            $node->product_apis[] = SerializationUtility::encodeData($api);
           }
         }
         else {
@@ -610,11 +624,25 @@ class Product {
 
         if ($product['catalog_product']['info']['termsOfService'] != '') {
           $node->set('product_terms_of_service', [
-            'value' => $product['catalog_product']['info']['termsOfService'],
+            'value' => Xss::filter($product['catalog_product']['info']['termsOfService']),
             'format' => $format,
           ]);
         } else {
           $node->set('product_terms_of_service', []);
+        }
+
+        // Store raw metadata in apic_metadata field
+        $metadata = NULL;
+        if (isset($product['catalog_product']['info']['metadata'])) {
+          $metadata = $product['catalog_product']['info']['metadata'];
+        } elseif (isset($product['metadata'])) {
+          $metadata = $product['metadata'];
+        }
+
+        if ($metadata !== NULL && !empty($metadata)) {
+          $node->set('apic_metadata', SerializationUtility::encodeData($metadata));
+        } else {
+          $node->set('apic_metadata', NULL);
         }
 
         if ($this->utils->hashMatch($existingNodeHash, $node, 'new-product')) {
@@ -634,7 +662,7 @@ class Product {
                     // ensure the translation has a title as its a required field
                     $translation = $node->addTranslation($lang, [
                       'title' => $truncated_title,
-                      'product_terms_of_service' => $product['catalog_product']['info']['x-ibm-languages']['termsOfService'][$lang],
+                      'product_terms_of_service' => Xss::filter($product['catalog_product']['info']['x-ibm-languages']['termsOfService'][$lang]),
                     ]);
                     $translation->save();
                   } else {
@@ -643,7 +671,7 @@ class Product {
                     if ($translation->getTitle() === NULL || $translation->getTitle() === "") {
                       $translation->setTitle($truncated_title);
                     }
-                    $translation->set('product_terms_of_service', $product['catalog_product']['info']['x-ibm-languages']['termsOfService'][$lang])
+                    $translation->set('product_terms_of_service', Xss::filter($product['catalog_product']['info']['x-ibm-languages']['termsOfService'][$lang]))
                       ->save();
                   }
                 }
@@ -966,7 +994,7 @@ class Product {
    */
   public static function containsAPIRef($productNode, $apiRef): bool {
     foreach ($productNode->product_apis->getValue() as $arrayValue) {
-      $api = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+      $api = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
       if (isset($api['name']) && $api['name'] === $apiRef) {
         return TRUE;
       }
@@ -1089,7 +1117,8 @@ class Product {
           ->query("SELECT entity_id
           FROM `node__apic_url` apic_url
           INNER JOIN `apic_app_application_subs` sub ON apic_url.apic_url_value = sub.product_url
-          WHERE consumerorg_url = '" . $myorg['url'] . "'", [], $options);
+          WHERE consumerorg_url = :orgUrl",
+            [':orgUrl' => $myorg['url']], $options);
           $doResults = $query->fetchAll();
 
           $additional = [];
@@ -1328,7 +1357,7 @@ class Product {
         $output['updated_at'] = $node->apic_updated_at->value;
         $productApis = [];
         foreach ($node->product_apis->getValue() as $arrayValue) {
-          $productApis[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+          $productApis[] = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
         }
         $output['apis'] = $productApis;
         $output['view_enabled'] = (bool) (int) $node->product_view_enabled->value;
@@ -1541,13 +1570,16 @@ class Product {
         if ((!isset($embeddedDoc['format']) || $embeddedDoc['format'] === 'md') && $moduleHandler->moduleExists('ghmarkdown')) {
           $parser = new \Drupal\ghmarkdown\cebe\markdown\GithubMarkdown();
           $text = $parser->parse($embeddedDoc['content']);
+          $text = \Drupal\Component\Utility\Xss::filterAdmin($text);
         }
         elseif ($embeddedDoc['format'] === 'b64html') {
           $text = base64_decode($embeddedDoc['content']);
+          $text = \Drupal\Component\Utility\Xss::filterAdmin($text);
         }
         else {
           // just use raw content
           $text = $embeddedDoc['content'];
+          $text = \Drupal\Component\Utility\Xss::filterAdmin($text);
         }
         $docs[$key]['output'] = $text;
       }
@@ -1801,7 +1833,7 @@ class Product {
         $productPlans = [];
         if (isset($product->product_plans)) {
           foreach ($product->product_plans->getValue() as $arrayValue) {
-            $productPlans[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+            $productPlans[] = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
           }
         }
 

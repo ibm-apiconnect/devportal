@@ -28,7 +28,7 @@ class AnalyticsAccessCheck implements AccessInterface {
    *
    * @return \Drupal\Core\Access\AccessResult|\Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultNeutral
    */
-  public function access(NodeInterface $node = NULL) {
+  public function access(?NodeInterface $node = NULL) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $allowed = FALSE;
     $current_user = \Drupal::currentUser();

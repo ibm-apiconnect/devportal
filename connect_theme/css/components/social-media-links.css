@@ -5,7 +5,7 @@
  ============================================================================ */
 .block-social-media-links .platforms,
 .pane-social-media-link-widget .platforms {
-  padding-left: 0;
+  padding-inline-start: 0;
   overflow: hidden;
 }
 

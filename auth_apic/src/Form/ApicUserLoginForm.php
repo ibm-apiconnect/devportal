@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2024
+ * (C) Copyright IBM Corporation 2018, 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -225,13 +225,13 @@ class ApicUserLoginForm extends UserLoginForm {
     $is_owner_invitation = FALSE;
 
     // if we are on the invited user flow, there will be a JWT in the session so grab that
-    $jwt = $this->authApicSessionStore->get('invitation_object');
-    if ($jwt === NULL) {
-      $inviteToken = \Drupal::request()->query->get('token');
-      if ($inviteToken !== NULL) {
-        $jwt = $this->jwtParser->parse($inviteToken);
-        $this->authApicSessionStore->set('invitation_object', $jwt);
-      }
+    $inviteToken = \Drupal::request()->query->get('token');
+    if ($inviteToken !== NULL) {
+      $jwt = $this->jwtParser->parse($inviteToken);
+      $this->authApicSessionStore->set('invitation_object', $jwt);
+    }
+    else {
+      $jwt = $this->authApicSessionStore->get('invitation_object');
     }
     if ($jwt !== NULL) {
       $form['#message']['message'] = t('To complete your invitation, sign in to an existing account or sign up to create a new account.');
@@ -363,6 +363,7 @@ class ApicUserLoginForm extends UserLoginForm {
             'apic-user-registry-button',
             'apic-user-registry-' . $this->chosen_registry->getRegistryType(),
             'registry-button',
+            'button', 'button-primary', 'btn-primary', 'btn',
           ],
         ];
       }
@@ -374,6 +375,7 @@ class ApicUserLoginForm extends UserLoginForm {
             'class' => [
               'apic-user-registry-button',
               'apic-user-registry-' . $this->chosen_registry->getRegistryType(),
+              'button', 'button-primary', 'btn-primary', 'btn',
             ],
           ],
           '#name' => $this->chosen_registry->getName(),
@@ -503,8 +505,8 @@ class ApicUserLoginForm extends UserLoginForm {
           }
         }
         else {
-          $button['#prefix'] = '<a class="registry-button generic-button button" href="' . $redirect_with_registry_url . $other_registry->getUrl() . '" title="' . $this->t('Sign in using @ur', ['@ur' => $other_registry->getTitle()]) . '">
-                                <svg width="18" height="18" viewBox="0 0 32 32" fill-rule="evenodd"><path d="M16 6.4c3.9 0 7 3.1 7 7s-3.1 7-7 7-7-3.1-7-7 3.1-7 7-7zm0-2c-5 0-9 4-9 9s4 9 9 9 9-4 9-9-4-9-9-9z"></path>
+          $button['#prefix'] = '<a class="registry-button generic-button button" href="' . $redirect_with_registry_url . $other_registry->getUrl() . '" aria-label="' . $this->t('Sign in using @ur', ['@ur' => $other_registry->getTitle()]) . '" title="' . $this->t('Sign in using @ur', ['@ur' => $other_registry->getTitle()]) . '">
+                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 32 32" fill-rule="evenodd"><path d="M16 6.4c3.9 0 7 3.1 7 7s-3.1 7-7 7-7-3.1-7-7 3.1-7 7-7zm0-2c-5 0-9 4-9 9s4 9 9 9 9-4 9-9-4-9-9-9z"></path>
                                 <path d="M16 0C7.2 0 0 7.2 0 16s7.2 16 16 16 16-7.2 16-16S24.8 0 16 0zm7.3 24.3H8.7c-1.2 0-2.2.5-2.8 1.3C3.5 23.1 2 19.7 2 16 2 8.3 8.3 2 16 2s14 6.3 14 14c0 3.7-1.5 7.1-3.9 9.6-.6-.8-1.7-1.3-2.8-1.3z"></path></svg>';
           $button['#suffix'] = '<span class="registry-name">' . $other_registry->getTitle() . '</span></a>';
         }
@@ -593,6 +595,11 @@ class ApicUserLoginForm extends UserLoginForm {
       $name = $form_state->getValue('name');
       $password = $form_state->getValue('pass');
       $corg = $form_state->getValue('consumer_org');
+      
+      // Apply sanitization only if needed
+      if ($corg !== null && $corg !== htmlspecialchars($corg, ENT_QUOTES)) {
+        $corg = htmlspecialchars($corg, ENT_QUOTES);
+      }
 
       // maybe this was an invited user?
       $jwt = $this->authApicSessionStore->get('invitation_object');
@@ -630,13 +637,40 @@ class ApicUserLoginForm extends UserLoginForm {
         if ($registry !== NULL) {
 
           if ($jwt !== NULL) {
-            $response = $this->invitationService->acceptInvite($jwt, $login_user);
-
-            if (isset($response) && $response->success() === TRUE) {
-              if ($response->getMessage()) {
-                $this->messenger->addStatus($response->getMessage());
+            if (empty($corg)) {
+              $accounts = $this->userStorage->loadByProperties(['name' => $name]);
+              $existingAccount = $accounts ? reset($accounts) : NULL;
+              if ($existingAccount !== NULL && !$existingAccount->get('consumerorg_url')->isEmpty()) {
+                $consumerOrgValues = $existingAccount->get('consumerorg_url')->getValue();
+                $invitedOrg = end($consumerOrgValues);
+                if (!empty($invitedOrg['value'])) {
+                  $login_user->setOrganization($invitedOrg['value']);
+                }
               }
+            }
+
+            $inviteResponse = $this->invitationService->acceptInvite($jwt, $login_user);
+
+            if (isset($inviteResponse) && $inviteResponse->success() === TRUE) {
+              if ($inviteResponse->getMessage()) {
+                $this->messenger->addStatus($inviteResponse->getMessage());
+              }
+
+              $accounts = $this->userStorage->loadByProperties(['name' => $name]);
+              $existingAccount = $accounts ? reset($accounts) : NULL;
+              if ($existingAccount !== NULL && empty($corg) && !$existingAccount->get('consumerorg_url')->isEmpty()) {
+                $consumerOrgValues = $existingAccount->get('consumerorg_url')->getValue();
+                $invitedOrg = end($consumerOrgValues);
+                if (!empty($invitedOrg['value'])) {
+                  $login_user->setOrganization($invitedOrg['value']);
+                }
+              }
+
               $response = $this->loginService->login($login_user);
+            }
+            else {
+              // Invitation acceptance failed
+              $response = $inviteResponse;
             }
           }
           else {
@@ -738,7 +772,12 @@ class ApicUserLoginForm extends UserLoginForm {
       $jwt = $this->authApicSessionStore->get('invitation_object');
       $oidc_url = $form_state->getValue('oidc_url');
       if (!empty($jwt) && !strpos($jwt->getUrl(), '/member-invitations/')) {
-        $oidc_url .= "&invitation_scope=consumer-org&title=" . urlencode($form_state->getValue('consumer_org'));
+        $consumer_org = $form_state->getValue('consumer_org');
+        // Apply sanitization only if needed
+        if ($consumer_org !== null && $consumer_org !== htmlspecialchars($consumer_org, ENT_QUOTES)) {
+          $consumer_org = htmlspecialchars($consumer_org, ENT_QUOTES);
+        }
+        $oidc_url .= "&invitation_scope=consumer-org&title=" . urlencode($consumer_org);
       }
       $response = new TrustedRedirectResponse(Url::fromUri($oidc_url)->toString());
       $form_state->setResponse($response);
@@ -804,6 +843,9 @@ class ApicUserLoginForm extends UserLoginForm {
         if (isset($destination) && !empty($destination)) {
           if ($destination[0] !== '/' && $destination[0] !== '?' && $destination[0] !== '#') {
             $destination = '/' . $destination;
+          }
+          if (strpos($destination, '//') === 0) {
+            $destination = '/' . ltrim($destination, '/');
           }
           $form_state->setRedirectUrl(Url::fromUserInput($destination));
         }

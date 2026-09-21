@@ -1,0 +1,7 @@
+name: "IBM APIC Getting Started"
+type: module
+description: "Tutorial for admin to get started with their customizations"
+core_version_requirement: ^10 | ^11
+package: "IBM CMS Portal"
+libraries:
+  - drupal:system

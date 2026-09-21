@@ -1,4 +1,15 @@
 {#
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 /**
  * @file
  *
@@ -9,8 +20,6 @@
 #}
 {{ attach_library('mail_subscribers/basic') }}
 <div class="apicWizardMain">
-  <div class="apicWizardHeader">{{ 'Select Products'|t }}</div>
-  <form {{ attributes }}>
-    {{ children }}
-  </form>
+  <div class="apicWizardHeader">{% trans %}Select Products{% endtrans %}</div>
+  {{ form }}
 </div>

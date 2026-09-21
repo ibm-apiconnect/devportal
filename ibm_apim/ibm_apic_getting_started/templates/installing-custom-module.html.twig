@@ -1,0 +1,142 @@
+{# /********************************************************* {COPYRIGHT-TOP}
+*** * Licensed Materials - Property of IBM * 5725-L30, 5725-Z22 * * (C)
+Copyright IBM Corporation 2025 * * All Rights Reserved. * US Government Users
+Restricted Rights - Use, duplication or disclosure * restricted by GSA ADP
+Schedule Contract with IBM Corp.
+********************************************************** {COPYRIGHT-END} **/
+/** * @file * Installing Custom Modules tutorial template. * * Available
+variables: * - tutorial: The tutorial definition. * - images_path: Path to the
+tutorial images. */ #} {% set header_content %}
+<p>
+  The IBM API Connect Developer Portal allows administrators to extend the
+  functionality of their site by installing custom modules. These modules can
+  either be created internally or downloaded from the Drupal community.
+</p>
+
+<p>Before you begin, refer to the official documentation for prerequisites and module compatibility: 
+  <a href="https://www.ibm.com/docs/en/SSMNED_12.1.x_cd?topic=extend-installing-custom-modules#tasktapic_portal_custom_module_install_drupal8__prereq__1" target="_blank">Prerequisites for Installing Custom Modules</a>.
+</p>
+
+<p>There are two ways to install a module: 
+  <ul>
+    <li>Complete the <strong>Install from a URL</strong> field.</li>
+    <li>Click <strong>Choose file</strong> to upload a <code>.tar.gz</code> module file from your local computer.</li>
+  </ul>
+</p>
+
+<p>In this tutorial, we'll walk through installing a custom module that IBM has created. This module will change the profile page to display the user's <strong>first name</strong> and <strong>last name</strong> instead of the username.</p>
+{% endset %} {% set steps_content %} {# Step 1: Clone and Package the Change
+Account Display Module #}
+<li class="gs-step" data-step="Clone and Package Custom Module">
+  <h3>Cloning and Packaging the Change Account Display Module</h3>
+  <p>
+    Start by cloning the custom module from GitHub. Use the following command:
+  </p>
+  <div class="command-block">
+    <pre><code class="language-bash">git clone https://github.com/ibm-apiconnect/devportal-addons</code></pre>
+  </div>
+
+  <p>
+    Next, navigate to the module directory and package the module into a .tar.gz
+    file:
+  </p>
+  <div class="command-block">
+    <pre><code class="language-bash">cd devportal-addons/apic_v10/modules
+tar -czf change_account_display.tar.gz change_account_display/</code></pre>
+  </div>
+
+  <p>Now, the module is packaged and ready for installation.</p>
+</li>
+
+{# Step 2: Install and Enable the Module #}
+<li class="gs-step" data-step="Install and Enable Custom Module">
+  <h3>Installing and Enabling the Change Account Display Module</h3>
+  <p>1. Log in to your Developer Portal as an administrator.</p>
+  <p>2. Navigate to:</p>
+  <div class="path-instruction">
+    <strong>Extend → Add new module</strong>
+  </div>
+
+  <img
+    src="{{ images_path }}/navigating-to-add-new-module.png"
+    alt="Navigate to Add New Module"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <p>
+    3. From the <strong>Upload a module or theme archive</strong> section, click
+    <strong>Browse file</strong>.
+  </p>
+  <p>
+    4. Select the packaged module you created earlier (e.g.,
+    <code>change_account_display.tgz</code>) and click <strong>Open</strong>.
+  </p>
+
+  <img
+    src="{{ images_path }}/upload-module.png"
+    alt="Upload Module"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <p>5. Click <strong>Continue</strong> to install the module.</p>
+
+  <img
+    src="{{ images_path }}/installation-successfull.png"
+    alt="Installation Successful"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <p>
+    6. Click the <strong>Enable newly added modules</strong> link to activate
+    the module.
+  </p>
+  <p>
+    7. In the filter box, type <strong>Change Account Display</strong>, and
+    select the checkbox next to the module name.
+  </p>
+  <img
+  src="{{ images_path }}/checkbox-module.png"
+  alt="Enable Module"
+  class="img-responsive"
+  loading="lazy"
+  />
+  <p>8. Finally, click <strong>Enable</strong>.</p>
+
+  <div class="success-message">
+    <p>The module is now installed and enabled!</p>
+  </div>
+</li>
+
+{# Step 3: Test Profile Page Change #}
+<li class="gs-step" data-step="Test Profile Page Change">
+  <h3>Test the Profile Page Change</h3>
+  <p>1. Sign out from your admin account.</p>
+  <p>2. Log in as a user on your Developer Portal.</p>
+  <p>
+    3. Click the arrow next to your <strong>username</strong> and select
+    <strong>My Account</strong>.
+  </p>
+  <p>
+    4. You should now see your <strong>first name</strong> and
+    <strong>last name</strong> displayed instead of the username.
+  </p>
+
+  <img
+    src="{{ images_path }}/my-account-page.jpg"
+    alt="My Account Page"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <div class="success-message">
+    <p>
+      Congratulations! You've successfully updated the profile page display.
+    </p>
+  </div>
+</li>
+{% endset %} {% include 'tutorial-base.html.twig' with { 'tutorial': tutorial,
+'images_path': images_path, 'header_content': header_content, 'steps_content':
+steps_content } %}

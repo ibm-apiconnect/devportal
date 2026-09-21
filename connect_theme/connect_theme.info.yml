@@ -1,7 +1,7 @@
 type: theme
 base theme: bootstrap
 core_version_requirement: ^8 || ^9 || ^10 || ^11
-version: 6.2.6
+version: 8.x-99.0.0
 project: connect_theme
 name: connect_theme
 description: Uses the Bootstrap framework Sass source files and must be compiled.
@@ -22,10 +22,13 @@ regions:
   collapse_right: Collapse Right
   disabled: Disabled
 libraries:
-- connect_theme/dropit
+  - connect_theme/dropit
+  - connect_theme/fix-tabledrag
+  - connect_theme/dark_mode_handler
+  - connect_theme/search_clear
 libraries-extend:
   bootstrap/framework:
-  - connect_theme/framework
+    - connect_theme/framework
 libraries-override:
   bootstrap/drupal.message: connect_theme/drupal.message
 interface translation project: connect_theme

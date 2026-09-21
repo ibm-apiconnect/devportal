@@ -28,8 +28,8 @@ body {
   font-family: $font-family-base;
   font-size: $font-size-base;
   line-height: $line-height-base;
-  color: $text-color;
-  background-color: $body-bg;
+  color: var(--text-color);
+  background-color: var(--body-bg);
 }
 
 // Reset fonts for relevant elements
@@ -46,12 +46,12 @@ textarea {
 // Links
 
 a {
-  color: $link-color;
+  color: var(--link-color);
   text-decoration: none;
 
   &:hover,
   &:focus {
-    color: $link-hover-color;
+    color: var(--link-hover-color);
     text-decoration: $link-hover-decoration;
   }
 

@@ -6,3 +6,6 @@ Feature: ConsumerorgCRUD
   Scenario: Content type exists
     Given I am at "/"
     Then The "consumerorg" content type is present
+
+  Scenario: Create consumerorg with metadata serialization
+    Given I create a consumerorg with metadata

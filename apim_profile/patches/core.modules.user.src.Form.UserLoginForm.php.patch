@@ -27,7 +27,7 @@
 @@ -263,20 +280,24 @@
          $this->userFloodControl->register('user.failed_login_user', $flood_config->get('user_window'), $flood_control_user_identifier);
        }
- 
+
 +      $query = isset($user_input['name']) ? ['name' => $user_input['name']] : [];
        if ($flood_control_triggered = $form_state->get('flood_control_triggered')) {
 +        $user_input = $form_state->getUserInput();

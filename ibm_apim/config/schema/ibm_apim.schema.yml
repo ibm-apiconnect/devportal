@@ -56,7 +56,7 @@ ibm_apim_config_object:
 
 ibm_apim.settings:
   type: config_object
-  label: 'IBM API Developer Portal configuration settings'
+  label: 'IBM CMS Portal configuration settings'
   mapping:
     audit_endpoint:
       type: string
@@ -88,12 +88,6 @@ ibm_apim.settings:
     autotag_with_phase:
       type: boolean
       label: 'Automatically tag each API with its phase'
-    show_cors_warnings:
-      type: boolean
-      label: 'Show CORS warnings'
-    render_api_schema_view:
-      type: boolean
-      label: 'Render API Schema objects'
     show_analytics:
       type: boolean
       label: 'Display API consumer analytics'
@@ -145,6 +139,15 @@ ibm_apim.settings:
     enable_oidc_login_form:
       type: boolean
       label: 'Enable the OIDC login form.'
+    show_subscription_tos:
+      type: boolean
+      label: 'Show Terms of Service in subscription wizard'
+    invitation_resend_limit:
+      type: integer
+      label: 'Invitation resend limit'
+    invitation_resend_window:
+      type: integer
+      label: 'Invitation resend window in seconds'
     categories:
       type: mapping
       label: 'Categories'
@@ -258,7 +261,7 @@ ibm_apim.settings:
 
 ibm_apim.devel_settings:
   type: config_object
-  label: 'IBM API Developer Portal development settings'
+  label: 'IBM CMS Portal development settings'
   mapping:
     acl_debug:
       type: boolean

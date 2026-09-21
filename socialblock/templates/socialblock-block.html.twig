@@ -1,4 +1,15 @@
 {#
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 /**
  * @file
  * Default theme implementation for the socialblock
@@ -17,15 +28,13 @@
               <div class="tweet_profile">
                 <img class="profile_image" src="{{ post.profile_img }}" alt>
                 <div class="profile_name">
-                  <a href="https://twitter.com/{{ post.handle }}" target="_blank" rel="noopener"
-                     class="profile_name name">{{ post.name }}</a>
+                  <a href="https://bsky.app/profile/{{ post.handle }}" target="_blank" rel="noopener"
+                    class="profile_name name twitter_handle">{{ post.name }}</a>
                   <div class="twitter_handle">@{{ post.handle }}</div>
                 </div>
               </div>
               <div class="tweet_meta">
-                <a href="https://twitter.com/{{ post.handle }}/statuses/{{ post.tweet_id }}" target="_blank"
-                   rel="noopener"
-                   class="bird" title="{{ 'Open this tweet'|t }}"></a>
+                <a href="https://bsky.app/profile/{{ post.handle }}/post/{{ post.tweet_id }}" target="_blank" rel="noopener" class="bsky" title="{% trans %}Open this tweet{% endtrans %}"></a>
                 <div class="tweet_timestamp">{{ post.timestamp }}</div>
               </div>
             </div>
@@ -41,7 +50,7 @@
             <div class="forum_info">
               <div class="forum_title"><a href="{{ post.url }}" class="title"
                                           title="{{ post.title }}">{{ post.title }}</a></div>
-              <div class="forum_icon"><a href="{{ post.url }}" class="speechbubble" title="{{ 'Open this post'|t }}">
+              <div class="forum_icon"><a href="{{ post.url }}" class="speechbubble" title="{% trans %}Open this post{% endtrans %}">
                   <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                        xml:space="preserve">
 <g>

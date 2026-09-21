@@ -1,0 +1,330 @@
+id: application_subscriptions
+label: 'Application Subscriptions'
+base_table: apic_app_application_subs
+base_field: id
+status: true
+module: views
+dependencies:
+  config:
+    - user.role.authenticated
+  module:
+    - apic_app
+    - user
+    - better_exposed_filters
+display:
+  default:
+    display_plugin: default
+    id: default
+    display_title: Master
+    display_options:
+      query:
+        type: views_query
+      row:
+        type: app_subscription_row
+        options: {}
+      arguments:
+        app_url:
+          id: app_url
+          table: apic_app_application_subs
+          field: app_url
+          plugin_id: string
+          exception:
+            title_enable: false
+          default_argument_type: fixed
+          default_argument_options:
+            argument: ''
+          validate:
+            type: none
+          operator: '='
+          action: use
+          empty_argument_behavior: hide
+      access:
+        type: role
+        options:
+          role:
+            authenticated: authenticated
+      pager:
+        type: full
+        options:
+          items_per_page: 50
+          offset: 0
+          id: 0
+          total_pages: null
+          tags:
+            previous: ‹‹
+            next: ››
+            first: '« First'
+            last: 'Last »'
+          expose:
+            items_per_page: true
+            items_per_page_label: 'Items per page'
+            items_per_page_options: '10, 25, 50, 75'
+            items_per_page_options_all: false
+            items_per_page_options_all_label: '- All -'
+            offset: false
+            offset_label: Offset
+          quantity: 9
+      fields: 
+        id:
+          id: id
+          table: apic_app_application_subs
+          field: id
+          plugin_id: standard
+          exclude: false
+          relationship: none
+          group_type: group
+        uuid:
+          id: uuid
+          table: apic_app_application_subs
+          field: uuid
+          plugin_id: standard
+          exclude: false
+          relationship: none
+          group_type: group
+        app_url:
+          id: app_url
+          table: apic_app_application_subs
+          field: app_url
+          plugin_id: standard
+          exclude: false
+          relationship: none
+          group_type: group 
+        plan:
+          id: plan
+          table: apic_app_application_subs
+          field: plan
+          plugin_id: standard
+          exclude: false
+          relationship: none
+          group_type: group
+        state:
+          id: state
+          table: apic_app_application_subs
+          field: state
+          plugin_id: standard
+          exclude: false
+          relationship: none
+          group_type: group 
+        product_url:
+          id: product_url
+          table: apic_app_application_subs
+          field: product_url 
+          plugin_id: standard
+          exclude: false
+          relationship: none
+          group_type: group
+      sorts:
+        id:
+          id: id
+          table: apic_app_application_subs
+          field: id
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: standard
+          order: DESC
+          expose:
+            label: 'Id'
+            field_identifier: id
+          exposed: true
+        plan_title_missing:
+          id: plan_title_missing
+          table: apic_app_application_subs
+          field: plan_title_missing
+          relationship: none
+          group_type: group
+          admin_label: 'Plan title missing'
+          plugin_id: standard
+          order: ASC
+          exposed: false
+        plan_title:
+          id: plan_title
+          table: apic_app_application_subs
+          field: plan_title
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: standard
+          order: ASC
+          expose:
+            label: 'Plan'
+            field_identifier: plan_title
+          exposed: true
+        product_title_missing:
+          id: product_title_missing
+          table: apic_app_application_subs
+          field: product_title_missing
+          relationship: none
+          group_type: group
+          admin_label: 'Product title missing'
+          plugin_id: standard
+          order: ASC
+          exposed: false
+        product_title:
+          id: product_title
+          table: apic_app_application_subs
+          field: product_title
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: standard
+          order: ASC
+          expose:
+            label: 'Product'
+            field_identifier: product_title
+          exposed: true
+      exposed_form:
+        type: bef
+        options:
+          submit_button: Apply
+          reset_button: true
+          reset_button_label: Reset
+          exposed_sorts_label: 'Sort by'
+          expose_sort_order: true
+          sort_asc_label: Asc
+          sort_desc_label: Desc
+          input_required: false
+          text_input_required: 'Select any filter and click on Apply to see results'
+          bef:
+            general:
+              allow_secondary: false
+              secondary_label: 'Advanced options'
+              autosubmit: false
+              autosubmit_hide: false
+            sort:
+              plugin_id: default
+              advanced:
+                collapsible: false
+                collapsible_label: 'Sort options'
+                combine: false
+                combine_rewrite: ''
+                reset: false
+                reset_label: ''
+                is_secondary: false
+            keyword:
+              plugin_id: default
+              advanced:
+                is_secondary: false
+      filters:
+        keyword:
+          id: keyword
+          table: apic_app_application_subs
+          field: product_title
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: string
+          operator: contains
+          value: ''
+          group: 1
+          exposed: true
+          expose:
+            operator_id: keyword_op
+            label: Search
+            description: ''
+            use_operator: false
+            operator: keyword_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: keyword
+            required: false
+            remember: false
+            multiple: false
+            placeholder: ''
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+      filter_groups:
+        operator: AND
+        groups:
+          1: AND
+      exposed_block: true
+      empty: {  }
+      style:
+        type: app_subscriptions_style
+        options: {}
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+        - 'url.query_args:keyword'
+        - 'url.query_args:sort_by'
+        - 'url.query_args:sort_order'
+        - 'user.node_grants:view'
+        - user.roles
+      tags: {  }
+  block_1:
+    display_plugin: block
+    id: block_1
+    display_title: Block
+    parent_display: default
+    display_options:
+      block_description: 'Application Subscriptions'
+      block_category: 'API Connect'
+      allow:
+        items_per_page: true
+      exposed_form:
+        type: bef
+        options:
+          submit_button: Apply
+          reset_button: true
+          reset_button_label: Reset
+          exposed_sorts_label: 'Sort by'
+          expose_sort_order: true
+          sort_asc_label: Asc
+          sort_desc_label: Desc
+          input_required: false
+          text_input_required: 'Select any filter and click on Apply to see results'
+          bef:
+            general:
+              allow_secondary: false
+              secondary_label: 'Advanced options'
+              autosubmit: false
+              autosubmit_hide: false
+            sort:
+              plugin_id: default
+              advanced:
+                collapsible: false
+                collapsible_label: 'Sort options'
+                combine: false
+                combine_rewrite: ''
+                reset: false
+                reset_label: ''
+                is_secondary: false
+            keyword:
+              plugin_id: default
+              advanced:
+                is_secondary: false
+      exposed_block: false
+      use_ajax: true
+      style:
+        type: app_subscriptions_style
+        options: { }
+      row:
+        type: app_subscription_row
+        options: { }
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+        - 'url.query_args:keyword'
+        - 'url.query_args:sort_by'
+        - 'url.query_args:sort_order'
+        - 'user.node_grants:view'
+        - user.roles
+      tags: {  }

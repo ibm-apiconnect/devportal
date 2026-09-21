@@ -1,6 +1,15 @@
---- core/includes/install.core.inc	2022-01-06 15:15:32.000000000 +0000
-+++ core/includes/install.core.inc	2022-01-06 15:15:11.000000000 +0000
-@@ -811,9 +811,9 @@
+--- core/includes/install.core.inc
++++ core/includes/install.core.inc
+@@ -390,7 +390,7 @@
+   $install_state['database_verified'] = install_verify_database_settings($site_path);
+   // A valid settings.php has database settings and a hash_salt value. Other
+   // settings will be checked by \Drupal\system\Install\SystemRequirements.
+-  $install_state['settings_verified'] = $install_state['config_verified'] && $install_state['database_verified'] && (bool) Settings::get('hash_salt', FALSE);
++  $install_state['settings_verified'] = $install_state['database_verified'] && (bool) Settings::get('hash_salt', FALSE);
+ 
+   if ($install_state['settings_verified']) {
+     try {
+@@ -799,9 +799,9 @@
      'install_install_profile' => [],
      'install_import_translations' => [
        'display_name' => t('Set up translations'),
@@ -12,16 +21,16 @@
      ],
      'install_configure_form' => [
        'display_name' => t('Configure site'),
-@@ -847,7 +847,7 @@
+@@ -856,7 +856,7 @@
    }
-
+ 
    // Now add any tasks defined by the installation profile.
 -  if (!empty($install_state['parameters']['profile'])) {
 +  if (isset($install_state['parameters']['profile'])) {
      // Load the profile install file, because it is not always loaded when
      // hook_install_tasks() is invoked (e.g. batch processing).
      $profile = $install_state['parameters']['profile'];
-@@ -868,15 +868,15 @@
+@@ -879,15 +879,15 @@
    $tasks += [
      'install_finish_translations' => [
        'display_name' => t('Finish translations'),
@@ -33,37 +42,11 @@
      ],
      'install_finished' => [],
    ];
-
+ 
    // Allow the installation profile to modify the full list of tasks.
 -  if (!empty($install_state['parameters']['profile'])) {
 +  if (isset($install_state['parameters']['profile'])) {
      $profile = $install_state['parameters']['profile'];
-     if ($install_state['profiles'][$profile]->load()) {
+-    if ($install_state['profiles'][$profile]->load()) {
++    if (isset($install_state['profiles'][$profile]) && $install_state['profiles'][$profile]->load()) {
        $function = $install_state['parameters']['profile'] . '_install_tasks_alter';
-@@ -1289,6 +1289,14 @@
-     if (isset($install_state['profiles'][$profile])) {
-       return $profile;
-     }
-+    // Fail here because further usage of the
-+    // "$install_state['parameters']['profile']" is unpredictable. For
-+    // instance, in "install_tasks()" function, we will have the next
-+    // fatal error: "Call to a member function getPath() on null".
-+    throw new InstallerException(t('@profile - is not valid name of installation profile. Use one of the following: @available.', [
-+      '@profile' => $profile,
-+      '@available' => implode(', ', array_keys($install_state['profiles'])),
-+    ]));
-   }
-   // If any of the profiles are distribution profiles, return the first one.
-   foreach ($install_state['profiles'] as $profile) {
-
---- core/includes/install.core.inc      2023-03-02 09:50:47
-+++ core/includes/install.core.inc 2023-03-02 09:50:40
-@@ -386,7 +386,7 @@
-   $install_state['database_verified'] = install_verify_database_settings($site_path);
-   // A valid settings.php has database settings and a hash_salt value. Other
-   // settings will be checked by system_requirements().
--  $install_state['settings_verified'] = $install_state['config_verified'] && $install_state['database_verified'] && (bool) Settings::get('hash_salt', FALSE);
-+  $install_state['settings_verified'] = $install_state['database_verified'] && (bool) Settings::get('hash_salt', FALSE);
-
-   if ($install_state['settings_verified']) {
-     try {

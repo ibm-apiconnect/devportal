@@ -1,7 +1,7 @@
 name: Apic Letter Avatar
 type: module
 description: 'Adds a letter avatar generator based on the name of a user.'
-package: IBM API Developer Portal
+package: IBM CMS Portal
 dependencies:
   - avatars
 

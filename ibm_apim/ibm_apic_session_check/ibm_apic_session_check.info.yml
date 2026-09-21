@@ -2,4 +2,4 @@ name: "APIC Session Check"
 type: module
 description: "Reloads the page when the user session has expired."
 core_version_requirement: ^10 || ^11
-package: IBM API Developer Portal
+package: IBM CMS Portal

@@ -1,0 +1,276 @@
+{# /********************************************************* {COPYRIGHT-TOP}
+*** * Licensed Materials - Property of IBM * 5725-L30, 5725-Z22 * * (C)
+Copyright IBM Corporation 2025 * * All Rights Reserved. * US Government Users
+Restricted Rights - Use, duplication or disclosure * restricted by GSA ADP
+Schedule Contract with IBM Corp.
+********************************************************** {COPYRIGHT-END} **/
+/** * @file * Customizing Portal Theme tutorial template. * * Available
+variables: * - tutorial: The tutorial definition. * - images_path: Path to the
+tutorial images. */ #} {% set header_content %}
+<p>
+  The IBM API Connect Developer Portal allows you to customize the front page of
+  your site to better align with your brand and help users quickly discover your
+  APIs.
+</p>
+
+<p>
+  In this tutorial, we'll walk through creating custom blocks, arranging them on
+  a page, and setting that page as your new front page. This approach avoids
+  inline styling and relies on your theme for rendering, making it easier to
+  update the design later without changing content stored in the database.
+</p>
+
+<p>This tutorial covers the following steps:</p>
+<ul>
+  <li>Creating custom content blocks</li>
+  <li>Creating and configuring a page</li>
+  <li>Adding the custom blocks to the page</li>
+  <li>Changing the site front page</li>
+</ul>
+
+<p>This is how the current front page looks like</p>
+<img
+  src="{{ images_path }}/current-frontpage.png"
+  alt="Current Front Page"
+  class="img-responsive"
+  loading="lazy"
+/>
+{% endset %} {% set steps_content %}
+<li class="gs-step" data-step="Create Custom Blocks">
+  <h3>Creating Custom Blocks</h3>
+  <p>1. Navigate to:</p>
+  <div class="path-instruction">
+    <strong>Content → Blocks → Add content</strong>
+  </div>
+  <p>
+    2. Enter <strong>Block 1</strong> in the <strong>Block description</strong>.
+  </p>
+  <p>
+    3. In the body area, click <strong>Source</strong> and paste the following
+    HTML:
+  </p>
+
+  <div class="command-block">
+    <pre><code class="language-html">&lt;div class=&quot;tutorial_block_1 tutorial_block_frontpage&quot;&gt;
+      &lt;h1&gt;&lt;span&gt;Create with our APIs&lt;/span&gt;&lt;/h1&gt;
+      &lt;p&gt;&lt;span&gt;Welcome to our Developer Portal where you will find APIs to create your awesome app.&lt;/span&gt;&lt;/p&gt;
+      &lt;/div&gt;</code>
+    </pre>
+  </div>
+
+  <img
+    src="{{ images_path }}/block-creation.png"
+    alt="Create a Content Block"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <p>4. Click <strong>Save</strong>.</p>
+  <div class="success-message">
+    <p>You’ve successfully created Block 1!</p>
+  </div>
+
+  <p>
+    5. Repeat the process to create Block 2, Block 3, and Block 4 with their
+    respective HTML content.
+  </p>
+  <p>Here is the HTML for each block:</p>
+  <p>Block 2</p>
+  <div class="command-block">
+    <pre><code class="language-html">&lt;div class=&quot;tutorial_block_2 tutorial_block_frontpage&quot;&gt;
+      &lt;p class=&quot;text-align-center&quot;&gt;Explore and subscribe to our APIs.&lt;br /&gt;
+        See what you come up with!&lt;/p&gt;
+      &lt;p class=&quot;text-align-center&quot;&gt; &lt;/p&gt;
+      &lt;div class=&quot;bannerButtonRow text-align-center&quot;&gt;&lt;a class=&quot;button cta-btns--white__btn&quot; href=&quot;product&quot;&gt;Explore API Documentation&lt;/a&gt;&lt;/div&gt;
+    &lt;/div&gt;</code></pre>
+  </div>
+
+  <p>Block 3</p>
+  <div class="command-block">
+    <pre><code class="language-html">&lt;div class=&quot;tutorial_block_3&quot;&gt;
+    &lt;p class=&quot;text-align-center&quot;&gt;&lt;a href=&quot;user/register&quot;&gt;Create a new account&lt;/a&gt; and get started with our APIs. It&apos;s free to join.&lt;/p&gt;
+  &lt;/div&gt;</code></pre>
+  </div>
+
+  <p>Block 4</p>
+  <div class="command-block">
+    <pre><code class="language-html">&lt;div class=&quot;block-get-help&quot;&gt;
+      &lt;div class=&quot;get_help&quot;&gt;
+        &lt;div class=&quot;column col1&quot;&gt;
+          &lt;h3&gt;Getting Help&lt;/h3&gt;
+          &lt;div&gt;Be sure to check out these extra help resources.&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class=&quot;column col2&quot;&gt;
+          &lt;h4&gt;Get Started&lt;/h4&gt;
+          &lt;div&gt;Get started with our APIs by creating an account and exploring the documentation to find what&apos;s right for you.&lt;/div&gt;
+          &lt;div&gt;&lt;a href=&quot;user/register&quot;&gt;&lt;svg height=&quot;24&quot; id=&quot;Layer_1&quot; space=&quot;preserve&quot; version=&quot;1.1&quot; viewbox=&quot;0 0 32 32&quot; width=&quot;24&quot; x=&quot;0px&quot; xlink=&quot;http://www.w3.org/1999/xlink&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; y=&quot;0px&quot;&gt; 
+            &lt;g&gt; 
+              &lt;polygon points=&quot;15.293,10.707 19.586,15 8,15 8,17 19.586,17 15.293,21.293 16.707,22.707 23.414,16 16.707,9.293&quot;&gt;&lt;/polygon&gt; 
+              &lt;path d=&quot;M16,2C8.269,2,2,8.269,2,16s6.269,14,14,14c7.731,0,14-6.269,14-14S23.731,2,16,2z M16,28C9.383,28,4,22.617,4,16S9.383,4,16,4c6.617,0,12,5.383,12,12S22.617,28,16,28z&quot;&gt;&lt;/path&gt; 
+            &lt;/g&gt; 
+          &lt;/svg&gt;Create an Account&lt;/a&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class=&quot;column col3&quot;&gt;
+          &lt;h4&gt;Forum&lt;/h4&gt;
+          &lt;div&gt;Ask a question in the forums or search to forum history to see if it&apos;s been asked before.&lt;/div&gt;
+          &lt;div&gt;&lt;a href=&quot;forum&quot;&gt;&lt;svg height=&quot;24&quot; id=&quot;Layer_1&quot; space=&quot;preserve&quot; version=&quot;1.1&quot; viewbox=&quot;0 0 32 32&quot; width=&quot;24&quot; x=&quot;0px&quot; xlink=&quot;http://www.w3.org/1999/xlink&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; y=&quot;0px&quot;&gt; 
+            &lt;g&gt; 
+              &lt;polygon points=&quot;15.293,10.707 19.586,15 8,15 8,17 19.586,17 15.293,21.293 16.707,22.707 23.414,16 16.707,9.293&quot;&gt;&lt;/polygon&gt; 
+              &lt;path d=&quot;M16,2C8.269,2,2,8.269,2,16s6.269,14,14,14c7.731,0,14-6.269,14-14S23.731,2,16,2z M16,28C9.383,28,4,22.617,4,16S9.383,4,16,4c6.617,0,12,5.383,12,12S22.617,28,16,28z&quot;&gt;&lt;/path&gt; 
+            &lt;/g&gt; 
+          &lt;/svg&gt;Join the discussion&lt;/a&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class=&quot;column col4&quot;&gt;
+          &lt;h4&gt;Contact Us&lt;/h4&gt;
+          &lt;div&gt;Can&apos;t find the answer to your question? Need more help? Have some feedback? Let us know!&lt;/div&gt;
+          &lt;div&gt;&lt;a href=&quot;contact&quot;&gt;&lt;svg height=&quot;24&quot; id=&quot;Layer_1&quot; space=&quot;preserve&quot; version=&quot;1.1&quot; viewbox=&quot;0 0 32 32&quot; width=&quot;24&quot; x=&quot;0px&quot; xlink=&quot;http://www.w3.org/1999/xlink&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; y=&quot;0px&quot;&gt; 
+            &lt;g&gt; 
+              &lt;polygon points=&quot;15.293,10.707 19.586,15 8,15 8,17 19.586,17 15.293,21.293 16.707,22.707 23.414,16 16.707,9.293&quot;&gt;&lt;/polygon&gt; 
+              &lt;path d=&quot;M16,2C8.269,2,2,8.269,2,16s6.269,14,14,14c7.731,0,14-6.269,14-14S23.731,2,16,2z M16,28C9.383,28,4,22.617,4,16S9.383,4,16,4c6.617,0,12,5.383,12,12S22.617,28,16,28z&quot;&gt;&lt;/path&gt; 
+            &lt;/g&gt; 
+          &lt;/svg&gt;Email us&lt;/a&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;</code></pre>
+  </div>
+
+  <img
+    src="{{ images_path }}/all-blocks.png"
+    alt="All Four Blocks Created"
+    class="img-responsive"
+    loading="lazy"
+  />
+</li>
+
+<li class="gs-step" data-step="Create and Configure a Page">
+  <h3>Creating and Configuring a Page</h3>
+  <p>1. Navigate to:</p>
+  <div class="path-instruction">
+    <strong>Structure → Pages → Add page</strong>
+  </div>
+
+  <img
+    src="{{ images_path }}/pages-list.png"
+    alt="Pages List"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <p>
+    2. Enter <code>Portal home</code> in the
+    <strong>Administrative title</strong> field.
+  </p>
+  <p>3. Enter <code>/newhome</code> in the <strong>Path</strong> field.</p>
+  <p>
+    4. For <strong>Variant type</strong>, select <code>Panels</code> and click
+    <strong>Next</strong>.
+  </p>
+  <img
+    src="{{ images_path }}/page-information.png"
+    alt="Pages List"
+    class="img-responsive"
+    loading="lazy"
+  />
+  <p>
+    5. Accept the defaults for <strong>Labels</strong> and select
+    <strong>Standard</strong> for <strong>Builder</strong>, then click
+    <strong>Next</strong>.
+  </p>
+  <p>
+    6. From <strong>Layout</strong>, select
+    <strong>Two column bricks</strong> under Bootstrap and click
+    <strong>Next</strong>.
+  </p>
+  <p>7. Adjust classes as follows:</p>
+  <ul>
+    <li><strong>Top Left</strong>: Small:9</li>
+    <li><strong>Top Right</strong>: Small:3</li>
+    <li><strong>Bottom Left</strong>: Small:4</li>
+    <li><strong>Bottom Right</strong>: Small:8</li>
+  </ul>
+
+  <img
+    src="{{ images_path }}/page-layout.png"
+    alt="Two Column Bricks Layout"
+    class="img-responsive"
+    loading="lazy"
+  />
+</li>
+
+<li class="gs-step" data-step="Add Custom Blocks to Page">
+  <h3>Adding the Custom Blocks to the Page</h3>
+  <p>
+    1. Leave the <strong>Page title</strong> blank and click
+    <strong>Add new block</strong>.
+  </p>
+  <p>
+    2. Under <strong>Content block</strong>, select <strong>Block 1</strong>.
+  </p>
+
+  <img
+    src="{{ images_path }}/add-block.png"
+    alt="Adding Block to Page"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <p>
+    3. Clear the <strong>Display title</strong> checkbox, select
+    <strong>Top Left</strong> as the region, then click
+    <strong>Add block</strong>.
+  </p>
+  <p>4. Repeat the process to add:</p>
+  <ul>
+    <li><strong>Block 2</strong> → Top Right</li>
+    <li><strong>Block 3</strong> → Bottom Left</li>
+    <li><strong>Block 4</strong> → Bottom Right</li>
+  </ul>
+  <p>
+    5. Click <strong>Finish</strong> and then <strong>Update and save</strong>.
+  </p>
+
+  <div class="success-message">
+    <p>All blocks are now placed on your custom page!</p>
+  </div>
+</li>
+
+<li class="gs-step" data-step="Change Front Page">
+  <h3>Changing the Front Page</h3>
+  <p>
+    <strong>Note:</strong> The original front page remains available as a backup
+    in case you need to revert.
+  </p>
+  <p>
+    1. Navigate to your new page at <code>/newhome</code> to confirm it looks
+    correct.
+  </p>
+  <p>2. Then go to:</p>
+  <div class="path-instruction">
+    <strong>Configuration → System → Basic site settings</strong>
+  </div>
+  <p>
+    3. In the <strong>Default front page</strong> field, enter
+    <code>/newhome</code>.
+  </p>
+  <p>4. Click <strong>Save configuration</strong>.</p>
+
+  <img
+    src="{{ images_path }}/updated-frontpage.png"
+    alt="Updated Front Page"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <div class="success-message">
+    <p>
+      Congratulations! Your new custom page is now the front page of your
+      Developer Portal.
+    </p>
+  </div>
+</li>
+{% endset %} {% include 'tutorial-base.html.twig' with { 'tutorial': tutorial,
+'images_path': images_path, 'header_content': header_content, 'steps_content':
+steps_content } %}

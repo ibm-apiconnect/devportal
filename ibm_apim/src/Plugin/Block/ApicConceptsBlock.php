@@ -23,7 +23,7 @@ use Drupal\Core\Url;
  * @Block(
  *   id = "ibm_apim_concepts",
  *   admin_label = @Translation("API Concepts Block"),
- *   category = @Translation("IBM API Developer Portal")
+ *   category = @Translation("IBM CMS Portal")
  * )
  */
 class ApicConceptsBlock extends BlockBase {

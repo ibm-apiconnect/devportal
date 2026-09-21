@@ -39,7 +39,7 @@ class GHMarkdown extends FilterBase {
    */
   public function tips($long = FALSE) {
     if ($long) {
-      $returnValue = $this->t('Quick Tips:<ul>
+      $returnValue = $this->t('Quick tips:<ul>
       <li>Two or more spaces at a line\'s end = Line break</li>
       <li>Double returns = Paragraph</li>
       <li>*Single asterisks* or _single underscores_ = <em>Emphasis</em></li>

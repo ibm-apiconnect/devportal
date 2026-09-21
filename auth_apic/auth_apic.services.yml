@@ -78,7 +78,8 @@ services:
     class: Drupal\auth_apic\UserManagement\ApicInvitationService
     arguments: ['@ibm_apim.mgmtserver',
                 '@ibm_apim.account',
-                '@logger.channel.auth_apic']
+                '@logger.channel.auth_apic',
+                '@ibm_apim.user_storage']
   auth_apic.password:
     class: Drupal\auth_apic\UserManagement\ApicPasswordService
     arguments: ['@ibm_apim.mgmtserver',

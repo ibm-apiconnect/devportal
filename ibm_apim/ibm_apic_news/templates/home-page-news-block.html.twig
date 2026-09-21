@@ -1,0 +1,60 @@
+{#
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+/**
+ * @file
+ * Default theme implementation for the news block
+ *
+ * @ingroup themeable
+ */
+#}
+{% if newsContainer|length > 0 %}
+  <div class="featuredNews featuredNewsBlockWrapper">
+    <div class="featuredNewsBlockHeader">
+      <h3>{% trans %}News{% endtrans %}</h3>
+      <a href="{{ path('view.news.page_1') }}">{% trans %}View all{% endtrans %}</a>
+    </div>
+    <div class="featuredNewsContainer">
+        {% for article in newsContainer %}
+        <div class="featuredNewsNode bx--card">
+          <div class="apicCard apicNewsCard newsNodeID-{{ article.nid|clean_class }}">
+            <div class="apicCardMain">
+              {% if article.image %}
+                <div class="apicNewsImage">
+                  <img src="{{- article.image -}}" loading="lazy" alt="{{ article.title }}" class="img-responsive" typeof="foaf:Image" />
+                </div>
+              {% else %}
+                <div class="apicNewsImage">
+                  <img src="modules/ibm_apim/ibm_apic_news/images/news_placeholder.png" loading="lazy" alt="placeholder" class="img-responsive" typeof="foaf:Image" />
+                </div>
+              {% endif %}
+              <div class="apicNewsCardDetails">
+                <div class="apicNewsTitle bx--about__title--name">
+                  <span>
+                    {{ article.title }}
+                  </span>
+                </div>
+                <div class="apicNewsDesc apicFade">
+                  {{ article.summary }}
+                </div>
+                <a class="apicNewsLink" href="{{- path('entity.node.canonical', {'node': article.nid}) -}}" rel="bookmark">
+                  Read more
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+    </div>
+  </div>
+{% endif %}

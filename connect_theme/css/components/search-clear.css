@@ -1,0 +1,120 @@
+/**
+ * @file
+ * Search clear button styles following Carbon Design System guidelines.
+ */
+
+/* Allow overflow for button to be visible */
+.views-exposed-form .form--inline,
+.views-exposed-form .form-inline {
+  overflow: visible;
+}
+
+/* Make form items position relative */
+.views-exposed-form .js-form-item-title,
+.views-exposed-form .form-item-title {
+  position: relative;
+}
+
+/* Add padding to input for the button */
+.views-exposed-form .js-form-item-title input.form-control,
+.views-exposed-form .form-item-title input.form-control {
+  padding-inline-end: 2.5rem;
+}
+
+/* Position button absolutely inside the input on the right */
+.views-exposed-form .js-form-item-title .bx--search-close,
+.views-exposed-form .form-item-title .bx--search-close {
+  position: absolute;
+  right: 0.25rem;
+  bottom: 0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Ensure input-group has flex display for side-by-side layout */
+.views-exposed-form .input-group {
+  display: flex;
+  align-items: stretch;
+}
+
+/* Make input flex-grow to take available space */
+.views-exposed-form .input-group input[type="text"] {
+  flex: 1;
+}
+
+/* Close button in input-group - appears side by side */
+.views-exposed-form .input-group .bx--search-close {
+  position: relative;
+  height: 2rem;
+  width: 2rem;
+  bottom: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background-color: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  border-radius: 0.125rem;
+  flex-shrink: 0;
+  align-self: stretch;
+  top: auto;
+  right: auto;
+  transform: none;
+}
+
+/* Close button hover state */
+.views-exposed-form .input-group .bx--search-close:hover {
+  background-color: var(--background-hover);
+}
+
+/* Close button focus state for input-group */
+.views-exposed-form .input-group .bx--search-close:focus {
+  outline: 2px solid var(--interactive-focus);
+  outline-offset: -2px;
+}
+
+/* Close button base styles */
+.bx--search-close {
+  height: 2rem;
+  width: 2rem;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background-color: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 70ms cubic-bezier(0.2, 0, 0.38, 0.9);
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  border-radius: 0.125rem;
+}
+
+/* Close button hover state */
+.bx--search-close:hover {
+  background-color: var(--background-hover);
+}
+
+/* Close button focus state */
+.bx--search-close:focus {
+  outline: 2px solid var(--interactive-focus);
+  outline-offset: -2px;
+}
+
+/* Close button SVG icon */
+.bx--search-close svg {
+  fill: var(--icon-secondary);
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Hidden state for close button */
+.bx--search-close--hidden {
+  visibility: hidden;
+}

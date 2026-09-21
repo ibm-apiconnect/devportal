@@ -271,4 +271,214 @@ class UserCheckSubscriberTest extends TestCase {
 
     $this->assertNotInstanceOf(RedirectResponse::class, $event->getResponse());
   }
+
+  //Needs to send JSON request, even if user is not logged in
+  public function testSendRequestOnUnathorizedUser(): void {
+    //int anonym user
+    $account = $this->createMock(AccountInterface::class);
+    $account->method('isAuthenticated')->willReturn(false);
+    $account->method('isAnonymous')->willReturn(true);
+
+    $this->container->set('current_user', $account);
+    $request = Request::create('/image-captcha-refresh/user_pass', 'GET');
+    $request->headers->set('X-Requested-With', 'XMLHttpRequest');
+    $request->headers->set('X-UserCheck-Redirect', 'image_captcha_refresh');
+  
+    $response = new Response();
+    $kernel = $this->createMock(HttpKernelInterface::class);
+    $event = new ResponseEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $response);
+  
+    $this->assertEquals(200, $event->getResponse()->getStatusCode());
+    $this->assertFalse($event->getResponse()->headers->has('X-UserCheck-Redirect'));
+  }
+  
+  public function testRequestWithRefererHeaderInWhiteList() {
+    $account = $this->createMock(AccountInterface::class);
+    $account->method('isAuthenticated')->willReturn(false);
+    $account->method('isAnonymous')->willReturn(true);    
+    $this->container->set('current_user', $account);
+    $request = Request::create(
+      '/product',
+      'GET',
+      [],
+      [],
+      [],
+      [
+        'HTTP_REFERER' => 'https://apiconnect-catalog-1/ibm/product',
+      ]
+    );
+    $response = new Response();
+    $kernel = $this->createMock(HttpKernelInterface::class);
+    $event = new ResponseEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $response);
+    $this->assertEquals(200, $event->getResponse()->getStatusCode());
+  }
+
+  /**
+   * Test that whitelist check works correctly when referer has query parameters.
+   * The parse_url() change ensures query parameters don't interfere with whitelist matching.
+   */
+  public function testWhitelistWithQueryParameters(): void {
+    $account = $this->createMock(AccountInterface::class);
+    $account->method('isAuthenticated')->willReturn(false);
+    $account->method('isAnonymous')->willReturn(true);
+    
+    $this->container->set('current_user', $account);
+    
+    // Test with query parameters - should still match whitelist
+    $request = Request::create(
+      '/some-endpoint',
+      'GET',
+      [],
+      [],
+      [],
+      [
+        'HTTP_REFERER' => 'https://example.com/catalog/product?id=123&category=api',
+      ]
+    );
+    
+    $this->requestStack->pop();
+    $this->requestStack->push($request);
+    
+    $routeMatch = $this->createMock(RouteMatchInterface::class);
+    $routeMatch->method('getRouteObject')->willReturn(null);
+    $this->container->set('current_route_match', $routeMatch);
+    
+    $response = new Response();
+    $kernel = $this->createMock(HttpKernelInterface::class);
+    $event = new ResponseEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $response);
+    
+    $subscriber = new UserCheckSubscriber($this->logger, $this->messenger);
+    $subscriber->userCheck($event);
+    
+    // Should not redirect because 'product' is in whitelist, even with query params
+    $this->assertNotInstanceOf(RedirectResponse::class, $event->getResponse());
+    $this->assertEquals(200, $event->getResponse()->getStatusCode());
+  }
+
+  /**
+   * Test that non-whitelisted paths with query parameters still get processed normally.
+   */
+  public function testNonWhitelistWithQueryParameters(): void {
+    $account = $this->createMock(AccountInterface::class);
+    $account->method('isAuthenticated')->willReturn(false);
+    
+    $this->container->set('current_user', $account);
+    
+    // Test with query parameters but non-whitelisted path
+    $request = Request::create(
+      '/api-endpoint',
+      'GET',
+      [],
+      [],
+      [],
+      [
+        'HTTP_ACCEPT' => 'application/json',
+        'HTTP_REFERER' => 'https://example.com/catalog/api-details?id=123',
+      ]
+    );
+    
+    $this->requestStack->pop();
+    $this->requestStack->push($request);
+    
+    $routeMatch = $this->createMock(RouteMatchInterface::class);
+    $routeMatch->method('getRouteObject')->willReturn(null);
+    $this->container->set('current_route_match', $routeMatch);
+    
+    $response = new Response();
+    $kernel = $this->createMock(HttpKernelInterface::class);
+    $event = new ResponseEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $response);
+    
+    $subscriber = new UserCheckSubscriber($this->logger, $this->messenger);
+    $subscriber->userCheck($event);
+    
+    // Should redirect because 'api-details' is not in whitelist
+    $newResponse = $event->getResponse();
+    $this->assertInstanceOf(RedirectResponse::class, $newResponse);
+    $this->assertEquals(307, $newResponse->getStatusCode());
+  }
+
+  /**
+   * Test that public AJAX views (search_content, products, apis) are accessible to anonymous users.
+   */
+  public function testPublicAjaxViewsAccessibleToAnonymous(): void {
+    $account = $this->createMock(AccountInterface::class);
+    $account->method('isAuthenticated')->willReturn(false);
+    
+    $this->container->set('current_user', $account);
+    
+    $publicViews = ['search_content', 'products', 'apis'];
+    
+    foreach ($publicViews as $viewName) {
+      $request = Request::create(
+        '/views/ajax?view_name=' . $viewName . '&view_display_id=page_1',
+        'GET',
+        [],
+        [],
+        [],
+        [
+          'HTTP_ACCEPT' => 'application/json',
+        ]
+      );
+      
+      $this->requestStack->pop();
+      $this->requestStack->push($request);
+      
+      $routeMatch = $this->createMock(RouteMatchInterface::class);
+      $routeMatch->method('getRouteObject')->willReturn(null);
+      $this->container->set('current_route_match', $routeMatch);
+      
+      $response = new Response();
+      $kernel = $this->createMock(HttpKernelInterface::class);
+      $event = new ResponseEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $response);
+      
+      $subscriber = new UserCheckSubscriber($this->logger, $this->messenger);
+      $subscriber->userCheck($event);
+      
+      // Should not redirect for public views
+      $this->assertNotInstanceOf(RedirectResponse::class, $event->getResponse(),
+        "View '{$viewName}' should be accessible to anonymous users");
+      $this->assertEquals(200, $event->getResponse()->getStatusCode());
+    }
+  }
+
+  /**
+   * Test that non-public AJAX views still require authentication.
+   */
+  public function testNonPublicAjaxViewsRequireAuthentication(): void {
+    $account = $this->createMock(AccountInterface::class);
+    $account->method('isAuthenticated')->willReturn(false);
+    
+    $this->container->set('current_user', $account);
+    
+    $request = Request::create(
+      '/views/ajax?view_name=private_content&view_display_id=page_1',
+      'GET',
+      [],
+      [],
+      [],
+      [
+        'HTTP_ACCEPT' => 'application/json',
+        'HTTP_REFERER' => 'https://example.com/private-page',
+      ]
+    );
+    
+    $this->requestStack->pop();
+    $this->requestStack->push($request);
+    
+    $routeMatch = $this->createMock(RouteMatchInterface::class);
+    $routeMatch->method('getRouteObject')->willReturn(null);
+    $this->container->set('current_route_match', $routeMatch);
+    
+    $response = new Response();
+    $kernel = $this->createMock(HttpKernelInterface::class);
+    $event = new ResponseEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $response);
+    
+    $subscriber = new UserCheckSubscriber($this->logger, $this->messenger);
+    $subscriber->userCheck($event);
+    
+    // Should redirect because this is not a public view
+    $newResponse = $event->getResponse();
+    $this->assertInstanceOf(RedirectResponse::class, $newResponse);
+    $this->assertEquals(307, $newResponse->getStatusCode());
+  }
 }

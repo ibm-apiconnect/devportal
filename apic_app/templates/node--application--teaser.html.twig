@@ -15,9 +15,9 @@
 ] -%}
 {{ attach_library('ibm_apim/core') }}
 {{ attach_library('apic_app/basic') }}
-<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes).removeAttribute('dir') }} aria-label="{{ node.title[0].value }}">
   <div class="apicAppTeaser">
-    {% if content.application_image is defined and content.application_image|render|trim is not empty %}
+    {% if showPlaceholders and content.application_image is defined and content.application_image|render|trim is not empty %}
       <div class="apicTeaserIcon">
         {{ content.application_image }}
       </div>

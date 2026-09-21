@@ -1,4 +1,14 @@
 {#
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 /**
  * @file
  * Default teaser theme implementation for products.
@@ -15,11 +25,11 @@
   ('casestudyTitle-' ~ node.title[0].value)|clean_class
 ] -%}
 
-<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes).removeAttribute('dir') }} aria-label="{{ node.title[0].value }}">
   <div class="apicCaseStudy">
     <header class="node__header--has-meta node__header apicCaseStudyHeader">
       <div class="breadcrumb">
-        <a href="{{ path('view.case_studies.page_1') }}">{{ 'Case studies'|t }}</a> /
+        <a href="{{ path('view.case_studies.page_1') }}">{% trans %}Case studies{% endtrans %}</a> /
       </div>
       <div class="apicCaseStudyTitle">
         <div class="apicCaseStudyTitleText">

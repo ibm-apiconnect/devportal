@@ -21,10 +21,13 @@ use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\consumerorg\Service\MemberService;
 use Drupal\consumerorg\Service\RoleService;
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\ibm_apim\ApicType\ApicUser;
@@ -41,6 +44,7 @@ use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
 use Prophecy\Prophet;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -148,6 +152,11 @@ class ConsumerOrgServiceTest extends UnitTestCase {
   protected $utils;
 
   /**
+   * @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $invitationRateLimitStore;
+
+  /**
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
@@ -172,6 +181,7 @@ class ConsumerOrgServiceTest extends UnitTestCase {
     $this->userQuery = $this->prophet->prophesize(QueryInterface::class);
     $this->eventLogService = $this->prophet->prophesize(EventLogService::class);
     $this->utils = $this->prophet->prophesize(Utils::class);
+    $this->invitationRateLimitStore = $this->prophet->prophesize(KeyValueStoreExpirableInterface::class);
     $userStorage = $this->prophet->prophesize(EntityStorageInterface::class);
     $this->entityTypeManager->getStorage('user')->willReturn($userStorage->reveal());
     $userStorage->getQuery()->willReturn($this->userQuery); // TODO: implement per test when needed?
@@ -293,7 +303,223 @@ class ConsumerOrgServiceTest extends UnitTestCase {
       $this->apicAccountService->reveal(),
       $this->userService->reveal(),
       $this->eventLogService->reveal(),
-      $this->utils->reveal());
+      $this->utils->reveal(),
+      $this->invitationRateLimitStore->reveal());
   }
+
+  // --- inviteMember: pending invite duplicate prevention ---
+
+  public function testInviteMemberBlocksDuplicatePendingInvite(): void {
+    $org = new ConsumerOrg();
+    $org->setName('testorg');
+    $org->setUrl('/org/url');
+    $org->setInvites([['email' => 'test@example.com', 'id' => 'inv-1', 'url' => '/inv/1']]);
+
+    $this->apimServer->postMemberInvitation(Argument::any(), Argument::any(), Argument::any())->shouldNotBeCalled();
+    $this->logger->error(Argument::any())->shouldNotBeCalled();
+
+    $service = $this->createService();
+    $response = $service->inviteMember($org, 'test@example.com', NULL);
+
+    self::assertFalse($response->success());
+    self::assertStringContainsString('pending', $response->getMessage());
+  }
+
+  public function testInviteMemberBlocksDuplicatePendingInviteCaseInsensitive(): void {
+    $org = new ConsumerOrg();
+    $org->setName('testorg');
+    $org->setUrl('/org/url');
+    $org->setInvites([['email' => 'Test@Example.COM', 'id' => 'inv-1', 'url' => '/inv/1']]);
+
+    $this->apimServer->postMemberInvitation(Argument::any(), Argument::any(), Argument::any())->shouldNotBeCalled();
+
+    $service = $this->createService();
+    $response = $service->inviteMember($org, 'test@example.com', NULL);
+
+    self::assertFalse($response->success());
+  }
+
+  public function testInviteMemberAllowsNewEmailWhenNoPendingInvite(): void {
+    $org = new ConsumerOrg();
+    $org->setName('testorg');
+    $org->setUrl('/org/url');
+    $org->setInvites([['email' => 'other@example.com', 'id' => 'inv-1', 'url' => '/inv/1']]);
+
+    $apim_response = new RestResponse();
+    $apim_response->setCode(201);
+    $apim_response->setData(['id' => 'inv-2', 'url' => '/inv/2']);
+
+    $this->apimServer->postMemberInvitation(Argument::any(), 'new@example.com', NULL)->willReturn($apim_response);
+    $this->apimUtils->removeFullyQualifiedUrl('/inv/2')->willReturn('/inv/2');
+    $this->currentUser->isAuthenticated()->willReturn(FALSE);
+    $this->eventLogService->createIfNotExist(Argument::any())->shouldBeCalled();
+    $this->cacheTagsInvalidator->invalidateTags(Argument::any())->shouldBeCalled();
+    $this->logger->notice(Argument::any(), Argument::any())->shouldBeCalled();
+    $this->logger->debug(Argument::any())->shouldBeCalled();
+
+    $service = $this->createService();
+    $response = $service->inviteMember($org, 'new@example.com', NULL);
+
+    self::assertTrue($response->success());
+  }
+
+  // --- resendMemberInvitation: rate limit ---
+
+  /**
+   * Set up a minimal Drupal container with ibm_apim.settings config mock.
+   * Required for tests that exercise getInvitationResendLimit/Window which
+   * call \Drupal::config() internally.
+   */
+  private function setUpResendConfig(int $limit = 2, int $window = 180): void {
+    $ibmApimConfig = $this->prophet->prophesize(ImmutableConfig::class);
+    $ibmApimConfig->get('invitation_resend_limit')->willReturn($limit);
+    $ibmApimConfig->get('invitation_resend_window')->willReturn($window);
+
+    $configFactory = $this->prophet->prophesize(ConfigFactoryInterface::class);
+    $configFactory->get('ibm_apim.settings')->willReturn($ibmApimConfig->reveal());
+
+    $container = new ContainerBuilder();
+    $container->set('config.factory', $configFactory->reveal());
+    \Drupal::setContainer($container);
+  }
+
+  public function testResendMemberInvitationBlockedWhenLimitReached(): void {
+    $this->setUpResendConfig(2, 180);
+
+    $org = new ConsumerOrg();
+    $org->setName('testorg');
+    $org->setUrl('/org/url');
+
+    // Simulate counter already at limit (2).
+    $hash = hash('sha256', '/org/url:inv-abc');
+    $key  = 'consumerorg:invite:resend:' . $hash;
+    $this->invitationRateLimitStore->get($key)->willReturn(2);
+
+    $this->apimServer->resendMemberInvitation(Argument::any(), Argument::any())->shouldNotBeCalled();
+    $this->logger->warning(Argument::any(), Argument::any())->shouldBeCalled();
+
+    $service = $this->createService();
+    $response = $service->resendMemberInvitation($org, 'inv-abc');
+
+    self::assertFalse($response->success());
+    self::assertStringContainsString('too many times', $response->getMessage());
+  }
+
+  public function testResendMemberInvitationAllowedWhenUnderLimit(): void {
+    $this->setUpResendConfig(2, 180);
+
+    $org = new ConsumerOrg();
+    $org->setName('testorg');
+    $org->setUrl('/org/url');
+
+    $hash      = hash('sha256', '/org/url:inv-abc');
+    $key       = 'consumerorg:invite:resend:' . $hash;
+    $expiryKey = 'consumerorg:invite:resend:expiry:' . $hash;
+
+    // Counter at 1 (under limit of 2), expiry key exists.
+    $this->invitationRateLimitStore->get($key)->willReturn(1);
+    $this->invitationRateLimitStore->get($expiryKey)->willReturn(time() + 180);
+    $this->invitationRateLimitStore->setWithExpire($key, 2, Argument::type('int'))->shouldBeCalled();
+
+    $apim_response = new RestResponse();
+    $apim_response->setCode(200);
+    $this->apimServer->resendMemberInvitation($org, 'inv-abc')->willReturn($apim_response);
+    $this->currentUser->isAuthenticated()->willReturn(FALSE);
+    $this->eventLogService->createIfNotExist(Argument::any())->shouldBeCalled();
+
+    $service = $this->createService();
+    $response = $service->resendMemberInvitation($org, 'inv-abc');
+
+    self::assertTrue($response->success());
+  }
+
+  public function testResendMemberInvitationFirstAttemptSetsWindowAnchor(): void {
+    $this->setUpResendConfig(2, 180);
+
+    $org = new ConsumerOrg();
+    $org->setName('testorg');
+    $org->setUrl('/org/url');
+
+    $hash      = hash('sha256', '/org/url:inv-abc');
+    $key       = 'consumerorg:invite:resend:' . $hash;
+    $expiryKey = 'consumerorg:invite:resend:expiry:' . $hash;
+
+    // No previous attempts.
+    $this->invitationRateLimitStore->get($key)->willReturn(NULL);
+    $this->invitationRateLimitStore->setWithExpire($key, 1, Argument::type('int'))->shouldBeCalled();
+    $this->invitationRateLimitStore->setWithExpire($expiryKey, Argument::type('int'), Argument::type('int'))->shouldBeCalled();
+
+    $apim_response = new RestResponse();
+    $apim_response->setCode(200);
+    $this->apimServer->resendMemberInvitation($org, 'inv-abc')->willReturn($apim_response);
+    $this->currentUser->isAuthenticated()->willReturn(FALSE);
+    $this->eventLogService->createIfNotExist(Argument::any())->shouldBeCalled();
+
+    $service = $this->createService();
+    $response = $service->resendMemberInvitation($org, 'inv-abc');
+
+    self::assertTrue($response->success());
+  }
+
+  /**
+ * @covers ::createFromJSON
+ */
+public function testCreateFromJSONMetadataHandled(): void {
+  $json = [
+    "consumer_org" => [
+      "id" => "org-unit-test",
+      "name" => "Test Org",
+      "metadata" => [
+        "foo" => "bar",
+        "nested" => ["x" => 1],
+      ],
+    ],
+    "roles" => [],
+    "members" => [],
+  ];
+
+  // Expect metadata to be passed to storage layer
+  $this->entityTypeManager->getStorage('node')->willReturn(
+    $this->prophet->prophesize(EntityStorageInterface::class)->reveal()
+  );
+
+  // Expect metadata setter to be called on ConsumerOrgService
+  $this->utils->jsonEncode(Argument::type('array'))->willReturn(json_encode($json['consumer_org']['metadata']));
+
+  $service = $this->createService();
+
+  // Trigger the logic
+  $org = $service->createFromJSON($json);
+
+  // Assert metadata stored on ConsumerOrg object
+  $this->assertEquals([
+    "foo" => "bar",
+    "nested" => ["x" => 1],
+  ], $org->getMetadata());
+}
+
+/**
+ * @covers ::setMetadata
+ */
+public function testSetMetadataStoresJson(): void {
+  $orgId = "org-update-test";
+  $metadata = [
+    "custom_key" => "changed_value",
+    "num" => 123,
+  ];
+
+  $this->entityTypeManager->getStorage('node')->willReturn(
+    $this->prophet->prophesize(EntityStorageInterface::class)->reveal()
+  );
+
+  $this->utils->jsonEncode($metadata)->willReturn(json_encode($metadata));
+
+  $service = $this->createService();
+
+  $result = $service->setMetadata($orgId, $metadata);
+
+  $this->assertTrue($result);
+}
+
 
 }

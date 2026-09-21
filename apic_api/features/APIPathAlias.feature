@@ -12,7 +12,7 @@ Feature: API PathAlias
       | Climbing Weather API | 65432 | climbing.json |
     Given products:
       | name      | title     | id     | document      |
-      | climbing-weather | Climbing Weather | 654321 | ClimbingProduct.json |
+      | climbing-weather | Climbing Weather | 654321 | ClimbingProductV1.json |
     Given I am not logged in
     And I am at "/api"
     Then I should see the text "Climbing Weather API"
@@ -29,7 +29,7 @@ Feature: API PathAlias
       | Climbing Weather API | 65432 | climbing.json |
     Given products:
       | name      | title     | id     | document      |
-      | climbing-weather | Climbing Weather | 654321 | ClimbingProduct.json |
+      | climbing-weather | Climbing Weather | 654321 | ClimbingProductV1.json |
     Given I am not logged in
     And I am at "/productselect/climbing-weather-api:1.0.0"
     Then I should see the text "Climbing Weather API"

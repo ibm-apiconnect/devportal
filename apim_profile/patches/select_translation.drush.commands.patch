@@ -1,0 +1,46 @@
+--- modules/select_translation/src/Commands/SelectTranslationCommands.php
++++ modules/select_translation/src/Commands/SelectTranslationCommands.php
+@@ -3,8 +3,6 @@
+ namespace Drupal\select_translation\Commands;
+ 
+ use Drush\Commands\DrushCommands;
+-use Symfony\Component\DependencyInjection\ContainerInterface;
+-use Psr\Log\LoggerInterface;
+ 
+ /**
+  * Drush 9+ command class containing select translation drush commands.
+@@ -14,25 +12,6 @@
+ class SelectTranslationCommands extends DrushCommands {
+ 
+   /**
+-   * Constructs a new SelectTranslationCommands object.
+-   *
+-   * @param \Psr\Log\LoggerInterface $logger
+-   *   The logger channel.
+-   */
+-  public function __construct(LoggerInterface $logger) {
+-    $this->logger = $logger;
+-  }
+-
+-  /**
+-   * {@inheritdoc}
+-   */
+-  public static function create(ContainerInterface $container) {
+-    return new static(
+-      $container->get('select_translation.logger'),
+-    );
+-  }
+-
+-  /**
+    * Select which translation of a node should be displayed.
+    *
+    * @param int $nid
+@@ -66,7 +45,7 @@
+       throw new \Exception(dt("Node with 'nid' = $nid not available."));
+     }
+ 
+-    $this->logger->info("Selected translation for node $nid: " . $node->language()->getId());
++    \Drupal::logger('select_translation')->info("Selected translation for node $nid: " . $node->language()->getId());
+ 
+     return $node;
+   }

@@ -153,7 +153,7 @@ class ChangeOrgOwnerForm extends FormBase {
             }
           }
           $form['new_owner'] = [
-            '#title' => t('New Owner'),
+            '#title' => t('New owner'),
             '#type' => 'select',
             '#description' => t('Select the user to take ownership.'),
             '#options' => $values,
@@ -198,7 +198,7 @@ class ChangeOrgOwnerForm extends FormBase {
 
             $form['role'] = [
               '#type' => 'radios',
-              '#title' => t('Assign Previous Owner\'s Role'),
+              '#title' => t('Assign previous owner\'s role'),
               '#default_value' => $default_role,
               '#options' => $roles_array,
               '#description' => t('Select the new role for the previous owner.'),

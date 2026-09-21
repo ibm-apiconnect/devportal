@@ -28,3 +28,4 @@ auto_build_scss: 1
 
 libraries:
   - 'stub/global-styling'
+  - 'stub/dark_mode_handler'

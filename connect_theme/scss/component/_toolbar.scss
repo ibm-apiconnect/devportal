@@ -1,3 +1,14 @@
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 /**
  * Toolbar module styling.
  */
@@ -60,8 +71,22 @@ body.toolbar-fixed {
     top: 48px;
   }
 
+  // Position new admin top-bar below navigation bar
+  [data-drupal-admin-styles].top-bar {
+    top: 48px !important;
+    inset-block-start: 48px !important;
+  }
+
   [data-admin-toolbar="collapsed"] .toolbar-loading .apicStickyHeader {
     left: 0;
+  }
+}
+
+// Position new admin top-bar below navigation bar on larger screens
+@media (min-width: 64rem) {
+  [data-drupal-admin-styles].top-bar {
+    top: 48px !important;
+    inset-block-start: 48px !important;
   }
 }
 

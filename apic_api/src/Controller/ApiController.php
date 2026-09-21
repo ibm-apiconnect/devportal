@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2024
+ * (C) Copyright IBM Corporation 2018, 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -30,7 +30,7 @@ class ApiController extends ControllerBase {
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse|array
    */
-  public function apiView(NodeInterface $apiNode = NULL) {
+  public function apiView(?NodeInterface $apiNode = NULL) {
     if (\Drupal::currentUser()->isAnonymous() && !((boolean) \Drupal::config('ibm_apim.settings')->get('show_anonymous_apis'))) {
       $url =  Url::fromRoute('system.401', ['redirectto' => Url::fromRoute('<current>')->getInternalPath()])->toString();
       $returnValue = new RedirectResponse($url);
@@ -53,7 +53,7 @@ class ApiController extends ControllerBase {
    *
    * @return string
    */
-  public function apiTitle(NodeInterface $apiNode = NULL): string {
+  public function apiTitle(?NodeInterface $apiNode = NULL): string {
     if ($apiNode !== NULL && $apiNode->bundle() === 'api') {
       $returnValue = $apiNode->getTitle() . ' - ' . \Drupal::config('system.site')->get('name');
     }

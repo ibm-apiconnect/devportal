@@ -1,3 +1,14 @@
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 /**
  * Navbar styling.
  */
@@ -62,7 +73,7 @@ body {
 }
 
 .navbar-default .navbar-toggle {
-  background-color: $navbar-default-bg;
+  background-color: var(--navbar-default-bg);
   @include navbar-vertical-align-padding(40px);
 }
 
@@ -104,6 +115,43 @@ nav.block-login .menu.nav {
   display: flex;
 }
 
+// Ensure the main nav area can shrink to avoid pushing right-side controls offscreen.
+.navbar .region-navigation {
+  flex: 1 1 auto;
+  min-width: 0; /* allow children to shrink properly inside flex */
+}
+
+// Right-side controls must not be squeezed or pushed offscreen.
+.navbar .region-navigation-right {
+  flex: 0 0 auto;
+}
+
+// Blog page specific: long breadcrumb or title can overflow the header.
+// Truncate breadcrumb on blog pages so header controls remain visible.
+body.path-blog .breadcrumb {
+  max-width: calc(100% - 320px); /* leave room for logo + actions */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+// Consumer Analytics page: prevent long org header content from pushing nav
+// (matches selectors used elsewhere for analytics/organization header)
+body.route-ibm-apimanalytics header.apicMyOrgHeader,
+body.route-ibm-apimanalytics .apicMyOrg {
+  // Truncate organization tabs / title to keep right-side controls visible
+  .organizationTabs,
+  .apicMyOrgHeader__title,
+  .breadcrumb,
+  .organizationTabs ul {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .navbar .region-navigation-right {
   display: flex;
   flex-direction: row-reverse;
@@ -116,22 +164,22 @@ nav.block-login .menu.nav {
 }
 
 .navbar .nav.navbar-nav > li > a:hover {
-  background-color: $navbar-default-link-hover-bg
+  background-color:var(--navbar-default-link-hover-bg)
 }
 .navbar .nav.navbar-nav > li > a:active {
-  background-color: $navbar-default-link-active-bg;
+  background-color: var(--navbar-default-link-active-bg);
 }
 
 .navbar .nav.navbar-nav > li > a:focus {
   outline: unset;
-  border:2px solid $navbar-default-link-color;
+  border:2px solid var(--navbar-default-link-color);
 }
 
 .navbar .nav.navbar-nav > li > a.is-active,
 .navbar .nav.navbar-nav > li.active > a,
 .nav.menu--login > li.active a {
-  border-bottom: 2px solid $brand-primary;
-  background-color: $navbar-default-bg;
+  border-bottom: 2px solid var(--tab-border-color-active);
+  background-color: var(--navbar-default-bg);
 }
 
 .navbar .nav.navbar-nav > li:last-child > a {
@@ -144,21 +192,23 @@ nav.block-login .menu.nav {
 }
 
 .navbar .ibmapimSearch{
-  padding: 0 .75rem 0 0.25rem;
+  padding-block: 0;
+  padding-inline-end: .75rem;
+  padding-inline-start: .25rem;
   @include navbar-vertical-align-padding(38px);
   border: 2px solid transparent;
   &:hover,
   &:active {
-    background-color: $navbar-default-link-hover-bg;
+    background-color:var(--navbar-default-link-hover-bg);
   }
   &:focus {
     outline: unset;
-    border:2px solid $navbar-default-link-color;
+    border:2px solid var(--navbar-default-link-color);
   }
 }
 
 .context--search-content .navbar .ibmapimSearch {
-  border-bottom: 2px solid $brand-primary;
+  border-bottom: 2px solid var(--tab-border-color-active);
 }
 
 .navbar .ibmapimNotificationBlock,
@@ -171,7 +221,7 @@ nav.block-login .menu.nav {
 }
 
 .navbar .ibmapimNotificationBlock{
-  border-left: 1px solid $navbar-default-link-color;
+  border-left: 1px solid var(--navbar-default-link-color);
   margin-left: 0;
   .imageContainer {
     padding-left: 5px;
@@ -184,7 +234,7 @@ nav.block-login .menu.nav {
 }
 
 .navbar .dropitmenu .dropit-icon {
-  color: $navbar-default-link-color;
+  color: var(--navbar-default-link-color);
   vertical-align: bottom;
   font-size: 0.625rem;
 }
@@ -199,34 +249,35 @@ nav.block-login .menu.nav {
   }
   &:hover,
   &:active {
-    background-color: $navbar-default-link-hover-bg;
+    background-color: var(--navbar-default-link-hover-bg);
   }
   &:focus {
     outline: unset;
-    border:2px solid $navbar-default-link-color;
+    border:2px solid var(--navbar-default-link-color);
   }
 }
 
 .navbar .dropitmenu ul.dropit-submenu {
-  background-color: $navbar-default-bg;
+  background-color: var(--navbar-default-bg);
   border-radius: 0;
   border-style: solid none none none;
-  border-color: $navbar-default-link-color;
+  border-color: var(--navbar-default-link-color);
   padding:0;
   line-height: 2rem;
   margin-top: 15px;
   margin-right: -1rem;
   max-height: 16rem;
   overflow-y: auto;
+  box-shadow: var(--dropdown-box-shadow);
   .selectorg {
     font-size: 0.75rem;
-    color: $navbar-default-link-color;
-    border-top: 1px solid $navbar-default-link-color;
+    color: var(--navbar-default-link-color);
+    border-top: 1px solid var(--navbar-default-link-color);
     padding: 0 1rem;
   }
   a {
     font-size: 0.875rem;
-    color: $navbar-default-color;
+    color: var(--navbar-default-color);
     padding: 0 0.75rem;
     border: 2px solid transparent;
     line-height: 2.25rem;
@@ -238,33 +289,33 @@ nav.block-login .menu.nav {
     }
     &:hover,
     &:active {
-      background-color: $navbar-default-link-hover-bg;
+      background-color:var(--navbar-default-link-hover-bg);
     }
     &:focus {
       outline: unset;
-      border:2px solid $navbar-default-link-color;
+      border:2px solid var(--navbar-default-link-color);
     }
   }
 }
 
 .consumerorgSelectBlock {
-  padding-right: 0.625rem;
+  padding-inline-end: 0.625rem;
   &:hover,
   &:active {
-    background-color: $navbar-default-link-hover-bg;
+    background-color:var(--navbar-default-link-hover-bg);
   }
   &:focus {
     outline: unset;
-    border:2px solid $navbar-default-link-color;
+    border:2px solid var(--navbar-default-link-color);
   }
 }
 
 .consumerorgSelectBlock .orgHeading {
   display: inline-block;
-  color: $navbar-default-color;
+  color: var(--navbar-default-color);
   width:100%;
   .subTitle {
-    color: $navbar-default-link-color;
+    color: var(--navbar-default-link-color);
     font-weight: lighter;
     font-size: .75rem;
     opacity: 0.9;
@@ -308,7 +359,7 @@ nav.block-menu ul.nav > li > a:focus,
 nav.block-menu ul.nav > li > a:hover,
 nav.block-menu ul.nav > li.active > a {
   padding-bottom: 8px;
-  border-bottom: 4px solid $navbar-default-link-hover-color;
+  border-bottom: 4px solid var(--navbar-default-link-hover-color);
 }
 
 .navbar-nav > li.front {
@@ -327,60 +378,61 @@ nav.block-login ul.nav > li > a:visited {
   padding-right: 0.75rem;
   padding-left: 0.75rem;
   display: inline-block;
-  color: $navbar-default-link-color;
+  color: var(--navbar-default-link-color);
   padding-bottom: calc(0.74rem + 4px);
 }
 nav.block-login ul.nav > li > a:focus,
 nav.block-login ul.nav > li > a:hover {
-  color: $navbar-default-link-hover-color;
+  color: var(--navbar-default-link-hover-color);
 }
 nav.block-login ul.menu li+li:before {
   content: " \00b7";
-  color: $ui-04;
+  color: var(--footer-link-color);
   margin-left: 10px;
   margin-right: 10px;
 }
 
 nav.block-login ul.nav > li.last {
-  margin-right: 10px;
+  margin-inline-end: 10px;
 }
 
 // main menu overflow menu
 .navbar-default {
   .navbar-nav {
     > li svg.bx--overflow-menu__icon {
-      fill: $navbar-default-link-color;
+      fill: var(--navbar-default-link-color);
       max-height:1rem;
       padding: 0;
       &:hover,
       &:focus {
-        fill: $navbar-default-link-hover-color;
+        fill: var(--navbar-default-link-hover-color);
       }
     }
     .dropdown-menu {
       @include reset;
       @include type-style('body-short-01');
-      background-color: $navbar-default-bg;
+      background-color: var(--navbar-default-bg);
       border-style: solid none none none;
-      border-color: $navbar-default-link-color;
+      border-color: var(--navbar-default-link-color);
 
       a {
-        background-color: $navbar-default-bg;
-        color: $navbar-default-link-color;
+        background-color: var(--navbar-default-bg);
+        color: var(--navbar-default-link-color);
         padding: 0 1rem;
         border: 2px solid transparent;
         line-height: 2.25rem;
         &:hover,
         &:active {
-          color: $navbar-default-link-hover-color;
-          background-color: $navbar-default-link-hover-bg;
+          color: var(--navbar-default-link-hover-color);
+          background-color:var(--navbar-default-link-hover-bg);
         }
         &:focus {
           outline: unset;
-          border:2px solid $navbar-default-link-color;
+          border:2px solid var(--navbar-default-link-color);
         }
       }
     }
 
   }
 }
+

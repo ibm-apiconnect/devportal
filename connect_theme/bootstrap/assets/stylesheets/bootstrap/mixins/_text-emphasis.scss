@@ -3,10 +3,18 @@
 // [converter] $parent hack
 @mixin text-emphasis-variant($parent, $color) {
   #{$parent} {
-    color: $color;
+    @if str-index(inspect($color), '--') == 1 {
+      color: var(#{$color});
+    } @else {
+      color: $color;
+    }
   }
   a#{$parent}:hover,
   a#{$parent}:focus {
-    color: darken($color, 10%);
+    @if str-index(inspect($color), '--') == 1 {
+      color: var(#{$color});
+    } @else {
+      color: darken($color, 10%);
+    }
   }
 }

@@ -16,6 +16,7 @@ namespace Drupal\ibm_apim;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 class ApicRest implements ApicRestInterface {
 
@@ -209,7 +210,7 @@ class ApicRest implements ApicRestInterface {
       if (!isset($hostname)) {
         $hostname = '';
       }
-      curl_setopt($resource, CURLOPT_USERAGENT, 'IBM API Developer Portal/' . $apicVersion['value'] . ' (' . $apicVersion['description'] . ') ' . $hostname);
+      curl_setopt($resource, CURLOPT_USERAGENT, 'IBM CMS Portal/' . $apicVersion['value'] . ' (' . $apicVersion['description'] . ') ' . $hostname);
     }
 
     // Verify the server cert if we have the $apiType-ca mounted
@@ -219,7 +220,7 @@ class ApicRest implements ApicRestInterface {
       $apim_rest_trace = (boolean) \Drupal::config('ibm_apim.devel_settings')->get('apim_rest_trace');
       if ($apim_rest_trace === TRUE) {
         curl_setopt($resource, CURLOPT_VERBOSE, TRUE);
-        \Drupal::logger('ibm_apim_rest')->debug('Payload: %data', ['%data' => serialize($data)]);
+        \Drupal::logger('ibm_apim_rest')->debug('Payload: %data', ['%data' => SerializationUtility::encodeData($data)]);
       }
     }
 
@@ -287,7 +288,7 @@ class ApicRest implements ApicRestInterface {
       ];
       \Drupal::state()->set('ibm_apim.rest_requests', $restState);
       \Drupal::logger('ibm_apim_rest')->debug('REST Trace output: %data.', [
-        '%data' => serialize($result),
+        '%data' => SerializationUtility::encodeData($result),
       ]);
     }
     if (function_exists('ibm_apim_exit_trace')) {
@@ -695,7 +696,7 @@ class ApicRest implements ApicRestInterface {
       $apim_rest_trace = (boolean) \Drupal::config('ibm_apim.devel_settings')->get('apim_rest_trace');
       if ($apim_rest_trace === TRUE) {
         curl_setopt($ch, CURLOPT_VERBOSE, TRUE);
-        \Drupal::logger('ibm_apim_rest')->debug('Payload: %data', ['%data' => serialize($data)]);
+        \Drupal::logger('ibm_apim_rest')->debug('Payload: %data', ['%data' => SerializationUtility::encodeData($data)]);
       }
     }
 
@@ -709,7 +710,7 @@ class ApicRest implements ApicRestInterface {
     if (!isset($hostname)) {
       $hostname = '';
     }
-    curl_setopt($ch, CURLOPT_USERAGENT, 'IBM API Developer Portal/' . $apicVersion['value'] . ' (' . $apicVersion['description'] . ') ' . $hostname);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'IBM CMS Portal/' . $apicVersion['value'] . ' (' . $apicVersion['description'] . ') ' . $hostname);
 
     // Verify the server cert if we have the consumer-ca mounted
     self::curl_set_accept_ssl($ch);

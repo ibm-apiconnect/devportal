@@ -78,8 +78,38 @@ class MockAPIMServer implements ManagementServerInterface {
    * @inheritdoc
    */
   public function getAuth(ApicUser $user) {
-    \Drupal::logger('apictest')->error('Implementation of MockAPIMServer::getAuth() is missing!');
-    return NULL;
+    $response = new RestResponse();
+    
+    // Check if user already exists in APIM (simulating re-invited user scenario)
+    // In a real scenario, this would check against APIM's user database
+    // For testing, we'll check if the user exists in Drupal but has no org
+    $existingUser = user_load_by_name($user->getUsername());
+    
+    if ($existingUser && empty($existingUser->get('consumerorg_url')->getValue())) {
+      // User exists in APIM but was removed from all orgs - should fail auth
+      $response->setCode(400);
+      $response->setErrors([
+        [
+          'message' => 'User ' . $user->getUsername() . ' is already registered.',
+        ],
+      ]);
+      \Drupal::logger('apictest')->notice('MockAPIMServer::getAuth() - User @user already registered in APIM', [
+        '@user' => $user->getUsername(),
+      ]);
+    }
+    else {
+      $response->setCode(200);
+      $response->setData([
+        'access_token' => 'mock_access_token_' . $user->getUsername(),
+        'token_type' => 'Bearer',
+        'expires_in' => 3600,
+      ]);
+      \Drupal::logger('apictest')->notice('MockAPIMServer::getAuth() - Successful auth for @user', [
+        '@user' => $user->getUsername(),
+      ]);
+    }
+    
+    return $response;
   }
 
   /**
@@ -230,6 +260,13 @@ class MockAPIMServer implements ManagementServerInterface {
       $this->createConsumerOrg(new ConsumerOrg());
     }
     $response->setCode(201);
+    
+    // Extract org ID from token URL and return org_url in response
+    $tokenUrl = $token->getUrl();
+    if (preg_match('#/orgs/([^/]+)/#', $tokenUrl, $matches)) {
+      $response->setData(['org_url' => '/consumer-api/orgs/' . $matches[1]]);
+    }
+    
     return $response;
   }
 
@@ -326,7 +363,7 @@ class MockAPIMServer implements ManagementServerInterface {
   /**
    * @inheritDoc
    */
-  public function postMemberInvitation(ConsumerOrg $org, string $email_address, string $role = NULL) {
+  public function postMemberInvitation(ConsumerOrg $org, string $email_address, ?string $role = NULL) {
     $response = new RestResponse();
     $response->setCode(201);
     $response->setData(['id' => 'abcde']);

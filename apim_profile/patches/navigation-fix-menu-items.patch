@@ -1,37 +1,30 @@
---- core/modules/navigation/src/Plugin/Block/NavigationMenuBlock.php    2024-07-04 12:33:45
-+++ core/modules/navigation/src/Plugin/Block/NavigationMenuBlock.php       2024-08-15 11:49:08
-@@ -86,6 +86,7 @@
-     $manipulators = [
+--- core/modules/navigation/src/Plugin/Block/NavigationMenuBlock.php	2025-07-03 16:07:17
++++ core/modules/navigation/src/Plugin/Block/NavigationMenuBlock.php	2025-07-03 16:18:29
+@@ -88,6 +88,7 @@
        ['callable' => 'menu.default_tree_manipulators:checkAccess'],
+       ['callable' => NavigationMenuLinkTreeManipulators::class . ':addSecondLevelOverviewLinks'],
        ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
 +      ['callable' => 'navigation.navigation_tree_manipulators:manipulate'],
      ];
      $tree = $this->menuTree->transform($tree, $manipulators);
      $build = $this->menuTree->build($tree);
-
-# ---------
-# Will probably still need the remove local tasks patch line once the menu items problem has been fixed!
-# ---------
---- core/modules/navigation/src/Hook/NavigationHooks.php        2025-01-08 12:19:40
-+++ core/modules/navigation/src/Hook/NavigationHooks copy.php   2025-01-08 12:19:32
-@@ -110,8 +110,8 @@
+--- core/modules/navigation/src/Hook/NavigationHooks.php	2025-07-03 16:19:53
++++ core/modules/navigation/src/Hook/NavigationHooks.php	2025-07-03 16:20:57
+@@ -137,6 +137,8 @@
      $navigation_links = \Drupal::classResolver(NavigationContentLinks::class);
      assert($navigation_links instanceof NavigationContentLinks);
      $navigation_links->addMenuLinks($links);
--    $navigation_links->removeAdminContentLink($links);
--    $navigation_links->removeHelpLink($links);
 +    //$navigation_links->removeAdminContentLink($links);
 +    //$navigation_links->removeHelpLink($links);
    }
-
+ 
    /**
-
---- core/modules/navigation/navigation.services.yml     2024-07-04 12:33:45
-+++ core/modules/navigation/navigation.services.yml        2024-08-15 11:54:28
-@@ -39,3 +39,12 @@
-     class: Drupal\navigation\TopBarItemManager
-     parent: default_plugin_manager
-   Drupal\navigation\TopBarItemManagerInterface: '@plugin.manager.top_bar_item'
+--- core/modules/navigation/navigation.services.yml	2025-07-03 16:23:37
++++ core/modules/navigation/navigation.services.yml	2025-07-03 16:35:53
+@@ -48,3 +48,11 @@
+ 
+   Drupal\navigation\Menu\NavigationMenuLinkTreeManipulators:
+     autowire: true
 +
 +  navigation.navigation_tree_manipulators:
 +    class: Drupal\navigation\NavigationMenuLinkTreeManipulators
@@ -40,4 +33,3 @@
 +
 +  navigation.event_subscriber:
 +    class: Drupal\navigation\EventSubscriber\NavigationMenuLinkTreeSubscriber
-+

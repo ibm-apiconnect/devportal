@@ -1,3 +1,14 @@
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 .api-view .masonry-layout .masonry-item {
   width: auto;
   border: 0;
@@ -73,11 +84,11 @@ body.adminimal-admin-toolbar .explorerWrapper {
 }
 
 .productApiWrapper #innerWrapper > article:not(.apiprotocol-graphql) {
-  border-top: 1px solid #dfe3e6;
+  border-top: 1px solid var(--border-subtle-00);
 }
 
 .bx--tertiary-text {
-  color: #6f6f6f;
+  color: var(--tertiary-text);
 }
 
 .apicProduct .apicProductBody .apicApiEmbedded .field {
@@ -85,11 +96,8 @@ body.adminimal-admin-toolbar .explorerWrapper {
 }
 
 .bx--card  .apicCardFooter {
-  margin-top: 1rem;
   width: 16.75rem;
-  position: absolute;
   bottom: 1rem;
-  left: 1rem;
 }
 
 .apicCardFooter .apicProtocol,
@@ -99,13 +107,12 @@ body.adminimal-admin-toolbar .explorerWrapper {
 
 .apicCardFooter .apicState .field::before {
   content: '\2022';
-  margin-right: 0.2rem;
+  margin-inline-end: 0.2rem;
 }
 
 .bx--card .apicApiDesc.apicFade,
 .bx--card .apicApiEmbedded .apicApiDesc.apicFade {
   max-height: 6.25rem;
-  /* height: min-content; */
 }
 
 apiconnect-explorer h1 .apiImage {
@@ -185,4 +192,22 @@ apiconnect-explorer .signInMessage {
 
 .apicProductApiList .views-bootstrap-list-group .list-group-item > p.list-group-item-text {
   display: none;
+}
+
+.node--type-api .bx--card {
+  min-height: unset;
+  min-width: 20rem;
+  height: 20rem;
+  max-width: 20rem;
+  margin-left: 10px
+}
+
+.bx--card .apicApiCard {
+  padding-left: 1rem;
+  padding-top: 1rem;
+  padding-right: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }

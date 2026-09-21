@@ -1,26 +1,44 @@
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+.block-featuredcontent {
+  background-color: var(--layer-01);
+}
+
 .featuredcontent.featuredcontentBlockWrapper {
+  display: flex;
+  flex-direction: column;
   margin: 1.5rem 2rem;
 }
 
 .featuredcontentNode {
   margin-bottom: 2px;
-  width: calc(25% - 16px);
+  width: calc((100% - 48px)/3);
+  height: 276px;
   padding: 1rem;
-  background-color: #fff;
+  background-color: var(--layer-02);
   min-width: 12.5rem;
-  max-height: 12.75rem;
   overflow-y: auto;
+  margin-bottom: 24px;
+  padding: 32px 32px 57px 32px;
 }
 
 @media (max-width: 1280px) {
   .featuredcontentNode {
-    width: calc(33% - 14px);
+    width: calc((100% - 48px)/3);
   }
 }
 
 @media (max-width: 992px) {
   .featuredcontentNode {
-    width: calc(50% - 11px);
+    width: calc((100% - 24px)/2);
   }
 }
 
@@ -32,56 +50,66 @@
 
 .featuredcontent h3 {
   font-weight: lighter;
-  font-size: 1.5rem;
 }
 
 .featuredcontentBlockHeader {
-  display: inline-block;
-  width: calc(100% / 4 - 8px);
+  display: flex;
+  width: 100%;
   min-width: 250px;
   vertical-align: top;
+  justify-content: space-between;
+  align-items: center;
+  margin: 24px auto 18px;
+}
+
+.featuredcontentBlockWrapper .featuredcontentBlockHeader>h3{
+  margin: 0;
+}
+
+.featuredcontentBlockWrapper .featuredcontentBlockHeader>a {
+  color: var(--home-link-color);
 }
 
 .featuredcontentContentContainer {
   display: inline-block;
-  width: 75%;
+  width: 100%;
 }
 
 .featuredcontentNodeHeader {
   align-items: center;
 }
 
+.featuredcontentNodeHeader .featuredcontentNodeTitle>a{
+  color: var(--text-primary);
+  line-height: 28px;
+}
+
 .featuredcontentNodeImage img {
-  width: 2rem;
-  height: 2rem;
+  width: 2.625rem;
+  height: 2.625rem;
 }
 
 .featuredcontentNodeImage {
-  margin-right: 1.25rem;
-  margin-top: auto;
-  margin-bottom: auto;
+  margin: 16px 0;
   padding-bottom: 0.5rem;
 }
 
 .featuredcontentNodeHeader .featuredcontentNodeTitle {
-  font-size: 0.875rem;
-  line-height: 18px;
+  font-size: 1.25rem;
   word-break: break-word;
   font-family: 'IBM Plex Sans SemiBold', 'IBM Plex Sans', 'sans-serif';
 }
 
-.featuredcontentNodeInfo {
-  padding-top: 0.875rem;
-}
-
 .featuredcontentNodeInfo .featuredcontentNodeSummary,
 .featuredcontentNodeInfo .featuredcontentNodeDescription {
-  font-size: 0.75rem;
+  font-size: 1rem;
   line-height: 20px;
-  height: 100px;
+  max-height: 77px;
+  color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: 0.16px;
+  letter-spacing: 0.18px;
+  text-align: justify;
 }
 
 @media (max-width: 380px) {
@@ -94,3 +122,4 @@
     padding-bottom: 1rem;
   }
 }
+

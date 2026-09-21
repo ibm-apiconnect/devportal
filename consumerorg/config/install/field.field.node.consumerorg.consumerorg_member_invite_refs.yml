@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.consumerorg_member_invite_refs
+    - node.type.consumerorg
+id: node.consumerorg.consumerorg_member_invite_refs
+field_name: consumerorg_member_invite_refs
+entity_type: node
+bundle: consumerorg
+label: 'Member/Invite References'
+description: 'References to member and invitation entities'
+required: false
+translatable: false
+default_value: []
+default_value_callback: ''
+settings:
+  handler: 'default:consumerorg_member_invite'
+  handler_settings: {}
+field_type: entity_reference

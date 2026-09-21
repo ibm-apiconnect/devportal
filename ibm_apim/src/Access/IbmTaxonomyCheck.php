@@ -26,7 +26,7 @@ class IbmTaxonomyCheck implements AccessInterface {
    *
    * @return \Drupal\Core\Access\AccessResult
    */
-  public function access(RouteMatch $routeMatch = NULL): AccessResult {
+  public function access(?RouteMatch $routeMatch = NULL): AccessResult {
     $allowed = TRUE;
 
     if (isset($routeMatch)) {

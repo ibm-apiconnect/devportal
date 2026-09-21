@@ -2,7 +2,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - block.block.noappsblock
     - core.entity_view_mode.node.card
     - node.type.application
   module:

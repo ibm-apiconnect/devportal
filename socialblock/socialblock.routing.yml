@@ -5,3 +5,10 @@ socialblock.form:
     _title: 'IBM Social Block Settings'
   requirements:
     _permission: 'administer site configuration'
+socialblock.status:
+  path: "/csp-check"
+  defaults:
+    _controller: '\Drupal\socialblock\Controller\SocialBlockController::status'
+    _title: "Session check"
+  requirements:
+    _access: "TRUE"

@@ -1,9 +1,9 @@
 name: Product
 type: module
-description: Products from IBM API Developer Portal
-package: IBM API Developer Portal
+description: Products from IBM CMS Portal
+package: IBM CMS Portal
 core_version_requirement: ^8 || ^9 || ^10 || ^11
-version: 6.2.5
+version: 8.x-99.0.0
 project: product
 dependencies:
 - block

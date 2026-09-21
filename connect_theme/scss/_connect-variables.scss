@@ -18,6 +18,8 @@ $css--plex: true !default;
 @import "carbon/css--body";
 @import "carbon/layer";
 
+@import "connect-theme";
+
 /**
  * connect theme override variables.
  *
@@ -36,6 +38,10 @@ $light-gray-02: #E2E8F2;
 $light-gray-03: #1D3649;
 
 $black-01: $ibm-color__gray-100;
+$dark-black-01: $dark-text-primary;
+
+$black-01-bg: $black-01;
+$dark-black-01-bg: $dark-background;
 
 // Set the proper directory for the Bootstrap Glyphicon font.
 // Needed for such things as the voting module
@@ -59,48 +65,97 @@ $line-height-base: 1.5;
 $headings-line-height: 1.25;
 $border-radius-base: 0;
 
-// Global body
+//** Global body
 $body-bg:                         $ui-01;
+$dark-body-bg: $dark-layer-01;
 
-// Global text color
+$page-header-bg: $ui-02;
+$dark-page-header-bg: $dark-background;
+
+//** Text
 $text-color:                       $text-01;
+$dark-text-color: $dark-text-primary;
+
 $label-color:                      $text-02;
+$dark-label-color: $dark-text-secondary;
+
 //** Global textual link color.
+$secondary-text: $text-02;
+$dark-secondary-text: $dark-text-secondary;
+
+$tertiary-text: $text-02;
+$dark-tertiary-text: $dark-text-secondary; // Using text-secondary instead of text-helper for a11y
+
+$inverse-text-on-color: $inverse-01;
+$dark-inverse-text-on-color: $dark-text-inverse;
+
+
+//** Link
 $link-color:                       $brand-01;
+$dark-link-color: $dark-link-primary;
+
 //** Link hover color
 $link-hover-color:                 $interactive-02;
+$dark-link-hover-color: $dark-link-primary-hover;
+
 //** Link hover decoration.
 $link-hover-decoration:            none;
 
-$secondary-text: $text-02;
-$tertiary-text: $text-05;
-
+//** Brand
 $brand-primary:         $interactive-01;
 $brand-primary-light:   $ibm-color__gray-10;
 $brand-primary-dark:    $hover-primary;
 
 $brand-success:         $support-02;
+$dark-brand-success: $dark-support-success;
+
 $brand-info:            $support-04;
 $brand-warning:         $support-03;
+
 $brand-danger:          $support-01;
+$dark-brand-danger: $dark-button-danger-primary;
+
+$brand-primary-icon-interactive: $brand-primary;
+$dark-brand-primary-icon-interactive: $dark-interactive;
+
+$brand-primary-link-color: $brand-primary;
+$dark-brand-primary-link-color: $dark-link-primary;
+
+$brand-text-on-color: $brand-primary-light;
+$dark-brand-text-on-color: $dark-text-on-color;
 
 // Placeholder text color
-$input-color-placeholder:        $text_03;
+$input-color-placeholder:        $text-03;
+$dark-input-color-placeholder: $dark-text-placeholder;
 
-// Navbar variable overrides
+
+//** Navbar
 $navbar-height:                    48px;
 $navbar-margin-bottom:             none;
 $navbar-border-radius:             none;
 $navbar-padding-horizontal:        0;
 $navbar-padding-vertical:          none;
+
 $navbar-default-color:             $ibm-color__gray-10;
+$dark-navbar-default-color: $dark-text-primary;
+
 $navbar-default-bg:                $ibm-color__gray-100;
+$dark-navbar-default-bg: $dark-background;
 
 $navbar-default-link-color:        $ibm-color__gray-10;
+$dark-navbar-default-link-color: $dark-text-primary;
+
 $navbar-default-link-hover-color:  $ibm-color__gray-10;
+$dark-navbar-default-link-hover-color: $dark-text-primary;
+
 $navbar-default-link-active-color: $ibm-color__gray-10;
+$dark-navbar-default-link-active-color: $dark-text-primary;
+
 $navbar-default-link-active-bg:    $ibm-color__gray-80;
+$dark-navbar-default-link-active-bg: $dark-background-active;
+
 $navbar-default-link-hover-bg:     $ibm-color__gray-80;
+$dark-navbar-default-link-hover-bg: $dark-background-hover;
 
 $navbar-default-toggle-border-color:none;
 $navbar-default-toggle-hover-bg:    none;
@@ -109,86 +164,224 @@ $navbar-default-toggle-icon-bar-bg: $inverse-01;
 $nav-link-hover-bg:                none;
 $nav-link-padding:                 .75rem 0rem;
 
-// footer variable overrides
-$footer-default-bg:                $ui-01;
+$tab-background-active: $ui-background;
+$dark-tab-background-active: $dark-layer-active-01;
+
+$tab-background: $ui-03;
+$dark-tab-background: $dark-layer-02;
+
+$tab-border-color-active: $brand-primary;
+$dark-tab-border-color-active: $dark-border-interactive;
+
+$tab-border-color-hover: $ui-04;
+$dark-tab-border-color-hover: $dark-border-strong-01;
+
+$tab-border-color: $ui-03;
+$dark-tab-border-color: $dark-border-subtle-01;
+
+//** Footer
+$footer-default-bg:                $gray-80;
+$dark-footer-default-bg: $dark-background;
+
 $footer-default-color:             $text-02;
+$dark-footer-default-color: $dark-text-secondary;
+
 $footer-default-bordercolor:       $ui-03;
+$dark-footer-default-bordercolor: $dark-border-subtle-01;
 
-$footer-link-color:                 $text-02;
+$footer-link-color:                 $gray-10;
+$dark-footer-link-color: $dark-text-primary;
 
-// status messages
+$footer-divider: $border-strong-01;
+$dark-footer-divider: $dark-border-strong-01;
+
+//** Status messages
 $alert-border-radius: 0;
 $alert-padding: .75rem 1rem;
-$alert-info-bg: $notification-info-background-color;
-$alert-info-border: $support-04;
-$alert-info-text: 	$text-01;
-$alert-danger-bg: $notification-error-background-color;
-$alert-danger-border: $support-01;
-$alert-danger-text: 	$text-01;
-$alert-warning-bg: $notification-warning-background-color;
-$alert-warning-border: $support-03;
-$alert-warning-text: 	$text-01;
-$alert-success-bg: $notification-success-background-color;
-$alert-success-border: $support-02;
-$alert-success-text: 	$text-01;
 
-// tabs
+$alert-info-bg: $notification-info-background-color;
+$dark-alert-info-bg: $dark-layer-02;
+
+$alert-info-border: $support-04;
+$dark-alert-info-border: $dark-support-info;
+
+$alert-info-text: 	$text-01;
+$dark-alert-info-text: $dark-text-primary;
+
+$alert-danger-bg: $notification-error-background-color;
+$dark-alert-danger-bg: $dark-layer-02;
+
+$alert-danger-border: $support-01;
+$dark-alert-danger-border: $dark-support-error;
+
+$alert-danger-text: 	$text-01;
+$dark-alert-danger-text: $dark-text-primary;
+
+$alert-warning-bg: $notification-warning-background-color;
+$dark-alert-warning-bg: $dark-layer-02;
+
+$alert-warning-border: $support-03;
+$dark-alert-warning-border: $dark-support-warning;
+
+$alert-warning-text: 	$text-01;
+$dark-alert-warning-text: $dark-text-primary;
+
+$alert-success-bg: $notification-success-background-color;
+$dark-alert-success-bg: $dark-layer-02;
+
+$alert-success-border: $support-02;
+$dark-alert-success-border: $dark-support-success;
+
+$alert-success-text: 	$text-01;
+$dark-alert-success-text: $dark-text-primary;
+
+//** Tabs
 $tab-primary-background: $brand-primary;
 $tab-primary-text: $inverse-01;
 
-// apic & modal forms
+//** APIC & Modal forms
 $default-header: $text-01;
+$dark-default-header: $dark-text-primary;
+
 $default-bg-light: $ui-02;
+$dark-default-bg-light: $dark-layer-02;
+
 $default-border: $ui-04;
+$dark-default-border: $dark-border-strong-01;
+
 $default-line: $ui-05;
+$dark-default-line: $dark-icon-primary;
+
 $default-submitted: $ui-04;
 $default-inverse: $inverse-01;
 
 $default-input-bg: $field-01;
+$dark-default-input-bg: $dark-field-02;
+
 $default-input-border: $ui_04;
+$dark-default-input-border: $dark-border-strong-02;
 
 // bootstrap form variable overrides
 $input-border-radius: 0;
 $input-bg: $field-02;
-$input-border: $ui_04;
-$input-color: $black-01;
-$input-focus: $focus;
+$dark-input-bg: $dark-field-02;
 
-// buttons
+$input-border: $ui_04;
+$dark-input-border: $dark-border-strong-02;
+
+$input-color: $black-01;
+$dark-input-color: $dark-text-primary;
+
+$input-focus: $focus;
+$dark-input-focus: $dark-focus;
+
+$interactive-focus: $focus;
+$dark-interactive-focus: $dark-focus;
+
+
+//** Buttons
 $btn-border-radius-base:  0;
 $btn-border-radius-large: 0;
 $btn-border-radius-small: 0;
+
 $btn-default-color: $text-04;
+$dark-btn-default-color: $dark-text-on-color;
+
 $btn-default-bg:    $interactive-02;
+$dark-btn-default-bg: $dark-button-secondary;
+
+$btn-default-hover-bg: $hover-secondary;
+$dark-btn-default-hover-bg: $dark-button-secondary-hover;
+
 $btn-default-border: $interactive-02;
+$dark-btn-default-border: $dark-button-secondary;
+
 $btn-primary-color:  $text-04;
+$dark-btn-primary-color: $dark-text-on-color;
+
 $btn-primary-bg:     $interactive-01;
+$dark-btn-primary-bg: $dark-button-primary;
+
+$btn-primary-hover-bg: $hover-primary;
+$dark-btn-primary-hover-bg: $dark-button-primary-hover;
+
+$btn-primary-active-bg: $active-primary;
+$dark-btn-primary-active-bg: $dark-button-primary-active;
+
 $btn-primary-border: transparent;
+$dark-btn-primary-border: transparent;
+
+$btn-tertiary-active-bg: $active-tertiary;
+$dark-btn-tertiary-active-bg: $dark-button-tertiary-active;
+
+$btn-tertiary-color: $interactive-03;
+$dark-btn-tertiary-color: $dark-button-tertiary;
+
+$btn-tertiary-hover-bg: $hover-tertiary;
+$dark-btn-tertiary-hover-bg: $dark-button-tertiary-hover;
+
 $btn-success-color: $text-04;
 $btn-success-bg:     $interactive-01;
 $btn-success-border: transparent;
+
 $btn-disabled-color: $disabled-03;
+$dark-btn-disabled-color: $dark-text-disabled;
+
 $btn-disabled-bg: $disabled-02;
+$dark-btn-disabled-bg: $dark-button-disabled;
+
 $btn-link-disabled-color: $disabled-03;
+$dark-btn-link-disabled-color: $dark-text-on-color-disabled;
 
 $tile-btn-bg:   $ui-02;
+$dark-tile-btn-bg: $dark-layer-02;
+
+$tile-btn-bg-hover: $hover-ui;
+$dark-tile-btn-bg-hover: $dark-layer-hover-02;
+
+$tile-btn-bg-active: $active-ui;
+$dark-tile-btn-bg-active: $dark-layer-active-02;
+
 $tile-btn-border: $ui-02;
+$dark-tile-btn-border: $dark-layer-02;
+
 $tile-btn-color: $interactive-01;
+$dark-tile-btn-color: $dark-link-primary;
 
-// checkboxes and radio buttons
+$tile-btn-color-hover: $brand-primary;
+$dark-tile-btn-color-hover: $dark-link-primary-hover;
+
+$ghost-button-hover: $hover-ui;
+$dark-ghost-button-hover: $dark-background-hover;
+
+//** Checkboxes and radio buttons
 $check-radio-bg: transparent;
-$check-radio-border: $ui-05;
-$check-radio-bg-checked: $ui-05;
-$check-radio-border-checked: $ui-05;
-$check-radio-color-checked: $inverse-01;
+$dark-check-radio-bg: transparent;
 
-// tooltips
+$check-radio-border: $ui-05;
+$dark-check-radio-border: $dark-icon-primary;
+
+$check-radio-bg-checked: $ui-05;
+$dark-check-radio-bg-checked: $dark-icon-primary;
+
+$check-radio-border-checked: $ui-05;
+$dark-check-radio-border-checked: $dark-icon-primary;
+
+$check-radio-color-checked: $inverse-01;
+$dark-check-radio-color-checked: $dark-icon-inverse;
+
+//** Tooltips
 $tooltip-max-width:   15rem;
-$tooltip-color:      $inverse_01;
+$tooltip-color:      $inverse-01;
 $tooltip-bg:          $inverse-02;
 $tooltip-opacity:     1;
 
-// modals
+$popover-background: $ui-01;
+$dark-popover-background: $dark-layer-02;
+
+$popover-container-filter: vdrop-shadow(0 .125rem .125rem rgba(0, 0, 0, .2));
+
+//** Modals
 
 //** Padding applied to the modal body
 $modal-inner-padding:         15px !default;
@@ -197,13 +390,26 @@ $modal-title-padding:         15px !default;
 //** Modal title line-height
 $modal-title-line-height:     $line-height-base !default;
 
-$modal-content-bg:                             $ui-01;
+$modal-content-bg: $ui-background;
+$dark-modal-content-bg: $dark-layer-02;
+
 $modal-content-border-color:                   transparent;
+
 $modal-backdrop-bg:           	$ui-03;
+$dark-modal-backdrop-bg: $dark-overlay;
+
 $modal-backdrop-opacity:       0;
 $modal-header-border-color:   		transparent;
 $modal-content-color: $text-02;
-$modal_overlay: $overlay_01;
+
+$modal-overlay: $overlay-01;
+$dark-modal-overlay: $dark-overlay;
+
+$modal-input-bg: $default-input-bg;
+$dark-modal-input-bg: $dark-field-03;
+
+$modal-input-border: $default-input-border;
+$dark-modal-input-border: $dark-border-strong-03;
 
 //** Modal footer border color
 $modal-footer-border-color:   transparent;
@@ -213,19 +419,167 @@ $modal-md:                    625px !default;
 $modal-sm:                    300px !default;
 
 
-//** card settings
+//** Card settings
 $card-bg: $ui-02;
+$dark-card-bg: $dark-layer-02;
+
 $card-border-color: $ui-02;
+$dark-card-border-color: transparent;
+
 $card-footer-bg: $ui-02;
+$dark-card-footer-bg: $dark-layer-02;
+
+$card-title-color: $brand-primary;
+$dark-card-title-color: $dark-link-primary;
+
+$card-tooltip-background: $layer-02;
+$dark-card-tooltip-background: $dark-layer-03;
+
+$case-study-card-bg: $purple-50;
+$dark-case-study-card-bg: $purple-50;
+
 $disabled-bg: $ui-05;
 
-//** table settings
+//** Table settings
 $table-header-bg: $ui-03;
+$dark-table-header-bg: $dark-layer-03;
+
 $table-header-border: $interactive-01;
 $table-row-border: $ui-03;
-$table-row-hover: $interactive-02;
+$dark-table-row-border: $dark-border-subtle-03;
+
+$table-row-hover: $layer-hover-01;
+$dark-table-row-hover: $dark-layer-hover-02;
+
 $table-row-bg-light: $ui-02;
+$dark-table-row-bg-light: $dark-layer-02;
+
 $table-row-bg-gray: $ui-01;
 $table-zebra-stripe: $ui-01;
+$table-row-even-bg: $ui-background;
+$dark-table-row-even-bg: $gray-80;
+
+$table-row-odd-bg: $cool-gray-10;
+$dark-table-row-odd-bg: $cool-gray-80;
 
 
+//** Home page
+$home-banner-bg: $brand-primary;
+$dark-home-banner-bg: $brand-primary;
+
+$home-banner-button-bg: $purple-60;
+$dark-home-banner-button-bg: $purple-60;
+
+$home-banner-button-color: $text-on-color;
+$dark-home-banner-button-color: $text-on-color;
+
+$home-banner-title-color: $text-on-color;
+$dark-home-banner-title-color: $text-on-color;
+
+$home-build-button-bg: $purple-60;
+$dark-home-build-button-bg: $purple-60;
+
+$home-button-secondary-bg: $purple-20;
+$dark-home-button-secondary-bg: $purple-20;
+
+$home-button-secondary-color: $black;
+$dark-home-button-secondary-color: $black;
+
+$home-button-secondary-hover-bg: $purple-50;
+$dark-home-button-secondary-hover-bg: $purple-50;
+
+$home-link-color: $purple-60;
+$dark-home-link-color: $purple-50;
+
+// ** HTTP method
+$http-post: $support-success;
+$dark-http-post: $dark-support-success;
+
+$http-delete: $red-50;
+$dark-http-delete: $red-40;
+
+$http-head: $purple-50;
+$dark-http-head: $purple-40;
+
+$http-options: $blue-70;
+$dark-http-options: $blue-40;
+
+$http-patch: $teal-50;
+$dark-http-patch: $teal-40;
+
+$http-put: $magenta-50;
+$dark-http-put: $magenta-40;
+
+$http-trace: $orange-70;
+$dark-http-trace: $orange-40;
+
+//** Dark mode tokens for bootstrap
+$dark-blockquote-border-color: $dark-border-strong-01;
+$dark-breadcrumb-active-color: $dark-text-primary;
+$dark-breadcrumb-color: $dark-text-primary;
+$dark-code-bg: $red-100;
+$dark-code-color: $red-40;
+$dark-dropdown-bg: $dark-field-02;
+$dark-dropdown-link-active-bg: $dark-layer-active-02;
+$dark-dropdown-link-active-color: $dark-text-primary;
+$dark-dropdown-link-color: $dark-text-secondary;
+$dark-dropdown-link-hover-bg: $dark-field-hover-02;
+$dark-dropdown-link-hover-color: $dark-text-primary;
+$dark-input-bg-disabled: $dark-field-02;
+$dark-legend-border-color: $dark-border-subtle-01;
+$dark-legend-color: $dark-text-secondary;
+$dark-nav-tabs-active-link-hover-color: $dark-text-primary;
+$dark-pagination-active-bg: $dark-button-primary;
+$dark-pagination-active-border: $dark-button-primary;
+$dark-pagination-active-color: $dark-text-on-color;
+$dark-pagination-bg: $dark-button-secondary;
+$dark-pagination-border: $dark-border-subtle-01;
+$dark-pagination-color: $dark-text-on-color;
+$dark-pagination-disabled-bg: $dark-button-disabled;
+$dark-pagination-disabled-border: $dark-border-subtle-01;
+$dark-pagination-disabled-color: $dark-text-on-color-disabled;
+$dark-pagination-hover-bg: $dark-button-secondary-hover;
+$dark-pagination-hover-border: $dark-border-subtle-01;
+$dark-pagination-hover-color: $dark-text-on-color;
+$dark-panel-bg: $dark-layer-02;
+$dark-panel-default-border: $dark-border-subtle-02;
+$dark-panel-default-heading-bg: $dark-layer-02;
+$dark-panel-default-text: $dark-text-primary;
+$dark-pre-bg: $red-100;
+$dark-pre-border-color: $red-80;
+$dark-pre-color: $red-40;
+$dark-state-info-bg: $dark-highlight;
+$dark-table-bg-hover: $dark-layer-hover-02;
+$dark-table-border-color: $dark-border-strong-01;
+
+//** Dark mode tokens for $carbon--theme--white
+$dark-active-danger: $dark-button-danger-active;
+$dark-active-primary: $dark-button-primary-hover;
+$dark-active-tertiary: $dark-button-tertiary-active;
+$dark-disabled-02: $dark-button-disabled;
+$dark-hover-danger: $dark-button-danger-hover;
+$dark-hover-primary-text: $dark-link-primary-hover;
+$dark-hover-primary: $dark-button-primary-hover;
+$dark-hover-secondary: $dark-button-secondary-hover;
+$dark-hover-selected-ui: $dark-layer-hover-02;
+$dark-hover-tertiary: $dark-button-tertiary-hover;
+$dark-hover-ui: $dark-layer-hover-02;
+$dark-interactive-01: $dark-focus;
+$dark-interactive-03: $dark-button-tertiary;
+$dark-interactive-04: $dark-border-interactive;
+$dark-inverse-01: $dark-focus;
+$dark-link-01: $dark-link-primary;
+$dark-text-01: $dark-text-primary;
+$dark-text-02: $dark-text-secondary;
+$dark-text-03: $dark-text-placeholder;
+$dark-text-04: $dark-text-inverse;
+$dark-text-05: $dark-text-helper;
+$dark-ui-01: $dark-layer-01;
+$dark-ui-02: $dark-layer-02;
+$dark-ui-03: $dark-layer-03;
+$dark-ui-04: $dark-border-strong-01;
+$dark-ui-05: $dark-icon-primary;
+$dark-ui-background: $dark-background;
+
+$dark-code-bg-selected: $red-80;
+$dark-icon-primary-filter: brightness(0) invert(1) brightness(0.96); // force switch to #f4f4f4

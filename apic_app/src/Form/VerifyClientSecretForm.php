@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2024
+ * (C) Copyright IBM Corporation 2018, 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -88,13 +88,16 @@ class VerifyClientSecretForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $credId = NULL): array {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    if ($appId !== NULL) {
-      $this->node = $appId;
+    $route_match = \Drupal::routeMatch();
+    if ($route_match->getParameter('appId') !== NULL) {
+      // The AppIdParamConverter has already converted the appId to a node
+      $this->node = $route_match->getParameter('appId');
     }
-    if ($credId !== NULL) {
-      $this->cred = $credId;
+    if ($route_match->getParameter('credId') !== NULL) {
+      // The AppIdParamConverter has already converted the appId to a node
+      $this->cred = $route_match->getParameter('credId');
     }
 
     $form['intro'] = ['#markup' => '<p>' . t('Use this form to verify you have the correct client secret for this application.') . '</p>'];
@@ -111,12 +114,29 @@ class VerifyClientSecretForm extends FormBase {
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => t('Verify'),
+      '#attributes' => [
+      'class' => ['button', 'button--primary'],
+     ],
     ];
     $form['actions']['cancel'] = [
       '#type' => 'link',
       '#title' => t('Cancel'),
       '#url' => $this->getCancelUrl(),
       '#attributes' => ['class' => ['button', 'apicSecondary']],
+    ];
+
+    $form['#attached']['library'][] = 'view_password/pwd_lb';
+    $form['#attributes']['class'][] = 'pwd-see';
+    $form['#cache'] = [
+      'tags' => [
+        'config:view_password.settings',
+      ],
+    ];
+    $span_classes = \Drupal::config('view_password.settings')->get('span_classes');
+    $form['#attached']['drupalSettings']['view_password'] = [
+      'showPasswordLabel' => t("Show password"),
+      'hidePasswordLabel' => t("Hide password"),
+      'span_classes' => $span_classes
     ];
 
     $form['#attached']['library'][] = 'apic_app/basic';

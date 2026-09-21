@@ -1,0 +1,211 @@
+{# /********************************************************* {COPYRIGHT-TOP}
+*** * Licensed Materials - Property of IBM * 5725-L30, 5725-Z22 * * (C)
+Copyright IBM Corporation 2025 * * All Rights Reserved. * US Government Users
+Restricted Rights - Use, duplication or disclosure * restricted by GSA ADP
+Schedule Contract with IBM Corp.
+********************************************************** {COPYRIGHT-END} **/
+/** * @file * Email Subscribers tutorial template. * * Available
+variables: * - tutorial: The tutorial definition. * - images_path: Path to the
+tutorial images. */ #} {% set header_content %}
+<p>
+  As a site administrator, you can use the Email subscribers wizards to send emails to various groups on your Developer Portal.
+  These wizards provide a convenient way to communicate with users based on their roles and subscriptions. 
+  <strong>Note</strong> that the Mail subscriber wizard has a specific permission that can be assigned to other roles if desired, allowing access beyond just portal administrators.
+</p>
+
+<p>In this tutorial, we'll show you how to:</p>
+<ul class="tutorial-objectives">
+  <li>Access the Email subscribers wizards</li>
+  <li>Select the appropriate wizard for your target audience</li>
+  <li>Configure and send emails to specific groups</li>
+  <li>Use tokens for personalized messaging</li>
+</ul>
+{% endset %} {% set steps_content %} {# Step 1: Navigate to Email subscribers #}
+<li class="gs-step" data-step="Navigate to Email subscribers">
+  <h3>Navigate to email subscribers</h3>
+  <p>In the Portal admin menu, go to:</p>
+  <div class="path-instruction">
+    <strong>People → Email subscribers</strong>
+  </div>
+  
+  <p>This page provides access to all the email subscriber wizards.</p>
+</li>
+
+{# Step 2: Select Wizard Type #}
+<li class="gs-step" data-step="Select Wizard Type">
+  <h3>Select the appropriate wizard</h3>
+  <p>Choose one of the following wizards depending on who you would like to email:</p>
+  
+  <ul class="instruction-list">
+    <li>
+      <strong>All users</strong> - Email all subscribers or a specified list of users across all consumer organizations
+    </li>
+    <li>
+      <strong>API subscribers</strong> - Send messages to subscribers of plans containing specific APIs
+    </li>
+    <li>
+      <strong>Plan subscribers</strong> - Send messages to subscribers of a chosen plan within a specific product
+    </li>
+    <li>
+      <strong>Product subscribers</strong> - Send messages to subscribers of any plan for specific products
+    </li>
+    <li>
+      <strong>Consumer organizations</strong> - Email users of chosen consumer organizations
+    </li>
+  </ul>
+
+  <img
+    src="{{ images_path }}/email-wizard-selection.png"
+    alt="Email wizard selection"
+    class="img-responsive"
+    loading="lazy"
+  />
+  
+  <p>Select your desired wizard and click <strong>save</strong> to continue.</p>
+</li>
+
+{# Step 3: Select Target Items #}
+<li class="gs-step" data-step="Select target items">
+  <h3>Select Target Items</h3>
+  <p>
+    If you selected a wizard other than "All users," you'll need to specify the target items:
+  </p>
+
+  <ul>
+    <li><strong>For API subscribers:</strong> Enter the name of the API whose subscribers you want to email</li>
+    <li><strong>For Plan subscribers:</strong> Enter the name of the product whose plan subscribers you want to email</li>
+    <li><strong>For Product subscribers:</strong> Enter the name of the product whose subscribers you want to email</li>
+    <li><strong>For Consumer organizations:</strong> Enter the name of the consumer organization</li>
+  </ul>
+
+  <p>
+    You can start typing in the text box to see available options. You can select multiple items as a comma-separated list.
+  </p>
+  
+  <p>Click <strong>Next</strong> to continue.</p>
+</li>
+
+{# Step 4: Select Recipient Roles #}
+<li class="gs-step" data-step="Select Recipient Roles">
+  <h3>Select Recipient Roles</h3>
+  <p>Select the role of the recipients that you want to send the email to:</p>
+  
+  <ul class="instruction-list">
+    <li>
+      <strong>Owners</strong> - Sends the email to the relevant consumer organization owners
+    </li>
+    <li>
+      <strong>Members</strong> - Sends the email to all members of the relevant consumer organizations
+    </li>
+  </ul>
+  
+  <p>Click <strong>next</strong> to continue.</p>
+</li>
+
+{# Step 5: Compose Email Content #}
+<li class="gs-step" data-step="Compose Email Content">
+  <h3>Compose email content</h3>
+  <p>Enter the content of your email:</p>
+  
+  <ul class="instruction-list">
+    <li>Subject line</li>
+    <li>Email body</li>
+    <li>Text format (Basic HTML or Plain text)</li>
+  </ul>
+  
+  <p>
+    Expand the <strong>replacements</strong> drop-down and click <strong>browse available tokens</strong> to view which tokens can be added to the subject and body fields for replacement. 
+    You can select a token to use by either typing it directly, or by clicking in the subject or body field. You are then given a list of available tokens, and you can insert the token that you want. 
+    For a reference list of tokens, see <a href=https://www.ibm.com/docs/en/SSMNED_12.1.x_cd?topic=subscribers-token-reference>token reference.</a>
+  </p>
+
+  <div>
+    <p><strong>Example tokens:</strong></p>
+    <ul>
+      <li><code>[user:display-name]</code> - The display name of the user account</li>
+      <li><code>[site:name]</code> - The name of the site.</li>
+      <li><code>[consumer-org:title]</code> - The title of the consumer organization.</li>
+    </ul>
+  </div>
+
+  <img
+    src="{{ images_path }}/replacement-dropdown.png"
+    alt="Replacement dropdown"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <img
+    src="{{ images_path }}/available-tokens.png"
+    alt="Available tokens"
+    class="img-responsive"
+    loading="lazy"
+  />
+</li>
+
+{# Step 6: Configure Additional Options #}
+<li class="gs-step" data-step="Configure Additional Options">
+  <h3>Configure additional options</h3>
+  <p>Expand the <strong>additional email options</strong> drop-down to configure settings like:</p>
+  
+  <ul class="instruction-list">
+    <li><strong>Priority:</strong> set the priority of the email. Many email programs ignore a priority setting.</li>
+    <li><strong>Request receipt:</strong> request a read receipt from your emails. Many email programs ignore these requests so it is not a definitive indication of how many people read your email.</li>
+    <li><strong>Additional headers:</strong> set any additional headers to be sent with the email.</li>
+  </ul>
+
+  <p>Use the remaining check boxes to configure what messages are to be sent and how:</p>
+  
+  <ul class="instruction-list">
+    <li><strong>Send the message directly by using the Batch API:</strong> this option sends the emails directly by the Batch API. If not selected, then the emails are added to the spool and sent out by cron.</li>
+    <li><strong>Only send one email per user:</strong> select this option to ensure that each user receives the email only once even if the user is a part of multiple selected APIs, products, plans, or consumer organizations.</li>
+    <li><strong>(Consumer organizations only) Send a copy of all messages to the copy recipient:</strong> as the emails might contain context specific tokens, new email content is generated for each recipient with the correct token replacement. 
+    This option sends a copy of all generated emails to the copy recipient configured in the Developer Portal settings.</li>
+    <li><strong>Send a copy of all messages to the sender:</strong> As the emails might contain context-specific tokens, a new email is generated for each recipient with the correct token replacement. This option sends a copy of all generated emails to the sender.</li>
+    <li><strong>Send a copy of the original message to the sender:</strong> This option sends a single copy of the original email, subject, and body, without the replacement of any specified tokens.</li>
+    <li><strong>Note:</strong> The wizard sends a separate email to each recipient individually for security reasons, ensuring that recipients are not included in a single group email.</li>
+  </ul>
+
+  <img
+    src="{{ images_path }}/additional-options.png"
+    alt="Additional email options"
+    class="img-responsive"
+    loading="lazy"
+  />
+  
+  <p>Click <strong>next</strong> to continue.</p>
+</li>
+
+{# Step 7: Review and Send #}
+<li class="gs-step" data-step="Review and Send">
+  <h3>Review and send</h3>
+  <p>
+    Confirm that your email is ready to send, then click <strong>next</strong>.
+  </p>
+  
+  <ul>
+    <li>If you chose to send the emails by the Batch API, you see a progress page that indicates how many emails were sent. You are then redirected to a summary page that shows the total number of emails that were sent.</li>
+    <li>If you chose to spool the delivery of the emails, you are redirected to the summary page that shows the total number of emails that are spooled.</li>
+  </ul>
+</li>
+
+{# Step 8: Save Email List #}
+<li class="gs-step" data-step="Save Email List">
+  <h3>Save email list</h3>
+  <p>
+    If you selected a wizard other than "all users" you can save your email list for future use.
+  </p>
+  
+  <p>
+    Enter a name in the text box on the summary page to save the email list.
+  </p>
+
+  <p>Click <strong>finish</strong> to complete the process.</p>
+  
+  <div class="success-message">
+    <p>Congratulations! You've successfully sent emails to your selected subscribers.</p>
+  </div>
+</li>
+{% endset %} {% include 'tutorial-base.html.twig' with { 'tutorial': tutorial,
+'images_path': images_path, 'header_content': header_content, 'steps_content':
+steps_content } %}

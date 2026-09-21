@@ -10,7 +10,7 @@
   overflow: hidden;
 }
 .tabledrag-handle {
-  color: $gray-light;
+  color: var(--icon-secondary);
   cursor: move;
   float: left;
   font-size: 125%;
@@ -18,7 +18,7 @@
   margin: -10px 0 0 -10px;
   padding: 10px;
   &:hover, &:focus {
-    color: $brand-primary;
+    color: var(--brand-primary-icon-interactive);
   }
 }
 .indentation {

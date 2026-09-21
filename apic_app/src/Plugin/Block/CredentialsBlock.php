@@ -35,7 +35,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @Block(
  *   id = "app_credentials",
  *   admin_label = @Translation("Application Credentials"),
- *   category = @Translation("IBM API Developer Portal (Application)")
+ *   category = @Translation("IBM CMS Portal (Application)")
  * )
  *
  */

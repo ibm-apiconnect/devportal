@@ -18,14 +18,10 @@
 
   Drupal.behaviors.frontpageSetup = {
     attach: function(context) {
-
-      $('.get_help').masonry({
-        // options
-        itemSelector: '.column', columnWidth: '.column', gutter: 0, percentPosition: true
-      });
+      var isRTL = document.documentElement.getAttribute('dir') === 'rtl';
       $('.apicSubscribeAppsList').masonry({
         // options
-        itemSelector: '.apicSubAppCard', columnWidth: '.apicSubAppCard', gutter: 0
+        itemSelector: '.apicSubAppCard', columnWidth: '.apicSubAppCard', gutter: 0, isOriginLeft: !isRTL,
       });
     }
   };

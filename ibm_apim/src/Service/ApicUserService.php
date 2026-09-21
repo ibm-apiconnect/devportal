@@ -301,6 +301,9 @@ class ApicUserService {
     $user->setUrl($apicuser['url']);
     $user->setApicUserRegistryUrl($apicuser['user_registry_url']);
     $user->setState($apicuser['state']);
+    if (isset($apicuser['identity_provider']) && $apicuser['identity_provider'] !== NULL) {
+      $user->setApicIdp($apicuser['identity_provider']);
+    }
     $customFields = $this->getMetadataFields();
     foreach ($customFields as $field) {
       if (isset($apicuser['metadata'][$field])) {

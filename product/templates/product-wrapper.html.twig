@@ -22,7 +22,7 @@
             {% set prodNode = product.nid %}
           {% endif %}
           <div class="breadcrumb"><a href="{{ path('view.products.page_1') }}">
-              {{ 'Products'|t }}</a> / <a
+              {% trans %}Products{% endtrans %}</a> / <a
                 href="{{- path('product.view', {'prodNode': prodNode}) }}">{{- product.title -}}</a></div>
         {% endif %}
         <div class="apicProductTitle apicApiTitle">
@@ -46,11 +46,22 @@
         </div>
       </div>
       <div class="rightTitle">
+       {% if api.collection_id and api.workspace_id and postmanEnabled %}
+          <a  class="button postmanButton apicTertiary" href="https://god.gw.postman.com/run-collection/{{ api.collection_id }}?action=collection%2Ffork&collection-url=entityId%3D{{ api.collection_id }}%26entityType%3Dcollection%26workspaceId%3D{{ api.workspace_id }}" target="_blank">
+            {% trans %}Run in Postman{% endtrans %}
+             <svg id="icon" class="carbon-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+              <path d="M26,28H6a2.0027,2.0027,0,0,1-2-2V6A2.0027,2.0027,0,0,1,6,4H16V6H6V26H26V16h2V26A2.0027,2.0027,0,0,1,26,28Z"/>
+              <polygon points="20 2 20 4 26.586 4 18 12.586 19.414 14 28 5.414 28 12 30 12 30 2 20 2"/>
+              <rect width="32" height="32" fill="none"/>
+            </svg>
+          </a>
+         
+        {% endif %}
         {% if product.nid is defined %}
           {% if api.enforced and product.subscribable %}
-            <div class="subscribeButton"><a href="{{- path('ibm_apim.subscription_wizard', {'productId': product.nid}) }}"
-                                            title="{{ 'Get access to this API'|t }}"
-                                            class="subscribeButton button">{{ 'Get access'|t }}</a></div>
+            <a href="{{- path('ibm_apim.subscription_wizard', {'productId': product.nid}) }}"
+                                            title="{% trans %}Get access to this API{% endtrans %}"
+                                            class="button">{% trans %}Get access{% endtrans %}</a>
           {% endif %}
         {% endif %}
       </div>

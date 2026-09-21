@@ -41,6 +41,49 @@ Feature: ApplicationUpdate
     And I do not have any applications
 
 
+  Scenario: Create and update application as Andre, needs to fail dueto hook
+    Given I am not logged in
+    Given users:
+      | name  | pass     | mail              | status |
+      | Andre | Qwert123IsBadPassword! | andre@example.com | 1      |
+    Given consumerorgs:
+      | title       | name        | id     | owner |
+      | andreconsumerorg | andreconsumerorg | 123456 | Andre |
+    Given I am logged in as "Andre"
+    Given I do not have any applications
+    Given I am at "/application/new"
+    And I should see a "#edit-title-0-value" element
+    And I should see a "#edit-apic-summary-0-value" element
+    And I should see a "#edit-application-redirect-endpoints-0-value" element
+    And I should see a "#edit-submit" element
+    Given I enter "app12345xyz" for "edit-title-0-value"
+    And I enter "this is some text" for "edit-apic-summary-0-value"
+    When I press the "Save" button
+    Then there are no errors
+    And I should see the text "API Key and Secret"
+    When I click "OK"
+    Then I should see the text "app12345xyz"
+    And I should see the text "Edit"
+    And I should see the text "Upload image"
+    And I should see the text "Delete"
+    And there are no errors
+    Given the Drupal state "apic_app_pre_update_throw_exception" is set to "TRUE"
+    When I click "Edit"
+    Then I should see the text "Update an application"
+    And I should see the text "Title"
+    And I should see the text "Description"
+    And I should see the text "Application OAuth Redirect URL(s)"
+    And I should see a "#edit-title-0-value" element
+    And I should see a "#edit-apic-summary-0-value" element
+    And I should see a "#edit-application-redirect-endpoints-0-value" element
+    And I should see a "#edit-submit" element
+    And I should see a "#edit-cancel" element
+    Given I enter "newapp23456" for "edit-title-0-value"
+    And I enter "this is some new text" for "edit-apic-summary-0-value"
+    When I press the "Save" button
+    Then I should see the unexpected error message
+
+
   Scenario: Create and update application as Andre
     Given I am not logged in
     Given users:
@@ -89,6 +132,8 @@ Feature: ApplicationUpdate
     And I should see the text "newapp23456"
     And I should see the text "this is some new text"
     And there are no errors
+    Then the custom hook with key "apic_app_pre_update" should have been invoked
+    Then the custom hook with key "apic_app_update" should have been invoked
     Then I delete all applications from the site
 
 
@@ -158,8 +203,8 @@ Feature: ApplicationUpdate
       | consumerorgid                  | username             | roles                   |
       | 123456                         | @data(andre[3].mail) | viewer                  |
     Given applications:
-      | title | id          | org_id                      |
-      | MyApp | 1234567@now | 123456                      |
+      | title | id          | org_id                      | state      |
+      | MyApp | 1234567@now | 123456                      | published  | 
     Given I am logged in as "@data(andre[3].mail)"
     When I go to "/application"
     Then I should see the text "Apps"
@@ -188,8 +233,8 @@ Feature: ApplicationUpdate
       | consumerorgid                  | username             | roles                   |
       | 123456                         | @data(andre[1].mail) | administrator           |
     Given applications:
-      | title | id          | org_id                      |
-      | MyApp | 1234567@now | 123456                      |
+      | title | id          | org_id                      | state     |
+      | MyApp | 1234567@now | 123456                      | published |
     Given I am logged in as "@data(andre[1].mail)"
     When I go to "/application"
     Then I should see the text "Apps"
@@ -232,8 +277,8 @@ Feature: ApplicationUpdate
       | title                             | name                             | id         | owner                |
       | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | 123456     | @data(andre[0].mail) |
     Given applications:
-      | title | id          | org_id                      |
-      | MyApp | 1234567@now | 123456                      |
+      | title | id          | org_id                      | state     |
+      | MyApp | 1234567@now | 123456                      | published |
     Given application certificates are enabled
     Given I am logged in as "@data(andre[0].mail)"
     When I go to "/application"
@@ -271,8 +316,8 @@ Feature: ApplicationUpdate
       | title                             | name                             | id         | owner                |
       | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | 123456     | @data(andre[0].mail) |
     Given applications:
-      | title | id          | org_id                      |
-      | MyApp | 1234567@now | 123456                      |
+      | title | id          | org_id                      | state     |
+      | MyApp | 1234567@now | 123456                      | published |
     Given I am logged in as "@data(andre[0].mail)"
     When I go to "/application"
     Then I should see the text "Apps"
@@ -313,8 +358,8 @@ Feature: ApplicationUpdate
       | title                             | name                             | id         | owner                |
       | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | 123456     | @data(andre[0].mail) |
     Given applications:
-      | title | id          | org_id                      |
-      | MyApp | 1234567@now | 123456                      |
+      | title | id          | org_id                      | state     |
+      | MyApp | 1234567@now | 123456                      | published |
     Given I am logged in as "@data(andre[0].mail)"
     When I go to "/application"
     Then I should see the text "Apps"
@@ -399,8 +444,8 @@ Feature: ApplicationUpdate
       | title       | name        | id     | owner |
       | andreconsumerorg | andreconsumerorg | 123456 | Andre |
     Given applications:
-      | title | id          | org_id                      |
-      | MyApp | 1234567@now | 123456                      |
+      | title | id          | org_id                      | state     |
+      | MyApp | 1234567@now | 123456                      | published |
     Given application entities have text type custom fields
     Given I am logged in as "Andre"
     Given I am at "/application/1234567@now/edit"
@@ -429,8 +474,8 @@ Feature: ApplicationUpdate
       | title       | name        | id     | owner |
       | andreconsumerorg | andreconsumerorg | 123456 | Andre |
     Given applications:
-      | title | id          | org_id                      |
-      | MyApp | 1234567@now | 123456                      |
+      | title | id          | org_id                      | state     |
+      | MyApp | 1234567@now | 123456                      | published |
     Given application entities have timestamp type custom fields
     Given I am logged in as "Andre"
     Given I am at "/application/1234567@now/edit"
@@ -468,8 +513,8 @@ Feature: ApplicationUpdate
       | title       | name        | id     | owner |
       | andreconsumerorg | andreconsumerorg | 123456 | Andre |
     Given applications:
-      | title | id          | org_id                      |
-      | MyApp | 1234567@now | 123456                      |
+      | title | id          | org_id                      | state     |
+      | MyApp | 1234567@now | 123456                      | published |
     Given application entities have datetime type custom fields
     Given I am logged in as "Andre"
     Given I am at "/application/1234567@now/edit"

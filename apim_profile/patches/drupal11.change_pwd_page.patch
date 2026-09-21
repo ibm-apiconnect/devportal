@@ -1,12 +1,13 @@
 --- modules/change_pwd_page/change_pwd_page.info.yml    2024-09-03 12:43:39
 +++ modules/change_pwd_page/change_pwd_page.info.yml       2024-09-03 15:51:09
-@@ -6,5 +6,5 @@
-   - user
-
- # Information added by Drupal.org packaging script on 2016-10-28
+@@ -2,6 +2,6 @@
+ type: module
+ description: 'Provides a separate page containing a form for the current user to change their password.'
+ package: User Management
 -core_version_requirement: ^8 || ^9 || ^10
 +core_version_requirement: ^8 || ^9 || ^10 || ^11
- datestamp: 1470233791
+ dependencies:
+   - user
 
 --- modules/change_pwd_page/src/Form/ChangePasswordForm.php
 +++ modules/change_pwd_page/src/Form/ChangePasswordForm.php
@@ -16,18 +17,18 @@
  use Symfony\Component\DependencyInjection\ContainerInterface;
 +use Drupal\user\Entity\Role;
 +use Drupal\user\RoleInterface;
-
+ 
  /**
   * Provides a user password reset form.
-@@ -124,8 +126,18 @@
+@@ -123,9 +125,18 @@
+           ]);
          }
        }
-
 +      $form['account']['name'] = [
 +        '#type' => 'hidden',
 +        '#value' => $account->getAccountName(),
 +      ];
-+
+ 
        // This should never show. The data is needed by other modules.
 -      $roles = array_map(['\Drupal\Component\Utility\Html', 'escape'], user_role_names(TRUE));
 +      $loaded_roles = Role::loadMultiple();
@@ -39,7 +40,7 @@
        $form['account']['roles'] = [
          '#type' => 'checkboxes',
          '#title' => $this->t('Roles'),
-@@ -145,7 +157,7 @@
+@@ -145,7 +156,7 @@
     * {@inheritdoc}
     */
    public function validateForm(array &$form, FormStateInterface $form_state) {
@@ -48,7 +49,7 @@
      if ($current_pass_input) {
        $user = User::load(\Drupal::currentUser()->id());
        if (!$this->passwordHasher->check($current_pass_input, $user->getPassword())) {
-@@ -159,6 +171,7 @@
+@@ -159,6 +170,7 @@
     */
    public function submitForm(array &$form, FormStateInterface $form_state) {
      $user = $form_state->getFormObject()->getEntity();

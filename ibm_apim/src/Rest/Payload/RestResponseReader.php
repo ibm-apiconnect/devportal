@@ -24,6 +24,7 @@ use Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface;
 use Drupal\ibm_apim\Rest\RestResponse;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * Create a new object to represent the response from an API call.
@@ -113,7 +114,7 @@ class RestResponseReader {
   private function parseCode($response): ?int {
 
     if (empty($response->code)) {
-      throw new RestResponseParseException('No status code in response. ' . serialize($response));
+      throw new RestResponseParseException('No status code in response. ' . SerializationUtility::decodeData($response));
     }
     return $response->code;
   }

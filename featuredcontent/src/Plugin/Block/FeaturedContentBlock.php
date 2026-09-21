@@ -103,7 +103,7 @@ class FeaturedContentBlock extends BlockBase {
 
     // Start laying out the form
     $form['intro'] = [
-      '#markup' => $this->t('<p>Configure the node selection settings for this Featured Content block. For each node the block will display its image, title and summary. If no summary is present then a truncated form of the description field will be used instead.</p>
+      '#markup' => $this->t('<p>Configure the node selection settings for this Featured content block. For each node the block will display its image, title and summary. If no summary is present then a truncated form of the description field will be used instead.</p>
 <p>To modify the content shown for a node either Edit that node in the portal or edit the YAML document for that node in the API Manager.</p>
 <p>Note that the node selection is per user, and so depending on the visibility settings, different users may see different nodes.</p>'),
       '#weight' => -10,
@@ -354,6 +354,7 @@ class FeaturedContentBlock extends BlockBase {
           }
           $data['version'] = $rawNode->apic_version->value;
           $data['id'] = $rawNode->api_id->value;
+          $data['tooltip_id'] = $rawNode->id();
           $data['apic_pathalias'] = $rawNode->apic_pathalias->value;
           $fid = $rawNode->apic_image->getValue();
           $imageUrl = NULL;
@@ -380,6 +381,7 @@ class FeaturedContentBlock extends BlockBase {
             $data['description'] = $utils->truncate_string(strip_tags($string), 300);
           }
           $data['id'] = $rawNode->product_id->value;
+          $data['tooltip_id'] = $rawNode->id();
           $data['version'] = $rawNode->apic_version->value;
           $data['apic_pathalias'] = $rawNode->apic_pathalias->value;
           $fid = $rawNode->apic_image->getValue();

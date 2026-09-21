@@ -1,0 +1,66 @@
+/* No forum topics in a forum */
+.noForumTopicContent {
+  align-items: center;
+  padding: 20px 50px 20px;
+  margin: auto;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  background-color: var(--layer-01);
+}
+
+.noForumTopicContent span {
+  display: inline-block;
+}
+
+.noForumTopicContent .noForumTopicImage svg {
+  width: 100px;
+}
+
+.noForumTopicContent .noForumTopicTextContainer {
+  display: inline-block;
+  text-align: left;
+  padding-left: 1rem;
+}
+
+.noForumTopicContent .noForumTopicTextContainer .noForumTopicText {
+  display: block;
+  padding-bottom: 7px;
+  font-weight: bold;
+}
+
+.noForumTopicContent .noForumTopicTextContainer .firstline {
+  font-weight: 600;
+}
+
+.noForumTopicContent .noForumTopicTextContainer .secondline {
+  font-size: 0.75rem;
+}
+
+.noForumTopicContent .noForumTopicImage .cls-1 { opacity: 0.15; }
+.noForumTopicContent .noForumTopicImage .cls-2 { mask: url(#mask); }
+.noForumTopicContent .noForumTopicImage .cls-3 { fill: #dcdcdc; }
+.noForumTopicContent .noForumTopicImage .cls-4 { fill: #f3f3f3; }
+.noForumTopicContent .noForumTopicImage .cls-5 { fill: #6f6f6f; }
+.noForumTopicContent .noForumTopicImage .cls-6 { fill: #3d3d3d; }
+.noForumTopicContent .noForumTopicImage .cls-7,
+.noForumTopicContent .noForumTopicImage .cls-13 { fill: none; }
+.noForumTopicContent .noForumTopicImage .cls-8 { fill: #565656; }
+.noForumTopicContent .noForumTopicImage .cls-9 { fill: #a4a4a4; }
+.noForumTopicContent .noForumTopicImage .cls-10 { opacity: 0.3; }
+.noForumTopicContent .noForumTopicImage .cls-11 { fill: #0062ff; }
+.noForumTopicContent .noForumTopicImage .cls-12 { fill: #fff; }
+.noForumTopicContent .noForumTopicImage .cls-13 {
+  stroke: #565656;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 0.17px;
+}
+.noForumTopicContent .noForumTopicImage .cls-14 { fill: #a3a3a3; }
+.noForumTopicContent .noForumTopicImage .cls-15 { fill: url(#linear-gradient); }
+.noForumTopicContent .noForumTopicImage .cls-16 { fill: #bdbdbd; }
+.noForumTopicContent .noForumTopicImage .cls-17 { fill: #8b8b8b; }
+.noForumTopicContent .noForumTopicImage .cls-18 { fill: url(#linear-gradient-2); }
+.noForumTopicContent .noForumTopicImage .cls-19 { fill: url(#linear-gradient-3); }
+.noForumTopicContent .noForumTopicImage .cls-20 { fill: #dbdbdb; }
+.noForumTopicContent .noForumTopicImage .cls-21 { filter: url(#luminosity-noclip); }

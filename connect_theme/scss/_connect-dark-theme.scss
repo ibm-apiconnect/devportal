@@ -1,0 +1,329 @@
+body[data-dmt-mode="dark"] {
+  // ============================================================================
+  // COMPONENT OVERRIDE: Overflow menu
+  // - Scope: Global
+  // - Enhance box shadow for visibility
+  // ============================================================================
+  .overflow-menu ul.dropit-submenu {
+    box-shadow: var(--dropdown-box-shadow);
+  }
+
+  // ============================================================================
+  // COMPONENT OVERRIDE: Admin top toolbar
+  // - Scope: Admin UI
+  // - Override text color to light mode
+  // ============================================================================
+  aside.top-bar {
+    .toolbar-title {
+      color: $gray-100;
+    }
+  }
+
+  // ============================================================================
+  // COMPONENT OVERRIDE: Icons
+  // - Improve visibility by applying filter or fill color
+  // ============================================================================
+  & {
+    // - Scope: Product details page (/product/*)
+    // - Override extlink.css
+    svg.ext,
+    svg.mailto,
+    svg.tel,
+    // - Scope: Alert notification close icon
+    // - Override connect_theme/scss/component/_alert.scss
+    svg.bx--inline-notification__close-icon,
+    // - Scope: My org page member table
+    .apicMyOrg .apicMyOrgMembers tbody td .apicMyOrgMemberRoleEnabled svg>*,
+    // - Scope: Product plan card
+    .planApiCheckMark svg {
+      fill: var(--icon-primary);
+    }
+
+    // - Scope: Support page (/support)
+    &.bx--global-light-ui .apicMainContent .ui-accordion-header-icon,
+    .block-social-media-links svg,
+    // - Scope: Compose tips page (/filter/tips, /filter/tips/full_html)
+    &.context--filter-tips [data-extlink-placement="append"],
+    // - Scope: Password & credentials input
+    .eye-close,
+    .eye-open,
+    .ui-dialog.ui-corner-all.ui-front .ui-dialog-titlebar-close {
+      filter: var(--dark-icon-primary-filter);
+    }
+  }
+
+  // ============================================================================
+  // COMPONENT OVERRIDE: Placeholder Image
+  // - Scope: Default product, api, application image
+  // - Improve visibility by applying filter
+  // - Set custom image background as transparent
+  // ============================================================================
+  & {
+    .apicCardIcon,
+    .apicAppIcon,
+    .apicApiIcon,
+    .apicProductIcon,
+    .featuredcontentNodeImage,
+    td.product {
+      img {
+        &[src*="product_01"],
+        &[src*="product_02"],
+        &[src*="product_03"],
+        &[src*="product_04"],
+        &[src*="product_05"],
+        &[src*="product_06"],
+        &[src*="product_07"],
+        &[src*="app_01"],
+        &[src*="app_02"],
+        &[src*="app_03"],
+        &[src*="app_04"],
+        &[src*="app_05"],
+        &[src*="app_06"],
+        &[src*="app_07"],
+        &[src*="api_01"],
+        &[src*="api_02"],
+        &[src*="api_03"],
+        &[src*="api_04"],
+        &[src*="api_05"],
+        &[src*="api_06"],
+        &[src*="api_07"] {
+          filter: brightness(1.5);
+        }
+
+        &[src*="product_08"],
+        &[src*="product_09"],
+        &[src*="product_10"],
+        &[src*="product_11"],
+        &[src*="product_12"],
+        &[src*="product_13"],
+        &[src*="app_08"],
+        &[src*="app_09"],
+        &[src*="app_10"],
+        &[src*="app_11"],
+        &[src*="app_12"],
+        &[src*="app_13"],
+        &[src*="api_08"],
+        &[src*="api_09"],
+        &[src*="api_10"],
+        &[src*="api_11"],
+        &[src*="api_12"],
+        &[src*="api_13"] {
+          filter: brightness(3);
+        }
+      }
+    }
+    // Prevent filter from affecting background and border 
+    .bx--about__icon,
+    .bx--about__icon img {
+      background-color: transparent;
+      border-color: transparent;
+    }
+  }
+
+  // ============================================================================
+  // COMPONENT OVERRIDE: SVG Assets
+  // - Scope: Welcome page (/start), home page (/), error pages
+  // - Replace SVG URLs with Dark Mode-specific assets
+  // ============================================================================
+  & {
+    .startguide {
+      .gsstep.explore div.placeholder {
+        background-image: url(../images/ibmcarbon/svg/exploreapis_dark.svg);
+      }
+      .gsstep.signup div.placeholder {
+        background-image: url(../images/ibmcarbon/svg/signup_dark.svg);
+      }
+      .gsstep.subscribe div.placeholder {
+        background-image: url(../images/ibmcarbon/svg/createapp_dark.svg);
+      }
+      .gsstep.check-usage div.placeholder {
+        background-image: url(../images/ibmcarbon/svg/check-usage_dark.svg);
+      }
+    }
+    &.route-system401 .main-container.container::before {
+      background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_OTHER_g100.svg);
+    }
+    &.route-system403 .main-container.container::before {
+      background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_403_g100.svg);
+    }
+    &.route-system404 .main-container.container::before {
+      background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_404_g100.svg);
+    }
+  }
+
+  // ============================================================================
+  // 3RD PARTY COMPONENT OVERRIDE: Full page loading
+  // - Scope: Global
+  // - Override: page_load_progress.theme.css
+  // ============================================================================
+  .page-load-progress-lock-screen {
+    background-color: var(--overlay);
+  }
+  .page-load-progress-throbber {
+    filter: invert(1);
+  }
+
+  // ============================================================================
+  // 3RD PARTY COMPONENT OVERRIDE: Captcha
+  // - Scope: Global
+  // - Override: image_captcha.css
+  // ============================================================================
+  #edit-captcha-image-wrapper img {
+    filter: invert(1) hue-rotate(180deg);
+    mix-blend-mode: lighten;
+  }
+
+  // ============================================================================
+  // 3RD PARTY COMPONENT OVERRIDE: Bootstrap Rating Stars
+  // - Scope: Product, api card & page header
+  // - Override: bootstrap-stars.min.css
+  // ============================================================================
+  .br-theme-bootstrap-stars .br-widget a {
+    &::after {
+      color: var(--border-subtle-03);
+    }
+    &.br-active::after,
+    &.br-selected::after {
+      color: var(--support-warning);
+    }
+  }
+
+  // ============================================================================
+  // 3RD PARTY COMPONENT OVERRIDE: Subscription - Create an application modal
+  // - Scope: Subscription: Select application step page (/subscription/chooseapp, /subscription_noplan/chooseapp)
+  // - Override: modal.css
+  // ============================================================================
+  &.context--subscription-chooseapp,
+  &.context--subscription-noplan,
+  &.context--subscription-noplan-chooseapp {
+    .ui-dialog.ui-corner-all.ui-front {
+      background-color: var(--layer-01);
+      .ui-dialog-titlebar {
+        color: var(--text-primary);
+      }
+      .ui-dialog-titlebar-close {
+        filter: var(--dark-icon-primary-filter);
+      }
+      input,
+      input:hover,
+      input:focus,
+      textarea,
+      textarea:hover,
+      textarea:focus {
+        background-color: var(--field-02);
+        border: unset;
+        border-bottom: 1px solid var(--border-strong-02);
+      }
+      // footer
+      .ui-widget-content {
+        background: var(--layer-01);
+        border-color: var(--border-subtle-01);
+      }
+      // credentials
+      .modal-dialog .modal-body {
+        background: var(--layer-01);
+
+      }
+    }
+    .ui-widget-content {
+      color: var(--text-primary);
+    }
+    // backdrop
+    .ui-widget-overlay {
+      background: var(--overlay);
+      opacity: 1;
+    }
+  }
+
+  // ============================================================================
+  // 3RD PARTY COMPONENT OVERRIDE: Changing the text format / leave preview modal
+  // - Scope: Rich text editor pages & content preview & auto complete dropdown on /product ,/application, /search/content, etc.
+  // - Override: theme.css
+  // ============================================================================
+  & {
+    // backdrop
+    .ui-widget-overlay {
+      background: var(--overlay);
+      opacity: 1;
+    }
+    // modal
+    .ui-widget-content {
+      background: var(--layer-01);
+      color: var(--text-primary);
+      border-color: var(--border-subtle-01);
+    }
+    .ui-widget.ui-widget-content {
+      border-color: var(--border-subtle-01);
+    }
+    // modal header
+    .ui-widget-header {
+      background: var(--layer-02);
+      color: var(--text-primary);
+      border-color: var(--border-subtle-01);
+    }
+    // modal header & footer icons
+    .ui-dialog .ui-dialog-titlebar-close,
+    .ui-dialog .ui-dialog-buttonpane button {
+      background: var(--button-secondary);
+    }
+  }
+
+  // ============================================================================
+  // 3RD PARTY COMPONENT OVERRIDE: CK Editor
+  // - Scope: Global
+  // - Override: editor.css
+  // ============================================================================
+  & {
+    --ck-color-base-background: var(--input-bg);
+    --ck-color-base-border: var(--input-border);
+    --ck-color-base-error: var(--text-error);
+    --ck-color-button-default-active-background: var(--dropdown-link-active-bg);
+    --ck-color-button-default-hover-background: var(--dropdown-link-hover-bg);
+    --ck-color-button-on-background: var(--dropdown-link-active-bg);
+    --ck-color-button-on-color: var(--focus);
+    --ck-color-button-on-disabled-background: var(--button-disabled);
+    --ck-color-button-on-hover-background: var(--dropdown-link-active-bg);
+    --ck-color-input-disabled-background: var(--input-bg-disabled);
+    --ck-color-input-disabled-text: var(--text-secondary);
+    --ck-color-input-error-border: var(--support-error);
+    --ck-color-labeled-field-label-background: var(--popover-background);
+    --ck-color-list-background: var(--popover-background);
+    --ck-color-list-button-hover-background: var(--dropdown-link-hover-bg);
+    --ck-color-split-button-hover-background: var(--dropdown-link-active-bg);
+    --ck-color-switch-button-off-background: var(--toggle-off);
+    --ck-color-switch-button-on-background: var(--support-success);
+    --ck-color-switch-button-on-hover-background: var(--support-success);
+    --ck-color-text: var(--text-primary);
+    --ck-color-widget-editable-background: var(--layer-active-02);
+    --ck-color-widget-editable-focus-background: var(--layer-active-02);
+    --ck-focus-disabled-outer-shadow: var(--focus);
+    --ck-focus-error-outer-shadow: var(--alert-danger-border);
+    --ck-focus-outer-shadow: var(--ck-focus-outer-shadow-geometry) var(--focus);
+    --ck-focus-ring: 1px solid var(--focus);
+    --ck-color-toolbar-background: var(--input-bg);
+    --ck-content-font-color: var(--text-primary);
+    --code-bg-selected: #{$dark-code-bg-selected};
+    // toolbar - dropdown
+    .ck.ck-dropdown__panel {
+      box-shadow: var(--dropdown-box-shadow);
+    }
+    // textarea
+    .ck-content code {
+      background-color: var(--code-bg);
+    }
+    .ck-content pre code {
+      background-color: transparent;
+      color: var(--text-primary);
+    }
+    .ck.ck-editor__editable .ck-code_selected {
+      background-color: var(--code-bg-selected);
+    }
+    .ck-content blockquote {
+      border-left-color: var(--blockquote-border-color);
+    }
+    // hr
+    .ck-content hr {
+      background-color: var(--blockquote-border-color);
+    }
+  }
+}

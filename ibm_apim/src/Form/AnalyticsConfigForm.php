@@ -48,7 +48,21 @@ class AnalyticsConfigForm extends ConfigFormBase {
     $config = $this->config('ibm_apim.settings');
     $dashboard = $config->get('analytics_dashboard');
     if (empty($dashboard)) {
-      $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'top_products', 'top_apis', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
+      $dashboard = [
+        'total_calls',
+        'total_errors',
+        'avg_response',
+        'num_calls',
+        'status_codes',
+        'top_products',
+        'top_apis',
+        'num_throttled',
+        'num_errors',
+        'call_table',
+        'top_api_paths',
+        'apis_with_fastest_response_time',
+        'apis_with_slowest_response_time'
+      ];
     }
 
     $form['dashboard'] = array(
@@ -62,10 +76,12 @@ class AnalyticsConfigForm extends ConfigFormBase {
         'status_codes' => t('Status codes'),
         'top_products' => t('Top products over time'),
         'top_apis' => t('Top APIs over time'),
-        'response_time' => t('Response time'),
         'num_throttled' => t('Number of throttled API calls'),
         'num_errors' => t('Number of errors'),
         'call_table' => t('API call history'),
+        'top_api_paths' => t('Top API paths by calls'),
+        'apis_with_slowest_response_time' => t('APIs with slowest response time'),
+        'apis_with_fastest_response_time' => t('APIs with fastest response time')
       ),
       '#default_value' => $dashboard,
     );
@@ -81,7 +97,7 @@ class AnalyticsConfigForm extends ConfigFormBase {
 
     $dashboard = array_keys(array_filter($form_state->getValue('dashboard')));
     if (empty($dashboard)) {
-      $settings_link = Link::fromTextAndUrl(t('Developer Portal Settings'), Url::fromRoute('ibm_apim.settings'));
+      $settings_link = Link::fromTextAndUrl(t('Developer Portal settings'), Url::fromRoute('ibm_apim.settings'));
       $form_state->setErrorByName('dashboard', $this->t('The analytics dashboard cannot be empty. Consumer analytics can be disabled in the @settings_link.', ['@settings_link' => $settings_link->toString()]));
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'calling parent validateForm');
@@ -94,8 +110,18 @@ class AnalyticsConfigForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     // Set the submitted configuration settings
     $dashboard = array_keys(array_filter($form_state->getValue('dashboard')));
+    
+    // Sanitize dashboard values if needed
+    $sanitized_dashboard = array_map(function($item) {
+      // Only apply htmlspecialchars if the value would be changed
+      if ($item !== htmlspecialchars($item, ENT_QUOTES)) {
+        return htmlspecialchars($item, ENT_QUOTES);
+      }
+      return $item;
+    }, $dashboard);
+    
     $this->config('ibm_apim.settings')
-      ->set('analytics_dashboard', $dashboard)
+      ->set('analytics_dashboard', $sanitized_dashboard)
       ->save();
     $query = \Drupal::entityQuery('node');
     $query->condition('type', 'application');

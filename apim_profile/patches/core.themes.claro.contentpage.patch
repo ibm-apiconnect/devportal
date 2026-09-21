@@ -1,0 +1,49 @@
+--- core/themes/claro/css/components/tableselect.css	2025-06-11 21:15:16
++++ core/themes/claro/css/components/tableselect.css	2025-06-11 21:15:04
+@@ -134,3 +134,7 @@
+ .ui-autocomplete {
+   z-index: 501;
+ }
++
++.hide-spacer [data-drupal-table-row-spacer] {
++  display: none;
++}
+\ No newline at end of file
+--- core/themes/claro/js/tableselect.js        2025-06-11 20:28:01
++++ core/themes/claro/js/tableselect.js        2025-06-11 20:27:51
+@@ -29,11 +29,6 @@
+       this.$tabbable.on('focus', (event) => this.focusHandler(event));
+       this.$tabbable.on('blur', (event) => this.blurHandler(event));
+ 
+-      // The will contain the CSS that hides the spacer during scroll
+-      // and resize.
+-      this.spacerCss = document.createElement('style');
+-      document.body.appendChild(this.spacerCss);
+-
+       const scrollResizeHandler = Drupal.debounce(() => {
+         this.scrollResizeHandler();
+       }, 10);
+@@ -117,20 +112,13 @@
+      * scroll and resize events have completed.
+      */
+     scrollResizeHandler() {
+-      // Add CSS rule that hides the spacer. CSS is used instead of removing
+-      // the spacer from the DOM as the change occurs faster.
+-      this.spacerCss.innerHTML =
+-        '[data-drupal-table-row-spacer] { display: none; }';
+-
+       if (!this.ignoreScrollEvent) {
+-        // Remove the timeout that un-hides the spacer. If this function is
+-        // called, then scrolling is still happening and spacers should stay
+-        // hidden.
++        document.body.classList.add('hide-spacer');
++
+         clearTimeout(this.scrollingTimeout);
+ 
+-        // Shortly after scrolling tops, the spacer is re-added.
+         this.scrollingTimeout = setTimeout(() => {
+-          this.spacerCss.innerHTML = '';
++          document.body.classList.remove('hide-spacer');
+           this.underStickyHandler();
+         }, 500);
+       }

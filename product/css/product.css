@@ -1,3 +1,14 @@
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 .product-view .masonry-layout .masonry-item {
   width: auto;
   border: 0;
@@ -31,9 +42,53 @@
   font-size: 24px;
   margin-bottom: 8px;
 }
+/* API Search Container */
+.api-search-container {
+  margin-bottom: 20px;
+}
+
+.api-search-container .input-group {
+  display: flex;
+  width: 100%;
+}
+
+.api-search-container .input-group .form-control {
+  flex: 1;
+  font-size: 0.875rem;
+  height: 48px;
+}
+
+.api-search-container .input-group-btn {
+  display: flex;
+}
+
+/* API Search Apply Button - uses .btn and .btn-primary from style.css */
+.api-search-apply-btn {
+  margin-left: 8px;
+  white-space: nowrap;
+  min-width: 80px;
+}
+
 
 .apicProductCard .apicProductDesc .field--label {
   display: none;
+}
+
+.apiTypeLozenge {
+  display: inline-block;
+  background-color: var(--tag-background-gray);
+  color: var(--tag-color-gray); 
+  padding: 0.2em 0.6em; 
+  border-radius: 1em;
+  font-size: 0.75em; 
+  text-transform: uppercase;
+  margin-right: 5px;
+  white-space: nowrap; 
+}
+
+.apicProductApiType {
+  display: block;
+  margin-top: 4px;
 }
 
 .apicProduct .field.field--name-product-version {
@@ -65,7 +120,7 @@
 
 .apicProductIcon,
 .apicApiIcon {
-  margin-right: 0.75rem;
+  margin-inline-end: 0.75rem;
 }
 
 .route-productview .apicMainContent,
@@ -84,15 +139,14 @@
 }
 
 .apicProduct .apicProductHeader {
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--body-bg);
 }
 
 .apicProduct .apicProductHeader,
 .productApiWrapper header.titleSection {
-  background: white;
+  background: var(--page-header-bg);
   padding: 0.5rem 2rem;
 }
-
 .apicProduct .apicProductBody {
   padding: 2rem;
 }
@@ -113,6 +167,7 @@
   flex-direction: row;
   align-items: center;
   padding: 0.5rem 0;
+  max-width: calc(100% - 6rem);
 }
 
 .apicProductTitleText {
@@ -156,11 +211,11 @@ h1.apiName {
 
 .apicProductTeaserMain h2 a {
   display: flex;
-  padding-right: 10px;
+  padding-inline-end: 10px;
 }
 
 .apicProductTeaserMain h2 a span:first-of-type {
-  padding-right: 4px;
+  padding-inline-end: 4px;
   margin-bottom: 0;
 }
 
@@ -180,6 +235,7 @@ h1.apiName {
   flex: 0.05 0 auto;
   -ms-flex: 0.05 0 100px;
   min-width: 100px;
+  max-height: 2rem;
 }
 
 .apicProductRating .field,
@@ -188,10 +244,22 @@ h1.apiName {
   margin-bottom: 0;
 }
 
+.apicProductRating .br-widget {
+ display: flex;
+}
+
+.apicProductRating .br-widget a {
+  display: inline-block;
+  padding-inline-start: 6px;
+  margin-inline-start: -6px;
+  margin-top: 6px;
+}
+
 .apicApiCount {
   font-size: 1.1rem;
   line-height: 1.4rem;
   margin-top: 0.5rem;
+  margin-inline-start: 1rem;
 }
 
 .apicProductName {
@@ -232,7 +300,7 @@ ul.apicProductApiList {
 }
 
 .apicProductContactInformation div {
-  padding-right: 1rem;
+  padding-inline-end: 1rem;
 }
 
 .apicProductTermsOfService .tosContainer {
@@ -269,7 +337,7 @@ ul.apicProductApiList {
 }
 
 .apicProductApiVersion {
-  margin-left: 10px;
+  margin-inline-start: 10px;
   line-height: 1.3125rem;
 }
 
@@ -376,11 +444,11 @@ ul.apicProductApiList {
 }
 
 .productApiWrapper .titleInnerWrapper .leftTitle {
-  width: calc(100% - 12rem);
+  width: calc(100% - 24rem);
 }
 
 .apicApiState {
-  margin-right:15px;
+  margin-inline-end:15px;
 }
 
 .apicApiState .text {
@@ -397,8 +465,8 @@ ul.apicProductApiList {
 }
 
 .apicApiState.online .icon {
-  border-color: green;
-  background: green;
+  border-color: var(--support-success);
+  background: var(--support-success);
 }
 
 
@@ -424,7 +492,7 @@ ul.apicProductApiList {
 
 .apicTwistieIcon {
   display: inline-block;
-  transition: 0.2s ease-in-out;
+  width: 10px;
 }
 
 .apicTwistieIcon .fa {
@@ -433,7 +501,7 @@ ul.apicProductApiList {
   transition: .2s;
 }
 
-.apicTwistieIcon .fa.flip {
+.apicTwistieIcon svg.flip {
   transform: rotate(-180deg);
 }
 
@@ -729,35 +797,35 @@ div[class*="planColumn"]:not(:last-of-type) {
 }
 
 .get .verb {
-  color: #4589ff;
+  color: var(--link-color);
 }
 
 .post .verb {
-  color: #24a148;
+  color: var(--http-post);
 }
 
 .put .verb {
-  color: #ee5396;
+  color: var(--http-put);
 }
 
 .delete .verb {
-  color: #fa4d56;
+  color: var(--http-delete);
 }
 
 .options .verb {
-  color: #0043ce;
+  color: var(--http-options);
 }
 
 .patch .verb {
-  color: #009d9a;
+  color: var(--http-patch);
 }
 
 .head .verb {
-  color: #a56eff;
+  color: var(--http-head);
 }
 
 .trace .verb {
-  color: #8a3800;
+  color: var(--http-trace);
 }
 
 
@@ -807,16 +875,12 @@ div[class*="planColumn"]:not(:last-of-type) {
 
 /* cards */
 .node--type-product.bx--card {
+  border: none;
+  box-shadow: none;
+  min-width: 20rem;
   height: 20rem;
-  border: none;
-  box-shadow: none;
+  max-width: 20rem;
 }
-
-.node--type-product.bx--card {
-  border: none;
-  box-shadow: none;
-}
-
 
 .bx--card .apicProductCard {
   padding-left: 1rem;
@@ -859,8 +923,11 @@ div[class*="planColumn"]:not(:last-of-type) {
 }
 
 .bx--card .apicProductCardMain .apicProductName {
-  padding-right: 0.625rem;
-  max-width: 10rem;
+  padding-inline-end: 0.625rem;
+  max-width: 15rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
 .bx--card .apicProductCardMain .apicProductName span {
@@ -887,13 +954,19 @@ div[class*="planColumn"]:not(:last-of-type) {
 }
 
 .bx--card .apicProductDesc {
-  height: 2.5rem;
+  height: 3em;
   overflow: hidden;
   text-overflow: ellipsis;
   font-family: IBMPlexSans, 'IBM Plex Sans', sans-serif;
   font-size: 0.875rem;
   letter-spacing: 0.16px;
   line-height: 20px;
+  position: absolute;
+  top: 135px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  width: 290px;
 }
 
 .bx--card .apicProductCardApi {
@@ -903,21 +976,33 @@ div[class*="planColumn"]:not(:last-of-type) {
   line-height: 1rem;
 }
 
+.node--type-product .apicProductAPIs {
+  position: absolute;
+  top: 180px;
+}
+
 .bx--card .apicProductSeeAll {
   position: absolute;
-  bottom: 1rem;
   left: 1rem;
   font-weight: normal;
   font-family: IBMPlexSans, 'IBM Plex Sans', sans-serif;
   font-size: 0.75rem;
   line-height: 1rem;
-  padding-top: 0.5rem;
 }
 
 .apicProductState {
   text-transform: capitalize;
   border: 1px solid #e0e0e0;
   padding: 8px;
+}
+
+.apicProductStateCard {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+}
+
+.apicProductStateLineCard {
   margin-left: 30px;
 }
 
@@ -1101,6 +1186,10 @@ h3.field__label.label
   flex-wrap: wrap;
 }
 
+.apicPlansList {
+  display: contents;
+}
+
 .apicPlans .planCard {
   display: flex;
   flex-direction: column;
@@ -1121,7 +1210,7 @@ h3.field__label.label
 .apicPlans .planCard .planTitle {
   margin-top: 0;
   margin-bottom: 1rem;
-  margin-right: 1rem;
+  margin-inline-end: 1rem;
   height: 3.75rem;
   overflow: hidden;
   display: -webkit-box;
@@ -1155,7 +1244,7 @@ h3.field__label.label
 
 .planApiList {
   list-style: none;
-  padding-left: 0;
+  padding-inline-start: 0;
 }
 
 .planApiList li {
@@ -1165,14 +1254,14 @@ h3.field__label.label
 }
 
 .planApiTitle {
-  margin-left: 0.4rem;
+  margin-inline-start: 0.4rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .planApiVersion {
-  margin-left: 0.3rem;
+  margin-inline-start: 0.3rem;
 }
 
 .planApiCheck svg{
@@ -1229,7 +1318,7 @@ h3.field__label.label
 }
 
 .planDetail--modalClose svg .cls-1{
-  fill:#000000;
+  fill: var(--icon-primary);
 }
 
 .planDetail--modalClose svg .cls-2{
@@ -1239,7 +1328,7 @@ h3.field__label.label
 .planDetail--content {
   padding: 2rem;
   max-height: 60vh;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .plansTable {
@@ -1328,3 +1417,130 @@ h3.field__label.label
 .planRatesAndBilling p {
   margin-bottom: 0.3rem;
 }
+
+
+.apis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.apis-header h3 {
+  margin: 0;
+}
+
+.productApiWrapper .button.postmanButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  margin-right: 8px;
+  font-size: 0.875rem;
+  transition: none;
+}
+
+.postmanButton svg {
+  height: 1rem;
+  width: 1rem;
+  flex-shrink: 0;
+  transition: none;
+}
+
+.postmanButton svg.ext {
+  display: none !important;
+}
+
+/* Add responsive styles for mobile */
+@media screen and (max-width: 768px) {
+  .productApiWrapper .titleInnerWrapper {
+    flex-direction: column;
+  }
+
+  .productApiWrapper .titleInnerWrapper .rightTitle {
+    width: 100%;
+    margin-left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+  }
+
+  .productApiWrapper .titleInnerWrapper .leftTitle {
+    width: 100%;
+    max-width: 100%;
+  }
+
+}
+
+.contained-list.api-search-results {
+  margin: 10px 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.contained-list__items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.contained-list-item {
+  border-bottom: 1px solid var(--border-subtle-02);
+  margin: 0;
+  padding: 0;
+}
+
+.contained-list-item:last-child {
+  border-bottom: none;
+}
+
+.contained-list-item--clickable {
+  cursor: pointer;
+}
+
+.contained-list-item__content {
+  padding: 1rem;
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+}
+
+.contained-list-item__content:hover {
+  background-color: var(--table-row-hover);
+}
+
+.contained-list-item__title {
+  font-size: 0.875rem;
+  line-height: 1.29;
+  color: var(--text-primary);
+}
+
+.search-results {
+  margin-top: 10px;
+}
+
+.api-search-message {
+  display: inline;
+  font-style: italic;
+  padding: 10px;
+}
+
+.no-api-search-results-message,
+.api-search-results-message-error {
+  display: inline;
+  font-style: italic;
+  padding: 10px;
+}
+
+.no-api-search-results-message {
+  color: var(--text-secondary);
+}
+
+.api-search-results-message-error {
+  color: var(--text-error);
+}
+
+.plan-api-search {
+  width: 100%;
+}
+

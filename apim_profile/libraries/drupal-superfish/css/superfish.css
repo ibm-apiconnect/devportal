@@ -13,6 +13,12 @@
   padding: 0 !important;
   width: 1px !important;
 }
+.sf-font-size-test {
+  padding: 0;
+  position: absolute;
+  top: -99999em;
+  width: auto;
+}
 ul.sf-menu,
 ul.sf-menu li {
   list-style: none;

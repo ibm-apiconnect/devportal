@@ -1,0 +1,36 @@
+--- core/modules/locale/src/StreamWrapper/TranslationsStream.php	2025-07-12 22:28:03
++++ core/modules/locale/src/StreamWrapper/TranslationsStream.php	2025-07-12 22:37:25
+@@ -2,7 +2,7 @@
+ 
+ namespace Drupal\locale\StreamWrapper;
+ 
+-use Drupal\Core\StreamWrapper\LocalStream;
++use Drupal\Core\StreamWrapper\PrivateStream;
+ use Drupal\Core\StreamWrapper\StreamWrapperInterface;
+ use Drupal\Core\StringTranslation\StringTranslationTrait;
+ 
+@@ -11,7 +11,7 @@
+  *
+  * Provides support for storing translation files.
+  */
+-class TranslationsStream extends LocalStream {
++class TranslationsStream extends PrivateStream {
+ 
+   use StringTranslationTrait;
+ 
+@@ -43,15 +43,4 @@
+     return \Drupal::config('locale.settings')->get('translation.path');
+   }
+ 
+-  /**
+-   * phpcs:ignore Drupal.Files.LineLength
+-   * Implements Drupal\Core\StreamWrapper\StreamWrapperInterface::getExternalUrl().
+-   *
+-   * @throws \LogicException
+-   *   PO files URL should not be public.
+-   */
+-  public function getExternalUrl() {
+-    throw new \LogicException('PO files URL should not be public.');
+-  }
+-
+ }

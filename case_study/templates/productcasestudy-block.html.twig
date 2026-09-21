@@ -1,4 +1,14 @@
 {#
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 /**
  * @file
  * Default theme implementation for the productcasestudy block
@@ -13,7 +23,7 @@
 {% if productCaseStudies|length > 0 %}
   <div class="productcasestudy">
     <div class="field product-case-study">
-      <h3 class="field__label label">{{ 'Case Studies'|t }}</h3>
+      <h3 class="field__label label">{% trans %}Case Studies{% endtrans %}</h3>
         <div class="productcasestudyCards">
           {% for nid in productCaseStudies %}
             {{ drupal_entity('node', nid, 'card') }}

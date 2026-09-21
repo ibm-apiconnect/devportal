@@ -24,9 +24,9 @@ legend {
   margin-bottom: $line-height-computed;
   font-size: ($font-size-base * 1.5);
   line-height: inherit;
-  color: $legend-color;
+  color: var(--legend-color);
   border: 0;
-  border-bottom: 1px solid $legend-border-color;
+  border-bottom: 1px solid var(--legend-border-color);
 }
 
 label {
@@ -104,7 +104,7 @@ output {
   padding-top: ($padding-base-vertical + 1);
   font-size: $font-size-base;
   line-height: $line-height-base;
-  color: $input-color;
+  color: var(--input-color);
 }
 
 
@@ -137,10 +137,10 @@ output {
   padding: $padding-base-vertical $padding-base-horizontal;
   font-size: $font-size-base;
   line-height: $line-height-base;
-  color: $input-color;
-  background-color: $input-bg;
+  color: var(--input-color);
+  background-color: var(--input-bg);
   background-image: none; // Reset unusual Firefox-on-Android default style; see https://github.com/necolas/normalize.css/issues/214
-  border: 1px solid $input-border;
+  border: 1px solid var(--input-border);
   border-radius: $input-border-radius; // Note: This has no effect on <select>s in some browsers, due to the limited stylability of <select>s in CSS.
   @include box-shadow(inset 0 1px 1px rgba(0, 0, 0, .075));
   @include transition(border-color ease-in-out .15s, box-shadow ease-in-out .15s);
@@ -165,7 +165,7 @@ output {
   &[disabled],
   &[readonly],
   fieldset[disabled] & {
-    background-color: $input-bg-disabled;
+    background-color: var(--input-bg-disabled);
     opacity: 1; // iOS fix for unreadable disabled content; see https://github.com/twbs/bootstrap/issues/11655
   }
 
@@ -444,7 +444,7 @@ textarea.form-control {
   display: block; // account for any element using help-block
   margin-top: 5px;
   margin-bottom: 10px;
-  color: lighten($text-color, 25%); // lighten the text some for contrast
+  color: var(--text-secondary); // for a11y
 }
 
 

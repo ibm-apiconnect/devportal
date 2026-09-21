@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2024
+ * (C) Copyright IBM Corporation 2018, 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -54,8 +54,8 @@ class ApicUserProfileForm extends ProfileForm {
                               ApicAccountInterface $account_service,
                               UserRegistryServiceInterface $registry_service,
                               State $state,
-                              EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL,
-                              TimeInterface $time = NULL) {
+                              ?EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL,
+                              ?TimeInterface $time = NULL) {
     $this->accountService = $account_service;
     $this->state = $state;
     $this->registryService = $registry_service;
@@ -303,11 +303,11 @@ class ApicUserProfileForm extends ProfileForm {
     if ($form_state->getValue('registry_type') !== NULL && $form_state->getValue('registry_type') === 'lur') {
       $firstName = $form_state->getValue(['first_name', '0', 'value']);
       if (empty($firstName)) {
-        $form_state->setErrorByName('first_name', $this->t('First Name is required.'));
+        $form_state->setErrorByName('first_name', $this->t('First name is required.'));
       }
       $lastName = $form_state->getValue(['last_name', '0', 'value']);
       if (empty($lastName)) {
-        $form_state->setErrorByName('last_name', $this->t('Last Name is required.'));
+        $form_state->setErrorByName('last_name', $this->t('Last name is required.'));
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'calling parent validateForm');

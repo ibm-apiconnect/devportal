@@ -146,7 +146,7 @@ class PaymentMethodDeleteForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getDescription(): TranslatableMarkup {
-    return $this->t('Are you sure you want to delete this payment method?');
+    return $this->t('Are you sure you want to delete this payment method? This action cannot be undone.');
   }
 
   /**

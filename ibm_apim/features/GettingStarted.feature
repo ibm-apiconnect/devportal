@@ -17,10 +17,6 @@ Feature: Getting started page
     And I enter "@data(andre.password)" for "Password"
     When I press the "Sign in" button
     Then I should be on "/start"
-    And I should see the text "let's get started"
     And I should see the text "Explore API products"
-    And I should see the text "Create a new app"
-    And I should see the link "Take me to the homepage"
     Then there are no errors
-    And there are no messages
     And there are no warnings

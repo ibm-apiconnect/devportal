@@ -26,6 +26,7 @@ use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Drush\Drush;
 use Throwable;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * Functionality for handling configuration updates
@@ -820,7 +821,7 @@ class SiteConfig {
         Drush::output()->writeln('Could not decrypt credentials with this key. Will try the next one');
         return FALSE;
       }
-      $socialBlockSettings = unserialize($unencryptedData, ['allowed_classes' => FALSE]);
+      $socialBlockSettings = SerializationUtility::decodeData($unencryptedData, TRUE, FALSE);
     }
 
     // decrypt payment methods
@@ -850,7 +851,7 @@ class SiteConfig {
                 Drush::output()->writeln('Could not decrypt paymentEntities with this key. Will try the next one');
                 return FALSE;
               }
-              $configuration = unserialize($unencryptedData, ['allowed_classes' => FALSE]);
+              $configuration = SerializationUtility::decodeData($unencryptedData, TRUE, FALSE);
               $decryptedPayments[$paymentEntity->id()] = $configuration;
             }
           }
@@ -871,7 +872,7 @@ class SiteConfig {
 
     // re-encrypt socialblock config
     if (isset($socialBlockSettings)) {
-      $encryptedSocialBlockSettings = $encryptionService->encrypt(serialize($socialBlockSettings), $encryptionProfile);
+      $encryptedSocialBlockSettings = $encryptionService->encrypt(SerializationUtility::encodeData($socialBlockSettings), $encryptionProfile);
       $this->configFactory->getEditable('socialblock.settings')->set('credentials', $encryptedSocialBlockSettings)->save();
     }
 
@@ -879,7 +880,7 @@ class SiteConfig {
     if (!empty($decryptedPayments) && $this->moduleHandler->moduleExists('consumerorg') && \Drupal::database()
         ->schema() !== NULL && \Drupal::database()->schema()->tableExists("consumerorg_payment_methods")) {
       foreach ($decryptedPayments as $id => $encryptedConfiguration) {
-        $configuration = $encryptionService->encrypt(serialize($encryptedConfiguration), $encryptionProfile);
+        $configuration = $encryptionService->encrypt(SerializationUtility::encodeData($encryptedConfiguration), $encryptionProfile);
         $query = \Drupal::entityQuery('consumerorg_payment_method');
         $query->condition('id', $id);
         $queryIds = $query->accessCheck()->execute();
@@ -950,7 +951,7 @@ class SiteConfig {
     $socialBlockConfig = \Drupal::config('socialblock.settings');
     $data = $socialBlockConfig->get('credentials');
     if (!empty($data)){
-      $encryptedSocialBlockSettings = $encryptionService->encrypt(serialize([]), $encryptionProfile);
+      $encryptedSocialBlockSettings = $encryptionService->encrypt(SerializationUtility::encodeData([]), $encryptionProfile);
       $this->configFactory->getEditable('socialblock.settings')->set('credentials', $encryptedSocialBlockSettings)->save();
     }
 
@@ -1049,6 +1050,21 @@ class SiteConfig {
     }
 
     return '';
+  }
+
+  /**
+   * Get the postman setting enabled value from site config.
+   *
+   * @return bool
+   *   TRUE if postman is enabled, FALSE otherwise.
+   */
+  public function isPostmanEnabled() {
+    $siteConfig = $this->state->get('ibm_apim.site_config');
+    if (!empty($siteConfig) && isset($siteConfig['postman_setting']['enabled'])) {
+      return (bool) $siteConfig['postman_setting']['enabled'];
+    }
+
+    return FALSE;
   }
 
 

@@ -1,4 +1,15 @@
 {#
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 /**
  * @file
  * Full view for appplications
@@ -15,19 +26,19 @@
 ] -%}
 {{ attach_library('ibm_apim/core') }}
 {{ attach_library('apic_app/basic') }}
-<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes).removeAttribute('dir') }} aria-label="{{ node.title[0].value }}">
   <div class="applicationWrapper">
     <header class="titleSection">
       <div class="titleInnerWrapper">
         <div class="leftTitle">
           <div class="breadcrumb">
             <a href="{{- path('view.applications.page_1') }}">
-              {{ 'Applications'|t }}
+              {% trans %}Applications{% endtrans %}
             </a>
           </div>
           <div class="applicationTitle">
             <div class="applicationLogo">
-              {% if content.application_image is defined and content.application_image|render|trim is not empty %}
+              {% if showPlaceholders and content.application_image is defined and content.application_image|render|trim is not empty %}
                 <div class="apicAppIcon">
                   {{ content.application_image }}
                 </div>
@@ -40,7 +51,7 @@
                 title="{{ node.title[0].value }}">{{- label -}}</h1>
             {% if applifecycleEnabled %}
               <div
-                  class="applicationType {{ content.application_lifecycle_state['#items'][0].value|clean_class }}">{% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %} {{ 'Development'|t }} {% else %} {{ 'Production'|t }} {% endif %}</div>
+                  class="applicationType {{ content.application_lifecycle_state['#items'][0].value|clean_class }}">{% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %} {% trans %}Development{% endtrans %} {% else %} {% trans %}Production{% endtrans %} {% endif %}</div>
             {% endif %}
           </div>
         </div>
@@ -52,10 +63,10 @@
                   {% if node.application_id.value is defined and node.application_id.value is not empty %}
                     <a href="{{- path('apic_app.promote', {'appId': node.application_id.value}) -}}"
                        class="button apicUpgradeApp"
-                       title="{{ 'Upgrade to production'|t }}">{{ 'Upgrade to production'|t }}</a>
+                       title="{% trans %}Upgrade to production{% endtrans %}">{% trans %}Upgrade to production{% endtrans %}</a>
                   {% endif %}
                 {% else %}
-                  <span>{{ 'Pending Upgrade'|t }}</span>
+                  <span>{% trans %}Pending Upgrade{% endtrans %}</span>
                 {% endif %}
               {% endif %}
             </div>
@@ -63,17 +74,16 @@
           {% if userHasAppManage %}
             <div class="extraMenu">
               <ul class="overflow-menu applicationMenu dropitmenu">
-                <li title="{{ 'Manage application'|t }}"><a title="{{ 'Manage application'|t }}" href="#"
+                <li title="{% trans %}Manage application{% endtrans %}"><a title="{% trans %}Manage application{% endtrans %}" href="#"
                                                             class="trigger">
                 <span class="dropit-icon">
                 <svg version="1.1" xmlns="http://www.w3.org/2000/svg"
                      xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                     width="32px" height="32px" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;"
-                     xml:space="preserve">
-                  <style type="text/css">.st0 {
-                      fill: none;
-                    }</style>
-                  <title>{{ 'Manage application'|t }}</title>
+                     width="32px" height="32px" viewBox="0 0 32 32" 
+                     xml:space="preserve"
+                     class="my-svg">
+
+                  <title>{% trans %}Manage application{% endtrans %}</title>
                   <circle cx="16" cy="8" r="2"/>
                   <circle cx="16" cy="16" r="2"/>
                   <circle cx="16" cy="24" r="2"/>
@@ -83,17 +93,17 @@
                     {% if node.application_id.value is defined and node.application_id.value is not empty %}
                       <li class="editApplication"><a
                             href="{{ path('apic_app.update', {'appId': node.application_id.value}) }}"
-                            title="{{ 'Edit App'|t }}">{{ 'Edit'|t }}</a>
+                            title="{% trans %}Edit App{% endtrans %}">{% trans %}Edit{% endtrans %}</a>
                       </li>
                       {% if appImageUploadEnabled %}
                         <li class="uploadImage"><a
                               href="{{ path('apic_app.image_upload', {'appId': node.application_id.value}) }}"
-                              title="{{ 'Upload image'|t }}">{{ 'Upload image'|t }}</a>
+                              title="{% trans %}Upload image{% endtrans %}">{% trans %}Upload image{% endtrans %}</a>
                         </li>
                       {% endif %}
                       <li class="deleteApplication"><a
                             href="{{ path('apic_app.delete', {'appId': node.application_id.value}) }}"
-                            title="{{ 'Delete App'|t }}">{{ 'Delete'|t }}</a>
+                            title="{% trans %}Delete App{% endtrans %}">{% trans %}Delete{% endtrans %}</a>
                       </li>
                     {% endif %}
                   </ul>
@@ -105,17 +115,17 @@
         <div class="applicationTabs">
           <ul role="tablist">
             {% if analytics_access %}
-              <li role="tab" class="selected" aria-selected="true" tabindex="-1"><a class="analyticsApplication"
-                     href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Dashboard'|t }}</a></li>
-              <li role="tab" aria-selected="false" tabindex="0"><a class="subscriptionsApplication"
-                     href="{{- path('apic_app.subscriptions', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
+              <li role="tab" class="selected" aria-selected="true" tabindex="0"><a class="analyticsApplication"
+                     href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{% trans %}Dashboard{% endtrans %}</a></li>
+              <li role="tab" aria-selected="false" tabindex="-1"><a class="subscriptionsApplication"
+                     href="{{- path('apic_app.subscriptions', {'node': node.id}) -}}">{% trans %}Subscriptions{% endtrans %}</a></li>
             {% else %}
-              <li role="tab" class="selected" aria-selected="true" tabindex="-1"><a class="subscriptionsApplication"
-                    href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{{ 'Subscriptions'|t }}</a></li>
+              <li role="tab" class="selected" aria-selected="true" tabindex="0"><a class="subscriptionsApplication"
+                    href="{{- path('entity.node.canonical', {'node': node.id}) -}}">{% trans %}Subscriptions{% endtrans %}</a></li>
             {% endif %}
             {% if notifications_access %}
-              <li role="tab" aria-selected="false" tabindex="0"><a class="activityApplication"
-                   href="{{- path('apic_app.activity', {'node': node.id}) -}}">{{ 'Notifications'|t }}</a></li>
+              <li role="tab" aria-selected="false" tabindex="-1"><a class="activityApplication"
+                   href="{{- path('apic_app.activity', {'node': node.id}) -}}">{% trans %}Notifications{% endtrans %}</a></li>
             {% endif %}
           </ul>
         </div>
@@ -123,14 +133,18 @@
     </header>
     <div class="contentInnerWrapper">
       <div class="applicationContent">
-        {% if apic_state|lower|clean_class == 'disabled' %}
+        {% if apic_state|lower|clean_class == 'disabled' or apic_state|lower|clean_class == 'pending' %}
           <div class="alert alert-warning" role="alert">
             <div class="alert-details">
-              {{ 'Warning: This application is disabled. '|t }}
-              {% if contact %}
-                <a href="{{ path('contact.site_page') }}"> {{ 'Contact us for more information'|t }} </a>
+              {% if apic_state|lower|clean_class == 'pending' %}
+                {% trans %}Warning: This application is pending.{% endtrans %}
               {% else %}
-                <a href="mailto:{{ site_admin_email }}"> {{ 'Contact us for more information'|t }} </a>
+                {% trans %}Warning: This application is disabled.{% endtrans %}
+              {% endif %}
+              {% if contact %}
+                &nbsp;<a href="{{ path('contact.site_page') }}">{% trans %}Contact us for more information{% endtrans %}</a>
+              {% else %}
+                &nbsp;<a href="mailto:{{ site_admin_email }}">{% trans %}Contact us for more information{% endtrans %}</a>
               {% endif %}
             </div>
           </div>

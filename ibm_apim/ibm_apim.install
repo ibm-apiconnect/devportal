@@ -368,6 +368,178 @@ function ibm_apim_update_10901() {
   \Drupal::service('config.factory')->getEditable('ibm_apim.settings')->set('product_recommendations', [ 'enabled' => true, 'count' => 3])->save();
 }
 
+/**
+ * Fix CSP settings configuration structure by reinstalling the CSP module.
+ *
+ * This ensures that the CSP settings are properly structured with 'enforce.enable'
+ * instead of just 'enforce' set to false.
+ */
+function ibm_apim_update_11101() {
+  
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  $config = \Drupal::configFactory()->getEditable('csp.settings');
+  if ($config) {
+    $enforce = $config->get('enforce');
+    
+    // Check if 'enforce' is a boolean value or an array without 'enable' key (invalid structure)
+    if (is_bool($enforce) || (is_array($enforce) && !array_key_exists('enable', $enforce))) {
+      \Drupal::logger('ibm_apim')->notice('Fixing invalid CSP settings structure by reinstalling the CSP module');
+      
+      // Uninstall the CSP module
+      \Drupal::service('module_installer')->uninstall(['csp']);
+      
+      // Delete any remaining configuration
+      $config->delete();
+      
+      // Reinstall the CSP module to get fresh configuration
+      \Drupal::service('module_installer')->install(['csp']);
+      
+      \Drupal::logger('ibm_apim')->notice('CSP module has been reinstalled with correct configuration structure');
+    }
+  }
+}
+
+/**
+ * Update analytics dashboard configuration to replace 'response_time' with new metrics.
+ */
+function ibm_apim_update_11102() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  $config = \Drupal::configFactory()->getEditable('ibm_apim.settings');
+  $dashboard = $config->get('analytics_dashboard');
+  
+  if ($dashboard !== NULL && is_array($dashboard)) {
+    // Remove 'response_time' if it exists
+    $key = array_search('response_time', $dashboard);
+    if ($key !== FALSE) {
+      unset($dashboard[$key]);
+    }
+    
+    // Add the three new metrics
+    $new_metrics = [
+      'top_api_paths',
+      'apis_with_fastest_response_time',
+      'apis_with_slowest_response_time'
+    ];
+    
+    foreach ($new_metrics as $metric) {
+      if (!in_array($metric, $dashboard)) {
+        $dashboard[] = $metric;
+      }
+    }
+    
+    // Re-index the array to ensure sequential keys
+    $dashboard = array_values($dashboard);
+    
+    // Save the updated configuration
+    $config->set('analytics_dashboard', $dashboard)->save();
+    
+    \Drupal::logger('ibm_apim')->notice('Analytics dashboard configuration updated: removed response_time and added top_api_paths, apis_with_fastest_response_time, apis_with_slowest_response_time');
+  }
+}
+
+/**
+ * Add PowerShell to code snippets configuration for existing installations.
+ */
+function ibm_apim_update_11103() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  $config = \Drupal::configFactory()->getEditable('ibm_apim.settings');
+  $codesnippets = $config->get('codesnippets');
+  
+  if ($codesnippets !== NULL && is_array($codesnippets)) {
+    // Add PowerShell if it doesn't exist
+    if (!array_key_exists('powershell', $codesnippets)) {
+      $codesnippets['powershell'] = TRUE;
+      $config->set('codesnippets', $codesnippets)->save();
+      \Drupal::logger('ibm_apim')->notice('PowerShell code snippet language has been added and enabled by default');
+    }
+  }
+  
+  // Update field storage to include PowerShell option
+  $field_storage_config = \Drupal::configFactory()->getEditable('field.storage.user.codesnippet');
+  $allowed_values = $field_storage_config->get('settings.allowed_values');
+  
+  if ($allowed_values !== NULL && is_array($allowed_values)) {
+    // Check if PowerShell already exists
+    $powershell_exists = FALSE;
+    foreach ($allowed_values as $value) {
+      if (isset($value['value']) && $value['value'] === 'powershell') {
+        $powershell_exists = TRUE;
+        break;
+      }
+    }
+    
+    // Add PowerShell if it doesn't exist
+    if (!$powershell_exists) {
+      $allowed_values[] = [
+        'value' => 'powershell',
+        'label' => 'PowerShell',
+      ];
+      $field_storage_config->set('settings.allowed_values', $allowed_values)->save();
+      \Drupal::logger('ibm_apim')->notice('PowerShell has been added to user code snippet field options');
+    }
+  }
+}
+
+/**
+ * Set default value for show_subscription_tos configuration.
+ */
+function ibm_apim_update_11104() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  $config = \Drupal::configFactory()->getEditable('ibm_apim.settings');
+  
+  // Only set the default if the configuration doesn't exist yet
+  if ($config->get('show_subscription_tos') === NULL) {
+    $config->set('show_subscription_tos', TRUE)->save();
+    \Drupal::logger('ibm_apim')->notice('Terms of Service display in subscription wizard has been enabled by default');
+  }
+}
+
+
+/**
+ * Update API Explorer performance settings to prevent browser freezing with deeply nested schemas.
+ * Sets api_max_depth to 5 and example_array_items to 1 for better performance.
+ */
+function ibm_apim_update_11105() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  $config = \Drupal::configFactory()->getEditable('ibm_apim.settings');
+  
+  // Update api_max_depth to 5 (from previous default of 9)
+  $current_max_depth = $config->get('api_max_depth');
+  if ($current_max_depth === NULL || $current_max_depth > 5) {
+    $config->set('api_max_depth', 5);
+    \Drupal::logger('ibm_apim')->notice('API Explorer max depth updated to 5 for better performance with deeply nested schemas');
+  }
+  
+  // Update example_array_items to 1 (from previous default of 3)
+  $current_array_items = $config->get('example_array_items');
+  if ($current_array_items === NULL || $current_array_items > 1) {
+    $config->set('example_array_items', 1);
+    \Drupal::logger('ibm_apim')->notice('API Explorer array items updated to 1 for better performance with deeply nested schemas');
+  }
+  
+  $config->save();
+}
+
 function ibm_apim_removeConfigDependency($config, $dep) {
   try {
     $key = 'dependencies.config';
@@ -382,5 +554,24 @@ function ibm_apim_removeConfigDependency($config, $dep) {
     $view->save();
   } catch (Throwable $e) {
     \Drupal::logger('ibm_apim')->notice('error: @error', ['@error' => $e->getMessage()]);
+  }
+}
+
+/**
+ * Change admin theme from connect_theme to claro if currently set.
+ */
+function ibm_apim_update_11106() {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate();
+  if ($equivalent_update instanceof \Drupal\Core\Update\EquivalentUpdate) {
+    return $equivalent_update->toSkipMessage();
+  }
+
+  $config = \Drupal::configFactory()->getEditable('system.theme');
+  $admin_theme = $config->get('admin');
+  
+  // If admin theme is currently set to connect_theme, change it to claro
+  if ($admin_theme === 'connect_theme') {
+    $config->set('admin', 'claro')->save();
+    \Drupal::logger('ibm_apim')->notice('Administration theme changed from connect_theme to claro');
   }
 }

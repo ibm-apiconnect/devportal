@@ -1,0 +1,23 @@
+--- core/modules/navigation/navigation.libraries.yml	2025-11-12 21:53:29
++++ core/modules/navigation/navigation.libraries.yml	2026-01-11 19:18:04
+@@ -10,13 +10,13 @@
+     js/arrow-navigation.js: {}
+   css:
+     theme:
+-      css/base/fonts.css: {}
+-      css/base/variables.css: {}
+-      css/components/admin-toolbar.css: {}
+-      css/components/top-bar.css: {}
+-      css/components/admin-toolbar-control-bar.css: {}
+-      css/components/toolbar-menu.css: {}
+-      css/components/toolbar-block.css: {}
++      css/base/fonts.css: { preprocess: false }
++      css/base/variables.css: { preprocess: false }
++      css/components/admin-toolbar.css: { preprocess: false }
++      css/components/top-bar.css: { preprocess: false }
++      css/components/admin-toolbar-control-bar.css: { preprocess: false }
++      css/components/toolbar-menu.css: { preprocess: false }
++      css/components/toolbar-block.css: { preprocess: false }
+   dependencies:
+     - core/drupal.displace
+     - core/once

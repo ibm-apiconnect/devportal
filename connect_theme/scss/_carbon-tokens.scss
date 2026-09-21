@@ -1,0 +1,136 @@
+//
+// Copyright IBM Corp. 2025
+//
+// Carbon Design System Tokens for IBM API Connect Developer Portal
+// Based on Carbon Design System v11 - g100 Theme
+//
+
+// ============================================================================
+// CARBON TYPE SCALE - Productive Heading Tokens
+// ============================================================================
+// Reference: https://carbondesignsystem.com/guidelines/typography/type-sets
+
+// Productive Heading Scale (for UI and data-heavy interfaces)
+$carbon-heading-01: 0.75rem;      // 12px - Smallest heading
+$carbon-heading-02: 0.875rem;     // 14px - Small heading, help text
+$carbon-heading-03: 1rem;         // 16px - Body text, form inputs
+$carbon-heading-04: 1.125rem;     // 18px - Card titles, h4
+$carbon-heading-05: 1.25rem;      // 20px - Section headings, h3
+$carbon-heading-06: 1.5rem;       // 24px - Page subheadings, h2
+$carbon-heading-07: 1.75rem;      // 28px - Page headings, h1
+$carbon-heading-08: 2rem;         // 32px - Large headings
+$carbon-heading-09: 2.625rem;     // 42px - Hero headings
+$carbon-heading-10: 3rem;         // 48px - Display headings
+
+// Expressive Heading Scale (for marketing and editorial content)
+$carbon-expressive-heading-01: 0.875rem;  // 14px
+$carbon-expressive-heading-02: 1rem;      // 16px
+$carbon-expressive-heading-03: 1.25rem;   // 20px
+$carbon-expressive-heading-04: 1.75rem;   // 28px
+$carbon-expressive-heading-05: 2rem;      // 32px
+$carbon-expressive-heading-06: 2.625rem;  // 42px
+
+// ============================================================================
+// CARBON TYPE SCALE - Body Text Tokens
+// ============================================================================
+
+$carbon-body-compact-01: 0.875rem;   // 14px - Compact body text
+$carbon-body-compact-02: 1rem;       // 16px - Standard compact body
+$carbon-body-short-01: 0.875rem;     // 14px - Short line height
+$carbon-body-short-02: 1rem;         // 16px - Standard short body
+$carbon-body-long-01: 0.875rem;      // 14px - Long form reading
+$carbon-body-long-02: 1rem;          // 16px - Standard long body
+
+// ============================================================================
+// CARBON TYPE SCALE - Utility Tokens
+// ============================================================================
+
+$carbon-code-01: 0.75rem;            // 12px - Inline code
+$carbon-code-02: 0.875rem;           // 14px - Code blocks
+$carbon-label-01: 0.75rem;           // 12px - Small labels
+$carbon-label-02: 0.875rem;          // 14px - Standard labels
+$carbon-helper-text-01: 0.75rem;     // 12px - Helper text
+$carbon-helper-text-02: 0.875rem;    // 14px - Form help text
+$carbon-legal-01: 0.75rem;           // 12px - Legal text
+$carbon-legal-02: 0.875rem;          // 14px - Footer legal text
+
+// ============================================================================
+// CARBON LINE HEIGHT TOKENS
+// ============================================================================
+
+$carbon-line-height-heading: 1.25;   // Tight for headings
+$carbon-line-height-body: 1.5;       // Standard for body text
+$carbon-line-height-loose: 1.75;     // Loose for long-form content
+
+// ============================================================================
+// CARBON FONT WEIGHT TOKENS
+// ============================================================================
+
+$carbon-font-weight-light: 300;
+$carbon-font-weight-regular: 400;
+$carbon-font-weight-semibold: 600;
+
+// ============================================================================
+// CARBON SPACING TOKENS (for consistent vertical rhythm)
+// ============================================================================
+
+$carbon-spacing-01: 0.125rem;   // 2px
+$carbon-spacing-02: 0.25rem;    // 4px
+$carbon-spacing-03: 0.5rem;     // 8px
+$carbon-spacing-04: 0.75rem;    // 12px
+$carbon-spacing-05: 1rem;       // 16px
+$carbon-spacing-06: 1.5rem;     // 24px
+$carbon-spacing-07: 2rem;       // 32px
+$carbon-spacing-08: 2.5rem;     // 40px
+$carbon-spacing-09: 3rem;       // 48px
+$carbon-spacing-10: 4rem;       // 64px
+
+// ============================================================================
+// TYPOGRAPHY MAPPING - Current to Carbon
+// ============================================================================
+// This section documents the mapping from current font sizes to Carbon tokens
+// for reference during migration
+
+// Desktop Typography Mapping:
+// Current 32px (2rem) → $carbon-heading-08 (2rem) ✓ Already aligned
+// Current 28px (1.75rem) → $carbon-heading-07 (1.75rem) ✓ Already aligned
+// Current 24px (1.5rem) → $carbon-heading-06 (1.5rem) ✓ Already aligned
+// Current 20px (1.25rem) → $carbon-heading-05 (1.25rem) ✓ Already aligned
+// Current 18px (1.125rem) → $carbon-heading-04 (1.125rem) ✓ Already aligned
+// Current 16px (1rem) → $carbon-heading-03 (1rem) ✓ Already aligned
+// Current 15px (0.9375rem) → $carbon-body-compact-01 (0.875rem) - Slight adjustment
+// Current 14px (0.875rem) → $carbon-body-compact-01 (0.875rem) ✓ Already aligned
+
+// Mobile Typography Mapping (≤767px):
+// Current 28px (1.75rem) → $carbon-heading-07 (1.75rem) ✓ Already aligned
+// Current 24px (1.5rem) → $carbon-heading-06 (1.5rem) ✓ Already aligned
+// Current 20px (1.25rem) → $carbon-heading-05 (1.25rem) ✓ Already aligned
+// Current 18px (1.125rem) → $carbon-heading-04 (1.125rem) ✓ Already aligned
+// Current 16px (1rem) → $carbon-heading-03 (1rem) ✓ Already aligned
+// Current 15px (0.9375rem) → $carbon-body-compact-01 (0.875rem) - Slight adjustment
+// Current 14px (0.875rem) → $carbon-body-compact-01 (0.875rem) ✓ Already aligned
+
+// Tablet Typography Mapping (768-991px):
+// Current 32px (2rem) → $carbon-heading-08 (2rem) ✓ Already aligned
+// Current 28px (1.75rem) → $carbon-heading-07 (1.75rem) ✓ Already aligned
+// Current 15px (0.9375rem) → $carbon-body-compact-01 (0.875rem) - Slight adjustment
+
+// Landscape Mobile Mapping (max-height: 500px):
+// Current 24px (1.5rem) → $carbon-heading-06 (1.5rem) ✓ Already aligned
+// Current 20px (1.25rem) → $carbon-heading-05 (1.25rem) ✓ Already aligned
+
+// ============================================================================
+// USAGE NOTES
+// ============================================================================
+// 
+// 1. Most current font sizes already align with Carbon tokens
+// 2. Only adjustment needed: 15px (0.9375rem) → 14px (0.875rem)
+// 3. This change affects base body text on mobile/tablet
+// 4. All heading sizes are already Carbon-compliant
+// 5. Line heights should be standardized to Carbon tokens
+//
+// Migration Strategy:
+// - Replace 0.9375rem with $carbon-body-compact-01 (0.875rem)
+// - Replace explicit rem values with Carbon token variables
+// - Standardize line-height to Carbon tokens
+// - Update comments to reference Carbon token names

@@ -1,0 +1,376 @@
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+.ui-dialog.ui-dialog-off-canvas#drupal-off-canvas-wrapper {
+  width: 33% !important;
+  max-width: 33% !important;
+  min-width: 200px !important;
+  background: #f8fafc !important;
+  border-radius: 12px 0 0 12px !important;
+  box-shadow: -2px 0 16px rgba(0, 0, 0, 0.08) !important;
+  font-family: "Segoe UI", "Roboto", Arial, sans-serif !important;
+  position: fixed !important;   
+  top: 0 !important;            
+  right: 0 !important;          
+  left: auto !important;        
+  height: 100vh !important;     
+  overflow-y: auto !important;  
+  z-index: 9999 !important;     
+}
+
+.ui-dialog.ui-dialog-off-canvas #drupal-off-canvas {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.tutorial {
+  padding: 28px 24px 24px 24px !important;
+  border-radius: 12px !important;
+  margin: 0 !important;
+}
+
+.tutorial-header {
+  margin-bottom: 18px !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding-bottom: 10px !important;
+}
+.tutorial-header h1 {
+  font-size: 1.5rem !important;
+  color: #1a237e !important;
+  margin: 0 0 8px 0 !important;
+  font-weight: 700 !important;
+}
+
+.tutorial-info,
+.gs-step p,
+.gs-step li {
+  color: #374151 !important;
+  font-size: 1rem !important;
+  letter-spacing: normal !important;
+}
+
+.gs-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 18px !important;
+  font-size: 1.05rem !important;
+  color: #374151 !important;
+}
+.gs-progress-text {
+  font-weight: 600 !important;
+  color: #1976d2 !important;
+}
+
+.gs-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 0 24px 0 !important;
+}
+.gs-step {
+  background: #f1f5fb !important;
+  border-radius: 8px !important;
+  padding: 20px 18px 18px 18px !important;
+  margin-bottom: 18px !important;
+  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.06) !important;
+  border-inline-start: 4px solid #1976d2 !important;
+}
+.gs-step h3 {
+  margin-top: 0 !important;
+  color: #1976d2 !important;
+  font-size: 1.15rem !important;
+  font-weight: 600 !important;
+}
+
+.gs-step img,
+.tutorial img {
+  display: block;
+  max-width: 100%;
+  margin: 18px auto !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08) !important;
+  background: #fff !important;
+  padding: 4px !important;
+}
+
+.path-instruction {
+  background: #e3f2fd !important;
+  color: #1976d2 !important;
+  padding: 7px 12px !important;
+  border-radius: 5px !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  margin: 10px 0 !important;
+  display: inline-block !important;
+}
+
+.example-block,
+.command-block {
+  background: #23272f !important;
+  color: #fff !important;
+  border-radius: 6px !important;
+  padding: 12px 14px !important;
+  margin: 14px 0 !important;
+  font-size: 0.97rem !important;
+  overflow-x: auto !important;
+}
+.example-block pre,
+.command-block pre {
+  margin: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+}
+
+.gs-actions {
+  display: flex !important;
+  gap: 12px !important;
+  justify-content: flex-end !important;
+  margin: 18px 0 8px 0 !important;
+}
+.gs-actions .button {
+  min-width: 90px !important;
+  padding: 7px 18px !important;
+  border-radius: 5px !important;
+  border: none !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  background: #e3eafc !important;
+  color: #1976d2 !important;
+  transition: background 0.2s, color 0.2s !important;
+  box-shadow: 0 1px 2px rgba(25, 118, 210, 0.04) !important;
+  cursor: pointer !important;
+  margin: 0px !important ;
+}
+.gs-actions .button--primary {
+  background: #1976d2 !important;
+  color: #fff !important;
+}
+.gs-actions .button:disabled,
+.gs-actions .button[disabled] {
+  background: #e0e0e0 !important;
+  color: #9e9e9e !important;
+  cursor: not-allowed !important;
+}
+.gs-actions .button:not(:disabled):hover,
+.gs-actions .button--primary:not(:disabled):hover {
+  background: #1565c0 !important;
+  color: #fff !important;
+}
+
+.step-note {
+  font-size: 0.98rem !important;
+  color: #616161 !important;
+  margin-top: 10px !important;
+  background: #f8fafc !important;
+  padding: 7px 12px !important;
+  border-radius: 5px !important;
+  display: inline-block !important;
+}
+
+.tutorial-objectives {
+  margin: 0 0 10px 18px !important;
+  padding: 0 !important;
+  color: #374151 !important;
+  font-size: 1rem !important;
+}
+
+.success-message {
+  background: #e8f5e9 !important;
+  color: #388e3c !important;
+  border-radius: 6px !important;
+  padding: 12px 14px !important;
+  margin: 18px 0 0 0 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 4px rgba(56, 142, 60, 0.06) !important;
+}
+
+@media (max-width: 600px) {
+  .ui-dialog.ui-dialog-off-canvas#drupal-off-canvas-wrapper {
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    width: 100vw !important;
+    border-radius: 0 !important;
+  }
+  .tutorial {
+    padding: 14px 6px 14px 6px !important;
+  }
+}
+
+.ol-dots {
+  list-style-type: disc !important;
+}
+
+.ibm-apic-getting-started-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.welcome-banner {
+  background-color: #0f62fe;
+  color: white;
+  border-radius: 4px;
+  margin-bottom: 2rem;
+  padding: 2rem;
+}
+
+.welcome-banner h1 {
+  font-size: 2rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.welcome-banner p {
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+
+/* Tutorials Section */
+.tutorials-section {
+  margin-bottom: 3rem;
+}
+
+.tutorials-section h2 {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+/* Getting Started Cards */
+.getting-started-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.getting-started-card {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Style for the active tutorial card */
+.getting-started-card.active-tutorial {
+  border: 2px solid #1976d2;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
+  background-color: #f8fafc;
+}
+
+.getting-started-card.active-tutorial .getting-started-card-header h3 a {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.getting-started-card.active-tutorial::before {
+  content: "Last viewed";
+  display: block;
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  background-color: #1976d2;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.getting-started-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.getting-started-card-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.getting-started-card-header {
+  margin-bottom: 1rem;
+}
+.getting-started-card-header a {
+  text-decoration: none;
+}
+
+.getting-started-card-header h3 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.getting-started-card-description {
+  color: #525252;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+.getting-started-card-actions {
+  margin-top: auto;
+}
+
+.bx--btn {
+  font-size: 0.875rem;
+  font-weight: 400;
+  height: 3rem;
+  padding: 0 1rem;
+  border-radius: 0;
+  text-align: left;
+  text-decoration: none;
+  transition: all 70ms cubic-bezier(0, 0, 0.38, 0.9);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bx--btn--primary {
+  background-color: #0f62fe;
+  color: #ffffff;
+  border: none;
+}
+
+.bx--btn--primary:hover {
+  background-color: #0353e9;
+}
+
+@media (max-width: 768px) {
+  .getting-started-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-banner {
+    padding: 1.5rem;
+  }
+
+  .welcome-banner h1 {
+    font-size: 1.75rem;
+  }
+}
+
+.getting-started-offcanvas .ajax-progress--throbber {
+  position: inherit;
+  transform: none;
+  box-sizing: inherit;
+}
+
+
+/* Added rtl here since _connect-bidi.scss is not applied on some Drupal admin config pages. */
+html[dir="rtl"] .ui-dialog.ui-dialog-off-canvas#drupal-off-canvas-wrapper {
+  left: 0 !important;
+  right: auto !important;
+}

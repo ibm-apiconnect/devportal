@@ -33,7 +33,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @Block(
  *   id = "new_application",
  *   admin_label = @Translation("New Application Link"),
- *   category = @Translation("IBM API Developer Portal")
+ *   category = @Translation("IBM CMS Portal")
  * )
  */
 class NewApplicationBlock extends BlockBase implements ContainerFactoryPluginInterface {
@@ -75,7 +75,8 @@ class NewApplicationBlock extends BlockBase implements ContainerFactoryPluginInt
     $current_user = \Drupal::currentUser();
     $config = \Drupal::config('ibm_apim.settings');
     $show_register_app = (boolean) $config->get('show_register_app');
-    return AccessResult::allowedIf($show_register_app === TRUE && !$current_user->isAnonymous() && (int) $current_user->id() !== 1);
+    $has_permission = $this->userUtils->checkHasPermission('app:manage');
+    return AccessResult::allowedIf($show_register_app === TRUE && !$current_user->isAnonymous() && (int) $current_user->id() !== 1 && $has_permission);
   }
 
   /**

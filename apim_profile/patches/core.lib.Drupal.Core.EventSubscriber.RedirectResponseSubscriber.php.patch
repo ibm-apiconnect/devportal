@@ -1,5 +1,20 @@
 --- core/lib/Drupal/Core/EventSubscriber/RedirectResponseSubscriber.php	2017-09-27 10:54:57.616512924 +0000
 +++ core/lib/Drupal/Core/EventSubscriber/RedirectResponseSubscriber.php	2017-09-27 10:54:49.468432534 +0000
+@@ -89,7 +89,13 @@
+           /** @var \Psr\Log\LoggerInterface $logger */
+           $logger = ($this->loggerClosure)();
+           $logger->error($message);
+-          $safe_response = new Response($message, 400);
++
++          if (isset($GLOBALS['real_base_path'])) {
++            $safe_response = new LocalRedirectResponse($GLOBALS['real_base_path']);
++            \Drupal::messenger()->addError(t('Redirects to external URLs are not allowed.'));
++          } else {
++            $safe_response = new Response($message, 400);
++          }
+         }
+         $event->setResponse($safe_response);
+       }
 @@ -110,6 +110,13 @@
        // host, because the 'Location' header must be absolute.
        if (strpos($destination, '/') === 0) {

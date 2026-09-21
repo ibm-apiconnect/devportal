@@ -15,8 +15,8 @@ samp {
 code {
   padding: 2px 4px;
   font-size: 90%;
-  color: $code-color;
-  background-color: $code-bg;
+  color: var(--code-color);
+  background-color: var(--code-bg);
   border-radius: $border-radius-base;
 }
 
@@ -44,11 +44,11 @@ pre {
   margin: 0 0 ($line-height-computed / 2);
   font-size: ($font-size-base - 1); // 14px to 13px
   line-height: $line-height-base;
-  color: $pre-color;
+  color: var(--pre-color);
   word-break: break-all;
   word-wrap: break-word;
-  background-color: $pre-bg;
-  border: 1px solid $pre-border-color;
+  background-color: var(--pre-bg);
+  border: 1px solid var(--pre-border-color);
   border-radius: $border-radius-base;
 
   // Account for some code outputs that place code tags in pre tags

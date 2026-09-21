@@ -10,8 +10,8 @@
 .eventLog {
   display: flex;
   align-items: center;
-  background-color: white;
-  border-top: 1px solid #e0e0e0;
+  background-color: var(--layer-02);
+  border-top: 1px solid var(--border-strong-01);
 }
 
 .eventLogAvatar {

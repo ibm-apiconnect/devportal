@@ -25,8 +25,8 @@
 }
 
 #edit-dashboard > .js-form-type-checkbox input {
-  margin-left: 0;
-  margin-right: 8px;
+  margin-inline-start: 0;
+  margin-inline-end: 8px;
 }
 
 .chart-wrapper {

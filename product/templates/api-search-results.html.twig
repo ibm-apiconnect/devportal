@@ -1,0 +1,21 @@
+{% if results is empty %}
+  <p class="no-api-search-results-message">{{ result_message }}</p>
+{% else %}
+  <div class="contained-list api-search-results" role="list">
+    <ul class="contained-list__items">
+      {% for api in results %}
+        <li class="contained-list-item contained-list-item--clickable"
+            role="listitem"
+            tabindex="0"
+            data-api-name="{{ api.name }}"
+            data-api-title="{{ api.title|default(api.name) }}">
+          <div class="contained-list-item__content">
+            <div class="contained-list-item__title">
+              {{ api.title|default(api.name) }}
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}

@@ -88,7 +88,7 @@ class EnterContentStep extends FormBase {
       $direct = 1;
     }
     if ($send_unique === NULL) {
-      $send_unique = 0;
+      $send_unique = 1;
     }
     if ($carbon_copy === NULL) {
       $carbon_copy = 0;
@@ -227,15 +227,35 @@ class EnterContentStep extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state): ?bool {
-
-    if (empty($form_state->getUserInput()['subject'])) {
+    // Sanitize subject
+    $subject = $form_state->getUserInput()['subject'];
+    $subject = htmlspecialchars($subject, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+    
+    if (empty($subject)) {
       $form_state->setErrorByName('subject', $this->t('You must enter a Subject.'));
       return FALSE;
     }
+    
+    // Message content is handled by Drupal's text format system which provides sanitization
     if (empty($form_state->getValue(['message', 'value']))) {
       $form_state->setErrorByName('message', $this->t('You must enter some content for the message.'));
       return FALSE;
     }
+    
+    // Validate headers if provided
+    $headers = $form_state->getUserInput()['headers'];
+    if (!empty($headers)) {
+      // Simple validation to ensure headers follow the format "Name: Value"
+      $headerLines = explode("\n", $headers);
+      foreach ($headerLines as $line) {
+        $line = trim($line);
+        if (!empty($line) && !preg_match('/^[A-Za-z0-9\-]+:\s*.+$/', $line)) {
+          $form_state->setErrorByName('headers', $this->t('Headers must be in the format "Name: Value" with one header per line.'));
+          return FALSE;
+        }
+      }
+    }
+    
     return NULL;
   }
 
@@ -245,15 +265,26 @@ class EnterContentStep extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     $cached_values = $form_state->getTemporaryValue('wizard');
 
+    // Sanitize all input values
     $subject = $form_state->getUserInput()['subject'];
+    $subject = htmlspecialchars($subject, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+    
+    // Message content is handled by Drupal's text format system
     $message = $form_state->getValue(['message']);
-    $priority = $form_state->getUserInput()['priority'];
-    $receipt = $form_state->getUserInput()['receipt'];
+    
+    // Sanitize numeric inputs
+    $priority = (int) $form_state->getUserInput()['priority'];
+    $receipt = (int) $form_state->getUserInput()['receipt'];
+    
+    // Sanitize headers
     $headers = $form_state->getUserInput()['headers'];
-    $direct = $form_state->getUserInput()['direct'];
-    $carbon_copy = $form_state->getUserInput()['carbon_copy'];
-    $send_original = $form_state->getUserInput()['send_original'];
-    $send_unique = $form_state->getUserInput()['send_unique'];
+    $headers = htmlspecialchars($headers, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+    
+    // Sanitize boolean values
+    $direct = (bool) $form_state->getUserInput()['direct'];
+    $carbon_copy = (bool) $form_state->getUserInput()['carbon_copy'];
+    $send_original = (bool) $form_state->getUserInput()['send_original'];
+    $send_unique = (bool) $form_state->getUserInput()['send_unique'];
 
     $cached_values['subject'] = $subject;
     $cached_values['message'] = $message;
@@ -267,7 +298,6 @@ class EnterContentStep extends FormBase {
     $cached_values['instance'] = time();
 
     $form_state->setTemporaryValue('wizard', $cached_values);
-
   }
 
 }

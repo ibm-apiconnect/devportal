@@ -24,11 +24,11 @@ html.js {
 
   .form-item .input-group-addon {
     .glyphicon {
-      color: $gray-light;
+      color: var(--icon-disabled);
       opacity: .5;
       transition: 150ms color, 150ms opacity;
       &.glyphicon-spin {
-        color: $brand-primary;
+        color: var(--brand-primary-icon-interactive);
         opacity: 1;
       }
     }

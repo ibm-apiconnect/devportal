@@ -51,6 +51,6 @@ interface ApicPasswordInterface {
    *
    * @return \Drupal\Core\Session\AccountInterface|null
    */
-  public function lookupUpAccount(string $reset_password_for, string $registry_url = NULL): ?EntityInterface;
+  public function lookupUpAccount(string $reset_password_for, ?string $registry_url = NULL): ?EntityInterface;
 
 }

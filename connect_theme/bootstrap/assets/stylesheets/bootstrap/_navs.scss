@@ -7,7 +7,7 @@
 // --------------------------------------------------
 
 .nav {
-  padding-left: 0; // Override default ul/ol
+  padding-inline-start: 0; // Override default ul/ol
   margin-bottom: 0;
   list-style: none;
   @include clearfix;
@@ -47,7 +47,7 @@
     &:hover,
     &:focus {
       background-color: $nav-link-hover-bg;
-      border-color: $link-color;
+      border-color: var(--link-color);
     }
   }
 
@@ -76,13 +76,13 @@
 .nav-tabs {
   border-bottom: 1px solid $nav-tabs-border-color;
   > li {
-    float: left;
+    float: inline-start;
     // Make the list-items overlay the bottom border
     margin-bottom: -1px;
 
     // Actual tabs (as links)
     > a {
-      margin-right: 2px;
+      margin-inline-end: 2px;
       line-height: $line-height-base;
       border: 1px solid transparent;
       border-radius: $border-radius-base $border-radius-base 0 0;
@@ -96,7 +96,7 @@
       &,
       &:hover,
       &:focus {
-        color: $nav-tabs-active-link-hover-color;
+        color: var(--nav-tabs-active-link-hover-color);
         cursor: default;
         background-color: $nav-tabs-active-link-hover-bg;
         border: 1px solid $nav-tabs-active-link-hover-border-color;

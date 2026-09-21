@@ -12,6 +12,8 @@
  ********************************************************** {COPYRIGHT-END} **/
 
 
+use Drupal\ibm_apim\External\SerializationUtility;
+
 /**
  * Default implementation for creating payment methods
  *
@@ -23,7 +25,7 @@
  */
 function ibm_create_payment_method_consumerorg_payment_method_create_alter(&$form, $integration, $billing) {
   // if no other module is controlling the creation then fallback to inline fields
-  $billingProviderConfig = unserialize(\Drupal::config('ibm_apim.settings')->get('billing_providers'), ['allowed_classes' => FALSE]);
+  $billingProviderConfig = SerializationUtility::decodeData(\Drupal::config('ibm_apim.settings')->get('billing_providers'), TRUE, FALSE);
 
   // check whether we should be using stripe for this billing provider
   if (!isset($billingProviderConfig[$billing['name']]) || $billingProviderConfig[$billing['name']] === 'ibm_create_payment_method') {

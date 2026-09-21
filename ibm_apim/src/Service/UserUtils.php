@@ -25,6 +25,7 @@ use Drupal\user\Entity\Role;
 use Drupal\user\UserStorageInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * User related functions.
@@ -207,7 +208,7 @@ class UserUtils {
           // store the current consumerorg in the session
           if (isset($consumerOrg)) {
             $org = ['url' => $consumerOrg->getUrl(), 'name' => $consumerOrg->getName()];
-            $this->logger->debug('Storing current org in session: %org', ['%org' => serialize($org)]);
+            $this->logger->debug('Storing current org in session: %org', ['%org' => SerializationUtility::encodeData($org)]);
             $this->tempStore->set('current_consumer_organization', $org);
 
             // total permissions for user is all permissions of all roles that the user has
@@ -238,7 +239,7 @@ class UserUtils {
             else {
               $this->logger->warning('Unable to load current user so cannot update roles and permissions');
             }
-            $this->logger->debug('Storing permissions in session: %perms', ['%perms' => \serialize($perms)]);
+            $this->logger->debug('Storing permissions in session: %perms', ['%perms' => SerializationUtility::encodeData($perms)]);
             $this->tempStore->set('permissions', $perms);
           }
           else {
@@ -343,6 +344,20 @@ class UserUtils {
         $this->logger->debug('adding org to consumerorg urls list %orgUrl', ['%orgUrl' => $orgUrl]);
         $org_urls[] = ['value' => $orgUrl];
         $account->set('consumerorg_url', $org_urls);
+        
+        // Also update the consumer_organization field with the organization name
+        // Get the organization name from the ConsumerOrgService
+        $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
+        $org = $consumerOrgService->get($orgUrl);
+        if ($org !== NULL) {
+          $consumer_organizations = $account->get('consumer_organization')->getValue();
+          if (empty($consumer_organizations)) {
+            $consumer_organizations = [];
+          }
+          $consumer_organizations[] = ['value' => $org->getTitle()];
+          $account->set('consumer_organization', $consumer_organizations);
+        }
+        
         $account->save();
         $found = TRUE;
       }
@@ -357,7 +372,9 @@ class UserUtils {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function removeConsumerOrgFromUser($orgUrl, $account = NULL): void {
-    ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $orgUrl);
+    if (function_exists('ibm_apim_entry_trace')) {
+      ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $orgUrl);
+    }
     $return = NULL;
     if ($account === NULL && !$this->currentUser->isAnonymous() && (int) $this->currentUser->id() !== 1) {
       $account = User::load($this->currentUser->id());
@@ -371,19 +388,33 @@ class UserUtils {
           $new_org_urls[] = $valueArray;
         }
       }
-      if (empty($new_org_urls)) {
-        user_cancel([], $account->id(), 'user_cancel_reassign');
-        if (!isset($GLOBALS['__PHPUNIT_ISOLATION_BLACKLIST']) && \Drupal::hasContainer()) {
-          $batch = &batch_get();
-          $batch['progressive'] = FALSE;
-          batch_process();
+      
+      // Also update the consumer_organization field
+      $consumerOrgService = \Drupal::service('ibm_apim.consumerorg');
+      $org = $consumerOrgService->get($orgUrl);
+      if ($org !== NULL) {
+        $consumer_organizations = $account->get('consumer_organization')->getValue();
+        $new_consumer_organizations = [];
+        foreach ($consumer_organizations as $index => $valueArray) {
+          if ($valueArray['value'] !== $org->getTitle()) {
+            $new_consumer_organizations[] = $valueArray;
+          }
         }
+        $account->set('consumer_organization', $new_consumer_organizations);
+      }
+      
+      if (empty($new_org_urls)) {
+        // Keep account with empty org list instead of deleting
+        $account->set('consumerorg_url', NULL);
+        $account->save();
       } else {
         $account->set('consumerorg_url', $new_org_urls);
         $account->save();
       }
     }
-    ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    if (function_exists('ibm_apim_exit_trace')) {
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    }
   }
 
   /**

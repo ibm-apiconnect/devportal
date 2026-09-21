@@ -22,6 +22,7 @@ use Drupal\ibm_apim\Service\Interfaces\ApicUserStorageInterface;
 use Drupal\ibm_apim\Service\Interfaces\ManagementServerInterface;
 use Drupal\user\Entity\User;
 use Psr\Log\LoggerInterface;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 class ApicPasswordService implements ApicPasswordInterface {
 
@@ -79,7 +80,7 @@ class ApicPasswordService implements ApicPasswordInterface {
 
     if ($code !== 204) {
       $this->logger->notice('Error resetting password.');
-      $this->logger->error('Reset password response: @result', ['@result' => serialize($mgmtResponse)]);
+      $this->logger->error('Reset password response: @result', ['@result' => SerializationUtility::encodeData($mgmtResponse)]);
       $this->messenger->addError(t('Error resetting password. Contact the system administrator.'));
       // If we have more information then provide it to the user as well.
       if ($mgmtResponse->getErrors() !== NULL) {
@@ -127,7 +128,7 @@ class ApicPasswordService implements ApicPasswordInterface {
   /**
    * @inheritDoc
    */
-  public function lookupUpAccount(string $lookup, string $registry_url = NULL): ?EntityInterface {
+  public function lookupUpAccount(string $lookup, ?string $registry_url = NULL): ?EntityInterface {
     if (\function_exists('ibm_apim_entry_trace')) {
       ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, $lookup);
     }

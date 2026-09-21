@@ -3,3 +3,9 @@
  * Use this file to override styles if you feel uncomfortable editing
  * component stylesheets.
  ============================================================================ */
+
+/* Hide the highlighted region wrapper when messages are closed */
+/* After closing an alert, Drupal leaves behind empty wrapper divs */
+.main-container .highlighted:has(.messages__wrapper:empty) {
+  display: none;
+}

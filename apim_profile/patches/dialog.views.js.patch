@@ -1,0 +1,39 @@
+--- core/modules/views_ui/js/dialog.views.js	2025-10-06 22:49:11.438794714 +0000
++++ core/modules/views_ui/js/dialog.views.js	2025-10-06 23:51:36.232780428 +0000
+@@ -10,24 +10,24 @@
+     const $scroll = $modal.find('[data-drupal-views-scroll]');
+     let offset = 0;
+     let modalHeight;
++    let handleDialogResize = 0;
+     if ($scroll.length) {
+-      // Add a class to do some styles adjustments.
+-      $modal.closest('.views-ui-dialog').addClass('views-ui-dialog-scroll');
+-      // Let scroll element take all the height available.
+-      $scroll.each(function () {
+-        Object.assign(this.style, {
+-          overflow: 'visible',
+-          height: 'auto',
+-        });
++      const $uiDialog = $modal.closest('.ui-dialog');
++      modalHeight = $uiDialog.height();
++    
++      $uiDialog.children().not($modal).each(function () {
++          handleDialogResize += $(this).outerHeight();
+       });
+-      modalHeight = $modal.height();
++      const usableHeight = modalHeight - handleDialogResize;
+       $viewsOverride.each(function () {
+         offset += $(this).outerHeight();
+       });
+-
+-      // Take internal padding into account.
++    
+       const scrollOffset = $scroll.outerHeight() - $scroll.height();
+-      $scroll.height(modalHeight - offset - scrollOffset);
++      const finalHeight = Math.max(0, usableHeight - offset - scrollOffset);
++    
++      $scroll.height(finalHeight);
++
+       // Reset scrolling properties.
+       $modal.each(function () {
+         this.style.overflow = 'hidden';

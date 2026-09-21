@@ -45,7 +45,7 @@ class DevelForm extends ConfigFormBase {
     $config = $this->config('ibm_apim.devel_settings');
 
     $form['intro'] = [
-      '#markup' => t('IBM API Developer Portal Development Settings'),
+      '#markup' => t('IBM CMS Portal Development Settings'),
       '#weight' => -20,
     ];
 

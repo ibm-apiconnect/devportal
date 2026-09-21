@@ -1,5 +1,17 @@
 <?php
 
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+
 namespace Drupal\file_upload_secure_validator\EventSubscriber;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -62,6 +74,10 @@ class FileValidationSubscriber implements EventSubscriberInterface {
 
         // Get mime type from filename.
         $mimeByFilename = $file->getMimeType();
+        if (empty($mimeByFilename)) {
+          $mimeByFilename = \Drupal::service('file.mime_type.guesser.extension')->guessMimeType($file->getFileUri());
+          $file->setMimeType($mimeByFilename);
+        }
         // Get mime type from fileinfo.
         try {
           $mimeByFileinfo = (new FileinfoMimeTypeGuesser())->guessMimeType($file->getFileUri());

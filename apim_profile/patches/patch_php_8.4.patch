@@ -1,0 +1,658 @@
+--- modules/avatars/avatars.module
++++ modules/avatars/avatars.module
+@@ -77,7 +77,7 @@
+ /**
+  * Implements hook_entity_field_access().
+  */
+-function avatars_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
++function avatars_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, ?FieldItemListInterface $items = NULL) {
+   /** @var \Drupal\avatars\AvatarManager $avatar_manager */
+   $avatar_manager = \Drupal::service('avatars.avatar_manager');
+   /** @var \Drupal\field\Entity\FieldConfig $field_definition */
+@@ -191,7 +191,7 @@
+  *
+  * @return string[int]
+  */
+-function avatars_callback_avatar_generators(FieldStorageDefinitionInterface $definition, FieldableEntityInterface $entity = NULL, &$cacheable = TRUE) {
++function avatars_callback_avatar_generators(FieldStorageDefinitionInterface $definition, ?FieldableEntityInterface $entity = NULL, &$cacheable = TRUE) {
+   // @todo remove this, add update hook for existing field form displays.
+   /** @var \Drupal\avatars\AvatarGeneratorStorageInterface $avatars_generator_storage */
+   $avatars_generator_storage = \Drupal::entityTypeManager()->getStorage('avatar_generator');
+
+--- modules/menu_item_role_access/menu_item_role_access.module
++++ modules/menu_item_role_access/menu_item_role_access.module
+@@ -95,7 +95,7 @@
+  *
+  * We want to make sure that fields aren't being edited by those who shouldn't.
+  */
+-function menu_item_role_access_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
++function menu_item_role_access_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, ?FieldItemListInterface $items = NULL) {
+   if ($field_definition->getName() == 'menu_item_roles') {
+     if ($operation == 'edit' and $account->hasPermission('edit menu_item_role_access')) {
+       return AccessResult::allowed();
+--- modules/field_group/tests/modules/field_group_test/field_group_test.module
++++ modules/field_group/tests/modules/field_group_test/field_group_test.module
+@@ -17,7 +17,7 @@
+   $operation,
+   FieldDefinitionInterface $field_definition,
+   AccountInterface $account,
+-  FieldItemListInterface $items = NULL,
++  ?FieldItemListInterface $items = NULL,
+ ) {
+ 
+   // Set access to false for field_no_access.
+--- modules/field_group/field_group.module
++++ modules/field_group/field_group.module
+@@ -423,7 +423,7 @@
+  * @return array
+  *   Processed form.
+  */
+-function field_group_form_process(array &$element, FormStateInterface $form_state = NULL, array &$form = []) {
++function field_group_form_process(array &$element, ?FormStateInterface $form_state = NULL, array &$form = []) {
+   return FormatterHelper::formProcess($element, $form_state, $form);
+ }
+ 
+@@ -490,7 +490,7 @@
+ /**
+  * Implements hook_field_group_form_process_build_alter().
+  */
+-function field_group_field_group_form_process_build_alter(array &$element, FormStateInterface $form_state = NULL, array &$form = []) {
++function field_group_field_group_form_process_build_alter(array &$element, ?FormStateInterface $form_state = NULL, array &$form = []) {
+   $groups = array_keys($element['#fieldgroups']);
+   field_group_remove_empty_form_groups($element, $groups, $element['#entity_type']);
+ }
+@@ -634,7 +634,7 @@
+  * @param string $context
+  *   The display context (entity type, form or view).
+  */
+-function field_group_fields_nest(array &$element, array &$vars = NULL, $context = NULL) {
++function field_group_fields_nest(array &$element, ?array &$vars = NULL, $context = NULL) {
+ 
+   // Create all groups and keep a flat list of references to these groups.
+   $group_references = [];
+@@ -727,7 +727,7 @@
+  * @param string $context
+  *   The display context (entity type, form or view).
+  */
+-function field_group_field_layout_fields_nest(array &$element, array &$vars = NULL, $context = NULL) {
++function field_group_field_layout_fields_nest(array &$element, ?array &$vars = NULL, $context = NULL) {
+   // Create all groups and keep a flat list of references to these groups.
+   $group_references = [];
+   foreach ($element['#fieldgroups'] as $group_name => $group) {
+@@ -874,7 +874,7 @@
+  *
+  * @throws \Drupal\Core\Entity\EntityStorageException
+  */
+-function field_group_group_save($group, EntityDisplayInterface $display = NULL) {
++function field_group_group_save($group, ?EntityDisplayInterface $display = NULL) {
+   if ($display === NULL) {
+     if ($group->context == 'form') {
+       $display = EntityFormDisplay::load($group->entity_type . '.' . $group->bundle . '.' . $group->mode);
+--- modules/gutenberg/gutenberg.module
++++ modules/gutenberg/gutenberg.module
+@@ -1103,7 +1103,7 @@
+  * @return bool
+  *   Whether the entity is supported.
+  */
+-function _gutenberg_is_gutenberg_enabled(EntityInterface $entity = NULL) {
++function _gutenberg_is_gutenberg_enabled(?EntityInterface $entity = NULL) {
+   if (!$entity) {
+     return FALSE;
+   }
+--- modules/avatars/src/Entity/AvatarPreview.php
++++ modules/avatars/src/Entity/AvatarPreview.php
+@@ -65,7 +65,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function setAvatar(FileInterface $file = NULL) {
++  public function setAvatar(?FileInterface $file = NULL) {
+     $this->set('avatar', ['entity' => $file]);
+     // @todo: change usage on save.
+     return $this;
+--- modules/avatars/src/AvatarPreviewInterface.php
++++ modules/avatars/src/AvatarPreviewInterface.php
+@@ -113,7 +113,7 @@
+    * @return \Drupal\avatars\AvatarPreviewInterface
+    *   Return avatar preview for chaining.
+    */
+-  public function setAvatar(FileInterface $file = NULL);
++  public function setAvatar(?FileInterface $file = NULL);
+ 
+   /**
+    * Gets the creation time of the avatar preview.
+--- modules/book/src/Form/BookAdminEditForm.php
++++ modules/book/src/Form/BookAdminEditForm.php
+@@ -80,7 +80,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
++  public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL) {
+     $form['#title'] = $node->label();
+     $form['#node'] = $node;
+     $this->bookAdminTable($node, $form);
+--- modules/book/src/Form/BookRemoveForm.php
++++ modules/book/src/Form/BookRemoveForm.php
+@@ -58,7 +58,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
++  public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL) {
+     $this->node = $node;
+     return parent::buildForm($form, $form_state);
+   }
+--- modules/book/src/Form/BookOutlineForm.php
++++ modules/book/src/Form/BookOutlineForm.php
+@@ -44,7 +44,7 @@
+    * @param \Drupal\Component\Datetime\TimeInterface $time
+    *   The time service.
+    */
+-  public function __construct(EntityRepositoryInterface $entity_repository, BookManagerInterface $book_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, TimeInterface $time = NULL) {
++  public function __construct(EntityRepositoryInterface $entity_repository, BookManagerInterface $book_manager, ?EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, ?TimeInterface $time = NULL) {
+     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
+     $this->bookManager = $book_manager;
+   }
+--- modules/content_synchronizer/src/Entity/ExportEntityViewBuilder.php
++++ modules/content_synchronizer/src/Entity/ExportEntityViewBuilder.php
+@@ -42,7 +42,7 @@
+    * @param \Drupal\Core\Form\FormBuilderInterface $formBuilder
+    *   The form builder.
+    */
+-  public function __construct(EntityTypeInterface $entity_type, EntityRepositoryInterface $entity_repository, LanguageManagerInterface $language_manager, Registry $theme_registry = NULL, EntityDisplayRepositoryInterface $entity_display_repository = NULL, FormBuilderInterface $formBuilder = NULL) {
++  public function __construct(EntityTypeInterface $entity_type, EntityRepositoryInterface $entity_repository, LanguageManagerInterface $language_manager, ?Registry $theme_registry = NULL, ?EntityDisplayRepositoryInterface $entity_display_repository = NULL, ?FormBuilderInterface $formBuilder = NULL) {
+     parent::__construct($entity_type, $entity_repository, $language_manager, $theme_registry, $entity_display_repository);
+     $this->formBuilder = $formBuilder;
+   }
+--- modules/content_synchronizer/src/Entity/ImportEntityViewBuilder.php
++++ modules/content_synchronizer/src/Entity/ImportEntityViewBuilder.php
+@@ -42,7 +42,7 @@
+    * @param \Drupal\Core\Form\FormBuilderInterface $formBuilder
+    *   The form builder.
+    */
+-  public function __construct(EntityTypeInterface $entity_type, EntityRepositoryInterface $entity_repository, LanguageManagerInterface $language_manager, Registry $theme_registry = NULL, EntityDisplayRepositoryInterface $entity_display_repository = NULL, FormBuilderInterface $formBuilder = NULL) {
++  public function __construct(EntityTypeInterface $entity_type, EntityRepositoryInterface $entity_repository, LanguageManagerInterface $language_manager, ?Registry $theme_registry = NULL, ?EntityDisplayRepositoryInterface $entity_display_repository = NULL, ?FormBuilderInterface $formBuilder = NULL) {
+     parent::__construct($entity_type, $entity_repository, $language_manager, $theme_registry, $entity_display_repository);
+     $this->formBuilder = $formBuilder;
+   }
+--- modules/content_synchronizer/src/Form/ImportEntityForm.php
++++ modules/content_synchronizer/src/Form/ImportEntityForm.php
+@@ -27,7 +27,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, TimeInterface $time = NULL, DateFormatterInterface $dateFormatter = NULL) {
++  public function __construct(EntityRepositoryInterface $entity_repository, ?EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, ?TimeInterface $time = NULL, ?DateFormatterInterface $dateFormatter = NULL) {
+     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
+     $this->dateFormatter = $dateFormatter;
+   }
+--- modules/content_synchronizer/src/Plugin/Action/ExportAction.php
++++ modules/content_synchronizer/src/Plugin/Action/ExportAction.php
+@@ -49,8 +49,8 @@
+     array $configuration,
+     $plugin_id,
+     $plugin_definition,
+-    PrivateTempStoreFactory $temp_store_factory = NULL,
+-    AccountInterface $current_user = NULL,
++    ?PrivateTempStoreFactory $temp_store_factory = NULL,
++    ?AccountInterface $current_user = NULL,
+     ExportManagerInterface $exportManager,
+   ) {
+     $this->currentUser = $current_user;
+@@ -63,7 +63,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
++  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+     return TRUE;
+   }
+ 
+--- modules/content_synchronizer/src/Plugin/content_synchronizer/entity_processor/ParagraphProcessor.php
++++ modules/content_synchronizer/src/Plugin/content_synchronizer/entity_processor/ParagraphProcessor.php
+@@ -19,7 +19,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function getEntityToImport(array $data, EntityInterface $existingEntity = NULL) {
++  public function getEntityToImport(array $data, ?EntityInterface $existingEntity = NULL) {
+     if (is_null($existingEntity)) {
+       $existingEntity = Paragraph::create(['type' => $this->getDefaultLanguageData($data)['type']]);
+     }
+--- modules/content_synchronizer/src/Plugin/content_synchronizer/entity_processor/FileProcessor.php
++++ modules/content_synchronizer/src/Plugin/content_synchronizer/entity_processor/FileProcessor.php
+@@ -162,7 +162,7 @@
+    * @return \Drupal\Core\Entity\EntityInterface|null
+    *   The entity to import.
+    */
+-  public function getEntityToImport(array $data, EntityInterface $entityToImport = NULL) {
++  public function getEntityToImport(array $data, ?EntityInterface $entityToImport = NULL) {
+     /** @var \Drupal\file\Entity\File|null $file */
+     $file = parent::getEntityToImport($data, $entityToImport);
+     if ($file) {
+--- modules/content_synchronizer/src/Plugin/content_synchronizer/entity_processor/TaxonomyTermProcessor.php
++++ modules/content_synchronizer/src/Plugin/content_synchronizer/entity_processor/TaxonomyTermProcessor.php
+@@ -88,7 +88,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function getEntityToImport(array $data, EntityInterface $existingEntity = NULL) {
++  public function getEntityToImport(array $data, ?EntityInterface $existingEntity = NULL) {
+ 
+     // Init tree process.
+     $currentGid = $data[ExportEntityWriter::FIELD_GID];
+--- modules/content_synchronizer/src/Processors/Entity/EntityProcessorBase.php
++++ modules/content_synchronizer/src/Processors/Entity/EntityProcessorBase.php
+@@ -511,7 +511,7 @@
+    *
+    * @throws \Drupal\Core\TypedData\Exception\MissingDataException
+    */
+-  public function getEntityToImport(array $data, EntityInterface $entityToImport = NULL) {
++  public function getEntityToImport(array $data, ?EntityInterface $entityToImport = NULL) {
+     if ($entityToImport) {
+       $backup = clone($entityToImport);
+     }
+--- modules/content_synchronizer/src/Service/EntityPublisher.php
++++ modules/content_synchronizer/src/Service/EntityPublisher.php
+@@ -55,7 +55,7 @@
+    * @param array $dataToImport
+    *   The data to import.
+    */
+-  public function saveEntity(EntityInterface $entity, $gid = NULL, EntityInterface $existingEntity = NULL, array $dataToImport = []) {
++  public function saveEntity(EntityInterface $entity, $gid = NULL, ?EntityInterface $existingEntity = NULL, array $dataToImport = []) {
+ 
+     // Alter entity before import.
+     $entityDataToImport = array_key_exists('translations', $dataToImport) ? $dataToImport['translations'][$entity->language()
+@@ -77,7 +77,7 @@
+    * @param \Drupal\Core\Entity\EntityInterface $existingEntity
+    *   The existing entity before changes.
+    */
+-  protected function saveEntityWithRevision(EntityInterface $entity, $gid, EntityInterface $existingEntity = NULL) {
++  protected function saveEntityWithRevision(EntityInterface $entity, $gid, ?EntityInterface $existingEntity = NULL) {
+ 
+     if ($entity->id()) {
+       $entityMethods = get_class_methods($entity);
+@@ -117,7 +117,7 @@
+    * @param \Drupal\Core\Entity\EntityInterface $existingEntity
+    *   The existing entity before changes.
+    */
+-  protected function saveEntityWithUnpublishedStatus(EntityInterface $entity, $gid, EntityInterface $existingEntity = NULL) {
++  protected function saveEntityWithUnpublishedStatus(EntityInterface $entity, $gid, ?EntityInterface $existingEntity = NULL) {
+     if ($this->isPublishable($entity)) {
+ 
+       if (!$entity->id()) {
+@@ -143,7 +143,7 @@
+    * @param \Drupal\Core\Entity\EntityInterface $existingEntity
+    *   The existing entity before changes.
+    */
+-  protected function defaultSave(EntityInterface $entity, EntityInterface $existingEntity = NULL) {
++  protected function defaultSave(EntityInterface $entity, ?EntityInterface $existingEntity = NULL) {
+     if ($this->haveToSave($entity, $existingEntity)) {
+       if (is_null($entity->uuid())) {
+         $entity->uuid = $this->uuid->generate();
+@@ -177,7 +177,7 @@
+    * @return bool
+    *   The state of update.
+    */
+-  protected function haveToSave(EntityInterface $entity, EntityInterface $existingEntity = NULL) {
++  protected function haveToSave(EntityInterface $entity, ?EntityInterface $existingEntity = NULL) {
+     $haveToSave = TRUE;
+ 
+     // Update :
+--- modules/content_synchronizer/src/Service/EntityPublisherInterface.php
++++ modules/content_synchronizer/src/Service/EntityPublisherInterface.php
+@@ -31,6 +31,6 @@
+    * @param array $dataToImport
+    *   The data to import.
+    */
+-  public function saveEntity(EntityInterface $entity, $gid = NULL, EntityInterface $existingEntity = NULL, array $dataToImport = []);
++  public function saveEntity(EntityInterface $entity, $gid = NULL, ?EntityInterface $existingEntity = NULL, array $dataToImport = []);
+ 
+ }
+--- modules/ctools/modules/ctools_entity_mask/src/MaskContentEntityStorage.php
++++ modules/ctools/modules/ctools_entity_mask/src/MaskContentEntityStorage.php
+@@ -53,7 +53,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  protected function doLoadMultiple(array $ids = NULL) {
++  protected function doLoadMultiple(?array $ids = NULL) {
+     return [];
+   }
+ 
+--- modules/field_encrypt/src/Form/UpdateEncryptionProfileForm.php
++++ modules/field_encrypt/src/Form/UpdateEncryptionProfileForm.php
+@@ -115,7 +115,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function buildForm(array $form, FormStateInterface $form_state, $entity_type = NULL, EncryptionProfile $encryption_profile = NULL) {
++  public function buildForm(array $form, FormStateInterface $form_state, $entity_type = NULL, ?EncryptionProfile $encryption_profile = NULL) {
+     $this->entityType = $this->entityTypeManager->getDefinition($entity_type);
+     $this->encryptionProfile = $encryption_profile;
+     return parent::buildForm($form, $form_state);
+--- modules/field_encrypt/src/ProcessEntities.php
++++ modules/field_encrypt/src/ProcessEntities.php
+@@ -171,7 +171,7 @@
+    *   the encrypted field to the decrypted value. If $method is set then it is
+    *   called with the entity, the field and the property name.
+    */
+-  protected function setEncryptedFieldValues(ContentEntityInterface $entity, string $method = NULL) {
++  protected function setEncryptedFieldValues(ContentEntityInterface $entity, ?string $method = NULL) {
+     $storage = $entity->get(static::ENCRYPTED_FIELD_STORAGE_NAME)->decrypted_value ?? [];
+ 
+     foreach ($storage as $field_name => $decrypted_field) {
+--- modules/field_group/src/FormatterHelper.php
++++ modules/field_group/src/FormatterHelper.php
+@@ -60,7 +60,7 @@
+    * @return array
+    *   The updated form.
+    */
+-  public static function formProcess(array &$element, FormStateInterface $form_state = NULL, array &$form = []) {
++  public static function formProcess(array &$element, ?FormStateInterface $form_state = NULL, array &$form = []) {
+     if (empty($element['#field_group_form_process'])) {
+       $element['#field_group_form_process'] = TRUE;
+       if (empty($element['#fieldgroups'])) {
+--- modules/field_group/contrib/field_group_migrate/src/Plugin/migrate/destination/d7/FieldGroup.php
++++ modules/field_group/contrib/field_group_migrate/src/Plugin/migrate/destination/d7/FieldGroup.php
+@@ -42,7 +42,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
++  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
+     return new static(
+       $configuration,
+       $plugin_id,
+@@ -103,7 +103,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function fields(MigrationInterface $migration = NULL) {
++  public function fields(?MigrationInterface $migration = NULL) {
+     // This is intentionally left empty.
+     return $migration;
+   }
+--- modules/fontawesome/src/Form/EditorIconDialog.php
++++ modules/fontawesome/src/Form/EditorIconDialog.php
+@@ -68,7 +68,7 @@
+    * @param \Drupal\editor\Entity\Editor $editor
+    *   The text editor to which this dialog corresponds.
+    */
+-  public function buildForm(array $form, FormStateInterface $form_state, Editor $editor = NULL) {
++  public function buildForm(array $form, FormStateInterface $form_state, ?Editor $editor = NULL) {
+     // Load the configuration settings.
+     $configuration_settings = $this->configFactory->get('fontawesome.settings');
+ 
+--- modules/focal_point/tests/src/Unit/FocalPointUnitTestCase.php
++++ modules/focal_point/tests/src/Unit/FocalPointUnitTestCase.php
+@@ -67,7 +67,7 @@
+    * @return \Drupal\focal_point\Plugin\ImageEffect\FocalPointCropImageEffect
+    *   Effect.
+    */
+-  protected function getTestEffect(ImageInterface $original_image = NULL) {
++  protected function getTestEffect(?ImageInterface $original_image = NULL) {
+     if (is_null($original_image)) {
+       $original_image = $this->getTestImage(0, 0);
+     }
+--- modules/graphql_twig/src/GraphQLTwigLoadGraphQlServer.php
++++ modules/graphql_twig/src/GraphQLTwigLoadGraphQlServer.php
+@@ -17,7 +17,7 @@
+   protected ServerInterface $graphQlServer;
+ 
+ 
+-  public function __construct(EntityTypeManagerInterface $entityTypeManager = NULL, ConfigFactoryInterface $configFactory = NULL,) {
++  public function __construct(?EntityTypeManagerInterface $entityTypeManager = NULL, ?ConfigFactoryInterface $configFactory = NULL,) {
+     $this->graphQlServer = $this->loadGraphQlServer($entityTypeManager, $configFactory);
+   }
+ 
+--- modules/graphql_twig/src/GraphQLTwigEnvironment.php
++++ modules/graphql_twig/src/GraphQLTwigEnvironment.php
+@@ -65,11 +65,11 @@
+     CacheBackendInterface $cache,
+     $twig_extension_hash,
+     StateInterface $state,
+-    \Twig\Loader\LoaderInterface $loader = NULL,
++    ?\Twig\Loader\LoaderInterface $loader = NULL,
+     array $options = [],
+-    EntityTypeManagerInterface $entityTypeManager = NULL,
+-    ConfigFactoryInterface $configFactory = NULL,
+-    RendererInterface $renderer = NULL
++    ?EntityTypeManagerInterface $entityTypeManager = NULL,
++    ?ConfigFactoryInterface $configFactory = NULL,
++    ?RendererInterface $renderer = NULL
+   ) {
+     $graphQLTwigLoadGraphQlServer = new GraphQLTwigLoadGraphQlServer($entityTypeManager, $configFactory);
+     $this->graphQlServer = $graphQLTwigLoadGraphQlServer->getGraphQlServer();
+--- modules/gutenberg/src/Plugin/Action/ReusableBlockDelete.php
++++ modules/gutenberg/src/Plugin/Action/ReusableBlockDelete.php
+@@ -27,7 +27,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
++  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+     /** @var \Drupal\block_content\BlockContentInterface $object */
+     return $object->access('delete', $account, $return_as_object);
+   }
+--- modules/gutenberg/src/Service/MediaService.php
++++ modules/gutenberg/src/Service/MediaService.php
+@@ -182,7 +182,7 @@
+    *
+    * @throws \Drupal\gutenberg\Service\MediaTypeNotFoundException
+    */
+-  public function renderDialog(array $media_types, array $media_bundles = NULL) {
++  public function renderDialog(array $media_types, ?array $media_bundles = NULL) {
+     $media_types = array_filter($media_types)
+       ? $media_types
+       : ['application', 'image', 'audio', 'video', 'text'];
+--- modules/gutenberg/src/MappingFieldsHelper.php
++++ modules/gutenberg/src/MappingFieldsHelper.php
+@@ -216,7 +216,7 @@
+    * @return array
+    *   The list of mapping fields.
+    */
+-  public function getMappedFields(array $template = NULL) {
++  public function getMappedFields(?array $template = NULL) {
+     $result = [];
+     if (empty($template)) {
+       return [];
+--- modules/gutenberg/src/Parser/BlockParser.php
++++ modules/gutenberg/src/Parser/BlockParser.php
+@@ -86,7 +86,7 @@
+    *
+    * @since 3.8.0
+    */
+-  public function parse($document, callable $filter_callable = NULL) {
++  public function parse($document, ?callable $filter_callable = NULL) {
+     $this->document = $document;
+     $this->filterCallable = $filter_callable;
+     $this->offset = 0;
+--- modules/gutenberg/src/BlockProcessor/OEmbedProcessor.php
++++ modules/gutenberg/src/BlockProcessor/OEmbedProcessor.php
+@@ -74,7 +74,7 @@
+     ModuleHandlerInterface $module_handler,
+     TimeInterface $time,
+     OEmbedResolverInterface $oembed_resolver,
+-    CacheBackendInterface $cache_backend = NULL
++    ?CacheBackendInterface $cache_backend = NULL
+   ) {
+     $this->renderer = $renderer;
+     $this->moduleHandler = $module_handler;
+--- modules/menu_item_role_access/src/MenuItemRoleAccessLinkTreeManipulator.php
++++ modules/menu_item_role_access/src/MenuItemRoleAccessLinkTreeManipulator.php
+@@ -50,7 +50,7 @@
+    * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
+    *   An implementation of the entity repository interface.
+    */
+-  public function __construct(AccessManagerInterface $access_manager, AccountInterface $account, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler = NULL, ConfigManagerInterface $config_manager, EntityRepositoryInterface $entity_repository) {
++  public function __construct(AccessManagerInterface $access_manager, AccountInterface $account, EntityTypeManagerInterface $entity_type_manager, ?ModuleHandlerInterface $module_handler = NULL, ConfigManagerInterface $config_manager, EntityRepositoryInterface $entity_repository) {
+     parent::__construct($access_manager, $account, $entity_type_manager, $module_handler);
+     $this->configManager = $config_manager->getConfigFactory();
+     $this->entityRepository = $entity_repository;
+--- modules/openapi/src/Controller/OpenApiListController.php
++++ modules/openapi/src/Controller/OpenApiListController.php
+@@ -34,7 +34,7 @@
+    * @param ?\Drupal\Component\Plugin\PluginManagerInterface $openapi_ui_manager
+    *   ui library plugin manager instance. NULL if the module is not enabled.
+    */
+-  public function __construct(PluginManagerInterface $openapi_generator_manager, PluginManagerInterface $openapi_ui_manager = NULL) {
++  public function __construct(PluginManagerInterface $openapi_generator_manager, ?PluginManagerInterface $openapi_ui_manager = NULL) {
+     $this->openapiGeneratorManager = $openapi_generator_manager;
+     $this->openapiUiManager = $openapi_ui_manager;
+   }
+ 
+--- modules/panels/panels_ipe/src/Form/PanelsIPELayoutForm.php
++++ modules/panels/panels_ipe/src/Form/PanelsIPELayoutForm.php
+@@ -94,7 +94,7 @@
+    * @return array
+    *   The form structure.
+    */
+-  public function buildForm(array $form, FormStateInterface $form_state, $layout_id = NULL, PanelsDisplayVariant $panels_display = NULL) {
++  public function buildForm(array $form, FormStateInterface $form_state, $layout_id = NULL, ?PanelsDisplayVariant $panels_display = NULL) {
+     // We require these default arguments.
+     if (!$layout_id || !$panels_display) {
+       return FALSE;
+--- modules/panels/panels_ipe/src/Form/PanelsIPEBlockPluginForm.php
++++ modules/panels/panels_ipe/src/Form/PanelsIPEBlockPluginForm.php
+@@ -108,7 +108,7 @@
+    * @return array
+    *   The form structure.
+    */
+-  public function buildForm(array $form, FormStateInterface $form_state, $plugin_id = NULL, PanelsDisplayVariant $panels_display = NULL, $uuid = NULL) {
++  public function buildForm(array $form, FormStateInterface $form_state, $plugin_id = NULL, ?PanelsDisplayVariant $panels_display = NULL, $uuid = NULL) {
+     // We require these default arguments.
+     if (!$plugin_id || !$panels_display) {
+       return FALSE;
+--- modules/panels_ipe/panels_ipe/src/Form/PanelsIPELayoutForm.php
++++ modules/panels_ipe/panels_ipe/src/Form/PanelsIPELayoutForm.php
+@@ -94,7 +94,7 @@
+    * @return array
+    *   The form structure.
+    */
+-  public function buildForm(array $form, FormStateInterface $form_state, $layout_id = NULL, PanelsDisplayVariant $panels_display = NULL) {
++  public function buildForm(array $form, FormStateInterface $form_state, $layout_id = NULL, ?PanelsDisplayVariant $panels_display = NULL) {
+     // We require these default arguments.
+     if (!$layout_id || !$panels_display) {
+       return FALSE;
+--- modules/panels_ipe/panels_ipe/src/Form/PanelsIPEBlockPluginForm.php
++++ modules/panels_ipe/panels_ipe/src/Form/PanelsIPEBlockPluginForm.php
+@@ -108,7 +108,7 @@
+    * @return array
+    *   The form structure.
+    */
+-  public function buildForm(array $form, FormStateInterface $form_state, $plugin_id = NULL, PanelsDisplayVariant $panels_display = NULL, $uuid = NULL) {
++  public function buildForm(array $form, FormStateInterface $form_state, $plugin_id = NULL, ?PanelsDisplayVariant $panels_display = NULL, $uuid = NULL) {
+     // We require these default arguments.
+     if (!$plugin_id || !$panels_display) {
+       return FALSE;
+--- modules/password_policy/src/Plugin/migrate/process/PolicyConfiguration.php
++++ modules/password_policy/src/Plugin/migrate/process/PolicyConfiguration.php
+@@ -56,7 +56,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
++  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
+     return new static(
+       $configuration,
+       $plugin_id,
+--- modules/password_policy/password_policy_length/tests/src/Functional/PasswordLengthOperations.php
++++ modules/password_policy/password_policy_length/tests/src/Functional/PasswordLengthOperations.php
+@@ -129,7 +129,7 @@
+    *
+    * @dataProvider passwordValidationDataProvider
+    */
+-  public function testPasswordLengthValidations(string $character_operation, string|int $character_length, string $status_message = NULL, string $page_text = NULL) {
++  public function testPasswordLengthValidations(string $character_operation, string|int $character_length, ?string $status_message = NULL, ?string $page_text = NULL) {
+     $this->drupalGet('admin/config/system/password_policy/constraint/add/test_policy/password_length');
+     $this->submitForm([
+       'character_operation' => $character_operation,
+--- modules/rdf/tests/src/Functional/CommentAttributesTest.php
++++ modules/rdf/tests/src/Functional/CommentAttributesTest.php
+@@ -259,7 +259,7 @@
+    *   (optional) An array containing information about an anonymous user.
+    *   Defaults to NULL.
+    */
+-  protected function testBasicCommentRdfaMarkup(CommentInterface $comment, UserInterface $account = NULL): void {
++  protected function testBasicCommentRdfaMarkup(CommentInterface $comment, ?UserInterface $account = NULL): void {
+     $this->drupalGet($this->node->toUrl());
+     $comment_uri = $comment->toUrl('canonical', ['absolute' => TRUE])->toString();
+ 
+@@ -355,7 +355,7 @@
+    * @return \Drupal\comment\Entity\Comment
+    *   The saved comment.
+    */
+-  public function saveComment(int $nid, int $uid, array $contact = NULL, int $pid = 0): Comment {
++  public function saveComment(int $nid, int $uid, ?array $contact = NULL, int $pid = 0): Comment {
+     $values = [
+       'entity_id' => $nid,
+       'entity_type' => 'node',
+--- modules/session_limit/src/Plugin/migrate/process/SessionLimitRidVariablesToRolesArray.php
++++ modules/session_limit/src/Plugin/migrate/process/SessionLimitRidVariablesToRolesArray.php
+@@ -56,7 +56,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
++  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
+     return new static(
+       $configuration,
+       $plugin_id,
+--- modules/social_api/src/AuthManager/OAuth2Manager.php
++++ modules/social_api/src/AuthManager/OAuth2Manager.php
+@@ -73,7 +73,7 @@
+    */
+   public function __construct(ImmutableConfig $settings,
+                               LoggerChannelFactoryInterface $logger_factory,
+-                              Request $request = NULL) {
++                              ?Request $request = NULL) {
+ 
+     $this->settings = $settings;
+     $this->loggerFactory = $logger_factory;
+--- modules/field_group/contrib/field_group_migrate/src/Plugin/migrate/source/d7/FieldGroup.php
++++ modules/field_group/contrib/field_group_migrate/src/Plugin/migrate/source/d7/FieldGroup.php
+@@ -54,7 +54,7 @@
+   /**
+    * {@inheritdoc}
+    */
+-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
++  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
+     return new static(
+       $configuration,
+       $plugin_id,
+--- modules/gutenberg/src/Controller/MediaController.php
++++ modules/gutenberg/src/Controller/MediaController.php
+@@ -201,7 +201,7 @@
+    *
+    * @throws \Exception
+    */
+-  public function upload(Request $request, Editor $editor = NULL) {
++  public function upload(Request $request, ?Editor $editor = NULL) {
+     $files = $request->files->get('files', []);
+     $uploaded_file = $files['fid'] ?? NULL;
+ 
+@@ -234,7 +234,7 @@
+    *
+    * @throws \Exception
+    */
+-  public function load(Request $request, File $file = NULL) {
++  public function load(Request $request, ?File $file = NULL) {
+     if (!$file) {
+       throw new NotFoundHttpException('File entity not found.');
+     }
+@@ -260,12 +260,12 @@
+    *
+    * @throws \Exception
+    */
+-  public function edit(Request $request, File $file = NULL) {
++  public function edit(Request $request, ?File $file = NULL) {
+     if (!$file) {
+       throw new NotFoundHttpException('File entity not found.');
+     }
+
+     $x = $request->request->get('x');
+     $y = $request->request->get('y');
+     $width = $request->request->get('width');
+     $height = $request->request->get('height');

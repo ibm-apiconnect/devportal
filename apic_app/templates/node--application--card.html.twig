@@ -16,10 +16,10 @@
 ] -%}
 {{ attach_library('ibm_apim/core') }}
 {{ attach_library('apic_app/basic') }}
-<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes).removeAttribute('dir') }} aria-label="{{ node.title[0].value }}">
   <a href="{{- path('entity.node.canonical', {'node': node.id}) -}}" rel="bookmark">
     <div class="apicAppCard">
-      {% if content.application_image is defined and content.application_image|render|trim is not empty %}
+      {% if showPlaceholders and content.application_image is defined and content.application_image|render|trim is not empty %}
         <div class="apicCardIcon bx--about__icon">
           {{ content.application_image }}
         </div>
@@ -52,9 +52,9 @@
       {% if applifecycleEnabled %}
         <div class="applicationType {{ content.application_lifecycle_state['#items'][0].value|clean_class }}">
           {% if content.application_lifecycle_state['#items'][0].value|upper == 'DEVELOPMENT' %}
-            {{ 'Development'|t }}
+            {% trans %}Development{% endtrans %}
           {% elseif content.application_lifecycle_state['#items'][0].value|upper == 'PRODUCTION' %}
-            {{ 'Production'|t }}
+            {% trans %}Production{% endtrans %}
           {% else %}
             {{ content.application_lifecycle_state['#items'][0].value }}
           {% endif %}
@@ -69,8 +69,14 @@
           apic_state|clean_class
         ] %}
         <div {{ my_attribute.addClass(status_classes) }}>
-          <div class="apicStatusText">{% if apic_state|lower|clean_class == 'enabled' %}
-              {{ 'Enabled'|t }} {% else %} {{ 'Disabled'|t }} {% endif %}
+          <div class="apicStatusText">
+            {% if apic_state|lower|clean_class == 'enabled' %}
+              {% trans %}Enabled{% endtrans %}
+            {% elseif apic_state|lower|clean_class == 'pending' %}
+              {% trans %}Pending{% endtrans %}
+            {% else %}
+              {% trans %}Disabled{% endtrans %}
+            {% endif %}
           </div>
         </div>
       </div>

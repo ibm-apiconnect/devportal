@@ -181,7 +181,8 @@ class Utils {
 
       $dumpHashedJson = \Drupal::state()->get('ibm_apim.dump_hashed_json');
       if ($dumpHashedJson === 'true' && $label) {
-        file_put_contents('/tmp/' . $label, $data);
+        $safe_label = basename($label);
+        file_put_contents('/tmp/' . $safe_label, $data);
       }
     }
 
@@ -406,14 +407,14 @@ class Utils {
   public function analytics_translations(): array {
 
     return [
-      'api_calls' => t('API Calls'),
-      'api_stats' => t('API Stats'),
+      'api_calls' => t('API calls'),
+      'api_stats' => t('API stats'),
       'subscriptions' => t('Subscriptions'),
-      'response_time' => t('Response Time'),
-      'average_response_time' => t('Average Response Time'),
-      'total_errors' => t('Total Errors'),
-      'total_calls' => t('Total Calls'),
-      'calls_last_100' => t('API Calls (Last 100)'),
+      'response_time' => t('Response time'),
+      'average_response_time' => t('Average Response time'),
+      'total_errors' => t('Total errors'),
+      'total_calls' => t('Total calls'),
+      'calls_last_100' => t('API calls (Last 100)'),
       'errors_last_100' => t('Errors (Last 100)'),
       '30s' => t('30s'),
       '1m' => t('1m'),
@@ -901,9 +902,38 @@ class Utils {
     return $data;
   }
 
+  /**
+   * Generates or reuse an existing correlation ID for the current operation
+   */
+  private function generateAuditCorrelationId(): void {
+    if (isset($GLOBALS['ibmApimAuditCorrelationId'])) {
+      return;
+    }
+    
+    $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+    $caller = isset($backtrace[1]) ? $backtrace[1] : [];
+    $callerClass = isset($caller['class']) ? $caller['class'] : '';
+    $callerFunction = isset($caller['function']) ? $caller['function'] : '';
+    $operationContext = $callerClass . '::' . $callerFunction;
+    
+    static $operationCorrelationIds = [];
+    if (!isset($operationCorrelationIds[$operationContext])) {
+      $uuid = openssl_random_pseudo_bytes(16);
+      $uuid[6] = chr(ord($uuid[6]) & 0x0f | 0x40);   
+      $uuid[8] = chr(ord($uuid[8]) & 0x3f | 0x80);
+      $uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($uuid), 4));
+      $operationCorrelationIds[$operationContext] = $uuid;
+    }
+    
+    $GLOBALS['ibmApimAuditCorrelationId'] = $operationCorrelationIds[$operationContext];
+  }
+
   public function logAuditEvent($eventName, $outcome, $targetType, $targetId, $requestData = NULL, $responseData = NULL) {
     // The code for this function is included from the container image so that we can share the code between Drupal code and the scripts
     try {
+      // generate a new or use an existing correlation ID for this operation
+      $this->generateAuditCorrelationId();
+      
       $site_config = \Drupal::service('ibm_apim.site_config');
       $platformApiEndpoint = $site_config->getPlatformApimEndpoint();
       if (isset($platformApiEndpoint)) {

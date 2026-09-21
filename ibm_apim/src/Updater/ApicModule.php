@@ -77,7 +77,7 @@ class ApicModule extends Module {
     foreach ($files as $file) {
       $rc = self::checkFunctionNames($file->uri);
       if ($rc !== TRUE) {
-        throw new UpdaterException(t('The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/docs/SSMNED_10.0.8?topic=extend-custom-module-development-background-prerequisites', ['%file' => $file->uri]));
+        throw new UpdaterException(t('The file (%file) contains APIC source code. This is not permitted. All method names must be unique. To modify current behavior use drupal module hooks in custom modules, see: https://www.ibm.com/docs/SSMNED_12.1.x_cd?topic=extend-custom-module-development-background-prerequisites', ['%file' => $file->uri]));
       }
     }
 
@@ -117,7 +117,7 @@ class ApicModule extends Module {
         $regex .= 'function\s+' . $prefix . '_|';
       }
       $regex = rtrim($regex, '|');
-      if (preg_match('/^\s*(' . $regex . ')/m', $data)) {
+      if (preg_match('/\b(' . $regex . ')/', $data)) {
         $rc = FALSE;
       }
     }

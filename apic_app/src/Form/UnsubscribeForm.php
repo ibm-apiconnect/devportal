@@ -92,12 +92,19 @@ class UnsubscribeForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL, $subId = NULL): array {
-    if ($appId !== NULL) {
-      $this->node = $appId;
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+     $route_match = \Drupal::routeMatch();
+    if ($route_match->getParameter('appId') !== NULL) {
+      // The AppIdParamConverter has already converted the appId to a node
+      $this->node = $route_match->getParameter('appId');
     }
-    if ($subId !== NULL) {
-      $this->sub = $subId;
+    if ($route_match->getParameter('credId') !== NULL) {
+      // The AppIdParamConverter has already converted the appId to a node
+      $this->cred = $route_match->getParameter('credId');
+    }
+    if ($route_match->getParameter('subId') !== NULL) {
+      // Get the subscription entity
+      $this->sub = $route_match->getParameter('subId');
     }
     $form = parent::buildForm($form, $form_state);
     $form['#attached']['library'][] = 'apic_app/basic';
@@ -149,10 +156,29 @@ class UnsubscribeForm extends ConfirmFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    
+    if (!isset($this->sub)) {
+      $this->messenger->addError($this->t('Subscription information is missing. Unable to unsubscribe.'));
+      $form_state->setRedirectUrl($this->getCancelUrl());
+      ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, 'Subscription not initialized');
+      return;
+    }
+    
     $appId = $this->node->application_id->value;
     $url = $this->node->apic_url->value . '/subscriptions/' . $this->sub->uuid();
+    
+    // Calling all modules implementing 'hook_apic_app_pre_unsubscribe':
+    \Drupal::moduleHandler()->invokeAll('apic_app_pre_unsubscribe', [
+      'node' => $this->node,
+      'appId' => $appId,
+      'product_url' => $this->sub->product_url(),
+      'plan' => $this->sub->plan(),
+      'subId' => $this->sub->uuid(),
+    ]);
+
     $result = $this->restService->deleteSubscription($url);
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
+
       // Find name and version of product
       $query = \Drupal::entityQuery('node');
       $query->condition('type', 'product');

@@ -57,6 +57,19 @@ function apim_profile_update_footerlinks() {
   }
 }
 
+/**
+ * Force update footer links with new translations
+ * This function updates all translations regardless of whether they exist.
+ */
+function apim_profile_force_update_footerlinks() {
+  $contactMenu = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link' => 'internal:/contact']);
+  $contactMenu = reset($contactMenu);
+  if (!empty($contactMenu)) {
+    // Force update with overwrite = TRUE
+    add_contact_menu_translations($contactMenu, TRUE);
+  }
+}
+
 function apim_profile_update_terms_page() {
   // Get the node id from the path alias
   $tandcsPath = \Drupal::entityTypeManager()->getStorage('path_alias')->loadByProperties(['alias' => '/tsandcs']);

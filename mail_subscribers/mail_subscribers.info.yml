@@ -1,9 +1,9 @@
 name: Mail Subscribers
 type: module
 description: Email subscribers of a given API Management Plan, Product or API
-package: IBM API Developer Portal
+package: IBM CMS Portal
 core_version_requirement: ^8 || ^9 || ^10 || ^11
-version: 6.2.4
+version: 8.x-99.0.0
 project: mail_subscribers
 libraries:
 - mail_subscribers/basic

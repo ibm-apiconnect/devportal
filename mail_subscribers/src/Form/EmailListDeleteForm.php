@@ -1,4 +1,16 @@
 <?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 namespace Drupal\mail_subscribers\Form;
 
 use Drupal\Core\Form\ConfirmFormBase;
@@ -123,7 +135,7 @@ class EmailListDeleteForm extends ConfirmFormBase {
       $this->emailList->delete();
 
       \Drupal::messenger()->addMessage($this->t('%title has been deleted.', ['%title' => $this->emailList->title->value]));
-
+      \Drupal::service('ibm_apim.utils')->logAuditEvent('PORTAL_MAIL_SUBSCRIBERS_LIST_DELETED' , 'success', 'mail_subscribers_email_list' , 'email_list' . $this->emailList->id(),$this->emailList->toArray());
       // Redirect or perform additional actions if needed.
       $form_state->setRedirect('mail_subscribers.settings');
     }

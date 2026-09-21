@@ -1,3 +1,13 @@
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 /**
  * Form styles.
  */
@@ -50,37 +60,16 @@
     }
   }
   &:after {
-    color: $brand-primary;
-    content: '▼';
-    font-style: normal;
-    font-weight: 400;
-    line-height: 1;
-    margin-top: -.5em;
-    padding-right: .5em;
-    pointer-events: none;
+    content: '';
     position: absolute;
-    right: 0;
+    right: 0.75rem; // spacing from right
     top: 50%;
-    z-index: 10;
-
-    // Use a more stylish icon if the theme uses glyphicons.
-    .has-glyphicons & {
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      content: '\e114'; // .glyphicon-chevron-down
-      display: inline-block;
-      font-family: 'Glyphicons Halflings';
-      font-size: 0.625rem;
-    }
-    .has-error & {
-      color: $state-danger-text;
-    }
-    .has-success & {
-      color: $state-success-text;
-    }
-    .has-warning & {
-      color: $state-warning-text;
-    }
+    width: 0.5rem;  // size
+    height: 0.5rem;
+    border-right: 2px solid var(--icon-primary); // Carbon text color
+    border-bottom: 2px solid var(--icon-primary);
+    transform: translateY(-50%) rotate(45deg); // create chevron
+    pointer-events: none;
   }
 }
 
@@ -95,41 +84,41 @@ textarea.form-control {
   display: flex;
   flex-direction: row-reverse;
   .button,.btn {
-    margin: 1rem 1rem 1rem 0;
-    background-color: $btn-default-bg;
-    color: $btn-default-color;
-    border: 1px solid $btn-default-border;
+    margin: 1rem 0;
+    margin-inline-end: 1rem;
+    background-color: var(--btn-default-bg);
+    color: var(--btn-default-color);
+    border: 1px solid var(--btn-default-border);
     &:first-child {
       margin-right: 0;
     }
     &:hover {
-      color: $btn-primary-color;
-      background-color: $hover-secondary;
+      color: var(--btn-primary-color);
+      background-color: var(--btn-default-hover-bg);
     }
     &:focus{
-      color: $btn-primary-color;
-      inset: $inverse-01;
-      border: 1px solid $focus;
+      color: var(--btn-primary-color);
+      border: 1px solid var(--interactive-focus);
     }
     &.button--primary, &.btn-primary, &.btn-success{
-      background-color: $btn-primary-bg;
-      color: $btn-primary-color;
-      border: 1px solid $btn-primary-border;
+      background-color: var(--btn-primary-bg);
+      color: var(--btn-primary-color);
+      border: 1px solid var(--btn-primary-border);
       &:hover{
-        background-color: $hover-primary;
+        background-color: var(--btn-primary-hover-bg);
       }
     }
     &.btn-danger
     {
-      background-color: $brand-danger;
-      border-color: $brand-danger;
+      background-color: var(--brand-danger);
+      border-color: var(--brand-danger);
       &:hover{
-        background-color: $hover-danger;
-        border-color: $hover-danger;
+        background-color: var(--hover-danger);
+        border-color: var(--hover-danger);
       }
       &:active {
-        background-color: $active-danger;
-        border-color: $active-danger;
+        background-color: var(--active-danger);
+        border-color: var(--active-danger);
       }
     }
     &.dropdown-toggle {
@@ -145,11 +134,11 @@ textarea.form-control {
     padding: 0;
 
     > li > a {
-      color: $text-color;
+      color: var(--text-color);
       font-size: 0.875rem;
       &:hover, &:focus {
-        background-color: $btn-primary-bg;
-        color: $btn-primary-color;
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-color);
       }
     }
   }
@@ -162,21 +151,21 @@ textarea.form-control {
 }
 
 body.bx--global-light-ui {
-  color: $text-color;
-  background-color: $body-bg;
+  color: var(--text-color);
+  background-color: var(--body-bg);
 }
 
 input::-webkit-input-placeholder {
-  color: $input-color-placeholder;
+  color: var(--input-color-placeholder);
 }
 input::-moz-placeholder {
-  color: $input-color-placeholder;
+  color: var(--input-color-placeholder);
 }
 input:-ms-input-placeholder {
-  color: $input-color-placeholder;
+  color: var(--input-color-placeholder);
 }
 input::placeholder {
-  color: $input-color-placeholder;
+  color: var(--input-color-placeholder);
 }
 
 input[type="checkbox"],
@@ -185,9 +174,9 @@ input[type="checkbox"],
   height: 1.125rem;
   width: 1.125rem;
   margin: 0 .75rem 0 0;
-  background-color: $field-01;
+  background-color: var(--field-01);
   border-radius: 2px;
-  border: 1px solid $ui-05;
+  border: 1px solid var(--ui-05);
   overflow: hidden;
   cursor: pointer;
 }
@@ -207,8 +196,8 @@ textarea,
   min-width: 9.375rem;
   padding: .5rem 0 .5rem 1rem;
   margin: .25rem 0;
-  color: $input-color;
-  background-color: $input-bg;
+  color: var(--input-color);
+  background-color: var(--input-bg);
   font-weight: 400;
 }
 
@@ -219,6 +208,19 @@ textarea,
   &:last-child{
     margin: 0;
   }
+}
+
+.field--widget-faqfield-default .ck-editor textarea {
+  min-height: unset;
+}
+
+.field--widget-faqfield-default .form-type-textarea {
+  margin-bottom: 0;
+}
+
+.field--widget-faqfield-default .filter-wrapper {
+  // background-color: $ui-background;
+  border: 0;
 }
 
 .container-inline .bx--form-item.form-item:last-child {
@@ -239,17 +241,17 @@ textarea,
   display: inline-block;
   vertical-align: baseline;
   margin-bottom: .5rem;
-  color: $label-color;
+  color: var(--label-color);
   padding: 0;
   letter-spacing: .32px;
   line-height: 1rem;
 }
 
 .form-required:after {
-  color: $alert-danger-border;
+  color: var(--alert-danger-border);
   content: "*";
   background-image: none;
-  padding-left: 0.25rem;
+  padding-inline-start: 0.25rem;
 }
 
 .bx--global-light-ui .form-item label.option {
@@ -259,17 +261,21 @@ textarea,
 .bx--global-light-ui .form-item input,
 .bx--global-light-ui .form-item input:hover,
 .bx--global-light-ui .form-item input:focus {
-  color:                $input-color;
-  background-color: 	$input-bg;
+  color:                var(--input-color);
+  background-color: 	var(--input-bg);
   font-size: 0.875rem;
   border-radius: 0;
   border: none;
   height: 2.5rem;
   width: 33rem;
-  border-bottom: 1px solid $input-border;
+  border-bottom: 1px solid var(--input-border);
   @media (max-width: $screen-xs-min) {
     width: 100%;
   }
+}
+.bx--global-light-ui .form-item input.form-text {
+  width: 100%;
+  max-width: 33rem;
 }
 
 .bx--global-light-ui .form-item input:read-only:not([type=file]),
@@ -282,7 +288,7 @@ textarea,
 }
 
 .bx--global-light-ui .form-control:focus {
-  outline: 2px solid #0f62fe;
+  outline: 2px solid var(--interactive-focus);
   outline-offset: -2px;
   box-shadow: unset;
 }
@@ -299,9 +305,9 @@ textarea,
   margin: 1rem 0 1.5rem 1rem;
   padding: 6px;
   line-height: initial;
-  background-color: $btn-default-bg;
+  background-color: var(--btn-default-bg);
   svg {
-    fill: $btn-default-color;
+    fill: var(--btn-default-color);
   }
 }
 
@@ -316,25 +322,27 @@ textarea,
 }
 
 .bx--global-light-ui .views-exposed-form .form-item {
-  margin-right: 0.5rem;
+  margin-inline-end: 0.5rem;
 }
 
 select,
 .select-wrapper select {
   display: block;
-  padding: .35rem 2.75rem .35rem 1rem;;
+  padding: .35rem 0rem;;
+  padding-inline-start: 1rem;
+  padding-inline-end: 2.75rem;
   border: none;
   border-radius: 0;
   height: 2.5rem;
   cursor: pointer;
-  color: $input-color;
-  background-color: $input-bg;
-  border-bottom: 1px solid $input-border;
+  color: var(--input-color);
+  background-color: var(--input-bg);
+  border-bottom: 1px solid var(--input-border);
   font-size:0.875rem;
 }
 
 .select-wrapper:after{
-  color: $text-color;
+  color: var(--text-color);
 }
 
 .votingapi-widgets .bx--form-item .select-wrapper:after {
@@ -344,14 +352,14 @@ select,
 
 .bx--select-optgroup,
 .bx--select-option {
-  color: $input-color; }
+  color: var(--input-color); }
 
 .bx--global-light-ui fieldset.form-item {
   legend {
     border:unset;
     font-weight:400;
     font-size: .75rem;
-    color: $label-color;
+    color: var(--legend-color);
     line-height: 1rem;
     letter-spacing: .32px;
     display: inline-block;
@@ -363,7 +371,7 @@ select,
 .bx--global-light-ui .form-type-radio label,
 .bx--global-light-ui .form-type-checkbox label {
   font-weight: normal;
-  color: $label-color;
+  color: var(--label-color);
   font-size: 0.875rem;
 }
 
@@ -391,12 +399,12 @@ input[type="checkbox"].bx--checkbox {
 }
 
 .bx--global-light-ui .bx--radio-button__appearance {
-  background-color: $check-radio-bg;
+  background-color: var(--check-radio-bg);
   border-radius: 50%;
-  border: 1px solid $check-radio-border;
+  border: 1px solid var(--check-radio-border);
   height: 1.125rem;
   width: 1.125rem;
-  margin-right: 0.5rem;
+  margin-inline-end: 0.5rem;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -415,11 +423,11 @@ input[type="checkbox"].bx--checkbox {
   width: .5rem;
   height: .5rem;
   border-radius: 50%;
-  background-color: $check-radio-bg-checked;
+  background-color: var(--check-radio-bg-checked);
 }
 
 .bx--global-light-ui .bx--radio-button:checked + .bx--radio-button__appearance {
-  border-color: $check-radio-bg-checked;
+  border-color: var(--check-radio-bg-checked);
 }
 
 .bx--global-light-ui .bx--radio-button:disabled ~*,
@@ -445,14 +453,14 @@ input[type="checkbox"].bx--checkbox {
   display: inline-block;
   height: 1rem;
   width: 1rem;
-  margin-right: .5rem;
-  background-color: $check-radio-bg;
-  border: 1px solid $check-radio-border;
+  margin-inline-end: .5rem;
+  background-color: var(--check-radio-bg);
+  border: 1px solid var(--check-radio-border);
 }
 
 .bx--global-light-ui .bx--checkbox:focus + .bx--checkbox-appearance,
 .bx--global-light-ui .bx--checkbox:focus + .bx--checkbox-label .bx--checkbox-appearance {
-  box-shadow: 0 0 0 2px $check-radio-color-checked,0 0 0 4px $input-focus;
+  box-shadow: 0 0 0 2px var(--check-radio-color-checked),0 0 0 4px var(--input-focus);
 }
 .bx--global-light-ui .bx--checkbox-appearance svg {
   display: none;
@@ -468,14 +476,14 @@ input[type="checkbox"].bx--checkbox {
   -webkit-box-align: baseline;
   -ms-flex-align: baseline;
   align-items: baseline;
-  background-color: $check-radio-bg-checked;
-  border-color: $check-radio-border-checked;
+  background-color: var(--check-radio-bg-checked);
+  border-color: var(--check-radio-border-checked);
 }
 
 .bx--global-light-ui .bx--checkbox-checkmark {
   display: none;
   fill: currentColor;
-  color: $check-radio-color-checked;
+  color: var(--check-radio-color-checked);
   position: absolute;
   top: .25rem;
 }
@@ -507,7 +515,7 @@ input[type="checkbox"].bx--checkbox {
 .bx--global-light-ui .form-item .description,
 .bx--global-light-ui  .password-strength__title
 {
-  color: $label-color;
+  color: var(--label-color);
   overflow: hidden;
   line-height: 1.5rem;
   font-size: .75rem;
@@ -521,6 +529,7 @@ input[type="checkbox"].bx--checkbox {
 
 .bx--global-light-ui .password-strength__meter {
   margin-top: 0;
+  background-color: var(--layer-accent-03);
 }
 .bx--global-light-ui .apic-user-form-wrapper .form-group {
   margin-bottom: 0;
@@ -529,8 +538,8 @@ input[type="checkbox"].bx--checkbox {
 .bx--global-light-ui .block-main-content .form-item input,
 .bx--global-light-ui .block-main-content .form-item input:hover,
 .bx--global-light-ui .block-main-content .form-item input:focus {
-  color: $input-color;
-  background-color: $input-bg;
+  color: var(--input-color);
+  background-color: var(--input-bg);
   border-radius: 0;
   border: none;
   height: 2.5rem;
@@ -575,47 +584,53 @@ input[type="checkbox"].bx--checkbox {
   font-weight: $button-font-weight;
   font-size: $button-font-size;
   height: $button-height;
-  padding: $button-padding;
+  padding-block: $button-padding-block;
+  padding-inline-start: $button-padding-inline-start;
+  padding-inline-end: $button-padding-inline-end;
   text-align: center;
   text-decoration: none;
-  transition-duration: 250ms;
-  transition-timing-function: ease-in;
+  transition-duration: 70ms;
+  transition-timing-function: cubic-bezier(0,0,.38,.9);
   white-space: nowrap;
-  background-color: $btn-primary-bg;
-  color: $btn-primary-color;
-  border: $button-border-width solid $btn-primary-border;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-color);
+  border: $button-border-width solid var(--btn-primary-border);
   box-shadow: none;
   &.btn-sm {
-    padding: $button-padding-field;
+    padding-block: $button-padding-field-block;
+    padding-inline-start: $button-padding-field-inline-start;
+    padding-inline-end: $button-padding-field-inline-end;
     height: 2.5rem;
   }
   &.btn-xs {
-     padding: $button-padding-sm;
+     padding-block: $button-padding-sm-block;
+     padding-inline-start: $button-padding-sm-inline-start;
+     padding-inline-end: $button-padding-sm-inline-end;
      height: 2rem;
    }
   &.bx--btn--ghost {
     background-color: transparent;
-    color: $link-01;
+    color: var(--link-01);
     border: 0;
   }
   &.bx--btn--ghost:hover {
-    color: $hover-primary-text;
-    background-color: $hover-ui;
+    color: var(--hover-primary-text);
+    background-color: var(--ghost-button-hover);
   }
   &.bx--btn--ghost:focus {
-    border:  1px solid $focus;
+    border:  1px solid var(--interactive-focus);
   }
   &.bx--btn--ghost:disabled,
   &.bx--btn--ghost[disabled]{
-    color: $disabled-02;
+    color: var(--text-disabled);
   }
   &.bx--btn--field {
-    color: $black-01;
+    color: var(--black-01);
     padding: calc(0.675rem - 3px) 16px;
     height: unset;
   }
   &.bx--btn--field:hover {
-    color: $black-01;
+    color: var(--black-01);
   }
 }
 
@@ -634,35 +649,35 @@ input[type="checkbox"].bx--checkbox {
   &[disabled]:focus,
   &.bx--btn--disabled:focus {
     cursor: not-allowed;
-    fill: $btn-disabled-color;
-    color: $btn-disabled-color;
-    background-color: $btn-disabled-bg;
+    fill: var(--btn-disabled-color);
+    color: var(--btn-disabled-color);
+    background-color: var(--btn-disabled-bg);
   }
 }
 .bx--global-light-ui .button.bx--btn--tertiary {
   background-color: transparent;
-  border: 1px solid $interactive-03;
-  color: $interactive-03;
+  border: 1px solid var(--btn-tertiary-color);
+  color: var(--btn-tertiary-color);
 }
 .bx--global-light-ui .button.bx--btn--tertiary:hover {
-  background-color: $hover-tertiary;
-  border: 1px solid $hover-tertiary;
-  color: $text-04;
+  background-color: var(--btn-tertiary-hover-bg);
+  border: 1px solid var(--btn-tertiary-hover-bg);
+  color: var(--text-04);
 }
 .bx--global-light-ui .button.bx--btn--tertiary:active {
-  background-color: $active-tertiary;
+  background-color: var(--btn-tertiary-active-bg);
 }
 .bx--global-light-ui .button.bx--btn--tertiary:focus {
-  background-color: $interactive-03;
-  border: 1px solid $focus;
-  inset: $inverse-01;
+  background-color: var(--btn-tertiary-color);
+  border: 1px solid var(--interactive-focus);
+  
 }
 .bx--global-light-ui .button.bx--btn--tertiary {
   &:disabled,
   &[disabled] {
     background-color: transparent;
-    border: 1px solid $disabled-02;
-    color: $disabled-02;
+    border: 1px solid var(--disabled-02);
+    color: var(--text-disabled);
   }
 }
 
@@ -676,19 +691,18 @@ input[type="checkbox"].bx--checkbox {
 
 .bx--global-light-ui .button:hover,
 .bx--global-light-ui  .bx--btn--primary:hover  {
-  background-color:$hover-primary;
-  color: $btn-primary-color;
+  background-color:var(--btn-primary-hover-bg);
+  color: var(--btn-primary-color);
 }
 
 .bx--global-light-ui .button:focus,
 .bx--global-light-ui .bx--btn--primary:focus {
-  border-color:	$focus;
-	box-shadow: 	inset 0 0 0 1px $inverse-01;
+	box-shadow: 	inset 0 0 0 1px var(--inverse-01);
 }
 
 .bx--global-light-ui .button:active ,
 .bx--global-light-ui  .bx--btn--primary:active{
-  background-color:$active-primary;
+  background-color:var(--btn-primary-active-bg);
 }
 
 
@@ -696,24 +710,24 @@ input[type="checkbox"].bx--checkbox {
 .bx--global-light-ui button.apicSecondary,
 .bx--global-light-ui .bx--btn.bx--btn--secondary,
 .bx--global-light-ui button.link-edit-summary {
-  border: 1px solid $btn-default-border;
-  color: $btn-default-color;
-  background-color: $btn-default-bg;
+  border: 1px solid var(--btn-default-border);
+  color: var(--btn-default-color);
+  background-color: var(--btn-default-bg);
 }
 
 .bx--global-light-ui .button.apicSecondary:focus,
 .bx--global-light-ui button.apicSecondary:focus,
 .bx--global-light-ui button.link-edit-summary:focus{
-  color: $btn-primary-color;
-  inset: $inverse-01;
-  border: $focus;
+  color: var(--btn-default-color);
+  
+  border: 1px solid var(--interactive-focus);
 }
 
 .bx--global-light-ui .button.apicSecondary:hover,
 .bx--global-light-ui button.apicSecondary:hover,
 .bx--global-light-ui button.link-edit-summary:hover {
-  color: $btn-primary-color;
-  background-color: $hover-secondary;
+  color: var(--btn-default-color);
+  background-color: var(--btn-default-hover-bg);
 }
 
 .bx--global-light-ui button.link-edit-summary {
@@ -725,39 +739,46 @@ input[type="checkbox"].bx--checkbox {
 .bx--global-light-ui.route-entityuseredit-form .button.apicSecondary#edit-delete {
   margin-right: auto;
   margin-left: 0;
-  background-color: $brand-danger;
-  border-color: $brand-danger;
+  background-color: var(--brand-danger);
+  border-color: var(--brand-danger);
+  color: var(--text-on-color);
   &:hover{
-    background-color: $hover-danger;
-    border-color: $hover-danger;
+    background-color: var(--hover-danger);
+    border-color: var(--hover-danger);
   }
   &:active {
-    background-color: $active-danger;
-    border-color: $active-danger;
+    background-color: var(--active-danger);
+    border-color: var(--active-danger);
   }
 }
 
 .bx--global-light-ui .button.apicTertiary,
 .bx--global-light-ui button.apicTertiary,
 .bx--global-light-ui button.bx--btn--tertiary {
-  border: 1px solid $interactive-03;
-  color: $interactive-03;
+  border: 1px solid var(--btn-tertiary-color);
+  color: var(--btn-tertiary-color);
   background-color: transparent;
+  svg {
+    fill: var(--btn-tertiary-color);
+  }
 }
 
 .bx--global-light-ui .button.apicTertiary:focus,
 .bx--global-light-ui button.apicTertiary:focus,
 .bx--global-light-ui button.bx--btn--tertiary:focus {
-  color: $interactive-03;
-  inset: $inverse-01;
-  border:  1px solid $focus;
+  color: var(--btn-tertiary-color);
+
+  border: 1px solid var(--interactive-focus);
 }
 
 .bx--global-light-ui .button.apicTertiary:hover,
 .bx--global-light-ui button.apicTertiary:hover,
 .bx--global-light-ui button.bx--btn--tertiary:hover {
-  color: $text-04;
-  background-color: $hover-tertiary;
+  color: var(--text-04);
+  background-color: var(--btn-tertiary-hover-bg);
+  svg {
+    fill: var(--text-04);
+  }
 }
 
 .bx--global-light-ui  button.bx--toast-notification__close-button,
@@ -807,36 +828,45 @@ input[type="checkbox"].bx--checkbox {
   height: 2rem;
 }
 
+/* Override the general form-actions rule specifically for view filters */
 .bx--global-light-ui .view-filters.form-group .form-actions {
   margin-bottom: 2rem;
-  display: inline-block;
+  display: flex;           // Allow us to reorder buttons
+  flex-direction: row;     // Keep buttons in a row
+  
   button {
-    color: $btn-primary-color;
-    background-color: $btn-primary-bg;
-    border: 1px solid $btn-primary-border;
-    padding: $button-padding-sm;
+    color: var(--btn-primary-color);
+    background-color: var(--btn-primary-bg);
+    border: 1px solid var(--btn-primary-border);
+    padding-block: $button-padding-sm-block;
+    padding-inline-start: $button-padding-sm-inline-start;
+    padding-inline-end: $button-padding-sm-inline-end;
     height: 2rem;
     margin: 0 0.5rem 0 0 ;
-    &:hover {
-      background-color: $hover-primary;
-    }
-    &#edit-reset {
-      border: 1px solid $btn-default-border;
-      color: $btn-default-color;
-      background-color: $btn-default-bg;
 
+    &:hover {
+      background-color: var(--btn-primary-hover-bg);
+    }
+    
+    /* RESET BUTTON STYLE (secondary look) */
+    &[id^="edit-reset-products"],
+    &#edit-reset-application-subscriptions {
+      border: 1px solid var(--btn-default-border);
+      color: var(--btn-default-color);
+      background-color: var(--btn-default-bg);
+      order: -1; 
+  
       &:hover {
-        color: $btn-primary-color;
-        background-color: $hover-secondary;
+        color: var(--btn-default-color);
+        background-color: var(--btn-default-hover-bg);
       }
-      &:focus{
-        color: $btn-primary-color;
-        inset: $inverse-01;
-        border: $focus;
+      &:focus {
+        outline: 2px solid var(--interactive-focus);
+        outline-offset: 2px;
       }
     }
   }
-}
+}   
 
 .bx--global-light-ui .views-exposed-form .form-item label {
   display: block;
@@ -850,6 +880,26 @@ input[type="checkbox"].bx--checkbox {
 .bx--global-light-ui .field--type-text-with-summary .form-textarea-wrapper {
   clear: both;
 }
+
+.bx--global-light-ui {
+  .apicProductTermsOfService,
+  .apicTermsOfService,
+  .termsOfService {
+    .field--type-string-long,
+    .field--type-text-long {
+      white-space: pre-line;
+    }
+  }
+
+  .field--type-text-with-summary,
+  .field--type-text-long,
+  .field--type-string-long {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
 
 .context-user-login .form-actions .button.button--primary,
 .context-user-login .form-actions .button.btn-primary,
@@ -868,7 +918,7 @@ input[type="checkbox"].bx--checkbox {
 }
 
 .apic-user-form-footer {
-  padding-left: 1rem;
+  padding-inline-start: 1rem;
   .apic-user-form-text {
     text-align: left;
     padding: 1.5rem 1rem 1.5rem 1rem;
@@ -937,31 +987,43 @@ input[type="checkbox"].bx--checkbox {
 .route-consumerorgbilling-delete-payment .main-container .row,
 .route-change-pwd-pagechange-password-form.pass-reset .main-container .row,
 .route-apic-appdisplay-creds .main-container .row,
-form.user-pass-reset,
 .apic-user-form, 
-.route-consumerorgdelete-invite .main-container .row {
-  background-color: $default-bg-light;
+.route-consumerorgdelete-invite .main-container .row,
+.page-node-type-forum .forumContent,
+.context--support,
+.tabs-left>.tab-content,
+.field--widget-text-textarea-with-summary,
+#edit-author,
+#edit-source-langcode,
+.table-striped>tbody>tr:hover {
+  --ck-color-base-background: var(--modal-input-bg);
+  --ck-color-widget-editable-focus-background: var(--layer-active-03);
+  background-color: var(--default-bg-light);
   border: unset;
 
   .form-item input,
   .form-item input:hover,
   .form-item textarea,
   .form-item select {
-    background-color: $default-input-bg;
+    background-color: var(--modal-input-bg);
     border: unset;
-    border-bottom: 1px solid $default-input-border;
+    border-bottom: 1px solid var(--modal-input-border);
   }
 
 }
+.field--widget-text-textarea-with-summary{
+  background-color: unset;
+}
+
 .route-ibm-apimsubscription-wizard .modal-dialog,
 .route-ibm-apimsubscription-wizardnoplan .modal-dialog {
   .form-item input,
   .form-item input:hover,
   .form-item textarea,
   .form-item select {
-    background-color: $default-input-bg;
+    background-color: var(--default-input-bg);
     border: unset;
-    border-bottom: 1px solid $default-input-border;
+    border-bottom: 1px solid var(--default-input-border);
   }
 }
 
@@ -1034,6 +1096,7 @@ form.user-pass-reset,
     margin: unset;
     margin-bottom: 1rem;
     padding:unset;
+    background-color: transparent;
   }
 
   #edit-actions, .form-actions {
@@ -1051,6 +1114,17 @@ form.user-pass-reset,
     }
   }
 }
+
+.route-apic-appreset-clientid .main-container .row .page-header {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.route-apic-appreset-clientsecret .main-container .row .page-header {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 .route-change-pwd-pagechange-password-form.pass-reset .main-container .row {
   .apic-user-form {
     padding-left: 0;
@@ -1087,7 +1161,7 @@ form.user-pass-reset,
 
 .apicFormHeader,
 .apic-user-form-header {
-  color: $default-header;
+  color: var(--default-header);
 }
 
 .apicFormHeader {
@@ -1100,7 +1174,7 @@ form.user-pass-reset,
 .apicFormContent {
   margin-bottom: $spacing-07;
   padding: $spacing-05;
-  background: $default-bg-light;
+  background: var(--default-bg-light);
 }
 
 .apicFormContent table {
@@ -1114,18 +1188,18 @@ form.user-pass-reset,
 }
 
 .apicFormContent img {
-  margin-right: $spacing-02;
+  margin-inline-end: $spacing-02;
 }
 
 .apicFormFooter {
-  border-top:1px solid $footer-default-bordercolor;
+  border-top:1px solid var(--footer-default-bordercolor);
   padding-top:$spacing-07;
   display: flex;
   justify-content: flex-end;
 }
 
 .apicFormFooter .button:not(:last-child) {
-  margin-right: 1rem;
+  margin-inline-end: 1rem;
 }
 
 .apicFormWrapper {
@@ -1161,7 +1235,7 @@ form.user-pass-reset,
 .apicFormLine,
 .apic-user-form-line {
   width: 1px;
-  background-color: $default-line;
+  background-color: var(--default-line);
 }
 
 .apicFormLine {
@@ -1174,7 +1248,7 @@ form.user-pass-reset,
 
 .apicFormOr,
 .apic-user-form-or {
-  color: $default-line;
+  color: var(--default-line);
 }
 
 .apicFormOr
@@ -1184,16 +1258,16 @@ form.user-pass-reset,
 }
 
 .is-weak {
-  background-color: $brand-danger;
+  background-color: var(--support-error);
 }
 
 .is-fair,
 .is-good {
-  background-color: $brand-warning;
+  background-color: var(--support-warning);
 }
 
 .is-strong {
-  background-color: $brand-success;
+  background-color: var(--support-success);
 }
 
 button.registry-button,
@@ -1215,20 +1289,23 @@ button.github-button:hover {
 
 /* deal FF cutting off buttons in input field */
 input[type="file"] {
-  -moz-box-sizing: content-box;
+  -moz-box-sizing: border-box;
 }
 
 /* clipboardjs */
 .bx--global-light-ui input.clipboardjs {
-  background-color: #f4f4f4;
+  background-color: var(--field-03);
   border-radius: 0;
   border: 0;
+}
+.bx--global-light-ui .form-item input.clipboardjs:hover {
+  background-color: var(--field-hover-03);
 }
 
 .application-create-form button[value="Remove"], .application-update-form button[value="Remove"], .modal-application-create-form button[value="Remove"] {
   height: 40px;
   padding: initial;
-  padding-right: 60px;
-  padding-left: 12px;
-  margin-left: 10px;
+  padding-inline-end: 60px;
+  padding-inline-start: 12px;
+  margin-inline-start: 10px;
 }

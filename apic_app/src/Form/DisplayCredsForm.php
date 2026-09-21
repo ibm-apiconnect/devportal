@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2024
+ * (C) Copyright IBM Corporation 2018, 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -92,10 +92,13 @@ class DisplayCredsForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
-    if ($appId !== NULL) {
-      $this->node = $appId;
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $route_match = \Drupal::routeMatch();
+    if ($route_match->getParameter('appId') !== NULL) {
+      // The AppIdParamConverter has already converted the appId to a node
+      $this->node = $route_match->getParameter('appId');
     }
+
     $credentials = $this->app_store->get('credentials');
     if (!isset($credentials)) {
       $form = [];
@@ -136,10 +139,10 @@ class DisplayCredsForm extends FormBase {
       $form['#attached']['library'][] = 'clipboardjs/drupal';
       if (isset($this->creds['client_id'])) {
         $form['client_id'] = [
-          '#markup' => Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input id="clientIDInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientIDInputLabel" readonly aria-readonly value="' . $this->creds['client_id'] . '" />
+          '#markup' => Markup::create('<div class="clientIDContainer"><label for="clientIDInput" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input id="clientIDInput" class="clipboardjs password-field passwordCreds" type="password" readonly aria-readonly value="' . $this->creds['client_id'] . '" />
                 <div id="hiddenClientIDInput" class="offscreen-field">' . $this->creds['client_id'] . '</div>
                   <span class="clipboardjs clipboardjs-btn" data-toggle="tooltip" data-placement="auto" title="' . t('Copy Key') . '">
-                    <button class="clipboardjs-button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientIDInput">
+                    <button class="clipboardjs-button" aria-label="' . t('Copy Key') . '" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientIDInput">
                     <div class="clipboardjs-tooltip">
                         ' . file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_app') . "/images/clipboard.svg") . '
                         <span class="tooltiptext clipboardjs-tooltip"></span>
@@ -152,10 +155,10 @@ class DisplayCredsForm extends FormBase {
       }
       if (isset($this->creds['client_secret'])) {
         $form['client_secret'] = [
-          '#markup' => Markup::create('<div class="clientSecretContainer"><label for="client_secret" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input id="clientSecretInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientSecretInputLabel" readonly aria-readonly value="' . $this->creds['client_secret'] . '" />
+          '#markup' => Markup::create('<div class="clientSecretContainer"><label for="clientSecretInput" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input id="clientSecretInput" class="clipboardjs password-field passwordCreds" type="password" readonly aria-readonly value="' . $this->creds['client_secret'] . '" />
                 <div id="hiddenClientSecretInput" class="offscreen-field">' . $this->creds['client_secret'] . '</div>
                   <span class="clipboardjs clipboardjs-btn" data-toggle="tooltip" data-placement="auto" title="' . t('Copy Secret') . '">
-                    <button class="clipboardjs-button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientSecretInput">
+                    <button class="clipboardjs-button" aria-label="' . t('Copy Secret') . '" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientSecretInput">
                     <div class="clipboardjs-tooltip">
                         ' . file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_app') . "/images/clipboard.svg") . '
                         <span class="tooltiptext clipboardjs-tooltip""></span>
@@ -171,13 +174,13 @@ class DisplayCredsForm extends FormBase {
     else {
       if (isset($this->creds['client_id'])) {
         $form['client_id'] = [
-          '#markup' => Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input class="form-control" id="client_id" readonly value="' . $this->creds['client_id'] . '"></div></div>'),
+          '#markup' => Markup::create('<div class="clientIDContainer"><label for="clientIDInput" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input class="form-control" id="clientIDInput" readonly value="' . $this->creds['client_id'] . '"></div></div>'),
           '#weight' => 10,
         ];
       }
       if (isset($this->creds['client_secret'])) {
         $form['client_secret'] = [
-          '#markup' => Markup::create('<div class="clientSecretContainer"><label for="client_secret" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input class="form-control" id="client_secret" readonly value="' . $this->creds['client_secret'] . '"></div></div>'),
+          '#markup' => Markup::create('<div class="clientSecretContainer"><label for="clientSecretInput" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input class="form-control" id="clientSecretInput" readonly value="' . $this->creds['client_secret'] . '"></div></div>'),
           '#weight' => 20,
         ];
       }

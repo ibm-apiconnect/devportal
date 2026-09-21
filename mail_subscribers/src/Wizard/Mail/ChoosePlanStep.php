@@ -18,6 +18,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Messenger\Messenger;
 use Drupal\node\Entity\Node;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 class ChoosePlanStep extends FormBase {
 
@@ -75,7 +76,7 @@ class ChoosePlanStep extends FormBase {
     $productsPlans = [];
     foreach($products as $product) {
       foreach ($product->product_plans->getValue() as $arrayValue) {
-        $productsPlans[$product->id()][] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+        $productsPlans[$product->id()][] = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
       }
     }
     if ($productsPlans === NULL || empty($productsPlans)) {

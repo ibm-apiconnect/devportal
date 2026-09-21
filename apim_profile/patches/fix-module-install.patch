@@ -1,22 +1,19 @@
-@@ This patch file combines patches taken from https://www.drupal.org/node/2583799#comment-10572256
-@@ with a small patch of our own (the change to UpdateManagerInstall) to allow modules and themes
-@@ to be installed in the Drupal portal as the functionality was removed.
---- core/lib/Drupal/Core/Updater/Module.php     2025-01-06 22:41:17
-+++ core/lib/Drupal/Core/Updater/Module.php        2025-01-08 10:14:55
+--- core/lib/Drupal/Core/Updater/Module.php
++++ core/lib/Drupal/Core/Updater/Module.php
 @@ -2,6 +2,8 @@
-
+ 
  namespace Drupal\Core\Updater;
-
+ 
 +use Drupal\Core\Url;
 +
  /**
   * Defines a class for updating modules.
   *
-@@ -35,6 +37,34 @@
-     }
+@@ -22,6 +24,34 @@
+     parent::__construct($source, $root);
    }
-
-+  public function postInstallTasks() {
+ 
++    public function postInstallTasks() {
 +    // Since this is being called outside of the primary front controller,
 +    // the base_url needs to be set explicitly to ensure that links are
 +    // relative to the site root.
@@ -45,30 +42,30 @@
 +  }
 +
    /**
-    * {@inheritdoc}
-    */
-
---- core/lib/Drupal/Core/Updater/Theme.php      2025-01-08 10:15:40
-+++ core/lib/Drupal/Core/Updater/Theme.php 2025-01-08 10:15:36
+    * Returns the directory where a module should be installed.
+    *
+--- core/lib/Drupal/Core/Updater/Theme.php
++++ core/lib/Drupal/Core/Updater/Theme.php
 @@ -2,6 +2,8 @@
-
+ 
  namespace Drupal\Core\Updater;
-
+ 
 +use Drupal\Core\Url;
 +
  /**
   * Defines a class for updating themes.
   *
-@@ -37,9 +39,42 @@
+@@ -49,10 +51,43 @@
+       return $this->root . '/' . $this->getRootDirectoryRelativePath();
      }
    }
-
++  
 +  public function postInstall() {
 +    // Update the theme info.
 +    clearstatcache();
 +    \Drupal::service('extension.list.theme')->reset();
 +  }
-+
+ 
    /**
     * {@inheritdoc}
     */
@@ -102,10 +99,9 @@
    public static function getRootDirectoryRelativePath() {
      return 'themes';
    }
-
---- core/lib/Drupal/Core/Updater/Updater.php    2025-01-06 22:41:17
-+++ core/lib/Drupal/Core/Updater/Updater.php       2025-01-08 10:16:34
-@@ -290,7 +290,6 @@
+--- core/lib/Drupal/Core/Updater/Updater.php
++++ core/lib/Drupal/Core/Updater/Updater.php
+@@ -300,7 +300,6 @@
     * @throws \Drupal\Core\Updater\UpdaterFileTransferException
     */
    public function install(&$filetransfer, $overrides = []) {
@@ -113,25 +109,25 @@
      try {
        // Establish arguments with possible overrides.
        $args = $this->getInstallArgs($overrides);
-@@ -404,7 +403,6 @@
+@@ -418,7 +417,6 @@
     * Performs actions after installation.
     */
    public function postInstall() {
 -    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.1.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3461934', E_USER_DEPRECATED);
    }
-
+ 
    /**
-@@ -414,7 +412,6 @@
+@@ -428,7 +426,6 @@
     *   Links which provide actions to take after the install is finished.
     */
    public function postInstallTasks() {
 -    @trigger_error(__METHOD__ . '() is deprecated in drupal:11.1.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3461934', E_USER_DEPRECATED);
      return [];
    }
-
---- core/lib/Drupal/Core/Updater/UpdaterInterface.php   2025-01-06 22:41:17
-+++ core/lib/Drupal/Core/Updater/UpdaterInterface.php      2025-01-08 10:16:58
-@@ -59,8 +59,6 @@
+ 
+--- core/lib/Drupal/Core/Updater/UpdaterInterface.php
++++ core/lib/Drupal/Core/Updater/UpdaterInterface.php
+@@ -67,8 +67,6 @@
    /**
     * Actions to run after an install has occurred.
     *
@@ -140,10 +136,9 @@
     *
     * @see https://www.drupal.org/node/3461934
     */
-
---- core/core.services.yml      2022-12-09 13:01:05
-+++ core/core.services.yml 2022-12-09 16:50:46
-@@ -1016,7 +1016,7 @@
+--- core/core.services.yml
++++ core/core.services.yml
+@@ -1132,7 +1132,7 @@
    Drupal\Core\Routing\RedirectDestinationInterface: '@redirect.destination'
    unrouted_url_assembler:
      class: Drupal\Core\Utility\UnroutedUrlAssembler
@@ -152,12 +147,11 @@
    Drupal\Core\Utility\UnroutedUrlAssemblerInterface: '@unrouted_url_assembler'
    link_generator:
      class: Drupal\Core\Utility\LinkGenerator
-
 --- core/lib/Drupal/Core/Routing/RequestContext.php
 +++ core/lib/Drupal/Core/Routing/RequestContext.php
 @@ -19,6 +19,20 @@
    protected $completeBaseUrl;
-
+ 
    /**
 +   * The base path relative to the location of index.php.
 +   *
@@ -179,18 +173,18 @@
 @@ -38,6 +52,10 @@
        $this->setCompleteBaseUrl($GLOBALS['base_url']);
      }
-
+ 
 +    if (isset($GLOBALS['base_path'])) {
 +      $this->setIndexPhpBasePath($GLOBALS['base_path']);
 +    }
 +
      return parent::fromRequest($request);
    }
-
+ 
 @@ -61,4 +79,24 @@
      $this->completeBaseUrl = $complete_base_url;
    }
-
+ 
 +  /**
 +   * Sets the index php base path.
 +   *
@@ -212,20 +206,19 @@
 +    return $this->indexPhpBasePath;
 +  }
  }
-
---- core/lib/Drupal/Core/Utility/UnroutedUrlAssembler.php	2017-09-01 10:55:31.010064346 +0000
-+++ core/lib/Drupal/Core/Utility/UnroutedUrlAssembler.php	2017-09-01 11:41:04.368396632 +0000
-@@ -5,6 +5,7 @@
+--- core/lib/Drupal/Core/Utility/UnroutedUrlAssembler.php
++++ core/lib/Drupal/Core/Utility/UnroutedUrlAssembler.php
+@@ -6,6 +6,7 @@
  use Drupal\Component\Utility\UrlHelper;
  use Drupal\Core\GeneratedUrl;
  use Drupal\Core\PathProcessor\OutboundPathProcessorInterface;
 +use Drupal\Core\Routing\RequestContext;
  use Symfony\Component\HttpFoundation\RequestStack;
-
+ 
  /**
-@@ -29,19 +30,29 @@
+@@ -30,23 +31,29 @@
    protected $pathProcessor;
-
+ 
    /**
 +   * The request context.
 +   *
@@ -245,36 +238,39 @@
     * @param string[] $filter_protocols
     *   (optional) An array of protocols allowed for URL generation.
     */
--  public function __construct(RequestStack $request_stack, OutboundPathProcessorInterface $path_processor, array $filter_protocols = ['http', 'https']) {
+-  public function __construct(
+-    RequestStack $request_stack,
+-    OutboundPathProcessorInterface $path_processor,
+-    array $filter_protocols = ['http', 'https'],
+-  ) {
 +  public function __construct(RequestStack $request_stack, RequestContext $request_context, OutboundPathProcessorInterface $path_processor, array $filter_protocols = ['http', 'https']) {
      UrlHelper::setAllowedProtocols($filter_protocols);
      $this->requestStack = $request_stack;
      $this->pathProcessor = $path_processor;
 +    $this->requestContext = $request_context;
    }
-
+ 
    /**
-@@ -123,7 +134,7 @@
+@@ -136,7 +143,7 @@
      $uri = ltrim($uri, '/');
-
+ 
      // Add any subdirectory where Drupal is installed.
 -    $current_base_path = $request->getBasePath() . '/';
 +    $current_base_path = $this->requestContext->getIndexPhpBasePath();
-
+ 
      if ($options['absolute']) {
        $current_base_url = $request->getSchemeAndHttpHost() . $current_base_path;
-@@ -151,6 +162,7 @@
+@@ -164,6 +171,7 @@
      $prefix = empty($uri) ? rtrim($options['prefix'], '/') : $options['prefix'];
-
+ 
      $uri = str_replace('%2F', '/', rawurlencode($prefix . $uri));
 +    $uri = $options['script'] && ($uri != '') ? '/' . trim($uri, '/') : $uri;
      $query = $options['query'] ? ('?' . UrlHelper::buildQuery($options['query'])) : '';
      $url = $base . $options['script'] . $uri . $query . $options['fragment'];
      return $collect_bubbleable_metadata ? $generated_url->setGeneratedUrl($url) : $url;
-
---- core/modules/system/src/Controller/DbUpdateController.php	2017-09-01 10:55:49.574285897 +0000
-+++ core/modules/system/src/Controller/DbUpdateController.php	2017-09-01 11:00:48.137790953 +0000
-@@ -235,8 +235,7 @@
+--- core/modules/system/src/Controller/DbUpdateController.php
++++ core/modules/system/src/Controller/DbUpdateController.php
+@@ -252,8 +252,7 @@
        '#type' => 'link',
        '#title' => $this->t('Continue'),
        '#attributes' => ['class' => ['button', 'button--primary']],
@@ -284,19 +280,18 @@
      ];
      return $build;
    }
-@@ -627,7 +626,7 @@
-     batch_set($batch);
-
+@@ -654,7 +653,7 @@
+     batch_set($batch_builder->toArray());
+ 
      // @todo Revisit once https://www.drupal.org/node/2548095 is in.
 -    return batch_process(Url::fromUri('base://results'), Url::fromUri('base://start'));
 +    return batch_process(Url::fromUri('base://update.php/results', ['script' => '']), Url::fromUri('base://update.php/start', ['script' => '']));
    }
-
+ 
    /**
-
 --- core/modules/system/system.module
 +++ core/modules/system/system.module
-@@ -423,7 +423,9 @@ function system_authorized_get_url(array $options = array()) {
+@@ -204,7 +204,9 @@
    // the correct usage for this case.
    $url = Url::fromUri('base:core/authorize.php');
    $url_options = $url->getOptions();
@@ -308,8 +303,8 @@
  }
 
 --- /dev/null   2025-01-08 10:24:31
-+++ core/modules/update/src/Form/UpdateManagerInstall.php       2025-01-08 10:24:30
-@@ -0,0 +1,291 @@
++++ core/modules/update/src/Form/UpdateManagerInstall.php
+@@ -0,0 +1,297 @@
 +<?php
 +
 +namespace Drupal\update\Form;
@@ -519,18 +514,24 @@
 +    // project name. Some archivers list the first file as the directory (i.e.,
 +    // MODULE/) and others list an actual file (i.e., MODULE/README.TXT).
 +    $project = strtok($files[0], '/\\');
-+
-+    $archive_errors = $this->moduleHandler->invokeAll('verify_update_archive', [$project, $local_cache, $directory]);
-+    if (!empty($archive_errors)) {
-+      $this->messenger()->addError(array_shift($archive_errors));
++    try {
++      $archive_errors = $this->moduleHandler->invokeAll('verify_update_archive', [$project, $local_cache, $directory]);
++      if (!empty($archive_errors)) {
++        $this->messenger()->addError(array_shift($archive_errors));
 +      // @todo Fix me in D8: We need a way to set multiple errors on the same
 +      //   form element and have all of them appear!
-+      if (!empty($archive_errors)) {
-+        foreach ($archive_errors as $error) {
-+          $this->messenger()->addError($error);
++        if (!empty($archive_errors)) {
++          foreach ($archive_errors as $error) {
++            $this->messenger()->addError($error);
++          }
 +        }
++        return;
 +      }
-+      return;
++    }catch (\Exception $e) {
++      $message = 'Unexpected error while verifying archive: ' . $e->getMessage();
++
++      $this->messenger()->addError($this->t($message));
++      return; 
 +    }
 +
 +    // Make sure the Updater registry is loaded.
@@ -601,42 +602,744 @@
 +  }
 +
 +}
+ 
 
---- core/modules/update/src/Routing/UpdateRouteSubscriber.php   2025-01-08 10:26:27
-+++ core/modules/update/src/Routing/UpdateRouteSubscriber.php      2025-01-08 10:26:23
-@@ -29,9 +29,12 @@
-       return;
-     }
-     $routes = [
+--- core/modules/update/config/install/update.settings.yml
++++ core/modules/update/config/install/update.settings.yml
+@@ -1,5 +1,5 @@
+ check:
+-  disabled_extensions: true
++  disabled_extensions: false
+   interval_days: 1
+ fetch:
+   url: ~
+
+--- /dev/null	1970-01-01 01:00:00
++++ core/modules/update/src/Form/UpdateManagerUpdate.php
+@@ -0,0 +1,395 @@
++<?php
++
++namespace Drupal\update\Form;
++
++use Drupal\Core\Batch\BatchBuilder;
++use Drupal\Core\Extension\ModuleHandlerInterface;
++use Drupal\Core\Form\FormBase;
++use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\Link;
++use Drupal\Core\State\StateInterface;
++use Drupal\Core\Url;
++use Drupal\Core\Extension\ExtensionVersion;
++use Drupal\update\ProjectRelease;
++use Drupal\update\UpdateFetcherInterface;
++use Drupal\update\UpdateManagerInterface;
++use Symfony\Component\DependencyInjection\ContainerInterface;
++
++/**
++ * Configure update settings for this site.
++ *
++ * @internal
++ */
++class UpdateManagerUpdate extends FormBase {
++
++  /**
++   * The module handler.
++   *
++   * @var \Drupal\Core\Extension\ModuleHandlerInterface
++   */
++  protected $moduleHandler;
++
++  /**
++   * The Drupal state storage service.
++   *
++   * @var \Drupal\Core\State\StateInterface
++   */
++  protected $state;
++
++  /**
++   * Constructs a new UpdateManagerUpdate object.
++   *
++   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
++   *   The module handler.
++   * @param \Drupal\Core\State\StateInterface $state
++   *   The state service.
++   */
++  public function __construct(ModuleHandlerInterface $module_handler, StateInterface $state) {
++    $this->moduleHandler = $module_handler;
++    $this->state = $state;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getFormId() {
++    return 'update_manager_update_form';
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function create(ContainerInterface $container) {
++    return new static(
++      $container->get('module_handler'),
++      $container->get('state')
++    );
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function buildForm(array $form, FormStateInterface $form_state) {
++    $this->moduleHandler->loadInclude('update', 'inc', 'update.manager');
++
++    $form['last_check'] = [
++      '#theme' => 'update_last_check',
++      '#last' => $this->state->get('update.last_check', 0),
++    ];
++
++    if (!_update_manager_check_backends($form, 'update')) {
++      return $form;
++    }
++
++    $available = update_get_available(TRUE);
++    if (empty($available)) {
++      $form['message'] = [
++        '#markup' => $this->t('There was a problem getting update information. Try again later.'),
++      ];
++      return $form;
++    }
++
++    $form['#attached']['library'][] = 'update/drupal.update.admin';
++
++    // This will be a nested array. The first key is the kind of project, which
++    // can be either 'installed', 'uninstalled', 'manual' (projects which
++    // require manual updates, such as core). Then, each subarray is an array of
++    // projects of that type, indexed by project short name, and containing an
++    // array of data for cells in that project's row in the appropriate table.
++    $projects = [];
++
++    // This stores the actual download link we're going to update from for each
++    // project in the form, regardless of if it's installed or uninstalled.
++    $form['project_downloads'] = ['#tree' => TRUE];
++    $this->moduleHandler->loadInclude('update', 'inc', 'update.compare');
++    $project_data = update_calculate_project_data($available);
++
++    $fetch_failed = FALSE;
++    foreach ($project_data as $name => $project) {
++      if ($project['status'] === UpdateFetcherInterface::NOT_FETCHED) {
++        $fetch_failed = TRUE;
++      }
++
++      // Filter out projects which are up to date already.
++      if ($project['status'] == UpdateManagerInterface::CURRENT) {
++        continue;
++      }
++      // The project name to display can vary based on the info we have.
++      if (!empty($project['title'])) {
++        if (!empty($project['link'])) {
++          $project_name = Link::fromTextAndUrl($project['title'], Url::fromUri($project['link']))->toString();
++        }
++        else {
++          $project_name = $project['title'];
++        }
++      }
++      elseif (!empty($project['info']['name'])) {
++        $project_name = $project['info']['name'];
++      }
++      else {
++        $project_name = $name;
++      }
++      if ($project['project_type'] == 'theme' || $project['project_type'] == 'theme-uninstalled') {
++        $project_name .= ' ' . $this->t('(Theme)');
++      }
++
++      if (empty($project['recommended'])) {
++        // If we don't know what to recommend they upgrade to, we should skip
++        // the project entirely.
++        continue;
++      }
++
++      $recommended_release = ProjectRelease::createFromArray($project['releases'][$project['recommended']]);
++      $recommended_version = '{{ release_version }} (<a href="{{ release_link }}" title="{{ project_title }}">{{ release_notes }}</a>)';
++      $recommended_version_parser = ExtensionVersion::createFromVersionString($recommended_release->getVersion());
++      if ($recommended_version_parser->getMajorVersion() != $project['existing_major']) {
++        $recommended_version .= '<div title="{{ major_update_warning_title }}" class="update-major-version-warning">{{ major_update_warning_text }}</div>';
++      }
++
++      $recommended_version = [
++        '#type' => 'inline_template',
++        '#template' => $recommended_version,
++        '#context' => [
++          'release_version' => $recommended_release->getVersion(),
++          'release_link' => $recommended_release->getReleaseUrl(),
++          'project_title' => $this->t('Release notes for @project_title', ['@project_title' => $project['title']]),
++          'major_update_warning_title' => $this->t('Major upgrade warning'),
++          'major_update_warning_text' => $this->t('This update is a major version update which means that it may not be backwards compatible with your currently running version. It is recommended that you read the release notes and proceed at your own risk.'),
++          'release_notes' => $this->t('Release notes'),
++        ],
++      ];
++
++      // Create an entry for this project.
++      $entry = [
++        'title' => $project_name,
++        'installed_version' => $project['existing_version'],
++        'recommended_version' => ['data' => $recommended_version],
++      ];
++
++      switch ($project['status']) {
++        case UpdateManagerInterface::NOT_SECURE:
++        case UpdateManagerInterface::REVOKED:
++          $entry['title'] .= ' ' . $this->t('(Security update)');
++          $entry['#weight'] = -2;
++          $type = 'security';
++          break;
++
++        case UpdateManagerInterface::NOT_SUPPORTED:
++          $type = 'unsupported';
++          $entry['title'] .= ' ' . $this->t('(Unsupported)');
++          $entry['#weight'] = -1;
++          break;
++
++        case UpdateFetcherInterface::UNKNOWN:
++        case UpdateFetcherInterface::NOT_FETCHED:
++        case UpdateFetcherInterface::NOT_CHECKED:
++        case UpdateManagerInterface::NOT_CURRENT:
++          $type = 'recommended';
++          break;
++
++        default:
++          // Jump out of the switch and onto the next project in foreach.
++          continue 2;
++      }
++
++      // Use the project title for the tableselect checkboxes.
++      $entry['title'] = [
++        'data' => [
++          '#title' => $entry['title'],
++          '#markup' => $entry['title'],
++        ],
++      ];
++      $entry['#attributes'] = ['class' => ['update-' . $type]];
++
++      // Drupal core needs to be upgraded manually.
++      $needs_manual = $project['project_type'] == 'core';
++
++      // If the recommended release for a contributed project is not compatible
++      // with the currently installed version of core, list that project in a
++      // separate table. If core compatibility is not defined, it means we can't determine
++      // compatibility requirements (or we're looking at core), so we assume it
++      // is compatible.
++      $compatible = $recommended_release->isCoreCompatible() ?? TRUE;
++
++      if ($needs_manual) {
++        $this->removeCheckboxFromRow($entry);
++        $projects['manual'][$name] = $entry;
++      }
++      elseif (!$compatible) {
++        $this->removeCheckboxFromRow($entry);
++        // If the release has a core_compatibility_message, inject it.
++        if ($core_compatibility_message = $recommended_release->getCoreCompatibilityMessage()) {
++          // @todo In https://www.drupal.org/project/drupal/issues/3121769
++          //   refactor this into something theme-friendly so we don't have a
++          //   classless <div> here.
++          $entry['data']['recommended_version']['data']['#template'] .= ' <div>{{ core_compatibility_message }}</div>';
++          $entry['data']['recommended_version']['data']['#context']['core_compatibility_message'] = $core_compatibility_message;
++        }
++        $projects['not-compatible'][$name] = $entry;
++      }
++      else {
++        $form['project_downloads'][$name] = [
++          '#type' => 'value',
++          '#value' => $recommended_release->getDownloadUrl(),
++        ];
++
++        // Based on what kind of project this is, save the entry into the
++        // appropriate subarray.
++        switch ($project['project_type']) {
++          case 'module':
++          case 'theme':
++            $projects['installed'][$name] = $entry;
++            break;
++
++          case 'module-uninstalled':
++          case 'theme-uninstalled':
++            $projects['uninstalled'][$name] = $entry;
++            break;
++        }
++      }
++    }
++
++    if ($fetch_failed) {
++      $message = ['#theme' => 'update_fetch_error_message'];
++      $this->messenger()->addError(\Drupal::service('renderer')->renderInIsolation($message));
++    }
++
++    if (empty($projects)) {
++      $form['message'] = [
++        '#markup' => $this->t('All of your projects are up to date.'),
++      ];
++      return $form;
++    }
++
++    $headers = [
++      'title' => [
++        'data' => $this->t('Name'),
++        'class' => ['update-project-name'],
++      ],
++      'installed_version' => $this->t('Site version'),
++      'recommended_version' => $this->t('Recommended version'),
++    ];
++
++    if (!empty($projects['installed'])) {
++      $form['projects'] = [
++        '#type' => 'tableselect',
++        '#header' => $headers,
++        '#options' => $projects['installed'],
++      ];
++      if (!empty($projects['uninstalled'])) {
++        $form['projects']['#prefix'] = '<h2>' . $this->t('Installed') . '</h2>';
++      }
++    }
++
++    if (!empty($projects['uninstalled'])) {
++      $form['uninstalled_projects'] = [
++        '#type' => 'tableselect',
++        '#header' => $headers,
++        '#options' => $projects['uninstalled'],
++        '#weight' => 1,
++        '#prefix' => '<h2>' . $this->t('Uninstalled') . '</h2>',
++      ];
++    }
++
++    // If either table has been printed yet, we need a submit button and to
++    // validate the checkboxes.
++    if (!empty($projects['installed']) || !empty($projects['uninstalled'])) {
++      $form['actions'] = ['#type' => 'actions'];
++      $form['actions']['submit'] = [
++        '#type' => 'submit',
++        '#value' => $this->t('Download these updates'),
++      ];
++    }
++
++    if (!empty($projects['manual'])) {
++      $prefix = '<h2>' . $this->t('Manual updates required') . '</h2>';
++      $prefix .= '<p>' . $this->t('Automatic updates of Drupal core are not supported at this time.') . '</p>';
++      $form['manual_updates'] = [
++        '#type' => 'table',
++        '#header' => $headers,
++        '#rows' => $projects['manual'],
++        '#prefix' => $prefix,
++        '#weight' => 120,
++      ];
++    }
++
++    if (!empty($projects['not-compatible'])) {
++      $form['not_compatible'] = [
++        '#type' => 'table',
++        '#header' => $headers,
++        '#rows' => $projects['not-compatible'],
++        '#prefix' => '<h2>' . $this->t('Not compatible') . '</h2>',
++        '#weight' => 150,
++      ];
++    }
++
++    return $form;
++  }
++
++  /**
++   * Prepares a row entry for use in a regular table, not a 'tableselect'.
++   *
++   * There are no checkboxes in the 'Manual updates' or 'Not compatible' tables,
++   * so they will be rendered by '#theme' => 'table', not 'tableselect'. Since
++   * the data formats are incompatible, this method converts to the format
++   * expected by '#theme' => 'table'. Generally, rows end up in the main tables
++   * that have a checkbox to allow the site admin to select which missing
++   * updates to install. This method is only used for the special case tables
++   * that have no such checkbox.
++   *
++   * @todo In https://www.drupal.org/project/drupal/issues/3121775 refactor
++   *   self::buildForm() so that we don't need this method at all.
++   *
++   * @param array[] $row
++   *   The render array for a table row.
++   */
++  protected function removeCheckboxFromRow(array &$row) {
++    unset($row['#weight']);
++    $attributes = $row['#attributes'];
++    unset($row['#attributes']);
++    $row = [
++      'data' => $row,
++    ] + $attributes;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function validateForm(array &$form, FormStateInterface $form_state) {
++    if (!$form_state->isValueEmpty('projects')) {
++      $installed = array_filter($form_state->getValue('projects'));
++    }
++    if (!$form_state->isValueEmpty('uninstalled_projects')) {
++      $uninstalled = array_filter($form_state->getValue('uninstalled_projects'));
++    }
++    if (empty($installed) && empty($uninstalled)) {
++      $form_state->setErrorByName('projects', $this->t('You must select at least one project to update.'));
++    }
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function submitForm(array &$form, FormStateInterface $form_state) {
++    $this->moduleHandler->loadInclude('update', 'inc', 'update.manager');
++    $projects = [];
++    foreach (['projects', 'uninstalled_projects'] as $type) {
++      if (!$form_state->isValueEmpty($type)) {
++        $projects = array_merge($projects, array_keys(array_filter($form_state->getValue($type))));
++      }
++    }
++    $batch_builder = (new BatchBuilder())
++      ->setFile($this->moduleHandler->getModule('update')->getPath() . '/update.manager.inc')
++      ->setTitle($this->t('Downloading updates'))
++      ->setInitMessage($this->t('Preparing to download selected updates'))
++      ->setFinishCallback('update_manager_download_batch_finished');
++    foreach ($projects as $project) {
++      $batch_builder->addOperation('update_manager_batch_project_get', [
++        $project,
++        $form_state->getValue(['project_downloads', $project]),
++      ]);
++    }
++    batch_set($batch_builder->toArray());
++  }
++
++}
+--- /dev/null	1970-01-01 01:00:00
++++ core/modules/update/src/Form/UpdateReady.php
+@@ -0,0 +1,174 @@
++<?php
++
++namespace Drupal\update\Form;
++
++use Drupal\Core\Extension\ModuleHandlerInterface;
++use Drupal\Core\FileTransfer\Local;
++use Drupal\Core\Form\FormBase;
++use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\State\StateInterface;
++use Drupal\Core\Updater\Updater;
++use Symfony\Component\DependencyInjection\ContainerInterface;
++use Symfony\Component\HttpFoundation\Response;
++
++/**
++ * Configure update settings for this site.
++ *
++ * @internal
++ */
++class UpdateReady extends FormBase {
++
++  /**
++   * The root location under which updated projects will be saved.
++   *
++   * @var string
++   */
++  protected $root;
++
++  /**
++   * The module handler.
++   *
++   * @var \Drupal\Core\Extension\ModuleHandlerInterface
++   */
++  protected $moduleHandler;
++
++  /**
++   * The state key value store.
++   *
++   * @var \Drupal\Core\State\StateInterface
++   */
++  protected $state;
++
++  /**
++   * The Site path.
++   *
++   * @var string
++   */
++  protected $sitePath;
++
++  /**
++   * Constructs a new UpdateReady object.
++   *
++   * @param string $root
++   *   The root location under which updated projects will be saved.
++   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
++   *   The object that manages installed modules in a Drupal installation.
++   * @param \Drupal\Core\State\StateInterface $state
++   *   The state key value store.
++   * @param string $site_path
++   *   The site path.
++   */
++  public function __construct($root, ModuleHandlerInterface $module_handler, StateInterface $state, $site_path) {
++    $this->root = $root;
++    $this->moduleHandler = $module_handler;
++    $this->state = $state;
++    $this->sitePath = $site_path;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getFormId() {
++    return 'update_manager_update_ready_form';
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function create(ContainerInterface $container) {
++    return new static(
++      $container->get('update.root'),
++      $container->get('module_handler'),
++      $container->get('state'),
++      $container->getParameter('site.path')
++    );
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function buildForm(array $form, FormStateInterface $form_state) {
++    $this->moduleHandler->loadInclude('update', 'inc', 'update.manager');
++    if (!_update_manager_check_backends($form, 'update')) {
++      return $form;
++    }
++
++    $form['backup'] = [
++      '#prefix' => '<strong>',
++      '#markup' => $this->t('Back up your database and site before you continue. <a href=":backup_url">Learn how</a>.', [':backup_url' => 'https://www.drupal.org/node/22281']),
++      '#suffix' => '</strong>',
++    ];
++
++    $form['maintenance_mode'] = [
++      '#title' => $this->t('Perform updates with site in maintenance mode (strongly recommended)'),
++      '#type' => 'checkbox',
++      '#default_value' => TRUE,
++    ];
++
++    $form['actions'] = ['#type' => 'actions'];
++    $form['actions']['submit'] = [
++      '#type' => 'submit',
++      '#value' => $this->t('Continue'),
++    ];
++
++    return $form;
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function submitForm(array &$form, FormStateInterface $form_state) {
++    $session = $this->getRequest()->getSession();
++    // Store maintenance_mode setting so we can restore it when done.
++    $session->set('maintenance_mode', $this->state->get('system.maintenance_mode'));
++    if ($form_state->getValue('maintenance_mode') == TRUE) {
++      $this->state->set('system.maintenance_mode', TRUE);
++    }
++
++    $projects = $session->remove('update_manager_update_projects');
++    if ($projects) {
++      // Make sure the Updater registry is loaded.
++      drupal_get_updaters();
++
++      $updates = [];
++      $directory = _update_manager_extract_directory();
++
++      $project_real_location = NULL;
++      foreach ($projects as $project => $url) {
++        $project_location = $directory . '/' . $project;
++        $updater = Updater::factory($project_location, $this->root);
++        $project_real_location = \Drupal::service('file_system')->realpath($project_location);
++        $updates[] = [
++          'project' => $project,
++          'updater_name' => get_class($updater),
++          'local_url' => $project_real_location,
++        ];
++      }
++
++      // If the owner of the last directory we extracted is the same as the
++      // owner of our configuration directory (e.g. sites/default) where we're
++      // trying to install the code, there's no need to prompt for FTP/SSH
++      // credentials. Instead, we instantiate a Drupal\Core\FileTransfer\Local
++      // and invoke update_authorize_run_update() directly.
++      if (fileowner($project_real_location) == fileowner($this->sitePath)) {
++        $this->moduleHandler->loadInclude('update', 'inc', 'update.authorize');
++        $filetransfer = new Local($this->root, \Drupal::service('file_system'));
++        $response = update_authorize_run_update($filetransfer, $updates);
++        if ($response instanceof Response) {
++          $form_state->setResponse($response);
++        }
++      }
++      // Otherwise, go through the regular workflow to prompt for FTP/SSH
++      // credentials and invoke update_authorize_run_update() indirectly with
++      // whatever FileTransfer object authorize.php creates for us.
++      else {
++        // The page title must be passed here to ensure it is initially used
++        // when authorize.php loads for the first time with the FTP/SSH
++        // credentials form.
++        system_authorized_init('update_authorize_run_update', __DIR__ . '/../../update.authorize.inc', [$updates], $this->t('Update manager'));
++        $form_state->setRedirectUrl(system_authorized_get_url());
++      }
++    }
++  }
++
++}
+--- /dev/null	1970-01-01 01:00:00
++++ core/modules/update/src/Routing/UpdateRouteSubscriber.php
+@@ -0,0 +1,46 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Drupal\update\Routing;
++
++use Drupal\Core\Routing\RouteSubscriberBase;
++use Drupal\Core\Site\Settings;
++use Symfony\Component\Routing\RouteCollection;
++
++/**
++ * Route subscriber for Update module routes.
++ */
++class UpdateRouteSubscriber extends RouteSubscriberBase {
++
++  /**
++   * Constructs a new UpdateRouteSubscriber.
++   */
++  public function __construct(
++    protected Settings $settings,
++  ) {
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  protected function alterRoutes(RouteCollection $collection) {
++    if ($this->settings->get('allow_authorize_operations', TRUE)) {
++      return;
++    }
++    $routes = [
 +      'update.report_install',
-       'update.report_update',
-       'update.module_update',
++      'update.report_update',
++      'update.module_update',
 +      'update.module_install',
-       'update.theme_update',
++      'update.theme_update',
 +      'update.theme_install',
-       'update.confirmation_page',
-     ];
-     foreach ($routes as $route) {
++      'update.confirmation_page',
++    ];
++    foreach ($routes as $route) {
++      $route = $collection->get($route);
++      $route->setRequirement('_access', 'FALSE');
++    }
++  }
++
++}
 
---- core/modules/update/src/UpdateManager.php   2025-01-08 10:27:41
-+++ core/modules/update/src/UpdateManager.php      2025-01-08 10:27:38
-@@ -182,8 +182,10 @@
+--- core/modules/update/src/UpdateManager.php
++++ core/modules/update/src/UpdateManager.php
+@@ -178,12 +178,18 @@
+     // On certain paths, we should clear the data and recompute the projects for
+     // update status of the site to avoid presenting stale information.
+     $route_names = [
++      'update.theme_update',
        'system.modules_list',
        'system.theme_install',
-       'update.module_update',
++      'update.module_update',
 +      'update.module_install',
        'update.status',
-       'update.report_update',
++      'update.report_update',
 +      'update.report_install',
        'update.settings',
        'system.status',
        'update.manual_status',
++      'update.confirmation_page',
+       'system.themes_page',
+     ];
+     if (in_array(\Drupal::routeMatch()->getRouteName(), $route_names)) {
+--- core/modules/update/src/UpdateRoot.php
++++ core/modules/update/src/UpdateRoot.php
+@@ -6,12 +6,7 @@
+ use Symfony\Component\HttpFoundation\RequestStack;
+ 
+ /**
+- * Gets the root path used by the legacy Update Manager.
+- *
+- * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+- *   replacement. Use composer to manage the code for your site.
+- *
+- * @see https://www.drupal.org/node/3522119
++ * Gets the root path used by the Update Manager to install or update projects.
+  */
+ class UpdateRoot {
+ 
+@@ -37,7 +32,7 @@
+   protected $updateRoot;
+ 
+   /**
+-   * Constructs an UpdateRoot instance.
++   * Constructs an UpdateRootFactory instance.
+    *
+    * @param \Drupal\Core\DrupalKernelInterface $drupal_kernel
+    *   The Drupal kernel.
+@@ -45,7 +40,6 @@
+    *   The request stack.
+    */
+   public function __construct(DrupalKernelInterface $drupal_kernel, RequestStack $request_stack) {
+-    @trigger_error(__CLASS__ . ' is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119', E_USER_DEPRECATED);
+     $this->drupalKernel = $drupal_kernel;
+     $this->requestStack = $request_stack;
+   }
+@@ -66,8 +60,8 @@
+    * The Update Manager will ensure that project files can only be copied to
+    * specific subdirectories of this root path.
+    *
+-   * @return string
+    *   The root path for project installation or update.
++   *   The root path for project installation or update.
+    */
+   public function __toString(): string {
+     // Return the $updateRoot when it is set.
 
---- core/modules/update/update.authorize.inc    2025-01-06 22:41:17
-+++ core/modules/update/update.authorize.inc       2025-01-08 10:30:20
-@@ -57,6 +57,54 @@
+
+--- core/modules/update/update.authorize.inc
++++ core/modules/update/update.authorize.inc
+@@ -2,19 +2,12 @@
+ 
+ /**
+  * @file
+- *
+- * @deprecated in drupal:11.3.0 and is removed from drupal:12.0.0.
+- *   Functions have been deprecated.
+- *
+- * @see https://www.drupal.org/node/3512364
+  */
+ 
+ use Drupal\Core\Batch\BatchBuilder;
+ use Drupal\Core\Updater\UpdaterException;
+ use Drupal\Core\Url;
+ 
+-@trigger_error(__FILE__ . ' is deprecated in drupal:11.3.0 and is removed from drupal:12.0.0. Functions have been deprecated. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+-
+ /**
+  * Updates existing projects when invoked by authorize.php.
+  *
+@@ -38,8 +31,7 @@
+  *   should use that response for the current page request.
+  */
+ function update_authorize_run_update($filetransfer, $projects) {
+-  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+-
++  
+   $batch_builder = (new BatchBuilder())
+     ->setFile(\Drupal::service('extension.list.module')->getPath('update') . '/update.authorize.inc')
+     ->setInitMessage(t('Preparing to update your site'))
+@@ -66,6 +58,54 @@
  }
-
+ 
  /**
 + * Installs a new project when invoked by authorize.php.
 + *
@@ -689,9 +1392,47 @@
   * Implements callback_batch_operation().
   *
   * Copies project to its proper place when authorized to do so.
-@@ -215,6 +263,69 @@
+@@ -84,8 +124,7 @@
+  *   Reference to an array used for Batch API storage.
+  */
+ function update_authorize_batch_copy_project($project, $updater_name, $local_url, $filetransfer, &$context): void {
+-  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+-
++  
+   // Initialize some variables in the Batch API $context array.
+   if (!isset($context['results']['log'])) {
+     $context['results']['log'] = [];
+@@ -105,7 +144,7 @@
+   // though the connection itself is now gone. So, although it's ugly, we have
+   // to unset the connection variable at this point so that the FileTransfer
+   // object will re-initiate the actual connection.
+-  // @phpstan-ignore property.deprecatedClass
++  //
+   unset($filetransfer->connection);
+ 
+   if (!empty($context['results']['log'][$project]['#abort'])) {
+@@ -113,7 +152,7 @@
+     return;
+   }
+ 
+-  // @phpstan-ignore getDeprecatedService.deprecated
++  
+   $updater = new $updater_name($local_url, \Drupal::getContainer()->get('update.root'));
+ 
+   try {
+@@ -156,8 +195,7 @@
+  *   An associative array of results from the batch operation.
+  */
+ function update_authorize_update_batch_finished($success, $results): void {
+-  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+-
++  
+   foreach ($results['log'] as $messages) {
+     if (!empty($messages['#abort'])) {
+       $success = FALSE;
+@@ -229,6 +267,69 @@
  }
-
+ 
  /**
 + * Implements callback_batch_finished().
 + *
@@ -759,37 +1500,121 @@
   * Creates a structure of log messages.
   *
   * @param array $project_results
+@@ -240,8 +341,7 @@
+  *   if there were errors. Defaults to TRUE.
+  */
+ function _update_batch_create_message(&$project_results, $message, $success = TRUE): void {
+-  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+-
++  
+   $project_results[] = ['message' => $message, 'success' => $success];
+ }
+ 
+@@ -259,8 +359,7 @@
+  * @see update_storage_clear()
+  */
+ function _update_authorize_clear_update_status(): void {
+-  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3512364', E_USER_DEPRECATED);
+-
++  
+   \Drupal::keyValueExpirable('update')->deleteAll();
+   \Drupal::keyValueExpirable('update_available_release')->deleteAll();
+ }
+--- core/modules/update/update.info.yml
++++ core/modules/update/update.info.yml
+@@ -1,6 +1,6 @@
+-name: 'Update Status'
++name: 'Update Manager'
+ type: module
+-description: 'Checks for updates and can notify users if there are new releases available.'
++description: 'Checks for updates and allows users to manage them through a user interface.'
+ version: VERSION
+ package: Core
+ configure: update.settings
 
---- /dev/null   2025-01-08 10:39:00
-+++ core/modules/update/update.links.action.yml 2025-01-08 10:38:59
-@@ -0,0 +1,20 @@
-+update.report_install:
-+  route_name: update.report_install
-+  title: 'Add new module or theme'
-+  weight: 25
-+  appears_on:
-+    - update.status
+--- core/modules/update/update.links.task.yml	2025-08-06 13:42:39
++++ core/modules/update/update.links.task.yml	2025-08-06 13:38:14
+@@ -7,3 +7,20 @@
+   base_route: system.admin_reports
+   title: Settings
+   weight: 50
++update.report_update:
++  route_name: update.report_update
++  base_route: system.admin_reports
++  title: Update
++  weight: 10
 +
-+update.module_install:
-+  route_name: update.module_install
-+  title: 'Add new module'
-+  weight: 25
-+  appears_on:
-+    - system.modules_list
++update.module_update:
++  route_name: update.module_update
++  base_route: system.modules_list
++  title: Update
++  weight: 10
 +
-+update.theme_install:
-+  route_name: update.theme_install
-+  title: 'Add new theme'
-+  weight: 25
-+  appears_on:
-+    - system.themes_page
++update.theme_update:
++  route_name: update.theme_update
++  base_route: system.themes_page
++  title: Update
++  weight: 10
 
---- core/modules/update/update.routing.yml      2025-01-06 22:41:17
-+++ core/modules/update/update.routing.yml 2025-01-08 11:06:47
-@@ -23,6 +23,14 @@
+--- core/modules/update/update.post_update.php
++++ core/modules/update/update.post_update.php
+@@ -2,11 +2,9 @@
+ 
+ /**
+  * @file
+- * Post update functions for Update Status.
++ * Post update functions for Update Manager.
+  */
+ 
+-use Drupal\Core\Site\Settings;
+-
+ /**
+  * Implements hook_removed_post_updates().
+  */
+@@ -18,26 +16,6 @@
+ }
+ 
+ /**
+- * Removes the legacy 'Update Manager' disk cache.
+- */
+-function update_post_update_clear_disk_cache(): void {
+-  // @see _update_manager_unique_id()
+-  $id = substr(hash('sha256', Settings::getHashSalt()), 0, 8);
+-  // List of legacy 'Update Manager' cache directories.
+-  $directories = [
+-    // @see _update_manager_cache_directory()
+-    "temporary://update-cache-$id",
+-    // @see _update_manager_extract_directory()
+-    "temporary://update-extraction-$id",
+-  ];
+-  foreach ($directories as $directory) {
+-    if (is_dir($directory)) {
+-      \Drupal::service('file_system')->deleteRecursive($directory);
+-    }
+-  }
+-}
+-
+-/**
+  * Remove empty email addresses from update.settings configuration.
+  */
+ function update_post_update_fix_update_emails(): void {
+
+--- core/modules/update/update.routing.yml
++++ core/modules/update/update.routing.yml
+@@ -2,7 +2,7 @@
+   path: '/admin/reports/updates/settings'
+   defaults:
+     _form: '\Drupal\update\UpdateSettingsForm'
+-    _title: 'Update Status settings'
++    _title: 'Update Manager settings'
+   requirements:
+     _permission: 'administer site configuration'
+ 
+@@ -22,3 +22,60 @@
+   requirements:
      _permission: 'administer site configuration'
      _csrf_token: 'TRUE'
-
++
 +update.report_install:
 +  path: '/admin/reports/updates/install'
 +  defaults:
@@ -798,13 +1623,14 @@
 +  requirements:
 +    _permission: 'administer software updates'
 +
- update.report_update:
-   path: '/admin/reports/updates/update'
-   defaults:
-@@ -31,6 +39,14 @@
-   requirements:
-     _permission: 'administer software updates'
-
++update.report_update:
++  path: '/admin/reports/updates/update'
++  defaults:
++    _form: '\Drupal\update\Form\UpdateManagerUpdate'
++    _title: 'Update'
++  requirements:
++    _permission: 'administer software updates'
++
 +update.module_install:
 +  path: '/admin/modules/install'
 +  defaults:
@@ -813,13 +1639,14 @@
 +  requirements:
 +    _permission: 'administer software updates'
 +
- update.module_update:
-   path: '/admin/modules/update'
-   defaults:
-@@ -39,6 +55,15 @@
-   requirements:
-     _permission: 'administer software updates'
-
++update.module_update:
++  path: '/admin/modules/update'
++  defaults:
++    _form: '\Drupal\update\Form\UpdateManagerUpdate'
++    _title: 'Update'
++  requirements:
++    _permission: 'administer software updates'
++
 +update.theme_install:
 +  path: '/admin/theme/install'
 +  defaults:
@@ -829,6 +1656,32 @@
 +    _permission: 'administer software updates'
 +
 +
- update.theme_update:
-   path: '/admin/appearance/update'
-   defaults:
++update.theme_update:
++  path: '/admin/appearance/update'
++  defaults:
++    _form: '\Drupal\update\Form\UpdateManagerUpdate'
++    _title: 'Update'
++  requirements:
++    _permission: 'administer software updates'
++
++update.confirmation_page:
++  path: '/admin/update/ready'
++  defaults:
++    _form: '\Drupal\update\Form\UpdateReady'
++    _title: 'Ready to update'
++  requirements:
++    _permission: 'administer software updates'
+
+--- core/modules/update/update.services.yml
++++ core/modules/update/update.services.yml
+@@ -24,7 +24,9 @@
+   update.root:
+     class: Drupal\update\UpdateRoot
+     arguments: ['@kernel', '@request_stack']
+-    deprecated: The "%service_id%" service is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119
+   logger.channel.update:
+     parent: logger.channel_base
+     arguments: [ 'update' ]
++  update.route_subscriber:
++    class: Drupal\update\Routing\UpdateRouteSubscriber
++    arguments: ['@settings']

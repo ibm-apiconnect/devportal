@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2024
+ * (C) Copyright IBM Corporation 2018, 2026
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -19,6 +19,7 @@
 namespace Drupal\apic_app\Plugin\Block;
 
 use Drupal\apic_app\Service\ApplicationService;
+use Drupal\apic_app\Service\SubscriptionMigrationService;
 use Drupal\Component\Utility\Html;
 use Drupal\consumerorg\Service\ConsumerOrgService;
 use Drupal\Core\Access\AccessResult;
@@ -29,14 +30,15 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\ibm_apim\Service\UserUtils;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-
+use Drupal\views\Views;
+use Drupal\Core\Cache\CacheableMetadata;
 /**
  * Provides a block to manage the subscriptions for a given application.
  *
  * @Block(
  *   id = "app_subscriptions",
  *   admin_label = @Translation("Application Subscriptions"),
- *   category = @Translation("IBM API Developer Portal (Application)")
+ *   category = @Translation("IBM CMS Portal (Application)")
  * )
  *
  */
@@ -58,6 +60,11 @@ class SubscriptionsBlock extends BlockBase implements ContainerFactoryPluginInte
   protected ApplicationService $applicationService;
 
   /**
+   * @var \Drupal\apic_app\Service\SubscriptionMigrationService
+   */
+  protected SubscriptionMigrationService $subscriptionMigrationService;
+
+  /**
    * SubscriptionsBlock constructor.
    *
    * @param array $configuration
@@ -66,12 +73,14 @@ class SubscriptionsBlock extends BlockBase implements ContainerFactoryPluginInte
    * @param \Drupal\ibm_apim\Service\UserUtils $userUtils
    * @param \Drupal\consumerorg\Service\ConsumerOrgService $consumerOrgService
    * @param \Drupal\apic_app\Service\ApplicationService $applicationService
+   * @param \Drupal\apic_app\Service\SubscriptionMigrationService $subscriptionMigrationService
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, UserUtils $userUtils, ConsumerOrgService $consumerOrgService, ApplicationService $applicationService) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, UserUtils $userUtils, ConsumerOrgService $consumerOrgService, ApplicationService $applicationService, SubscriptionMigrationService $subscriptionMigrationService) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->userUtils = $userUtils;
     $this->consumerOrgService = $consumerOrgService;
     $this->applicationService = $applicationService;
+    $this->subscriptionMigrationService = $subscriptionMigrationService;
   }
 
   /**
@@ -88,7 +97,8 @@ class SubscriptionsBlock extends BlockBase implements ContainerFactoryPluginInte
       $plugin_definition,
       $container->get('ibm_apim.user_utils'),
       $container->get('ibm_apim.consumerorg'),
-      $container->get('apic_app.application'));
+      $container->get('apic_app.application'),
+      $container->get('apic_app.subscription_migration'));
   }
 
   /**
@@ -118,7 +128,13 @@ class SubscriptionsBlock extends BlockBase implements ContainerFactoryPluginInte
     //if you depends on \Drupal::routeMatch()
     //you must set context of this block with 'route' context tag.
     //Every new route this block will rebuild
-    return Cache::mergeContexts(parent::getCacheContexts(), ['route']);
+    return Cache::mergeContexts(parent::getCacheContexts(), [
+      'route',
+      'url.query_args:keyword',
+      'url.query_args:sort_by',
+      'url.query_args:sort_order',
+      'url.query_args:items_per_page',
+    ]);
   }
 
   /**
@@ -127,7 +143,7 @@ class SubscriptionsBlock extends BlockBase implements ContainerFactoryPluginInte
   public function getCacheTags(): array {
     $userUtils = \Drupal::service('ibm_apim.user_utils');
     $org = $userUtils->getCurrentConsumerOrg();
-    $tags = Cache::mergeTags(parent::getCacheTags(), ['consumerorg:' . Html::cleanCssIdentifier($org['url'])]);
+    $tags = Cache::mergeTags(parent::getCacheTags(), ['consumerorg:' . Html::cleanCssIdentifier($org['url']), 'apic_app_application_subs_list']);
 
     // With this when your node change your block will rebuild
     if ($node = \Drupal::routeMatch()->getParameter('node')) {
@@ -140,36 +156,38 @@ class SubscriptionsBlock extends BlockBase implements ContainerFactoryPluginInte
   /**
    * @return array
    */
-  public function build(): array {
-    $userUtils = \Drupal::service('ibm_apim.user_utils');
+
+
+  public function build(): array
+  {
     $node = \Drupal::routeMatch()->getParameter('node');
-    $userHasAppManage = $userUtils->checkHasPermission('app:manage');
-    $userHasSubView = $userUtils->checkHasPermission('subscription:view');
-    $userHasSubManage = $userUtils->checkHasPermission('subscription:manage');
-    $ibmApimShowVersions = (boolean) \Drupal::config('ibm_apim.settings')->get('show_versions');
-    if ($ibmApimShowVersions === NULL) {
-      $ibmApimShowVersions = TRUE;
+    $billingEnabled = (bool) \Drupal::state()->get('ibm_apim.billing_enabled');
+    // Get contextual argument from node
+    $app_url = $node->get('apic_url')->value ?? NULL;
+
+    if (empty($app_url)) {
+      \Drupal::logger('apic_app')->warning('Missing application URL on node for subscriptions view.');
+      return [];
     }
-    $billingEnabled = (boolean) \Drupal::state()->get('ibm_apim.billing_enabled');
 
-    $nodeArray = [
-      'application_id' => ['value' => $node->application_id->value],
-      'subscriptions' => $this->applicationService->getSubscriptions($node),
-      'id' => $node->id(),
-    ];
+    // Load and render the view programmatically with full plugin lifecycle
+    $view = Views::getView('application_subscriptions');
+    $view->setDisplay('block_1');
+    $view->setArguments([$app_url]);
+    $request = \Drupal::request();
+    $exposed_input = $request->query->all() + $request->request->all();
+    if (!empty($exposed_input)) {
+      $view->setExposedInput($exposed_input);
+    }
+    $view->execute();
+    $render_array = $view->render();
 
-    return [
-      '#theme' => 'app_subscriptions',
-      '#node' => $nodeArray,
-      '#showVersions' => $ibmApimShowVersions,
-      '#billing_enabled' => $billingEnabled,
-      '#userHasAppManage' => $userHasAppManage,
-      '#userHasSubView' => $userHasSubView,
-      '#userHasSubManage' => $userHasSubManage,
-      '#attached' => [
-        'library' => ['apic_app/basic'],
-      ],
-    ];
+    $metadata = new CacheableMetadata();
+    $metadata->addCacheTags(['node:' . $node->id(), 'apic_app_application_subs_list']);
+    $metadata->addCacheContexts(['route', 'url.query_args:keyword', 'url.query_args:sort_by', 'url.query_args:sort_order']);
+    $metadata->applyTo($render_array);
+    return $render_array;
+
   }
 
 }

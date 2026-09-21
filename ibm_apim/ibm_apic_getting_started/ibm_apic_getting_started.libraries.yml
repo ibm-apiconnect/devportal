@@ -1,0 +1,19 @@
+getting_started:
+  version: 1.x
+  js:
+    js/getting_started.js: {}
+    js/copy-code.js: {}
+  css:
+    component:
+      css/getting_started.css: {}
+      css/copy-code.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+    - core/jquery.once
+
+clear_storage:
+  version: 1.x
+  js:
+    js/clear_storage.js: {}

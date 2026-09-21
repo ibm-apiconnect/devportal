@@ -1,7 +1,7 @@
 <div class="apicNewAppWrapper">
   {% if access %}
     <a class="button apicNewApp" href="{{- path('apic_app.create') -}}">
-      <span>{{ 'Create new app'|t }}</span>
+      <span>{% trans %}Create new app{% endtrans %}</span>
     </a>
   {% endif %}
 </div>

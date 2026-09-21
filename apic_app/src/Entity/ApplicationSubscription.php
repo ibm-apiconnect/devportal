@@ -142,9 +142,33 @@ class ApplicationSubscription extends ContentEntityBase implements ApplicationSu
       ->setDescription(t('The URL of the product this Subscription applies to'))
       ->setReadOnly(TRUE);
 
+    $fields['product_title'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Product title'))
+      ->setDescription(t('The display title of the product this Subscription applies to'))
+      ->setReadOnly(TRUE);
+
     $fields['plan'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Plan name'))
       ->setDescription(t('The name of the plan this Subscription applies to'))
+      ->setReadOnly(TRUE);
+
+    $fields['plan_title'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Plan title'))
+      ->setDescription(t('The display title of the plan this Subscription applies to'))
+      ->setReadOnly(TRUE);
+
+    $fields['product_title_missing'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Product title missing'))
+      ->setDescription(t('Whether the product title could not be resolved'))
+      ->setSetting('unsigned', TRUE)
+      ->setDefaultValue(0)
+      ->setReadOnly(TRUE);
+
+    $fields['plan_title_missing'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Plan title missing'))
+      ->setDescription(t('Whether the plan title could not be resolved'))
+      ->setSetting('unsigned', TRUE)
+      ->setDefaultValue(0)
       ->setReadOnly(TRUE);
 
     $fields['state'] = BaseFieldDefinition::create('string')

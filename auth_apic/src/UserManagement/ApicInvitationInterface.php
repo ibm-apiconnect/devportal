@@ -26,7 +26,7 @@ interface ApicInvitationInterface {
    *
    * @return \Drupal\auth_apic\UserManagerResponse
    */
-  public function registerInvitedUser(JWTToken $token, ApicUser $invitedUser = NULL): UserManagerResponse;
+  public function registerInvitedUser(JWTToken $token, ?ApicUser $invitedUser = NULL): UserManagerResponse;
 
   /**
    * Accepts a user invitation representing by the JWT as the user represented

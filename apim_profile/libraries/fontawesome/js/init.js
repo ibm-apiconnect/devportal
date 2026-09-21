@@ -1,0 +1,3 @@
+window.FontAwesomeConfig = {
+  autoAddCss: false
+};

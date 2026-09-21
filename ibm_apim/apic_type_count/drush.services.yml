@@ -1,5 +1,0 @@
-services:
-  apic_type_count.commands:
-    class: Drupal\apic_type_count\Commands\ApicTypeCountCommands
-    tags:
-      - { name: drush.command } 

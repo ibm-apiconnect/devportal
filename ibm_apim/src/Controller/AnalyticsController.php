@@ -14,9 +14,11 @@
 namespace Drupal\ibm_apim\Controller;
 
 use Drupal\apic_api\Service\ApiUtils;
+use Drupal\consumerorg\ApicType\Member;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\ibm_apim\ApicRest;
+use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\ibm_apim\Service\AnalyticsService;
 use Drupal\ibm_apim\Service\SiteConfig;
 use Drupal\ibm_apim\Service\UserUtils;
@@ -26,6 +28,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Drupal\Core\Database\Database;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 class AnalyticsController extends ControllerBase {
 
@@ -107,6 +111,7 @@ class AnalyticsController extends ControllerBase {
     $consumerorgId = NULL;
     $consumerorgNid = NULL;
     $consumerorgTitle = NULL;
+    $members = [];
 
     if (isset($consumerOrg['url'])) {
       $query = \Drupal::entityQuery('node');
@@ -119,6 +124,24 @@ class AnalyticsController extends ControllerBase {
         if ($consumerorg !== NULL) {
           $consumerorgId = $consumerorg->consumerorg_id->value;
           $consumerorgTitle = $consumerorg->getTitle();
+          
+          // Process members (excluding owner) for member count check
+          $myorgOwnerUrl = $consumerorg->consumerorg_owner->value;
+          $cOrgMembers = $consumerorg->consumerorg_members->getValue();
+          if ($cOrgMembers !== NULL) {
+            $orgService = \Drupal::service('ibm_apim.myorgsvc');
+            $whitelist = [Member::class, ApicUser::class];
+            foreach ($cOrgMembers as $arrayValue) {
+              $orgMember = new Member();
+              $orgMember->createFromArray(SerializationUtility::decodeData($arrayValue['value'], TRUE, $whitelist));
+              
+              $memberUserUrl = $orgMember->getUserUrl();
+              if ($myorgOwnerUrl !== $memberUserUrl) {
+                $newMember = $orgService->prepareOrgMemberForDisplay($orgMember);
+                $members[$newMember['id']] = $newMember;
+              }
+            }
+          }
         }
       }
     }
@@ -129,18 +152,66 @@ class AnalyticsController extends ControllerBase {
     $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString(TRUE)->getGeneratedUrl();
     $dashboard = \Drupal::config('ibm_apim.settings')->get('analytics_dashboard');
     if (empty($dashboard)) {
-      $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'top_products', 'top_apis', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
+      $dashboard = [
+        'total_calls',
+        'total_errors',
+        'avg_response',
+        'num_calls',
+        'status_codes',
+        'top_products',
+        'top_apis',
+        'num_throttled',
+        'num_errors',
+        'call_table',
+        'top_api_paths',
+        'apis_with_fastest_response_time',
+        'apis_with_slowest_response_time'
+      ];
     }
     $filters = \Drupal::config('ibm_apim.settings')->get('analytics_filters');
     if (empty($filters)) {
-      $filters = ['api_name', 'api_version', 'product_name', 'product_version', 'plan_name', 'app_name'];
+      $filters = ['api_name', 'api_version', 'product_name', 'product_version', 'plan_name', 'app_name', 'status_code', 'operation_path'];
     }
+    // Prepare data for analytics filtering
+    $apiNames = [];
+    $apiVersions = [];
+    $productNames = [];
+    $productVersions = [];
+    $planNames = [];
+    $applicationData = [];
+    
+    // Get all data for filtering
+    $this->getApiData($apiNames, $apiVersions);
+    $this->getProductData($productNames, $productVersions, $planNames);
+    $this->getApplicationNames($applicationData);
+    
+    // Extract just the application names for backward compatibility
+    $applicationNames = [];
+    foreach ($applicationData as $appKey => $appInfo) {
+      $applicationNames[$appKey] = $appInfo['title'];
+    }
+    $analyticsTheme = $this->requestStack->getCurrentRequest()->cookies->get('analytics_theme', 'g10');
+    if (!in_array($analyticsTheme, ['g10', 'g100'], TRUE)) {
+      $analyticsTheme = 'g10';
+    }
+
     $drupalSettings = [
       'analytics' => [
         'proxyURL' => \Drupal::service('ibm_apim.apim_utils')->getHostUrl() . $url,
         'locale' => $this->utils->convert_lang_name(\Drupal::languageManager()->getCurrentLanguage()->getId()),
         'dashboard' => $dashboard,
-        'filters' => $filters
+        'filters' => $filters,
+        // Set temp will be passed a var when the Dark mode for portal will be implemented
+        'theme' => $analyticsTheme,
+        'portalData' => [
+          'apiNames' => $apiNames,
+          'apiVersions' => $apiVersions,
+          'productNames' => $productNames,
+          'productVersion' => $productVersions,
+          'planNames' => $planNames,
+          'appNames' => $applicationNames,
+          'appData' => $applicationData
+        ]
       ],
     ];
 
@@ -153,6 +224,18 @@ class AnalyticsController extends ControllerBase {
         \Drupal::messenger()->addError(t('Analytics client URL is not set.'));
       }
     }
+
+    // Get configuration settings for consumer org actions
+    $config = \Drupal::config('ibm_apim.settings');
+    $hasSettingsManagePerm = $this->userUtils->checkHasPermission('settings:manage');
+    $allowConsumerorgChangeOwner = (boolean) $config->get('allow_consumerorg_change_owner');
+    $allowConsumerorgRename = (boolean) $config->get('allow_consumerorg_rename');
+    $allowConsumerorgDelete = (boolean) $config->get('allow_consumerorg_delete');
+
+    $canTransferOwner = $hasSettingsManagePerm && $allowConsumerorgChangeOwner;
+    $canRenameOrg = $hasSettingsManagePerm && $allowConsumerorgRename;
+    $canDeleteOrg = $hasSettingsManagePerm && $allowConsumerorgDelete;
+
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, [
       'theme' => $theme,
       'consumerorgId' => $consumerorgId,
@@ -172,6 +255,10 @@ class AnalyticsController extends ControllerBase {
       '#catalogName' => urlencode($catalogName),
       '#porgId' => $pOrgId,
       '#consumerorgTitle' => $consumerorgTitle,
+      '#myorg_members' => $members,
+      '#myorg_can_transfer_owner' => $canTransferOwner,
+      '#myorg_can_rename_org' => $canRenameOrg,
+      '#myorg_can_delete_org' => $canDeleteOrg,
       '#attached' => [
         'library' => $libraries,
         'drupalSettings' => $drupalSettings,
@@ -214,7 +301,7 @@ class AnalyticsController extends ControllerBase {
       $response = new Response('User is not part of a valid consumer organization.', 401, []);
     }
 
-    $queryParams = ['limit', 'offset', 'api_name', 'api_version', 'product_name', 'product_version', 'plan_name', 'app_name'];
+    $queryParams = ['limit', 'offset', 'api_name', 'api_version', 'product_name', 'product_version', 'plan_name', 'app_name', 'status_code', 'operation_path'];
     if (!isset($response)) {
       $currentRequest = $this->requestStack->getCurrentRequest();
       $app = $currentRequest->query->get('app');
@@ -276,7 +363,21 @@ class AnalyticsController extends ControllerBase {
         $data = array_shift($data);
         $dashboard = \Drupal::config('ibm_apim.settings')->get('analytics_dashboard');
         if (empty($dashboard)) {
-          $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'top_products', 'top_apis', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
+          $dashboard = [
+            'total_calls',
+            'total_errors',
+            'avg_response',
+            'num_calls',
+            'status_codes',
+            'top_products',
+            'top_apis',
+            'num_throttled',
+            'num_errors',
+            'call_table',
+            'top_api_paths',
+            'apis_with_fastest_response_time',
+            'apis_with_slowest_response_time'
+          ];
         }
         try {
           $decoded = json_decode($data, TRUE, 512, JSON_THROW_ON_ERROR);
@@ -304,9 +405,6 @@ class AnalyticsController extends ControllerBase {
         if (!in_array('status_codes', $dashboard)) {
           unset($decoded['status_codes']);
         }
-        if (!in_array('response_time', $dashboard)) {
-          unset($decoded['response_times']);
-        }
         if (!in_array('num_throttled', $dashboard)) {
           unset($decoded['throttled_calls']);
         }
@@ -315,6 +413,15 @@ class AnalyticsController extends ControllerBase {
         }
         if (!in_array('call_table', $dashboard)) {
           unset($decoded['last_api_calls']);
+        }
+        if (!in_array('top_api_paths', $dashboard)) {
+          unset($decoded['top_api_paths_by_calls']);
+        }
+        if (!in_array('apis_with_fastest_response_time', $dashboard)) {
+          unset($decoded['apis_with_fastest_response_time']);
+        }
+        if (!in_array('apis_with_slowest_response_time', $dashboard)) {
+          unset($decoded['apis_with_slowest_response_time']);
         }
         $data = json_encode($decoded, JSON_THROW_ON_ERROR);
         $headers = $apimResponse->getHeaders();
@@ -329,5 +436,217 @@ class AnalyticsController extends ControllerBase {
     \Drupal::messenger()->deleteAll();
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     return $response;
+  }
+
+  /**
+   * Get all API data for analytics filtering
+   *
+   * @param array &$apiNames
+   *   Array to store API names and related data
+   * @param array &$apiVersions
+   *   Array to store API versions
+   */
+  public static function getApiData(&$apiNames, &$apiVersions) {
+    $query = \Drupal::entityTypeManager()
+      ->getStorage('node')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('type', 'api')
+      ->execute();
+    $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($query) ?? [];
+    if (empty($nodes)) {
+      return;
+    }
+    
+    foreach ($nodes as $node) {
+      if ($node->hasField('api_swagger') && !$node->get('api_swagger')->isEmpty()) {
+        $api = SerializationUtility::decodeData($node->get('api_swagger')->getValue()[0]['value']);
+        
+        if (!isset($api['info'])) {
+          continue;
+        }
+        
+        $name = $api['info']['x-ibm-name'] ?? null;
+        if ($name === null && isset($api['info']['title'])) {
+          $name = strtolower(str_replace(' ', '-', $api['info']['title']));
+        }
+        
+        // Add API to apiNames array
+        $apiNames[] = [
+          'key' => $name,
+          'title' => $api['info']['title'] ?? $name,
+          'version' => $api['info']['version'] ?? '',
+        ];
+        
+        // Add API version to apiVersions array if not already there
+        if (isset($api['info']['version']) && !in_array($api['info']['version'], $apiVersions)) {
+          $apiVersions[] = $api['info']['version'];
+        }
+      }
+    }
+  }
+
+  /**
+   * Get all product data including APIs and plans for analytics filtering
+   *
+   * @param array &$productNames
+   *   Array to store product names and related data
+   * @param array &$productVersions
+   *   Array to store product versions
+   * @param array &$planNames
+   *   Array to store plan names
+   */
+  public static function getProductData(&$productNames, &$productVersions, &$planNames) {
+    $query = \Drupal::entityTypeManager()
+      ->getStorage('node')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('type', 'product')
+      ->execute();
+    $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($query) ?? [];
+    if (empty($nodes)) {
+      return;
+    }
+
+    foreach ($nodes as $node) {
+      if ($node->hasField('product_data') && !$node->get('product_data')->isEmpty()) {
+        $productYaml = $node->get('product_data')->value;
+        $product = yaml_parse($productYaml);
+        
+        if (!isset($product['info']) || !isset($product['apis'])) {
+          continue;
+        }
+        
+        $related_product_apis = [];
+        $related_product_plans = [];
+        
+        // Process APIs
+        foreach ($product['apis'] as $api) {
+          if (isset($api['name'])) {
+            $apiParts = explode(':', $api['name']);
+            if (count($apiParts) >= 2) {
+              $api_key = $apiParts[0];
+              $api_version = $apiParts[1];
+              
+              $related_product_apis[] = [
+                'key' => $api_key,
+                'version' => $api_version
+              ];
+              
+              // Add to product versions if not already there
+              if (!in_array($api_version, $productVersions)) {
+                $productVersions[] = $api_version;
+              }
+            }
+          }
+        }
+        
+        // Process all plans
+        if (isset($product['plans']) && is_array($product['plans'])) {
+          foreach ($product['plans'] as $name => $plan) {
+            // Add to plan names if not already there
+            $planExists = false;
+            foreach ($planNames as $existingPlan) {
+              if (isset($existingPlan['key']) && $existingPlan['key'] === $name) {
+                $planExists = true;
+                break;
+              }
+            }
+            
+            if (!$planExists && isset($plan['title'])) {
+              $planNames[] = [
+                'key' => $name,
+                'title' => $plan['title'],
+              ];
+            }
+            
+            $related_product_plans[] = $name;
+          }
+        }
+        
+        // Add product version to the versions array if not already there
+        if (isset($product['info']['version']) && !in_array($product['info']['version'], $productVersions)) {
+          $productVersions[] = $product['info']['version'];
+        }
+        
+        // Add product to productNames
+        $productNames[] = [
+          'key' => $product['info']['name'] ?? '',
+          'title' => $product['info']['title'] ?? '',
+          'version' => $product['info']['version'] ?? '',
+          'apis' => $related_product_apis,
+          'plans' => $related_product_plans,
+        ];
+      }
+    }
+  }
+
+  /**
+   * Get all application data including subscribed APIs, products, and plans
+   *
+   * @param array &$applicationData
+   *   Array to store application data
+   */
+  public static function getApplicationNames(&$applicationData) {
+    // First, get all applications
+    $query = \Drupal::entityTypeManager()
+      ->getStorage('node')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('type', 'application')
+      ->execute();
+    $appNodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($query) ?? [];
+    
+    if (empty($appNodes)) {
+      return;
+    }
+    
+    // Process each application
+    $applicationData = [];
+    foreach ($appNodes as $node) {
+      if ($node->hasField('application_data') && !$node->get('application_data')->isEmpty()) {
+        $app = SerializationUtility::decodeData($node->get('application_data')->value);
+        if (isset($app['name']) && isset($app['title'])) {
+          $appId = $node->hasField('application_id') ? $node->application_id->value : '';
+          $appKey = $app['name'];
+          $appTitle = $app['title'];
+          
+          // Get app-specific portal data using the function from apic_app.module
+          $apiNames = [];
+          $apiVersions = [];
+          $productNames = [];
+          $productVersions = [];
+          $planNames = [];
+          
+          // Call the function from apic_app.module to get app-specific data
+          if (function_exists('apic_app_generate_app_specific_portal_data')) {
+            apic_app_generate_app_specific_portal_data($appId, $apiNames, $apiVersions, $productNames, $productVersions, $planNames);
+          }
+          
+          // Create subscriptions array from products and plans
+          $subscriptions = [];
+          foreach ($productNames as $product) {
+            if (isset($product['plans']) && is_array($product['plans']) && !empty($product['plans'])) {
+              foreach ($product['plans'] as $planName) {
+                $subscriptions[] = [
+                  'product' => $product['key'],
+                  'plan' => $planName
+                ];
+              }
+            }
+          }
+          
+          // Store application data with related information
+          $applicationData[$appKey] = [
+            'title' => $appTitle,
+            'id' => $appId,
+            'subscriptions' => $subscriptions,
+            'apis' => $apiNames,
+            'products' => $productNames,
+            'plans' => $planNames
+          ];
+        }
+      }
+    }
   }
 }

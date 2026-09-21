@@ -13,7 +13,7 @@
 view_mode ? ('node--view-mode-' ~ view_mode)|clean_class,
 'bx--card'
 ] -%}
-<article id="node-{{ node.id }}" {{ attributes.addClass(classes) }} aria-label="{{ node.title[0].value }}">
+<article id="node-{{ node.id }}" {{ attributes.addClass(classes).removeAttribute('dir') }} aria-label="{{ node.title[0].value }}">
   <div class="apicCard">
     {% if display_submitted %}
       <footer class="apicIcon">

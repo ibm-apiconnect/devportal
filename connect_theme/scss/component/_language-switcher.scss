@@ -1,0 +1,160 @@
+// Language switcher dropdown.
+// Base styles are position-agnostic — work in any block region.
+// Region-specific overrides are applied via the .region-* classes that Drupal
+// automatically places on the region wrapper (region.html.twig).
+.block-language {
+  .language-switcher-nav {
+    margin: 0;
+    padding: 0;
+  }
+
+  .language-switcher-dropdown {
+    padding-inline-start: 0.75rem;
+    padding-inline-end: 0.75rem;
+    list-style: none;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .language-switcher-trigger {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    // Inherit surrounding context colour so it looks right wherever it lands.
+    color: inherit;
+    font-size: 0.875rem;
+    line-height: normal;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    &:hover,
+    &:focus {
+      // Use a neutral interactive token with a currentColor fallback.
+      color: var(--link-hover-color, currentColor);
+      outline: none;
+    }
+
+    svg {
+      fill: currentColor;
+      transition: transform 0.2s;
+    }
+  }
+
+  .language-switcher-dropdown.open {
+    .language-switcher-trigger svg {
+      transform: rotate(180deg);
+    }
+  }
+
+  .dropdown-menu {
+    // Default: open downward.
+    top: 100%;
+    bottom: auto;
+    inset-inline-end: 0;
+    left: auto;
+    min-width: 8rem;
+    // Cap height and scroll so a long language list never clips off-screen.
+    max-height: 60vh;
+    overflow-y: auto;
+
+    li {
+      list-style: none;
+    }
+
+    a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      white-space: nowrap;
+
+      svg {
+        fill: currentColor;
+        flex-shrink: 0;
+      }
+    }
+
+    li.active a {
+      font-weight: 600;
+    }
+  }
+}
+
+// ── Navbar (navigation_right region) ────────────────────────────────────────
+// Restore the exact navbar height alignment that was there before.
+.region-navigation-right .block-language,
+.navbar .block-language {
+  .language-switcher-dropdown {
+    height: $navbar-height;
+  }
+
+  .language-switcher-trigger {
+    color: var(--navbar-default-link-color);
+    line-height: $navbar-height;
+    height: 100%;
+
+    &:hover,
+    &:focus {
+      color: var(--navbar-default-link-hover-color);
+    }
+  }
+}
+
+// ── Top bar ──────────────────────────────────────────────────────────────────
+// Opens downward. Align menu to the start (left) edge of the trigger so it
+// doesn't run off the right side of the screen on a narrow bar.
+.region-topbar .block-language {
+  .language-switcher-trigger {
+    color: var(--text-01);
+
+    &:hover,
+    &:focus {
+      color: var(--text-01);
+    }
+  }
+
+  .dropdown-menu {
+    inset-inline-end: auto;
+    left: 0;
+  }
+}
+
+// ── Footer ───────────────────────────────────────────────────────────────────
+// Menu opens upward so it is not clipped by the page bottom.
+// Align to start edge — footer language switcher is typically on the left.
+.region-footer .block-language,
+footer .block-language {
+  .language-switcher-trigger {
+    color: var(--footer-link-color);
+
+    &:hover,
+    &:focus {
+      color: var(--footer-link-color);
+    }
+  }
+
+  .dropdown-menu {
+    top: auto;
+    bottom: 100%;
+    inset-inline-end: auto;
+    left: 0;
+  }
+}
+
+// ── Sidebars ─────────────────────────────────────────────────────────────────
+// Limit inline padding to fit a narrow column; menu opens downward (default).
+.region-sidebar-first .block-language,
+.region-sidebar-second .block-language {
+  .language-switcher-dropdown {
+    padding-inline-start: 0;
+    padding-inline-end: 0;
+  }
+
+  .dropdown-menu {
+    inset-inline-end: auto;
+    left: 0;
+  }
+}

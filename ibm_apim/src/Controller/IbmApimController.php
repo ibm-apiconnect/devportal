@@ -89,7 +89,7 @@ class IbmApimController extends ControllerBase {
         $version .= '( ' . $yaml['build'] . ' )';
       }
     }
-    $markup = '<p>' . t('IBM API Developer Portal version %ver', ['%ver' => $version]) . '</p>';
+    $markup = '<p>' . t('IBM CMS Portal version %ver', ['%ver' => $version]) . '</p>';
     $moduleHandler = \Drupal::service('module_handler');
     if ($moduleHandler->moduleExists('apic_api')) {
       $filename = \Drupal::service('extension.list.module')->getPath('apic_api') . '/explorer/app/version.json';

@@ -213,10 +213,10 @@ class Member {
     if (array_key_exists('org_url', $content)) {
       $this->setOrgUrl($content['org_url']);
     }
-    if (array_key_exists('created_at', $content)) {
+    if (array_key_exists('created_at', $content) && $content['created_at'] !== NULL) {
       $this->setCreatedAt(strtotime($content['created_at']));
     }
-    if (array_key_exists('updated_at', $content)) {
+    if (array_key_exists('updated_at', $content) && $content['updated_at'] !== NULL) {
       $this->setUpdatedAt(strtotime($content['updated_at']));
     }
     if (array_key_exists('user', $content)) {
