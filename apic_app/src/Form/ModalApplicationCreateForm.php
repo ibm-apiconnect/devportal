@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2024
+ * (C) Copyright IBM Corporation 2018, 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -15,6 +15,8 @@ namespace Drupal\apic_app\Form;
 
 use Drupal\apic_app\Service\ApplicationRestInterface;
 use Drupal\apic_app\Service\CertificateService;
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\InsertCommand;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
@@ -165,6 +167,11 @@ class ModalApplicationCreateForm extends FormBase {
 
     $form['title']['#required'] = TRUE;
 
+    // Add aria-label for accessibility
+    if (isset($form['apic_summary']['widget'][0]['value'])) {
+      $form['apic_summary']['widget'][0]['value']['#attributes']['aria-label'] = $this->t('Description');
+    }
+
     $form['actions']['#type'] = 'actions';
     $form['actions']['#weight'] = $max_weight + 1;
     $form['actions']['submit'] = [
@@ -226,8 +233,8 @@ class ModalApplicationCreateForm extends FormBase {
     if (is_array($name) && isset($name[0]['value'])) {
       $name = $name[0]['value'];
     }
-    $name = trim($name);
-    if (!isset($name) || empty($name)) {
+
+    if (!isset($name) || empty(trim($name))) {
       $form_state->setErrorByName('Name', $this->t('Application name is a required field.'));
     }
   }
@@ -267,11 +274,18 @@ class ModalApplicationCreateForm extends FormBase {
       if (is_array($name) && isset($name[0]['value'])) {
         $name = $name[0]['value'];
       }
-      $name = trim($name);
+
+      $name = Html::escape(trim($name));
+
       $summary = $form_state->getValue('apic_summary');
       if (is_array($summary) && isset($summary[0]['value'])) {
         $summary = $summary[0]['value'];
       }
+
+      if (isset($summary)) {
+        $summary = Xss::filter($summary);
+      }
+      
       $oauth_endpoints = [];
       $oauth = $form_state->getValue('application_redirect_endpoints');
       foreach ($oauth as $oauth_value) {
@@ -319,58 +333,78 @@ class ModalApplicationCreateForm extends FormBase {
         $credsForm = [];
         $moduleHandler = \Drupal::service('module_handler');
 
-        $modalHeaderHTML = '<div class="modal-header ui-dialog-titlebar ui-draggable-handle" id="drupal-modal--header"><button class="close ui-dialog-titlebar-close" aria-label="Close" data-dismiss="modal" type="button"><span aria-hidden="true">×</span></button><h4 class="modal-title ui-dialog-title">' . t('Credentials for your new application') . '</h4></div>';
         $credsForm['intro'] = [
-          '#markup' => '<div class="modalAppResultContainer modal-dialog"><div class="modal-content">' . $modalHeaderHTML . '<div class="modal-body pwd-see"><p>' . t('The API Key and Secret have been generated for your application.') . '</p>',
+          '#markup' => '<div class="pwd-see"><span>' . t('The API Key and Secret have been generated for your application.') . '</span>',
           '#weight' => 0,
-          '#allowed_tags' => ['button', 'div', 'span', 'p', 'h4'],
         ];
         if ($moduleHandler->moduleExists('clipboardjs')) {
+
+          $escapedClientId = Html::escape($clientId);
+          $escapedClientSecret = Html::escape($clientSecret);
+          
           $credsForm['client_id'] = [
-            '#markup' => Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input id="clientIDInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientIDInputLabel" readonly aria-readonly value="' . $clientId . '" />
-                <div id="hiddenClientIDInput" class="offscreen-field">' . $clientId . '</div>
+            '#markup' => Markup::create('<div class="clientIDContainer"><label for="clientIDInput" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input id="clientIDInput" class="clipboardjs password-field passwordCreds" type="password" readonly aria-readonly value="' . $escapedClientId . '" />
+                <div id="hiddenClientIDInput" class="offscreen-field">' . $escapedClientId . '</div>
                   <span class="clipboardjs clipboardjs-btn" data-toggle="tooltip" data-placement="auto" title="' . t('Copy Key') . '">
-                    <button class="clipboardjs-button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientIDInput">
+                    <button class="clipboardjs-button" aria-label="' . t('Copy Key') . '" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientIDInput">
                     <div class="clipboardjs-tooltip">
                         ' . file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_app') . "/images/clipboard.svg") . '
                         <span class="tooltiptext clipboardjs-tooltip"></span>
                       </div>
                     </button>
                   </span>
-                  </div>'),
+                </div></div>'),
             '#weight' => 10,
           ];
 
           $credsForm['client_secret'] = [
-            '#markup' => Markup::create('<div class="clientSecretContainer"><label for="client_secret" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input id="clientSecretInput" class="clipboardjs password-field passwordCreds" type="password" aria-labelledby="clientSecretInputLabel" readonly aria-readonly value="' . $clientSecret . '" />
-                <div id="hiddenClientSecretInput" class="offscreen-field">' . $clientSecret . '</div>
+            '#markup' => Markup::create('<div class="clientSecretContainer"><label for="clientSecretInput" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input id="clientSecretInput" class="clipboardjs password-field passwordCreds" type="password" readonly aria-readonly value="' . $escapedClientSecret . '" />
+                <div id="hiddenClientSecretInput" class="offscreen-field">' . $escapedClientSecret . '</div>
                   <span class="clipboardjs clipboardjs-btn" data-toggle="tooltip" data-placement="auto" title="' . t('Copy Secret') . '">
-                    <button class="clipboardjs-button" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientSecretInput">
+                    <button class="clipboardjs-button" aria-label="' . t('Copy Secret') . '" data-clipboard-alert="tooltip" data-clipboard-alert-text="' . t('Copied successfully') . '" data-clipboard-target="#hiddenClientSecretInput">
                     <div class="clipboardjs-tooltip">
                         ' . file_get_contents(\Drupal::service('extension.list.module')->getPath('apic_app') . "/images/clipboard.svg") . '
                         <span class="tooltiptext clipboardjs-tooltip""></span>
                       </div>
                     </button>
                   </span>
-                  </div>'),
+                  </div></div>'),
             '#weight' => 20,
           ];
         }
         else {
+          
+          $escapedClientId = Html::escape($clientId);
+          $escapedClientSecret = Html::escape($clientSecret);
+          
           $credsForm['client_id'] = [
-            '#markup' => Markup::create('<div class="clientIDContainer"><label for="client_id" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input class="form-control password-field passwordCreds" type="password" id="client_id" value="' . $clientId . '"></div></div>'),
+            '#markup' => Markup::create('<div class="clientIDContainer"><label for="clientIDInput" class="field__label">' . t('Key') . '</label><div class="bx--form-item appID js-form-item form-item js-form-type-textfield form-group"><input class="form-control password-field passwordCreds" type="password" id="clientIDInput" value="' . $escapedClientId . '"></div></div>'),
             '#weight' => 10,
           ];
 
           $credsForm['client_secret'] = [
-            '#markup' => Markup::create('<div class="clientSecretContainer"><label for="client_secret" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input class="form-control password-field passwordCreds" type="password" id="client_secret" value="' . $clientSecret . '"></div></div>'),
+            '#markup' => Markup::create('<div class="clientSecretContainer"><label for="clientSecretInput" class="field__label">' . t('Secret') . '</label><div class="bx--form-item appSecret js-form-item form-item js-form-type-textfield form-group"><input class="form-control password-field passwordCreds" type="password" id="clientSecretInput" value="' . $escapedClientSecret . '"></div></div>'),
             '#weight' => 20,
           ];
         }
 
+        $outro = '<p>' . t('The Secret will only be displayed here one time. Please copy your API Secret and keep it for your records.') . '</p>';
+        if (\Drupal::service('apic_api.utils')->areEventAPIsPresent()) {
+          $outro = $outro . '<p>' . t('Application credentials are used when an API requires authentication. Depending on its use, it can be referred to as API key and secret in a HTTP authentication header, Client ID and secret in an OAuth flow or Kafka SASL username and password.') . '</p>';
+        }
         $credsForm['outro'] = [
-          '#markup' => '<p>' . t('The Secret will only be displayed here one time. Please copy your API Secret and keep it for your records.') . '</p></div></div></div>',
+          '#markup' => $outro . '</div>',
           '#weight' => 30,
+        ];
+        $credsForm['actions'] = [
+          '#type' => 'actions',
+          '#weight' => 40,
+        ];
+        $credsForm['actions']['cancel'] = [
+          '#type' => 'link',
+          '#title' => t('OK'),
+          '#url' => Url::fromRoute('ibm_apim.subscription_wizard.step', ['step' => 'chooseapp']),
+          '#attributes' => ['class' => ['button', 'button--primary']],
         ];
         if ($moduleHandler->moduleExists('clipboardjs')) {
           $credsForm['#attached']['library'][] = 'clipboardjs/drupal';
@@ -392,7 +426,12 @@ class ModalApplicationCreateForm extends FormBase {
           ];
         }
 
-        $response->addCommand(new OpenModalDialogCommand(t('Credentials for your new application'), $credsForm));
+        $dialogOptions = [
+          'width' => 700,
+          'closeOnEscape' => FALSE,
+          'dialogClass' => 'no-close',
+        ];
+        $response->addCommand(new OpenModalDialogCommand(t('New application credentials'), $credsForm, $dialogOptions));
       }
     }
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);

@@ -1,0 +1,50 @@
+--- core/authorize.php	2026-04-21 11:07:20
++++ core/authorize.php	2026-04-21 11:09:42
+@@ -155,6 +155,24 @@
+   }
+   // If a batch is running, let it run.
+   elseif ($request->query->has('batch')) {
++    // Check if the batch still exists before attempting to process it.
++    // This prevents fatal errors when users refresh after session expiration.
++    $batch_id = $request->query->get('id');
++    if ($batch_id) {
++      $batch_exists = \Drupal::database()->select('batch', 'b')
++        ->fields('b', ['bid'])
++        ->condition('bid', $batch_id)
++        ->execute()
++        ->fetchField();
++      
++      if (!$batch_exists) {
++        // Batch doesn't exist (likely due to session expiration), redirect
++        \Drupal::messenger()->addWarning(t('Your previous operation could not be completed because your session expired. Please try again.'));
++        header('Location: ' . \Drupal\Core\Url::fromRoute('system.modules_list')->toString());
++        exit;
++      }
++    }
++    
+     $content = _batch_page($request);
+     // If _batch_page() returns a response object (likely a JsonResponse for
+     // JavaScript-based batch processing), send it immediately.
+@@ -165,7 +183,21 @@
+   }
+   else {
+     if (!$request->getSession()->has('authorize_operation') || !$request->getSession()->has('authorize_filetransfer_info')) {
+-      $content = ['#markup' => t('It appears you have reached this page in error.')];
++      // Generate URLs with absolute paths using base_url
++      $login_url = \Drupal\Core\Url::fromRoute('user.login', [], [
++        'absolute' => TRUE,
++        'base_url' => $GLOBALS['base_url'],
++      ])->toString();
++      $home_url = \Drupal\Core\Url::fromRoute('<front>', [], [
++        'absolute' => TRUE,
++        'base_url' => $GLOBALS['base_url'],
++      ])->toString();
++      $content = [
++        '#markup' => t('It appears you have reached this page in error. <a href="@login">Sign in</a> or return to the <a href="@home">home page</a>.', [
++          '@login' => $login_url,
++          '@home' => $home_url,
++        ])
++      ];
+     }
+     elseif (!$batch = batch_get()) {
+       // We have a batch to process, show the filetransfer form.

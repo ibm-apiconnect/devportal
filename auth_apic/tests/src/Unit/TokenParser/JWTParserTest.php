@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2024
+ * (C) Copyright IBM Corporation 2018, 2024, 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -19,6 +19,7 @@ use Drupal\Tests\UnitTestCase;
 use Prophecy\Prophet;
 use Drupal\Core\State\State;
 use Prophecy\Argument;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 /**
  * @coversDefaultClass \Drupal\auth_apic\Service\JWTParser
@@ -85,7 +86,7 @@ class JWTParserTest extends UnitTestCase {
    * @throws \Exception
    */
   public function testValidParse(): void {
-    $publicKeyJWK = [unserialize(base64_decode(getenv('JWK_B64_KEY')))];
+    $publicKeyJWK = [SerializationUtility::decodeData(base64_decode(getenv('JWK_B64_KEY')))];
     $this->state->get('ibm_apim.apim_keys')->willReturn(['keys' => $publicKeyJWK]);
     $this->mgmtServer->updateKeys(Argument::any())->shouldNotBeCalled();
     $this->utils->base64_url_decode($this->getValidHeaders())->willReturn(\base64_decode($this->getValidHeaders()));
@@ -123,7 +124,7 @@ class JWTParserTest extends UnitTestCase {
    * @throws \Exception
    */
   public function testMissingUrlParse(): void {
-    $publicKeyJWK = [unserialize(base64_decode(getenv('JWK_B64_KEY')))];
+    $publicKeyJWK = [SerializationUtility::decodeData(base64_decode(getenv('JWK_B64_KEY')))];
     $this->state->get('ibm_apim.apim_keys')->willReturn(['keys' => $publicKeyJWK]);
 
     $this->logger->error('payload.scopes.url not available in activation JWT')->shouldBeCalled();

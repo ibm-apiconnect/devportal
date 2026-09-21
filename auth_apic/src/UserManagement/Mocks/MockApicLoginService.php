@@ -18,6 +18,7 @@ use Drupal\auth_apic\UserManagerResponse;
 use Drupal\ibm_apim\ApicType\ApicUser;
 use Drupal\user\Entity\User;
 use Drupal\apictest\ApicTestUtils;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 class MockApicLoginService implements ApicLoginServiceInterface {
 
@@ -30,7 +31,7 @@ class MockApicLoginService implements ApicLoginServiceInterface {
       return $this->oidcLogin($user);
     }
 
-    \Drupal::logger('mock_auth_apic')->debug('MOCKED: MockApicLoginService->login() with @user',['@user' => \serialize($user)]);
+    \Drupal::logger('mock_auth_apic')->debug('MOCKED: MockApicLoginService->login() with @user',['@user' => SerializationUtility::encodeData($user)]);
     //\Drupal::messenger()->addStatus('MOCKED: MockApicLoginService->login()');
     // otherwise we are a non-oidc user.
     $password = $user->getPassword();
@@ -168,7 +169,7 @@ class MockApicLoginService implements ApicLoginServiceInterface {
     }
 
     if ($authCode === 'fail') {
-      \Drupal::messenger()->addError('Error while authenticating user. Please contact your system administrator.');
+      \Drupal::messenger()->addError(t('Error while authenticating user. Please contact your system administrator.'));
     }
     elseif ($authCode === 'noorgenabledonboarding') {
       return 'consumerorg.create';

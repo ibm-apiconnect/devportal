@@ -55,7 +55,7 @@ class ConfigForm extends ConfigFormBase {
     }
 
     $form['intro'] = [
-      '#markup' => t('IBM Notifications Event Log Settings'),
+      '#markup' => t('IBM Notifications event log settings'),
       '#weight' => -20,
     ];
 
@@ -67,7 +67,7 @@ class ConfigForm extends ConfigFormBase {
     ];
     $form['retention']['retention_days'] = [
       '#type' => 'number',
-      '#title' => t('Retention Days'),
+      '#title' => t('Retention days'),
       '#description' => t('Provide the number of days to keep events for.'),
       '#min' => EventLogService::MIN_RETENTION,
       '#max' => EventLogService::MAX_RETENTION,

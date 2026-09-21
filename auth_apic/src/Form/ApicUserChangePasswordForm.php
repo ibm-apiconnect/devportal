@@ -133,9 +133,8 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
    *
    * @return array
    */
-  public function buildForm(array $form, FormStateInterface $form_state, UserInterface $user = NULL): array {
+  public function buildForm(array $form, FormStateInterface $form_state, ?UserInterface $user = NULL): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-
     $this->userProfile = $account = $user;
     $user = $this->account;
 
@@ -358,7 +357,15 @@ class ApicUserChangePasswordForm extends ChangePasswordForm {
       $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser()->id());
       if ($user !== NULL) {
         $this->logger->notice('change password form submit for non-admin user');
-        $success = $this->apicPassword->changePassword($user, $form_state->getValue('current_pass'), $form_state->getValue('pass'));
+        
+        // Get password values
+        $current_pass = $form_state->getValue('current_pass');
+        $new_pass = $form_state->getValue('pass');
+        
+        // For passwords, we don't want to apply htmlspecialchars as it would alter the password
+        // Passwords should be validated but not sanitized
+        
+        $success = $this->apicPassword->changePassword($user, $current_pass, $new_pass);
       }
       if ($success) {
         $form_state->setRedirect('<front>');

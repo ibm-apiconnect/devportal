@@ -1,0 +1,717 @@
+// ============================================================================
+// THEME TOKEN DEFINITIONS
+// ============================================================================
+// Tokens in this file are aligned with the Carbon Design System color tokens:
+// https://carbondesignsystem.com/elements/color/tokens/
+//
+// - The default (light) theme follows the Carbon "White" theme.
+// - Dark mode tokens use the "dark-" prefix and are based on the Carbon G100 theme.
+// - Token naming and values must remain consistent with Carbon tokens.
+//
+// ➤ For custom tokens, use:
+//   connect_theme/scss/_connect-variables.scss
+// ============================================================================
+// ============================================================================
+// Background - Carbon White Theme
+// ============================================================================
+$background: $white-0; // White | #ffffff
+$layer-background-01: $white-0; // White | #ffffff
+$background-hover: rgba($gray-50, 0.12); // Gray 50, 12% | rgba(#8d8d8d, 0.12)
+$background-active: rgba($gray-50, 0.50); // Gray 50, 50% | rgba(#8d8d8d, 0.50)
+$background-selected: rgba($gray-50, 0.20); // Gray 50, 20% | rgba(#8d8d8d, 0.20)
+$background-selected-hover: rgba($gray-50, 0.32); // Gray 50, 32% | rgba(#8d8d8d, 0.32)
+$background-inverse: $gray-80; // Gray 80 | #393939
+$background-inverse-hover: $gray-80-hover; // Gray 80 hover | #474747
+$background-brand: $blue-60; // Blue 60 | #0f62fe
+// ============================================================================
+// Background - Carbon G100 Theme
+// ============================================================================
+$dark-background: $gray-100; // Gray 100 | #161616
+$dark-layer-background-01: $gray-100; // Gray 100 | #8d8d8d
+$dark-background-hover: rgba($gray-50, 0.16); // Gray 50, 16% | rgba(#8d8d8d, 0.16)
+$dark-background-active: rgba($gray-50, 0.40); // Gray 50, 40% | rgba(#8d8d8d, 0.4)
+$dark-background-selected: rgba($gray-50, 0.24); // Gray 50, 24% | rgba(#8d8d8d, 0.24)
+$dark-background-selected-hover: rgba($gray-50, 0.32); // Gray 50, 32% | rgba(#8d8d8d, 0.32)
+$dark-background-inverse: $gray-10; // Gray 10 | #f4f4f4
+$dark-background-inverse-hover: $gray-10-hover; // Gray 10 hover | #e8e8e8
+$dark-background-brand: $blue-60; // Blue 60 | #0f62fe
+// ============================================================================
+// Layer - Carbon White Theme
+// ============================================================================
+$layer-01: $gray-10; // Gray 10 | #f4f4f4
+$layer-02: $white-0; // White | #ffffff
+$layer-03: $gray-10; // Gray 10 | #f4f4f4
+$layer-background-02: $gray-10; // Gray 10 | #f4f4f4
+$layer-background-03: $white-0; // White | #ffffff
+$layer-hover-01: $gray-10-hover; // Gray 10 hover | #e8e8e8
+$layer-hover-02: $gray-10-hover; // Gray 10 hover | #e8e8e8
+$layer-hover-03: $gray-10-hover; // Gray 10 hover | #e8e8e8
+$layer-active-01: $gray-30; // Gray 30 | #c6c6c6
+$layer-active-02: $gray-30; // Gray 30 | #c6c6c6
+$layer-active-03: $gray-30; // Gray 30 | #c6c6c6
+$layer-selected-01: $gray-20; // Gray 20 | #e0e0e0
+$layer-selected-02: $gray-20; // Gray 20 | #e0e0e0
+$layer-selected-03: $gray-20; // Gray 20 | #e0e0e0
+$layer-selected-hover-01: $gray-20-hover; // Gray 20 hover | #d1d1d1
+$layer-selected-hover-02: $gray-20-hover; // Gray 20 hover | #d1d1d1
+$layer-selected-hover-03: $gray-20-hover; // Gray 20 hover | #d1d1d1
+$layer-selected-inverse: $gray-100; // Gray 100 | #161616
+$layer-selected-disabled: $gray-50; // Gray 50 | #8d8d8d
+// ============================================================================
+// Layer - Carbon G100 Theme
+// ============================================================================
+$dark-layer-01: $gray-90; // Gray 90 | #262626
+$dark-layer-02: $gray-80; // Gray 80 | #393939
+$dark-layer-03: $gray-70; // Gray 70 | #525252
+$dark-layer-background-02: $gray-90; // Gray 90 | #262626
+$dark-layer-background-03: $gray-80; // Gray 80 | #393939
+$dark-layer-hover-01: $gray-90-hover; // Gray 90 hover | #333333
+$dark-layer-hover-02: $gray-80-hover; // Gray 80 hover | #474747
+$dark-layer-hover-03: $gray-70-hover; // Gray 70 hover | #636363
+$dark-layer-active-01: $gray-70; // Gray 70 | #525252
+$dark-layer-active-02: $gray-60; // Gray 60 | #6f6f6f
+$dark-layer-active-03: $gray-50; // Gray 50 | #8d8d8d
+$dark-layer-selected-01: $gray-80; // Gray 80 | #393939
+$dark-layer-selected-02: $gray-70; // Gray 70 | #525252
+$dark-layer-selected-03: $gray-60; // Gray 60 | #6f6f6f
+$dark-layer-selected-hover-01: $gray-80-hover; // Gray 80 hover | #474747
+$dark-layer-selected-hover-02: $gray-70-hover; // Gray 70 hover | #636363
+$dark-layer-selected-hover-03: $gray-60-hover; // Gray 60 hover | #5e5e5e
+$dark-layer-selected-inverse: $gray-10; // Gray 10 | #f4f4f4
+$dark-layer-selected-disabled: $gray-60; // Gray 60 | #6f6f6f
+// ============================================================================
+// Layer accent - Carbon White Theme
+// ============================================================================
+$layer-accent-01: $gray-20; // Gray 20 | #e0e0e0
+$layer-accent-02: $gray-20; // Gray 20 | #e0e0e0
+$layer-accent-03: $gray-20; // Gray 20 | #e0e0e0
+$layer-accent-hover-01: $gray-20-hover; // Gray 20 hover | #d1d1d1
+$layer-accent-hover-02: $gray-20-hover; // Gray 20 hover | #d1d1d1
+$layer-accent-hover-03: $gray-20-hover; // Gray 20 hover | #d1d1d1
+$layer-accent-active-01: $gray-40; // Gray 40 | #a8a8a8
+$layer-accent-active-02: $gray-40; // Gray 40 | #a8a8a8
+$layer-accent-active-03: $gray-40; // Gray 40 | #a8a8a8
+// ============================================================================
+// Layer accent - Carbon G100 Theme
+// ============================================================================
+$dark-layer-accent-01: $gray-80; // Gray 80 | #393939
+$dark-layer-accent-02: $gray-70; // Gray 70 | #525252
+$dark-layer-accent-03: $gray-60; // Gray 60 | #6f6f6f
+$dark-layer-accent-hover-01: $gray-80-hover; // Gray 80 hover | #474747
+$dark-layer-accent-hover-02: $gray-70-hover; // Gray 70 hover | #636363
+$dark-layer-accent-hover-03: $gray-60-hover; // Gray 60 hover | #5e5e5e
+$dark-layer-accent-active-01: $gray-70; // Gray 70 | #525252
+$dark-layer-accent-active-02: $gray-50; // Gray 50 | #8d8d8d
+$dark-layer-accent-active-03: $gray-80; // Gray 80 | #393939
+// ============================================================================
+// Field - Carbon White Theme
+// ============================================================================
+$field-01: $gray-10; // Gray 10 | #f4f4f4
+$field-02: $white-0; // White | #ffffff
+$field-03: $gray-10; // Gray 10 | #f4f4f4
+$field-hover-01: $gray-10-hover; // Gray 10 hover | #e8e8e8
+$field-hover-02: $gray-10-hover; // Gray 10 hover | #e8e8e8
+$field-hover-03: $gray-10-hover; // Gray 10 hover | #e8e8e8
+// ============================================================================
+// Field - Carbon G100 Theme
+// ============================================================================
+$dark-field-01: $gray-90; // Gray 90 | #262626
+$dark-field-02: $gray-80; // Gray 80 | #393939
+$dark-field-03: $gray-70; // Gray 70 | #525252
+$dark-field-hover-01: $gray-90-hover; // Gray 90 hover | #333333
+$dark-field-hover-02: $gray-80-hover; // Gray 80 hover | #474747
+$dark-field-hover-03: $gray-70-hover; // Gray 70 hover | #636363
+// ============================================================================
+// Border - Carbon White Theme
+// ============================================================================
+$border-interactive: $blue-60; // Blue 60 | #0f62fe
+$border-subtle-00: $gray-20; // Gray 20 | #e0e0e0
+$border-subtle-01: $gray-30; // Gray 30 | #c6c6c6
+$border-subtle-02: $gray-20; // Gray 20 | #e0e0e0
+$border-subtle-03: $gray-30; // Gray 30 | #c6c6c6
+$border-subtle-selected-01: $gray-30; // Gray 30 | #c6c6c6
+$border-subtle-selected-02: $gray-30; // Gray 30 | #c6c6c6
+$border-subtle-selected-03: $gray-30; // Gray 30 | #c6c6c6
+$border-strong-01: $gray-50; // Gray 50 | #8d8d8d
+$border-strong-02: $gray-50; // Gray 50 | #8d8d8d
+$border-strong-03: $gray-50; // Gray 50 | #8d8d8d
+$border-tile-01: $gray-30; // Gray 30 | #c6c6c6
+$border-tile-02: $gray-40; // Gray 40 | #a8a8a8
+$border-tile-03: $gray-30; // Gray 30 | #c6c6c6
+$border-inverse: $gray-100; // Gray 100 | #161616
+$border-disabled: $gray-30; // Gray 30 | #c6c6c6
+// ============================================================================
+// Border - Carbon G100 Theme
+// ============================================================================
+$dark-border-interactive: $blue-50; // Blue 50 | #4589ff
+$dark-border-subtle-00: $gray-80; // Gray 80 | #393939
+$dark-border-subtle-01: $gray-70; // Gray 70 | #525252
+$dark-border-subtle-02: $gray-60; // Gray 60 | #6f6f6f
+$dark-border-subtle-03: $gray-60; // Gray 60 | #6f6f6f
+$dark-border-subtle-selected-01: $gray-60; // Gray 60 | #6f6f6f
+$dark-border-subtle-selected-02: $gray-50; // Gray 50 | #8d8d8d
+$dark-border-subtle-selected-03: $gray-50; // Gray 50 | #8d8d8d
+$dark-border-strong-01: $gray-60; // Gray 60 | #6f6f6f
+$dark-border-strong-02: $gray-50; // Gray 50 | #8d8d8d
+$dark-border-strong-03: $gray-40; // Gray 40 | #a8a8a8
+$dark-border-tile-01: $gray-70; // Gray 70 | #525252
+$dark-border-tile-02: $gray-60; // Gray 60 | #6f6f6f
+$dark-border-tile-03: $gray-50; // Gray 50 | #8d8d8d
+$dark-border-inverse: $gray-10; // Gray 10 | #f4f4f4
+$dark-border-disabled: rgba($gray-50, 0.50); // Gray 50, 50% | rgba(#8d8d8d, 0.5)
+// ============================================================================
+// Text - Carbon White Theme
+// ============================================================================
+$text-primary: $gray-100; // Gray 100 | #161616
+$text-secondary: $gray-70; // Gray 70 | #525252
+$text-placeholder: $gray-40; // Gray 40 | #a8a8a8
+$text-on-color: $white-0; // White | #ffffff
+$text-on-color-disabled: $gray-50; // Gray 50 | #8d8d8d
+$text-helper: $gray-60; // Gray 60 | #6f6f6f
+$text-error: $red-60; // Red 60 | #da1e28
+$text-inverse: $white-0; // White | #ffffff
+$text-disabled: rgba($gray-100, 0.75); // Gray 100 – 25% | rgba(#161616, 0.25)
+// ============================================================================
+// Text - Carbon G100 Theme
+// ============================================================================
+$dark-text-primary: $gray-10; // Gray 10 | #f4f4f4
+$dark-text-secondary: $gray-30; // Gray 30 | #c6c6c6
+$dark-text-placeholder: $gray-60; // Gray 60 | #6f6f6f
+$dark-text-on-color: $white-0; // White | #ffffff
+$dark-text-on-color-disabled: rgba($white-0, 0.75); // White – 25% | #8d8d8d
+$dark-text-helper: $gray-50; // Gray 50 | #8d8d8d
+$dark-text-error: $red-40; // Red 40 | #ff8389
+$dark-text-inverse: $gray-100; // Gray 100 | #161616
+$dark-text-disabled: rgba($gray-10, 0.75); // Gray 10 – 25% | rgba(#f4f4f4, 0.25)
+// ============================================================================
+// Link - Carbon White Theme
+// ============================================================================
+$link-primary: $link-01; // Blue 60 | #0f62fe
+$link-primary-hover: $blue-70; // Blue 70 | #0043ce
+$link-secondary: $blue-70; // Blue 70 | #0043ce
+$link-inverse: $blue-40; // Blue 40 | #78a9ff
+$link-inverse-hover: $blue-30; // Blue 30 | #a6c8ff
+$link-inverse-active: $gray-10; // Gray 10 | #f4f4f4
+$link-inverse-visited: $purple-40; // Purple 40 | #be95ff
+$link-visited: $purple-60; // Purple 60 | #8a3ffc
+// ============================================================================
+// Link - Carbon G100 Theme
+// ============================================================================
+$dark-link-primary: $blue-40; // Blue 40 | #78a9ff
+$dark-link-primary-hover: $blue-30; // Blue 30 | #a6c8ff
+$dark-link-secondary: $blue-30; // Blue 30 | #a6c8ff
+$dark-link-inverse: $blue-60; // Blue 60 | #0f62fe
+$dark-link-inverse-hover: $blue-70; // Blue 70 | #0043ce
+$dark-link-inverse-active: $gray-100; // Gray 100 | #161616
+$dark-link-inverse-visited: $purple-60; // Purple 60 | #8a3ffc
+$dark-link-visited: $purple-40; // Purple 40 | #be95ff
+// ============================================================================
+// Syntax - Carbon White Theme
+// ============================================================================
+$syntax-comment: $green-60; // Green 60 | #198038
+$syntax-line-comment: $green-60; // Green 60 | #198038
+$syntax-block-comment: $green-60; // Green 60 | #198038
+$syntax-doc-comment: $green-60; // Green 60 | #198038
+$syntax-doc-string: $gray-100; // Gray 100 | #161616
+$syntax-keyword: $blue-60; // Blue 60 | #0f62fe
+$syntax-operator-keyword: $blue-60; // Blue 60 | #0f62fe
+$syntax-control-keyword: $purple-60; // Purple 70 | #8a3ffc
+$syntax-definition-keyword: $cyan-70-hover; // Cyan 70 | #0066bd
+$syntax-module-keyword: $purple-60; // Purple 70 | #8a3ffc
+$syntax-variable: $blue-60; // Blue 60 | #0f62fe
+$syntax-name: $blue-60; // Blue 60 | #0f62fe
+$syntax-variable-name: $blue-60; // Blue 60 | #0f62fe
+$syntax-label-name: $blue-60; // Blue 60 | #0f62fe
+$syntax-attribute: $cyan-70-hover; // Cyan 70 | #0066bd
+$syntax-attribute-name: $cyan-70-hover; // Cyan 70 | #0066bd
+$syntax-property-name: $cyan-70-hover; // Cyan 70 | #0066bd
+$syntax-tag: $teal-50; // Teal 60 | #009d9a
+$syntax-tag-name: $teal-50; // Teal 60 | #009d9a
+$syntax-type: $teal-50; // Teal 60 | #009d9a
+$syntax-type-name: $teal-50; // Teal 60 | #009d9a
+$syntax-class-name: $teal-50; // Teal 60 | #009d9a
+$syntax-namespace: $teal-50; // Teal 60 | #009d9a
+$syntax-macro-name: $gray-100; // Gray 100 | #161616
+$syntax-atom: $gray-100; // Gray 100 | #161616
+$syntax-literal: $gray-100; // Gray 100 | #161616
+$syntax-bool: $gray-100; // Gray 100 | #161616
+$syntax-null: $gray-100; // Gray 100 | #161616
+$syntax-self: $teal-50; // Teal 60 | #009d9a
+$syntax-number: $green-60; // Green 60 | #198038
+$syntax-integer: $green-60; // Green 60 | #198038
+$syntax-float: $green-60; // Green 60 | #198038
+$syntax-unit: $green-60; // Green 60 | #198038
+$syntax-string: $gray-100; // Gray 100 | #161616
+$syntax-character: $gray-100; // Gray 100 | #161616
+$syntax-attribute-value: $gray-100; // Gray 100 | #161616
+$syntax-special-string: $purple-50; // Purple 60 | #a56eff
+$syntax-regexp: $purple-60; // Purple 70 | #8a3ffc
+$syntax-escape: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-url: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-color: $gray-100; // Gray 100 | #161616
+$syntax-operator: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-deref-operator: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-arithmetic-operator: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-logic-operator: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-bitwise-operator: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-compare-operator: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-update-operator: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-definition-operator: $cyan-60; // Cyan 70 | #0072c3
+$syntax-type-operator: $teal-50; // Teal 60 | #009d9a
+$syntax-control-operator: $purple-60; // Purple 60 | #8a3ffc
+$syntax-modifier: $magenta-60-hover; // Magenta 60 | #b0215f
+$syntax-punctuation: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-separator: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-bracket: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-angle-bracket: $gray-60; // Cool Gray 60 | #6f6f6f
+$syntax-square-bracket: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-paren: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-brace: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-content: $gray-100; // Gray 100 | #161616
+$syntax-list: $gray-100; // Gray 100 | #161616
+$syntax-emphasis: $gray-100; // Gray 100 | #161616
+$syntax-strong: $gray-100; // Gray 100 | #161616
+$syntax-monospace: $gray-100; // Gray 100 | #161616
+$syntax-strikethrough: $gray-100; // Gray 100 | #161616
+$syntax-heading: $cyan-60; // Cyan 70 | #0072c3
+$syntax-heading-1: $cyan-60; // Cyan 70 | #0072c3
+$syntax-heading-2: $cyan-60; // Cyan 70 | #0072c3
+$syntax-heading-3: $cyan-60; // Cyan 70 | #0072c3
+$syntax-heading-4: $cyan-60; // Cyan 70 | #0072c3
+$syntax-heading-5: $cyan-60; // Cyan 70 | #0072c3
+$syntax-heading-6: $cyan-60; // Cyan 70 | #0072c3
+$syntax-content-separator: $gray-50; // Cool Gray 80 | #8d8d8d
+$syntax-quote: $gray-60; // Gray 60 | #6f6f6f
+$syntax-link: $blue-60; // Blue 60 | #0f62fe
+$syntax-invalid: $red-60; // Red 60 | #da1e28
+$syntax-meta: $green-50; // Green 60 | #24a148
+$syntax-document-meta: $green-50; // Green 60 | #24a148
+$syntax-annotation: $teal-50; // Teal 60 | #009d9a
+$syntax-processing-instruction: $purple-60; // Purple 60 | #8a3ffc
+$syntax-definition: $cyan-60; // Cyan 70 | #0072c3
+$syntax-constant: $blue-60; // Blue 60 | #0f62fe
+$syntax-function: $yellow-30; // Yellow 60 | #f1c21b
+$syntax-standard: $blue-60; // Blue 60 | #0f62fe
+$syntax-local: $blue-60; // Blue 60 | #0f62fe
+$syntax-special: $blue-60; // Blue 60 | #0f62fe
+// ============================================================================
+// Syntax - Carbon G100 Theme
+// ============================================================================
+$dark-syntax-comment: $green-40; // Green 40 | #42be65
+$dark-syntax-line-comment: $green-40; // Green 40 | #42be65
+$dark-syntax-block-comment: $green-40; // Green 40 | #42be65
+$dark-syntax-doc-comment: $green-40; // Green 40 | #42be65
+$dark-syntax-doc-string: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-keyword: $blue-50; // Blue 50 | #4589ff
+$dark-syntax-operator-keyword: $blue-50; // Blue 50 | #4589ff
+$dark-syntax-control-keyword: $purple-40; // Purple 40 | #be95ff
+$dark-syntax-definition-keyword: $cyan-40; // Cyan 40 | #33b1ff
+$dark-syntax-module-keyword: $purple-40; // Purple 40 | #be95ff
+$dark-syntax-variable: $blue-40; // Blue 30 | #78a9ff
+$dark-syntax-name: $blue-40; // Blue 30 | #78a9ff
+$dark-syntax-variable-name: $blue-40; // Blue 30 | #78a9ff
+$dark-syntax-label-name: $blue-40; // Blue 30 | #78a9ff
+$dark-syntax-attribute: $cyan-40; // Cyan 40 | #33b1ff
+$dark-syntax-attribute-name: $cyan-40; // Cyan 40 | #33b1ff
+$dark-syntax-property-name: $cyan-40; // Cyan 40 | #33b1ff
+$dark-syntax-tag: $teal-30; // Teal 30 | #3ddbd9
+$dark-syntax-tag-name: $teal-30; // Teal 30 | #3ddbd9
+$dark-syntax-type: $teal-30; // Teal 30 | #3ddbd9
+$dark-syntax-type-name: $teal-30; // Teal 30 | #3ddbd9
+$dark-syntax-class-name: $teal-30; // Teal 30 | #3ddbd9
+$dark-syntax-namespace: $teal-30; // Teal 30 | #3ddbd9
+$dark-syntax-macro-name: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-atom: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-literal: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-bool: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-null: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-self: $teal-30; // Teal 30 | #3ddbd9
+$dark-syntax-number: $green-30; // Green 30 | #6fdc8c
+$dark-syntax-integer: $green-30; // Green 30 | #6fdc8c
+$dark-syntax-float: $green-30; // Green 30 | #6fdc8c
+$dark-syntax-unit: $green-30; // Green 30 | #6fdc8c
+$dark-syntax-string: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-character: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-attribute-value: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-special-string: $purple-40; // Purple 40 | #be95ff
+$dark-syntax-regexp: $purple-40; // Purple 40 | #be95ff
+$dark-syntax-escape: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-url: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-color: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-operator: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-deref-operator: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-arithmetic-operator: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-logic-operator: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-bitwise-operator: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-compare-operator: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-update-operator: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-definition-operator: $blue-40; // Cyan 40 | #78a9ff
+$dark-syntax-type-operator: $teal-30; // Teal 40 | #3ddbd9
+$dark-syntax-control-operator: $purple-40; // Purple 40 | #be95ff
+$dark-syntax-modifier: $magenta-40; // Magenta 40 | #ff7eb6
+$dark-syntax-punctuation: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-separator: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-bracket: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-angle-bracket: $gray-50; // Gray 50 | #8d8d8d
+$dark-syntax-square-bracket: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-paren: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-brace: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-content: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-list: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-emphasis: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-strong: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-monospace: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-strikethrough: $gray-10; // Gray 10 | #f4f4f4
+$dark-syntax-heading: $blue-40; // Cyan 40 | #78a9ff
+$dark-syntax-heading-1: $blue-40; // Cyan 40 | #78a9ff
+$dark-syntax-heading-2: $blue-40; // Cyan 40 | #78a9ff
+$dark-syntax-heading-3: $blue-40; // Cyan 40 | #78a9ff
+$dark-syntax-heading-4: $blue-40; // Cyan 40 | #78a9ff
+$dark-syntax-heading-5: $blue-40; // Cyan 40 | #78a9ff
+$dark-syntax-heading-6: $blue-40; // Cyan 40 | #78a9ff
+$dark-syntax-content-separator: $gray-20; // Gray 20 | #e0e0e0
+$dark-syntax-quote: $gray-30; // Gray 40 | #c6c6c6
+$dark-syntax-link: $blue-50; // Blue 50 | #4589ff
+$dark-syntax-invalid: $red-50; // Red 50 | #fa4d56
+$dark-syntax-meta: $green-40; // Green 40 | #42be65
+$dark-syntax-document-meta: $green-40; // Green 40 | #42be65
+$dark-syntax-annotation: $teal-30; // Teal 40 | #3ddbd9
+$dark-syntax-processing-instruction: $purple-40; // Purple 40 | #be95ff
+$dark-syntax-definition: $blue-40; // Cyan 40 | #78a9ff
+$dark-syntax-constant: $blue-50; // Blue 50 | #4589ff
+$dark-syntax-function: $yellow-30; // Yellow 30 | #f1c21b
+$dark-syntax-standard: $blue-50; // Blue 50 | #4589ff
+$dark-syntax-local: $blue-30; // Blue 30 | #a6c8ff
+$dark-syntax-special: $blue-50; // Blue 50 | #4589ff
+// ============================================================================
+// Icon - Carbon White Theme
+// ============================================================================
+$icon-primary: $gray-100; // Gray 100 | #161616
+$icon-secondary: $gray-70; // Gray 70 | #525252
+$icon-on-color: $white-0; // White | #ffffff
+$icon-on-color-disabled: $gray-50; // Gray 50 | #8d8d8d
+$icon-interactive: $blue-60; // Blue 60 | #0f62fe
+$icon-inverse: $white-0; // White | #ffffff
+$icon-disabled: rgba($gray-100, 0.75); // Gray 100 – 25% | rgba(#161616, 0.25)
+// ============================================================================
+// Icon - Carbon G100 Theme
+// ============================================================================
+$dark-icon-primary: $gray-10; // Gray 10 | #f4f4f4
+$dark-icon-secondary: $gray-30; // Gray 30 | #c6c6c6
+$dark-icon-on-color: $white-0; // White | #ffffff
+$dark-icon-on-color-disabled: rgba($white-0, 0.75); // White – 25% | #8d8d8d
+$dark-icon-interactive: $white-0; // White | #ffffff
+$dark-icon-inverse: $gray-100; // Gray 100 | #161616
+$dark-icon-disabled: rgba($gray-10, 0.75); // Gray 10 – 25% | rgba(#f4f4f4, 0.25)
+// ============================================================================
+// Support - Carbon White Theme
+// ============================================================================
+$support-error: $red-60; // Red 60 | #da1e28
+$support-success: $green-50; // Green 50 | #24a148
+$support-warning: $yellow-30; // Yellow 30 | #f1c21b
+$support-info: $blue-70; // Blue 70 | #0043ce
+$support-error-inverse: $red-50; // Red 50 | #fa4d56
+$support-success-inverse: $green-40; // Green 40 | #42be65
+$support-warning-inverse: $yellow-30; // Yellow 30 | #f1c21b
+$support-info-inverse: $blue-50; // Blue 50 | #4589ff
+$support-caution-minor: $yellow-30; // Yellow 30 | #f1c21b
+$support-caution-major: $orange-40; // Orange 40 | #ff832b
+$support-caution-undefined: $purple-60; // Purple 60 | #8a3ffc
+// ============================================================================
+// Support - Carbon G100 Theme
+// ============================================================================
+$dark-support-error: $red-50; // Red 50 | #fa4d56
+$dark-support-success: $green-40; // Green 40 | #42be65
+$dark-support-warning: $yellow-30; // Yellow 30 | #f1c21b
+$dark-support-info: $blue-50; // Blue 50 | #4589ff
+$dark-support-error-inverse: $red-60; // Red 60 | #da1e28
+$dark-support-success-inverse: $green-50; // Green 50 | #24a148
+$dark-support-warning-inverse: $yellow-30; // Yellow 30 | #f1c21b
+$dark-support-info-inverse: $blue-70; // Blue 70 | #0043ce
+$dark-support-caution-minor: $yellow-30; // Yellow 30 | #f1c21b
+$dark-support-caution-major: $orange-40; // Orange 40 | #ff832b
+$dark-support-caution-undefined: $purple-50; // Purple 50 | #a56eff
+// ============================================================================
+// Focus - Carbon White Theme
+// ============================================================================
+$focus: $blue-60; // Blue 60 | #0f62fe
+$focus-inset: $white-0; // White | #ffffff
+$focus-inverse: $white-0; // White | #ffffff
+// ============================================================================
+// Focus - Carbon G100 Theme
+// ============================================================================
+$dark-focus: $white-0; // White | #ffffff
+$dark-focus-inset: $gray-100; // Gray 100 | #161616
+$dark-focus-inverse: $blue-60; // Blue 60 | #0f62fe
+// ============================================================================
+// Miscellaneous - Carbon White Theme
+// ============================================================================
+$interactive: $blue-60; // Blue 60 | #0f62fe
+$highlight: $blue-20; // Blue 20 | #d0e2ff
+$toggle-off: $gray-50; // Gray 50 | #8d8d8d
+$overlay: rgba($black-100, 0.60); // Black | rgba(#000000, 0.60)
+$skeleton-element: $gray-30; // Gray 30 | #c6c6c6
+$skeleton-background: $gray-10-hover; // Gray 10 hover | #e8e8e8
+// ============================================================================
+// Miscellaneous - Carbon G100 Theme
+// ============================================================================
+$dark-interactive: $blue-50; // Blue 50 | #4589ff
+$dark-highlight: $blue-90; // Blue 90 | #001d6c
+$dark-toggle-off: $gray-60; // Gray 60 | #6f6f6f
+$dark-overlay: rgba($black-100, 0.60); // Black | rgba(#000000, 0.6)
+$dark-skeleton-element: $gray-70; // Gray 70 | #525252
+$dark-skeleton-background: $gray-80; // Gray 80 hover | #393939
+// ============================================================================
+// Button - Carbon White Theme
+// ============================================================================
+$button-primary: $blue-60; // Blue 60 | #0f62fe
+$button-primary-hover: $blue-60-hover; // Blue 60 hover | #0050e6
+$button-primary-active: $blue-80; // Blue 80 | #002d9c
+$button-secondary: $gray-80; // Gray 80 | #393939
+$button-secondary-hover: $gray-80-hover; // Gray 80 hover | #474747
+$button-secondary-active: $gray-60; // Gray 60 | #6f6f6f
+$button-tertiary: $blue-60; // Blue 60 | #0f62fe
+$button-tertiary-hover: $blue-60-hover; // Blue 60 hover | #0050e6
+$button-tertiary-active: $blue-80; // Blue 80 | #002d9c
+$button-danger-primary: $red-60; // Red 60 | #da1e28
+$button-danger-secondary: $red-60; // Red 60 | #da1e28
+$button-danger-hover: $red-60-hover; // Red 60 hover | #b81922
+$button-danger-active: $red-80; // Red 80 | #750e13
+$button-separator: $gray-20; // Gray 20 | #e0e0e0
+$button-disabled: $gray-30; // Gray 30 | #c6c6c6
+// ============================================================================
+// Button - Carbon G100 Theme
+// ============================================================================
+$dark-button-primary: $blue-60; // Blue 60 | #0f62fe
+$dark-button-primary-hover: $blue-60-hover; // Blue 60 hover | #0050e6
+$dark-button-primary-active: $blue-80; // Blue 80 | #002d9c
+$dark-button-secondary: $gray-60; // Gray 60 | #6f6f6f
+$dark-button-secondary-hover: $gray-60-hover; // Gray 60 hover | #5e5e5e
+$dark-button-secondary-active: $gray-80; // Gray 80 | #393939
+$dark-button-tertiary: $white-0; // White | #ffffff
+$dark-button-tertiary-hover: $gray-10; // Gray 10 | #f4f4f4
+$dark-button-tertiary-active: $gray-30; // Gray 30 | #c6c6c6
+$dark-button-danger-primary: $red-60; // Red 60 | #da1e28
+$dark-button-danger-secondary: $red-50; // Red 50 | #fa4d56
+$dark-button-danger-hover: $red-60-hover; // Red 60 hover | #b81922
+$dark-button-danger-active: $red-80; // Red 80 | #750e13
+$dark-button-separator: $gray-100; // Gray 100 | #161616
+$dark-button-disabled: $gray-70; // Gray 70 | #525252
+// ============================================================================
+// Content Switcher - Carbon White Theme
+// ============================================================================
+$content-switcher-background: $gray-20; // Gray 20 | #e0e0e0
+$content-switcher-background-hover: $gray-20-hover; // Gray 20 hover | #d1d1d1
+$content-switcher-selected: $white-0; // White | #ffffff
+// ============================================================================
+// Content Switcher - Carbon G100 Theme
+// ============================================================================
+$dark-content-switcher-background: transparent; // Transparent | transparent
+$dark-content-switcher-background-hover: rgba($gray-50, 0.12); // Gray 50, 12% | rgba(#8d8d8d, 0.12)
+$dark-content-switcher-selected: rgba($gray-50, 0.24); // Gray 50, 24% | rgba(#8d8d8d, 0.24)
+// ============================================================================
+// Tag - Carbon White Theme
+// ============================================================================
+$tag-background-gray: $gray-20; // Gray 20 | #e0e0e0
+$tag-color-gray: $gray-100; // Gray 100 | #161616
+$tag-hover-gray: $gray-20-hover; // Gray 20 hover | #d1d1d1
+$tag-border-gray: $gray-40; // Gray 40 | #a8a8a8
+$tag-background-cool-gray: $cool-gray-20; // Cool gray 20 | #dde1e6
+$tag-color-cool-gray: $cool-gray-100; // Cool gray 100 | #121619
+$tag-hover-cool-gray: $cool-gray-20-hover; // Cool gray 20 hover | #cdd3da
+$tag-border-cool-gray: $cool-gray-40; // Cool gray 40 | #a2a9b0
+$tag-background-warm-gray: $warm-gray-20; // Warm gray 20 | #e5e0df
+$tag-color-warm-gray: $warm-gray-100; // Warm gray 100 | #171414
+$tag-hover-warm-gray: $warm-gray-20-hover; // Warm gray 20 hover | #d8d0cf
+$tag-border-warm-gray: $warm-gray-40; // Warm gray 40 | #ada8a8
+$tag-background-red: $red-20; // Red 20 | #ffd7d9
+$tag-color-red: $red-70; // Red 70 | #a2191f
+$tag-hover-red: $red-20-hover; // Red 20 hover | #ffc2c5
+$tag-border-red: $red-40; // Red 40 | #ff8389
+$tag-background-magenta: $magenta-20; // Magenta 20 | #ffd6e8
+$tag-color-magenta: $magenta-70; // Magenta 70 | #9f1853
+$tag-hover-magenta: $magenta-20-hover; // Magenta 20 hover | #ffbdda
+$tag-border-magenta: $magenta-40; // Magenta 40 | #ff7eb6
+$tag-background-purple: $purple-20; // Purple 20 | #e8daff
+$tag-color-purple: $purple-70; // Purple 70 | #6929c4
+$tag-hover-purple: $purple-20-hover; // Purple 20 hover | #dcc7ff
+$tag-border-purple: $purple-40; // Purple 40 | #be95ff
+$tag-background-blue: $blue-20; // Blue 20 | #d0e2ff
+$tag-color-blue: $blue-70; // Blue 70 | #0043ce
+$tag-hover-blue: $blue-20-hover; // Blue 20 hover | #b8d3ff
+$tag-border-blue: $blue-40; // Blue 40 | #78a9ff
+$tag-background-cyan: $cyan-20; // Cyan 20 | #bae6ff
+$tag-color-cyan: $cyan-70; // Cyan 70 | #00539a
+$tag-hover-cyan: $cyan-20-hover; // Cyan 20 hover | #99daff
+$tag-border-cyan: $cyan-40; // Cyan 40 | #33b1ff
+$tag-background-teal: $teal-20; // Teal 20 | #9ef0f0
+$tag-color-teal: $teal-70; // Teal 70 | #005d5d
+$tag-hover-teal: $teal-20-hover; // Teal 20 hover | #57e5e5
+$tag-border-teal: $teal-40; // Teal 40 | #08bdba
+$tag-background-green: $green-20; // Green 20 | #a7f0ba
+$tag-color-green: $green-70; // Green 70 | #0e6027
+$tag-hover-green: $green-20-hover; // Green 20 hover | #74e792
+$tag-border-green: $green-40; // Green 40 | #42be65
+// ============================================================================
+// Tag - Carbon G100 Theme
+// ============================================================================
+$dark-tag-background-gray: $gray-70; // Gray 70 | #525252
+$dark-tag-color-gray: $gray-20; // Gray 20 | #e0e0e0
+$dark-tag-hover-gray: $gray-70-hover; // Gray 70 hover | #636363
+$dark-tag-border-gray: $gray-50; // Gray 50 | #8d8d8d
+$dark-tag-background-cool-gray: $cool-gray-70; // Cool gray 70 | #4d5358
+$dark-tag-color-cool-gray: $cool-gray-20; // Cool gray 20 | #dde1e6
+$dark-tag-hover-cool-gray: $cool-gray-70-hover; // Cool gray 70 hover | #5d646a
+$dark-tag-border-cool-gray: $cool-gray-50; // Cool gray 50 | #878d96
+$dark-tag-background-warm-gray: $warm-gray-70; // Warm gray 70 | #565151
+$dark-tag-color-warm-gray: $warm-gray-20; // Warm gray 20 | #e5e0df
+$dark-tag-hover-warm-gray: $warm-gray-70-hover; // Warm gray 70 hover | #696363
+$dark-tag-border-warm-gray: $warm-gray-50; // Warm gray 50 | #8f8b8b
+$dark-tag-background-red: $red-70; // Red 70 | #a2191f
+$dark-tag-color-red: $red-20; // Red 20 | #ffd7d9
+$dark-tag-hover-red: $red-70-hover; // Red 70 hover | #c21e25
+$dark-tag-border-red: $red-50; // Red 50 | #fa4d56
+$dark-tag-background-magenta: $magenta-70; // Magenta 70 | #9f1853
+$dark-tag-color-magenta: $magenta-20; // Magenta 20 | #ffd6e8
+$dark-tag-hover-magenta: $magenta-70-hover; // Magenta 70 hover | #bf1d63
+$dark-tag-border-magenta: $magenta-50; // Magenta 50 | #ee5396
+$dark-tag-background-purple: $purple-70; // Purple 70 | #6929c4
+$dark-tag-color-purple: $purple-20; // Purple 20 | #e8daff
+$dark-tag-hover-purple: $purple-70-hover; // Purple 70 hover | #7c3dd6
+$dark-tag-border-purple: $purple-50; // Purple 50 | #a56eff
+$dark-tag-background-blue: $blue-70; // Blue 70 | #0043ce
+$dark-tag-color-blue: $blue-20; // Blue 20 | #d0e2ff
+$dark-tag-hover-blue: $blue-70-hover; // Blue 70 hover | #0053ff
+$dark-tag-border-blue: $blue-50; // Blue 50 | #4589ff
+$dark-tag-background-cyan: $cyan-70; // Cyan 70 | #00539a
+$dark-tag-color-cyan: $cyan-20; // Cyan 20 | #bae6ff
+$dark-tag-hover-cyan: $cyan-70-hover; // Cyan 70 hover | #0066bd
+$dark-tag-border-cyan: $cyan-50; // Cyan 50 | #1192e8
+$dark-tag-background-teal: $teal-70; // Teal 70 | #005d5d
+$dark-tag-color-teal: $teal-20; // Teal 20 | #9ef0f0
+$dark-tag-hover-teal: $teal-70-hover; // Teal 70 hover | #007070
+$dark-tag-border-teal: $teal-50; // Teal 50 | #009d9a
+$dark-tag-background-green: $green-70; // Green 70 | #0e6027
+$dark-tag-color-green: $green-20; // Green 20 | #a7f0ba
+$dark-tag-hover-green: $green-70-hover; // Green 70 hover | #11742f
+$dark-tag-border-green: $green-50; // Green 50 | #24a148
+// ============================================================================
+// Notification - Carbon White Theme
+// ============================================================================
+$notification-background-error: $red-10; // Red 10 | #fff1f1
+$notification-background-success: $green-10; // Green 10 | #defbe6
+$notification-background-info: $blue-10; // Blue 10 | #edf5ff
+$notification-background-warning: $yellow-10-hover; // Yellow 10 | #f8e6a0
+$notification-action-hover: $white-0; // White | #ffffff
+$notification-action-tertiary-inverse: $white-0; // White | #ffffff
+$notification-action-tertiary-inverse-active: $white-0; // White | #ffffff
+$notification-action-tertiary-inverse-hover: $gray-30; // Gray 30 | #c6c6c6
+$notification-action-tertiary-inverse-text: $gray-100; // Gray 100 | #161616
+$notification-action-tertiary-inverse-text-on-color-disabled: $white-0; // White | #ffffff
+// ============================================================================
+// Notification - Carbon G100 Theme
+// ============================================================================
+$dark-notification-background-error: $gray-90; // Gray 90 | #262626
+$dark-notification-background-success: $gray-90; // Gray 90 | #262626
+$dark-notification-background-info: $gray-90; // Gray 90 | #262626
+$dark-notification-background-warning: $gray-90; // Gray 90 | #262626
+$dark-notification-action-hover: $gray-90-hover; // Gray 90 hover | #333333
+$dark-notification-action-tertiary-inverse: $blue-60; // Blue 60 | #0f62fe
+$dark-notification-action-tertiary-inverse-active: $gray-100; // Gray 100 | #161616
+$dark-notification-action-tertiary-inverse-hover: $blue-80; // Blue 80 | #002d9c
+$dark-notification-action-tertiary-inverse-text: $white-0; // White | #ffffff
+$dark-notification-action-tertiary-inverse-text-on-color-disabled: $white-0; // White | #ffffff
+// ============================================================================
+// General AI - Carbon White Theme
+// ============================================================================
+$ai-aura-start: rgba($blue-50, 0.10); // Blue 50, 10% | rgba(#4589ff, 0.1)
+$ai-aura-start-sm: rgba($blue-50, 0.16); // Blue 50, 16% | rgba(#4589ff, 0.16)
+$ai-aura-end: rgba($white-0, 0.00); // White, 0% | rgba(#ffffff, 0)
+$ai-aura-hover-start: rgba($blue-50, 0.32); // Blue 50, 32% | #4589ff
+$ai-aura-hover-end: rgba($white-0, 0.00); // White, 0% | rgba(#ffffff, 0)
+$ai-aura-hover-background: $blue-10; // Blue 10 | #edf5ff
+$ai-border-start: rgba($blue-30, 0.64); // Blue 30, 64% | rgba(#a6c8ff, 0.64)
+$ai-border-end: $blue-40; // Blue 40 | #78a9ff
+$ai-border-strong: $blue-50; // Blue 50 | #4589ff
+$ai-drop-shadow: rgba($blue-60, 0.10); // Blue 60, 10% | rgba(#0f62fe, 0.1)
+$ai-inner-shadow: rgba($blue-50, 0.10); // Blue 50, 10% | rgba(#4589ff, 0.1)
+$ai-popover-background: $white-0; // White | #ffffff
+$ai-popover-shadow-outer-01: rgba($blue-70, 0.06); // Blue 70, 6% | rgba(#0043ce, 0.06)
+$ai-popover-shadow-outer-02: rgba($black-100, 0.04); // Black, 4% | rgba(#000000, 0.04)
+$ai-skeleton-element: $blue-50; // Blue 50 | #4589ff
+$ai-skeleton-background: $blue-20; // Blue 20 | #d0e2ff
+$ai-overlay: rgba($blue-100, 0.50); // Blue 100, 50% | rgba(#001141, 0.5)
+// ============================================================================
+// General AI - Carbon G100 Theme
+// ============================================================================
+$dark-ai-aura-start: rgba($blue-50, 0.10); // Blue 50, 10% | rgba(#4589ff, 0.1)
+$dark-ai-aura-start-sm: rgba($blue-50, 0.16); // Blue 50, 16% | rgba(#4589ff, 0.16)
+$dark-ai-aura-end: rgba($black-100, 0.00); // Black, 0% | rgba(#000000, 0)
+$dark-ai-aura-hover-start: rgba($blue-50, 0.40); // Blue 50, 40% | rgba(#4589ff, 0.4)
+$dark-ai-aura-hover-end: rgba($black-100, 0.00); // Black, 0% | rgba(#000000, 0)
+$dark-ai-aura-hover-background: $gray-10-hover; // $layer-hover | #e8e8e8
+$dark-ai-border-start: rgba($blue-30, 0.36); // Blue 30, 36% | rgba(#a6c8ff, 0.36)
+$dark-ai-border-end: $blue-50; // Red 50 | #4589ff
+$dark-ai-border-strong: $blue-40; // Blue 40 | #78a9ff
+$dark-ai-drop-shadow: rgba($black-100, 0.28); // Black, 28% | rgba(#000000, 0.28)
+$dark-ai-inner-shadow: rgba($blue-50, 0.16); // Blue 50, 16% | rgba(#4589ff, 0.16)
+$dark-ai-popover-background: $gray-100; // Gray 100 | #161616
+$dark-ai-popover-shadow-outer-01: rgba($black-100, 0.12); // Black, 12% | rgba(#000000, 0.12)
+$dark-ai-popover-shadow-outer-02: rgba($black-100, 0.08); // Black, 8% | rgba(#000000, 0.08)
+$dark-ai-skeleton-element: rgba($blue-40, 0.30); // Blue 40, 30% | rgba(#78a9ff, 0.3)
+$dark-ai-skeleton-background: rgba($blue-40, 0.50); // Blue 40, 50% | rgba(#78a9ff, 0.5)
+$dark-ai-overlay: rgba($black-100, 0.50); // Black, 50% | rgba(#000000, 0.5)
+// ============================================================================
+// Chat - Carbon White Theme
+// ============================================================================
+$chat-avatar-bot: $gray-60; // Gray 60 | #6f6f6f
+$chat-avatar-agent: $gray-80; // Gray 80 | #393939
+$chat-avatar-user: $blue-60; // Blue 60 | #0f62fe
+$chat-bubble-user: $gray-20; // Gray 20 | #e0e0e0
+$chat-bubble-agent: $white-0; // White | #ffffff
+$chat-bubble-agent-text: $gray-100; // Gray 100 | #161616
+$chat-bubble-border: $gray-20; // Gray 20 | #e0e0e0
+$chat-bubble-user-text: $gray-100; // Gray 100 | #161616
+$chat-prompt-background: $white-0; // White | #ffffff
+$chat-prompt-border-start: $gray-10; // Gray 10 | #f4f4f4
+$chat-prompt-border-end: rgba($gray-10, 0.00); // Gray 10, 0% | rgba(#f4f4f4, 0)
+$chat-prompt-text: $gray-100; // Gray 100 | #161616
+$chat-shell-background: $white-0; // White | #ffffff
+$chat-header-background: $white-0; // White | #ffffff
+$chat-header-text: $gray-100; // Gray 100 | #161616
+// ============================================================================
+// Chat - Carbon G100 Theme
+// ============================================================================
+$dark-chat-avatar-bot: $gray-50; // Gray 50 | #8d8d8d
+$dark-chat-avatar-agent: $gray-30; // Gray 30 | #c6c6c6
+$dark-chat-avatar-user: $blue-50; // Blue 50 | #4589ff
+$dark-chat-bubble-user: $gray-80; // Gray 80 | #393939
+$dark-chat-bubble-agent: $gray-90; // Gray 90 | #262626
+$dark-chat-bubble-agent-text: $gray-10; // Gray 10 | #f4f4f4
+$dark-chat-bubble-border: $gray-70; // Gray 70 | #525252
+$dark-chat-bubble-user-text: $gray-10; // Gray 10 | #f4f4f4
+$dark-chat-prompt-background: $gray-100; // Gray 100 | #161616
+$dark-chat-prompt-border-start: $gray-90; // Gray 90 | #262626
+$dark-chat-prompt-border-end: rgba($gray-90, 0.00); // Gray 90, 0% | rgba(#262626, 0)
+$dark-chat-prompt-text: $gray-10; // Gray 10 | #f4f4f4
+$dark-chat-shell-background: $gray-90; // Gray 90 | #262626
+$dark-chat-header-background: $gray-90; // Gray 90 | #262626
+$dark-chat-header-text: $gray-10; // Gray 10 | #f4f4f4
+// ============================================================================
+// Chat button - Carbon White Theme
+// ============================================================================
+$chat-button: $blue-60; // $link-primary | #0f62fe
+$chat-button-hover: rgba($gray-50, 0.12); // $background-hover | rgba(#8d8d8d, 0.12)
+$chat-button-text-hover: $blue-70; // $link-primary-hover | #0043ce
+$chat-button-active: rgba($gray-50, 0.50); // $background-active | rgba(#8d8d8d, 0.5)
+$chat-button-selected: rgba($gray-50, 0.20); // $background-selected | rgba(#8d8d8d, 0.2)
+$chat-button-text-selected: $gray-70; // $text-secondary | #525252
+// ============================================================================
+// Chat button - Carbon G100 Theme
+// ============================================================================
+$dark-chat-button: $blue-40; // $link-primary | #78a9ff
+$dark-chat-button-hover: rgba($gray-50, 0.16); // $background-hover | rgba(#8d8d8d, 0.16)
+$dark-chat-button-text-hover: $blue-30; // $link-primary-hover | #a6c8ff
+$dark-chat-button-active: rgba($gray-50, 0.40); // $background-active | rgba(#8d8d8d, 0.4)
+$dark-chat-button-selected: rgba($gray-50, 0.24); // $background-selected | rgba(#8d8d8d, 0.24)
+$dark-chat-button-text-selected: $gray-30; // $text-secondary | #c6c6c6

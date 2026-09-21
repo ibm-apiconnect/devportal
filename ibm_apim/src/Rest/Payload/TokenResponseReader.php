@@ -19,6 +19,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\ibm_apim\Rest\Exception\RestResponseParseException;
 use Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * Response to POST to /token.
@@ -60,7 +61,7 @@ class TokenResponseReader extends RestResponseReader {
     } else if ( $token_response->getCode() === 201) {
       return $token_response;
     } else {
-      throw new RestResponseParseException('Unexpected response from GET /token: ' . $token_response->getCode() . '. Message: ' . serialize($token_response));
+      throw new RestResponseParseException('Unexpected response from GET /token: ' . $token_response->getCode() . '. Message: ' . SerializationUtility::encodeData($token_response));
     }
     return $token_response;
   }

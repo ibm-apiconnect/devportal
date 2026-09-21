@@ -1,0 +1,72 @@
+// _dark-mode-toggle.scss
+
+// Hide the block title "Dark Mode Toggle"
+#block-connect-theme-darkmodetoggle h2,
+#block-darkmodetoggle h2,
+.block-dark-mode-toggle h2 {
+  display: none;
+}
+
+[data-dmt-container] {
+  // Center the container vertically in navbar
+  display: flex;
+  align-items: center;
+  height: 100%;
+
+  ul {
+    list-style: none; // remove bullets
+    margin: 0;
+    padding: 0;
+    display: flex; // show buttons inline
+    gap: 0.5rem; // spacing between buttons
+    align-items: center; // vertically center items
+  }
+
+  button {
+    background-color: transparent; // dark-bg-primary color
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem; // increased padding for better click area
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem; // ensure consistent height with navbar items
+    border-radius: 0.25rem; // slight rounding for better appearance
+    color: #f4f4f4; // white icon color
+    
+    &:hover {
+      background-color: #262626; // $dark-bg-layer-01
+    }
+  }
+
+  button:active {
+    transform: scale(0.95);
+  }
+
+  // Icon styling with background-image
+  .dark-mode-icon {
+    display: block;
+    width: 1.25rem;
+    height: 1.25rem;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    filter: brightness(0) invert(1); // Make icons white
+    
+    // Light mode: show asleep icon
+    background-image: url('../images/ibmcarbon/svg/asleep.svg');
+  }
+}
+
+// In dark mode: show light icon
+body[data-dmt-mode="dark"] [data-dmt-container] {
+  .dark-mode-icon {
+    background-image: url('../images/ibmcarbon/svg/light.svg');
+  }
+}
+
+// Navbar dropdown submenu positioning adjustment when dark mode toggle exists
+// The toggle button changes the navbar layout, requiring position adjustment
+.navbar .dropitmenu ul.dropit-submenu {
+  margin-right: -1.7rem;
+}

@@ -1,22 +1,22 @@
 ibm_apim.settings:
-  title: 'IBM API Developer Portal'
+  title: 'IBM CMS Portal'
   route_name: ibm_apim.settings
   parent: system.admin_config_system
-  description: 'IBM API Developer Portal configuration.'
+  description: 'IBM CMS Portal configuration.'
   weight: -26
 
 ibm_apim.analytics_settings:
-  title: 'IBM API Developer Portal Consumer Analytics'
+  title: 'IBM CMS Portal Consumer Analytics'
   route_name: ibm_apim.analytics_settings
   parent: system.admin_config_system
-  description: 'IBM API Developer Portal Consumer Analytics settings'
+  description: 'IBM CMS Portal Consumer Analytics settings'
   weight: -25
 
 ibm_apim.billing_settings:
-  title: 'IBM API Developer Portal Billing'
+  title: 'IBM CMS Portal Billing'
   route_name: ibm_apim.billing_settings
   parent: system.admin_config_system
-  description: 'IBM API Developer Portal Billing settings'
+  description: 'IBM CMS Portal Billing settings'
   weight: -24
 
 ibm_apim.devel:

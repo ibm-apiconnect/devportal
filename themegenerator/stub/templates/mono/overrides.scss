@@ -1,3 +1,6 @@
+// Prevent duplicate font loading
+$css--font-face: false;
+
 // import connect variables
 @import "connect-variables";
 
@@ -5,66 +8,112 @@
 $font-family-base: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
 
 // Mono color palette
-$mono-01: #777677;
-$mono-02: #595859;
-$mono-03: #a6a5a6;
+$mono-10: #f4f4f4;
+$mono-20: #e0e0e0;
+$mono-30: #c6c6c6;
+$mono-40: #a8a8a8;
+$mono-50: #8d8d8d;
+$mono-60: #777677;
+$mono-70: #5d5d5d;
+$mono-80: #464646;
+$mono-90: #2d2d2d;
+$mono-gray: #242323;
 
 $white-01: #fff;
 $white-02: #fbf8f8;
+
 $gray-01: #eaeaea;
 $gray-02: #d8d8d8;
 $gray-03: #c0bfc0;
 $gray-04: #949394;
 $gray-05: #464646;
+$gray-06: #6f6f6f;
+$gray-07: #525252;
+$gray-08: #393939;
+$gray-09: #262626;
 
-$dark-gray-01: #272727;
 $black-01: #000;
-
 
 // theme variables
 // these are the variables to override for custom theme creation
-// Global body
+//** Global body
 $body-bg: $white-01;
+// Dark mode
+$dark-body-bg: $gray-09;
+$dark-page-header-bg: $gray-09;
 
-// Global text color
+//** Text
 $text-color: $black-01;
 $label-color: $black-01;
-//** Global textual link color.
-$link-color: $mono-01;
-//** Link hover color
-$link-hover-color: $mono-02;
 
-$brand-primary: $mono-01;
-$brand-primary-light: $mono-03;
-$brand-primary-dark: $mono-02;
+//** Highlight
+$highlight: $mono-20;
+// Dark mode
+$dark-highlight: $mono-90;
 
-// Placeholder text color
-$input-color-placeholder: $gray-05;
+//** Panel background
+$panel-bg: $white-01;
+// Dark mode
+$dark-panel-bg: $mono-gray;
 
-// Navbar variable overrides
-$navbar-default-color: $gray-05;
-$navbar-default-bg: $white-01;
+//** Link
+$link-color: $mono-70;
+$link-hover-color: $mono-60;
+// Dark mode
+$dark-link-color: $mono-40;
+$dark-link-hover-color: $mono-30;
 
-$navbar-default-link-color: $gray-05;
-$navbar-default-link-hover-color: $gray-05;
-$navbar-default-link-active-color: $gray-05;
-$navbar-default-link-active-bg: $white-01;
-$navbar-default-link-hover-bg: $white-02;
+//** Focus
+$focus: $mono-60;
+$interactive-focus: $mono-60;
+$focus-inset: $white-01;
+$focus-inverse: $white-01;
+// Dark mode
+$dark-focus: $mono-50;
+$dark-interactive-focus: $mono-50;
+$dark-focus-inset: $white-01;
+$dark-focus-inverse: $white-01;
 
-$navbar-default-toggle-icon-bar-bg: $white-01;
+//** Brand
+$brand-primary: $mono-70;
+$brand-primary-light: $mono-50;
+$brand-primary-dark: $mono-60;
+$brand-primary-link-color: $mono-70;
+$brand-primary-icon-interactive: $mono-70;
+// Dark mode
+$dark-brand-primary-link-color: $mono-40;
+$dark-brand-primary-icon-interactive: $mono-50;
 
-// footer variable overrides
-$footer-default-bg: $white-01;
+//** Navbar
+$navbar-default-color: $white-01;
+$navbar-default-bg: $brand-primary;
+$navbar-default-link-color: $white-01;
+$navbar-default-link-hover-color: $white-01;
+$navbar-default-link-active-color: $white-01;
+$navbar-default-link-active-bg: $brand-primary;
+$navbar-default-link-hover-bg: $mono-60;
+$navbar-default-toggle-icon-bar-bg: $brand-primary-dark;
+// Dark mode
+$dark-navbar-default-bg: $mono-80;
+$dark-navbar-default-link-hover-bg: $mono-70;
+
+//** Footer
+$footer-default-bg: $mono-70;
 $footer-default-color: $gray-05;
 $footer-default-bordercolor: $brand-primary;
+$footer-divider: $white-01;
+// Dark mode
+$dark-footer-default-bg: $mono-80;
+$dark-footer-divider: $white-01;
 
-$footer-link-color: $brand-primary;
-
-// tabs
+//** Tabs
 $tab-primary-background: $brand-primary;
 $tab-primary-text: $white-01;
+$tab-border-color-active: $mono-70;
+// Dark mode
+$dark-tab-border-color-active: $mono-50;
 
-// forms
+//** Forms
 $default-header: $gray-05;
 $default-bg-light: $white-02;
 $default-border: $gray-03;
@@ -79,55 +128,86 @@ $input-border-radius: 0;
 $input-bg: $gray-01;
 $input-border: $gray-01;
 $input-color: $black-01;
+$input-focus: $mono-60;
+// Placeholder text color
+$input-color-placeholder: $gray-04;
+$modal-input-bg: $gray-01;
+$modal-input-border: $gray-01;
 
-// buttons
+// Dark mode
+$dark-default-bg-light: $mono-gray;
+$dark-input-border: $gray-04;
+$dark-input-focus: $mono-50;
+$dark-modal-input-border: $gray-07;
+
+//** Buttons
 $btn-border-radius-base: 0;
 $btn-border-radius-large: 0;
 $btn-border-radius-small: 0;
-$btn-default-color: $mono-01;
-$btn-default-bg: $white-01;
-$btn-default-border: $mono-01;
+$btn-default-color: $mono-70; // secondary button
+$btn-default-bg: $white-01; // secondary button
+$btn-default-border: $mono-70; // secondary button
+$btn-default-hover-bg: $white-01; // secondary button
 $btn-primary-color: $white-01;
-$btn-primary-bg: $mono-01;
+$btn-primary-bg: $mono-70;
+$btn-primary-hover-bg: $mono-80;
+$btn-primary-active-bg: $mono-80;
 $btn-primary-border: transparent;
 $btn-success-color: $white-01;
-$btn-success-bg: $mono-01;
+$btn-success-bg: $mono-70;
 $btn-success-border: transparent;
 $btn-link-disabled-color: $brand-primary;
-
 $tile-btn-bg: $white-02;
 $tile-btn-border: $white-02;
-$tile-btn-color: $text-01;
+$tile-btn-color: $mono-70;
+$tile-btn-color-hover: $mono-70;
+$btn-tertiary-hover-bg: $mono-70;
+$btn-tertiary-color: $mono-70;
+$btn-tertiary-active-bg: $mono-70;
+// Dark mode
+$dark-btn-primary-bg: $mono-70;
+$dark-btn-primary-hover-bg: $mono-80;
+$dark-btn-primary-active-bg: $mono-80;
+$dark-tile-btn-bg: $mono-gray;
+$dark-tile-btn-color: $mono-40;
+$dark-tile-btn-color-hover: $mono-40;
 
-// checkboxes and radio buttons
+//** Checkboxes and radio buttons
 $check-radio-bg: $white-01;
 $check-radio-border: $gray-05;
 $check-radio-bg-checked: $brand-primary;
 $check-radio-border-checked: $brand-primary;
 $check-radio-color-checked: $white-01;
+// Dark mode
+$dark-check-radio-bg-checked: $mono-40;
 
-// tooltips
+//** Tooltips
 $tooltip-color: $white-01;
 $tooltip-bg: $gray-05;
 
-// modals
+//** Modals
 $modal-content-bg: $white-01;
 $modal-content-border-color: $brand-primary;
 $modal-backdrop-bg: $white-01;
-$modal-backdrop-opacity: 0;
+$modal-backdrop-opacity: .5;
 $modal-header-border-color: transparent;
 $modal-content-color: $gray-05;
-
-//** Modal footer border color
 $modal-footer-border-color: $gray-04;
 
-//** card settings
+//** Card settings
 $card-bg: $gray-01;
-$card-border-color: $gray-04;
+$card-title-color: $mono-70;
+$card-border-color: $gray-01;
 $card-footer-bg: $gray-03;
 $disabled-bg: $gray-05;
+$case-study-card-bg: $brand-primary;
+// Dark mode
+$dark-card-title-color: $mono-40;
+$dark-card-border-color: $gray-06;
+$dark-card-footer-bg: $gray-07;
+$dark-case-study-card-bg: $case-study-card-bg;
 
-//** table settings
+//** Table settings
 $table-header-bg: $gray-04;
 $table-header-border: $brand-primary;
 $table-row-border: $gray-04;
@@ -136,7 +216,122 @@ $table-row-bg-light: $gray-01;
 $table-row-bg-gray: $gray-02;
 $table-zebra-stripe: $gray-02;
 
+
+
+//** Home page
+$home-banner-bg: $mono-10;
+$home-banner-button-bg: $mono-60;
+$home-banner-button-color: $text-on-color;
+$home-banner-title-color: $black-01;
+$home-build-button-bg: $mono-60;
+$home-button-secondary-bg: $mono-20;
+$home-button-secondary-color: $black-01;
+$home-button-secondary-hover-bg: $mono-40;
+$home-link-color: $mono-70;
+// Dark mode
+$dark-home-button-secondary-bg: $mono-20;
+$dark-home-button-secondary-color: $black-01;
+$dark-home-button-secondary-hover-bg: $home-button-secondary-hover-bg;
+$dark-home-banner-bg: $mono-70;
+$dark-home-banner-button-bg: $mono-20;
+$dark-home-banner-button-color: $black-01;
+$dark-home-banner-title-color: $text-on-color;
+$dark-home-build-button-bg: $mono-70;
+$dark-home-link-color: $mono-40;
+
+//** HTTP method
+$http-post: $mono-70;
+$http-delete: $mono-70;
+$http-head: $mono-70;
+$http-options: $mono-70;
+$http-patch: $mono-70;
+$http-put: $mono-70;
+$http-trace: $mono-70;
+
+$dark-http-post: $mono-40;
+$dark-http-delete: $mono-40;
+$dark-http-head: $mono-40;
+$dark-http-options: $mono-40;
+$dark-http-patch: $mono-40;
+$dark-http-put: $mono-40;
+$dark-http-trace: $mono-40;
+
 // import everything from connect_theme as a starting point
 @import "connect-styles";
 
+.welcomebanner::before {
+  background-image: none;
+}
 
+// getting started section
+.startguide {
+  .gsstep.explore div.placeholder {
+    background-image: url(../images/explorerapis.svg);
+  }
+  .gsstep.signup div.placeholder {
+    background-image: url(../images/signup.svg);
+  }
+  .gsstep.subscribe div.placeholder {
+    background-image: url(../images/createapp.svg);
+  }
+  .gsstep.check-usage div.placeholder {
+    background-image: url(../images/check-usage.svg);
+  }
+}
+
+.case-study-banner::before {
+  background: url('../images/case-study-banner.svg') center / cover no-repeat;
+}
+
+// Improve link visibility
+a {
+  text-decoration: underline;
+  &:hover,
+  &:focus,
+  &:active {
+    text-decoration: underline;
+  }
+
+  // Exclusions
+  ul.nav li &,
+  ul.dropitmenu-submenu &,
+  h2 &,
+  .bx--card &,
+  &.bx--card,
+  &.button,
+  &[role="button"],
+  .featuredcontentNode &,
+  .get_help & {
+    text-decoration: none;
+    &:hover,
+    &:focus,
+    &:active {
+      text-decoration: none;
+    }
+  }
+}
+.explorerWrapper a.cds--link {
+  text-decoration: underline;
+  &:hover,
+  &:focus,
+  &:active {
+    text-decoration: underline;
+  }
+}
+
+body[data-dmt-mode="dark"] {
+  .startguide {
+    .gsstep.explore div.placeholder {
+      background-image: url(../images/explorerapis_dark.svg);
+    }
+    .gsstep.signup div.placeholder {
+      background-image: url(../images/signup_dark.svg);
+    }
+    .gsstep.subscribe div.placeholder {
+      background-image: url(../images/createapp_dark.svg);
+    }
+    .gsstep.check-usage div.placeholder {
+      background-image: url(../images/check-usage_dark.svg);
+    }
+  }
+}

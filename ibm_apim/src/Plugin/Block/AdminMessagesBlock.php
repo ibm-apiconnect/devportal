@@ -67,6 +67,22 @@ class AdminMessagesBlock extends BlockBase {
       \user_cookie_delete('ibm_apim_session_expired_on_token');
     }
 
+    $corg_create_status = \Drupal::request()->cookies->get('Drupal_visitor_corg_create_status_msg');
+    if (isset($corg_create_status) && !empty($corg_create_status)) {
+      $message_data = json_decode($corg_create_status, true);
+
+      if (isset($message_data) && !empty($message_data['text'])) {
+        if ($message_data['error']) {
+          \Drupal::messenger()->addError($message_data['text']);
+        } else {
+          \Drupal::messenger()->addMessage($message_data['text']);
+        }
+      }
+      // Clear cookie after use
+      user_cookie_delete('corg_create_status_msg');
+    }
+
+
     $status_messages = \Drupal::state()->get('ibm_apim.status_messages');
     $messages = [];
 

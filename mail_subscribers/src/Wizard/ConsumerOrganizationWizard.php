@@ -29,7 +29,7 @@ class ConsumerOrganizationWizard extends FormWizardBase {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string
    */
   public function getWizardLabel() {
-    return t('Mail Consumer Organizations Wizard');
+    return t('Mail consumer organizations wizard');
   }
 
   /**
@@ -58,7 +58,7 @@ class ConsumerOrganizationWizard extends FormWizardBase {
       'form' => ChooseConsumerOrgStep::class,
     ];
     $steps['choosesubs'] = [
-      'title' => t('Select Users'),
+      'title' => t('Select users'),
       'form' => ChooseRoleStep::class,
     ];
     $steps['entercontent'] = [

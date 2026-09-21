@@ -1,0 +1,135 @@
+{# /********************************************************* {COPYRIGHT-TOP}
+*** * Licensed Materials - Property of IBM * 5725-L30, 5725-Z22 * * (C)
+Copyright IBM Corporation 2025 * * All Rights Reserved. * US Government Users
+Restricted Rights - Use, duplication or disclosure * restricted by GSA ADP
+Schedule Contract with IBM Corp.
+********************************************************** {COPYRIGHT-END} **/
+/** * @file * Customizing Portal Theme tutorial template. * * Available
+variables: * - tutorial: The tutorial definition. * - images_path: Path to the
+tutorial images. */ #} {% set header_content %}
+<p>
+  The IBM API Connect Developer Portal lets admin users fully customize the
+  appearance of their site — from colors and fonts to logos and layouts. This
+  means you can make the portal match your organization's branding perfectly.
+</p>
+
+<p>In this tutorial, we'll show you how to:</p>
+<ul class="tutorial-objectives">
+  <li>Create a subtheme from the default theme</li>
+  <li>Make basic CSS style changes</li>
+  <li>Upload and enable your customized theme</li>
+</ul>
+{% endset %} {% set steps_content %} {# Step 1: Create Subtheme #}
+<li class="gs-step" data-step="Customize Portal Theme">
+  <h3>Create a Subtheme</h3>
+  <p>In the Portal admin menu, go to:</p>
+  <div class="path-instruction">
+    <strong>Appearance → Generate subtheme</strong>
+  </div>
+
+  <img
+    src="{{ images_path }}/navigating-to-subtheme-gen.png"
+    alt="Subtheme navigation"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <p>In the <strong>Generate</strong> tab:</p>
+  <ul class="instruction-list">
+    <li>
+      Enter a <strong>Subtheme name</strong> (e.g., <code>my_theme</code>)
+    </li>
+    <li>Select <strong>CSS</strong> as the Subtheme type</li>
+    <li>Select <strong>Default Connect Theme</strong> as the base template</li>
+  </ul>
+
+  <img
+    src="{{ images_path }}/enter-theme-name.png"
+    alt="Theme generation form"
+    class="img-responsive"
+    loading="lazy"
+  />
+  <p>Click <strong>Generate</strong>, then download and extract the ZIP file</p>
+</li>
+
+{# Step 2: Edit Theme CSS #}
+<li class="gs-step" data-step="Edit Theme CSS">
+  <h3>Edit the Theme CSS</h3>
+  <p>
+    Open the extracted folder in a code editor. Locate and open the
+    <code>overrides.css</code> file, then make your changes.
+  </p>
+
+  <div class="example-block">
+    <p><strong>Example:</strong></p>
+    <pre><code class="language-css">/* Body of the home page */
+body.path-frontpage.contexthome {
+  color: #152935;
+  background-color: #d1f0f7;
+}
+
+/* Header */
+.navbar {
+  background-color: #a0a0a0;
+}
+
+/* Footer */
+footer.footer {
+  background-color: #dee0e2;
+}
+footer.footer ul.nav > li > a {
+  color: #454A4C;
+}</code></pre>
+  </div>
+
+  <p>Save your changes when you're done.</p>
+</li>
+
+{# Step 3: Upload Subtheme #}
+<li class="gs-step" data-step="Upload Subtheme">
+  <h3>Upload the Customized Theme</h3>
+  <p>Compress your updated theme folder into a ZIP file:</p>
+
+  <div class="command-block">
+    <pre><code class="language-bash">zip -r mycustomtheme.zip mycustomtheme</code></pre>
+  </div>
+
+  <p>Then in the Portal admin menu, navigate to:</p>
+  <div class="path-instruction">
+    <strong>Appearance → Add new theme</strong>
+  </div>
+
+  <img
+    src="{{ images_path }}/add-theme.png"
+    alt="Upload theme UI"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <p>Upload your ZIP file and click <strong>Continue</strong> to install it.</p>
+</li>
+
+{# Step 4: Enable Theme #}
+<li class="gs-step" data-step="Enable Theme">
+  <h3>Enable Your Custom Theme</h3>
+  <p>After installation, click <strong>Enable newly added themes</strong>.</p>
+  <p>
+    Find your theme under <strong>Disabled themes</strong> and click
+    <strong>Enable and set as default</strong>.
+  </p>
+  <p>Return to the homepage to see your changes in action.</p>
+
+  <img
+    src="{{ images_path }}/final-result-theme.png"
+    alt="Final customized theme result"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <div class="success-message">
+    <p>Congratulations! You've successfully customized your portal theme.</p>
+  </div>
+</li>
+{% endset %} {% include 'tutorial-base.html.twig' with { 'tutorial': tutorial,
+'images_path': images_path, 'header_content': header_content, 'steps_content':
+steps_content } %}

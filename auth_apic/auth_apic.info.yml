@@ -14,8 +14,8 @@ dependencies:
 - key
 - real_aes
 - session_based_temp_store
-package: IBM API Developer Portal
+package: IBM CMS Portal
 core_version_requirement: ^8 || ^9 || ^10 || ^11
-version: 6.2.7
+version: 8.x-99.0.0
 project: auth_apic
 interface translation project: auth_apic

@@ -143,7 +143,7 @@ class ApicNodeListController extends ControllerBase {
               $newResult['version'] = $node->apic_version->value;
               $newResult['title'] = $node->getTitle();
               $newResult['url'] = $node->apic_url->value;
-              $newResult['protocol'] = $node->api_oaiversion->value;
+              $newResult['protocol'] = $node->api_protocol->value;
               $newResult['nid'] = $node->id();
               break;
             case 'application':
@@ -178,7 +178,7 @@ class ApicNodeListController extends ControllerBase {
    *
    * @return array|string|null
    */
-  public static function getAPI($input, string $outputType = NULL) {
+  public static function getAPI($input, ?string $outputType = NULL) {
     $node = self::getEntityofType($input, 'api');
     $url = NULL;
     $json = NULL;
@@ -203,7 +203,7 @@ class ApicNodeListController extends ControllerBase {
    *
    * @return array|null
    */
-  public static function getProduct($input, string $outputType = NULL): ?array {
+  public static function getProduct($input, ?string $outputType = NULL): ?array {
     $node = self::getEntityofType($input, 'product');
     $json = NULL;
 

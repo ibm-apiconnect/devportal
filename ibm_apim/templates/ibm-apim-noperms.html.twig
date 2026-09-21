@@ -10,7 +10,7 @@
 <div class="ibmapimNoPermissions">
   <div id="noperms-wrapper">
     <div class="noPermsContentWrapper">
-      <div class="mainContent">{{ 'Hmm. It appears you don\'t have access to the Portal.'|t }}</div>
+      <div class="mainContent">{% trans %} Hmm. It appears you don\'t have access to the Portal.{% endtrans %}</div>
       <div class="contactLink">{% set contact_path = path('ibm_apim.support') %}{% trans %}
           Please <a href="{{ contact_path }}">contact the system administrator</a> for assistance.
         {% endtrans %}</div>

@@ -1,0 +1,171 @@
+{# /********************************************************* {COPYRIGHT-TOP}
+*** * Licensed Materials - Property of IBM * 5725-L30, 5725-Z22 * * (C)
+Copyright IBM Corporation 2025 * * All Rights Reserved. * US Government Users
+Restricted Rights - Use, duplication or disclosure * restricted by GSA ADP
+Schedule Contract with IBM Corp.
+********************************************************** {COPYRIGHT-END} **/
+/** * @file * Installing Custom Modules tutorial template. * * Available
+variables: * - tutorial: The tutorial definition. * - images_path: Path to the
+tutorial images. */ #} {% set header_content %}
+<p>
+    In this tutorial you create three views in the Developer Portal, each one is configured to display a list of products according to their category. 
+    You then create a new page to show the views, where you see products that are grouped by category.
+</p>
+
+{% endset %} {% set steps_content %} 
+{# Step 1: Create a Vocabulary #}
+<li class="gs-step" data-step="Create three new taxonomy tags">
+    <h3>Create three new taxonomy tags</h3>    
+    <ol>
+        <li>Navigate to <strong>Structure > Taxonomy</strong>.</li>
+        <li>Under Vocabulary name, find Tags and click the arrow near to <strong>List terms</strong>.</li>
+        <li>Click <strong>Add terms</strong>.</li>
+        <li>In the Name field, enter Accounts and click <strong>Save</strong>.</li>
+        <li>In the Name field, enter Logistics and click <strong>Save</strong>.</li>
+        <li>In the Name field, enter Marketing and click <strong>Save</strong>.</li>
+        <li>To show the list of new tags, navigate to <strong>Structure > Taxonomy</strong>, find <strong>Tags</strong> vocabulary, and click <strong>List terms</strong>.</li>
+    </ol>
+
+    <img
+        src="{{ images_path }}/step_1.png"
+        alt="Taxonomy"
+        class="img-responsive"
+        loading="lazy"
+    />
+</li>
+
+{# Step 2: Add Terms #}
+<li class="gs-step" data-step="Create a view to display products with the Accounts category">
+    <h3>Create a view to display products with the Accounts category</h3>
+    <ol>
+        <li>Navigate to <strong>Structure > Views > +Add view</strong></li>
+        <li>In the View name field, enter Accounts products.</li>
+        <li>In the View Settings section, select the following options:
+            <ol class="ol-dots">
+                <li>Show: <strong>Content</strong></li>
+                <li>of type: <strong>Product</strong></li>
+                <li>sorted by: <strong>Newest first</strong></li>
+            </ol>
+        </li>
+        <li>In Page settings section, ensure that the <strong>Create a page</strong> checkbox is clear.</li>
+        <li>In Block settings section, select the <strong>Create a block</strong> checkbox, and enter Accounts products in the Block title field.</li>
+        <li>Ensure that the Block Display Settings section has the following default options:
+            <ol class="ol-dots">
+                <li>Display format: <strong>Masonry</strong></li>
+                <li>of: <strong>tiles (linked)</strong></li>
+            </ol>
+        </li>
+        <li>Select the <strong>Use a pager</strong> checkbox.
+            <img
+                src="{{ images_path }}/step_2.png"
+                alt="Taxonomy"
+                class="img-responsive"
+                loading="lazy"
+            />
+        </li>
+        <li>Click Save and edit.</li>
+    </ol>
+</li>
+
+{# Step 3: Attach Taxonomy to Content #}
+<li class="gs-step" data-step="Configure the view block settings">
+    <h3>Configure the view block settings</h3>
+    <ol>
+        <li>In the Format section, click the <strong>Fields</strong> link next to the Show label.</li>
+        <li>In the dialog box, select <strong>Content</strong> and click <strong>Apply</strong>.</li>
+        <li>From the <strong>View mode</strong> list, select <strong>Card</strong> and click <strong>Apply</strong>.</li>
+        <li>In the Filter Criteria section, click <strong>Add</strong>.</li>
+        <li>In the Searchfield, enter tag, select the Tags (apic_tags) option from the list, and click <strong>Add and configure filter criteria</strong>.</li>
+        <li>In the next dialog box, select the Tags and Client-side hierarchical options, then click <strong>Apply and continue</strong>.</li>
+        <li>Under Operator, select <strong>Is all of</strong>, and from the Select terms from vocabulary Tags list, select <strong>Accounts</strong>, and click <strong>Apply</strong>.</li>
+        <li>Under Advanced, click the <strong>None</strong> link next to the CSS class label.</li>
+        <li>If you are using the default API connect theme, then enter the CSS class name product-view and click <strong>Apply</strong>. If you have your own css class that you want to use, then enter its name in here instead.</li>
+        <li>Click <strong>Save</strong> to save all the changes.</li>
+    </ol>
+    <img
+        src="{{ images_path }}/step_3.png"
+        alt="Taxonomy"
+        class="img-responsive"
+        loading="lazy"
+    />
+</li>
+
+{# Step 4: Attach Taxonomy to Content #}
+<li class="gs-step" data-step="Create a view for the Logistics products">
+    <h3>Create a view for the Logistics products</h3>
+    <ol>
+        <li>Select <strong>Structure > Views</strong>.</li>
+        <li>Navigate to the Accounts products view. Click the arrow next to <strong>Edit</strong> and select <strong>Duplicate</strong>.</li>
+        <li>In the View name field, enter Logistics products, update the machine name, and click <strong>Duplicate</strong>.</li>
+        <li>In the Title section, click <strong>Accounts products</strong>.</li>
+        <li>In the Title field, enter Logistics products and click <strong>Apply</strong>.</li>
+        <li>In the Filter Criteria section, click the <strong>Content: Tags: (=Accounts)</strong> link.</li>
+        <li>From the <strong>Select terms from vocabulary Tags</strong> list, select <strong>Logistics</strong> and click <strong>Apply</strong>.</li>
+        <li>Click <strong>Save</strong> to save all the changes.</li>
+    </ol>
+    <p>Repeat step to create a view for the Marketing products</p>
+</li>
+
+{# Step 5: Attach Taxonomy to Content #}
+<li class="gs-step" data-step="Create a page to display the views">
+    <h3>Create a page to display the views</h3>
+    <ol>
+        <li>Navigate to <strong>Structure > Pages</strong>.</li>
+        <li>Click <strong>+Add page</strong>.</li>
+        <li>In the Administrative title field, enter Products by category.</li>
+        <li>In the Path field, enter products-by-category.</li>
+        <li>From the <strong>Variant type</strong> list, select Panels and click <strong>Next</strong>.
+            <img
+                src="{{ images_path }}/step_6_1.png"
+                alt="Taxonomy"
+                class="img-responsive"
+                loading="lazy"
+            />
+        </li>
+        <li>Change the Label value to Products grouped by category.</li>
+        <li>From the <strong>Builder</strong> list, select Standard and click <strong>Next</strong>.</li>
+        <li>From the <strong>Layout</strong> list, select <strong>Three column</strong> then click <strong>Next</strong>.</li>
+        <li>Leave all the defaults on the next page and click <strong>Next</strong>.</li>
+        <li>Click <strong>Add new block</strong>.</li>
+        <li>From the Lists (views) section, select <strong>Accounts products</strong>.</li>
+        <li>Ensure that <strong>Display title</strong> checkbox is selected and Region is set to <strong>Left</strong>.</li>
+        <li>Click <strong>Add block</strong>.
+             <img
+                src="{{ images_path }}/step_6_2.png"
+                alt="Taxonomy"
+                class="img-responsive"
+                loading="lazy"
+            />
+        </li>
+        <li>Click <strong>Add new block</strong>. Select Logistics products view from the list and set the Region to <strong>Middle</strong>, click <strong>Add block</strong>.</li>
+        <li>Click <strong>Add new block</strong>. Select Marketing products view from the list and set the Region to <strong>Right</strong>, click <strong>Add block</strong>.</li>
+        <li>Enter Products grouped by category in the Page title field, and click <strong>Finish</strong>.
+            <img
+                src="{{ images_path }}/step_6_3.png"
+                alt="Taxonomy"
+                class="img-responsive"
+                loading="lazy"
+            />
+        </li>
+    </ol>
+</li>
+
+{# Step 5: Attach Taxonomy to Content #}
+<li class="gs-step" data-step="Create a page to display the views">
+    <p>From your API Manager, create three new products, or update existing ones, to give each one a category value of either Accounts, Logistics, or Marketing. Publish each of the products to the catalog with the configured Developer Portal</p>
+    <h3>Check that the Products grouped by category page shows your published products by category</h3>
+    <ol>
+        <li>Select <strong>Structure > Pages</strong>.</li>
+        <li>Click the /products-by-category path link.</li>
+        <li>You are redirected to the /products-by-category page and can see the products that you assigned to these categories.</li>
+    </ol>
+
+    <div class="success-message">
+        <p>
+            Congratulations! You've successfully created three new views in Developer Portal. Configured each one to display a list of products according to their category.
+        </p>
+  </div>
+</li>
+{% endset %} {% include 'tutorial-base.html.twig' with { 'tutorial': tutorial,
+'images_path': images_path, 'header_content': header_content, 'steps_content':
+steps_content } %}

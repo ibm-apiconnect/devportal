@@ -1,0 +1,698 @@
+// _connect-bidi.scss
+// BiDi (Right-to-Left) Support for IBM API Connect Developer Portal
+// 
+// This file contains all RTL styling overrides for the portal.
+// Drupal automatically adds dir="rtl" to <html> when an RTL language is selected.
+// We use html[dir="rtl"] selector to scope all RTL-specific styles.
+
+// ============================================================================
+// GLOBAL STYLES
+// ============================================================================
+
+html[dir="rtl"] {
+
+    // ============================================================================
+    // Nav bar
+    // ============================================================================
+    @media (min-width: 768px) {
+        .navbar-nav>li {
+            float: right;
+        }
+    }
+
+    .navbar {
+
+        // Account menu dropdown - RTL positioning
+        .account-menu.dropitmenu .dropit-submenu {
+            margin-right: 0;
+            margin-left: -14px;
+            right: auto;
+            left: 0;
+        }
+
+        // Organization selector dropdown - RTL positioning
+        .consumerorgSelectBlock .dropitmenu .dropitmenu-submenu {
+            margin-right: 0;
+            margin-left: -1.5rem;
+            right: auto;
+            left: 0;
+        }
+    }
+
+    // ============================================================================
+    // Login page
+    // ============================================================================
+
+    // First time login page background image
+    .ibmapimGetStarted::before {
+        transform: scaleX(-1);
+    }
+
+    // First time login page cards
+    #get-started-wrapper .startguide {
+        right: -150px;
+        left: unset;
+    }
+
+    .homepageLink.breadcrumb a svg {
+        transform: scaleX(-1);
+
+    }
+
+    .apic-login-wrapper,
+    .apic-user-form-register,
+    .apic-register-wrapper,
+    .apic-reset-wrapper {
+
+        // Login form side background
+        &::after {
+            right: 0;
+            left: inherit;
+            background-position-x: 100%;
+            background-size: 100%;
+            transform: scaleX(-1);
+        }
+
+        // Links at bottom
+        .apic-user-forgot-password,
+        .apic-user-form-text,
+        .apic-user-form-footer .apic-user-form-text {
+            text-align: right;
+        }
+    }
+
+
+    // styles for action buttons (e.g. sign in)
+    .context-user-login,
+    .context-user-password,
+    .context-ibm-apim-activate-x,
+    .context-ibm-apim-forgotpwd-x,
+    .context-user-register,
+    .pass-reset form[class*="change-pwd-form"] {
+        .form-actions {
+            .button {
+
+                &.button--primary,
+                &.btn-primary {
+                    padding-left: 12px;
+                    padding-right: 12px;
+                    margin-left: 0px;
+                    margin-right: 0px;
+                }
+            }
+        }
+    }
+
+    // styles for user registry buttons (e.g. google, github, ldap)
+    .apic-user-form-registries {
+
+        button.registry-button,
+        a.registry-button {
+            text-align: right;
+        }
+    }
+
+
+    // ============================================================================
+    // Home page
+    // ============================================================================
+    // Flip banner background image and icons
+    .welcomebanner::before {
+        transform: scaleX(-1);
+    }
+
+    .case-study-banner::before {
+        transform: scaleX(-1);
+    }
+
+    .apicCardMain .apicCaseStudyLink svg {
+        transform: scaleX(-1);
+    }
+
+    .apicCard.apicCaseStudyCard:hover .apicCaseStudyLink svg {
+        transform: scaleX(-1) translateX(4px);
+    }
+
+    .get_help a svg {
+        transform: scaleX(-1);
+
+    }
+
+    // start guide
+    .field--item:has(.startguide) {
+        overflow: hidden;
+    }
+
+    .startguide .gsstep.explore h4,
+    .startguide .gsstep.signup h4,
+    .startguide .gsstep.subscribe h4,
+    .startguide .gsstep.check-usage h4 {
+        text-align: left;
+    }
+
+    .startguide .gsstep.explore p {
+        left: 15px;
+    }
+
+    .block-getting-started .startguide .gsstep.explore::before {
+        transform: translateX(-100%) translateY(32%) scaleX(-1);
+    }
+
+    .block-getting-started .startguide .gsstep.signup::after {
+        transform: translateX(135.5%) translateY(7%);
+    }
+
+    .block-getting-started .startguide .gsstep.subscribe::before {
+        transform: translateX(-100%) translateY(90%) scaleX(-1);
+    }
+
+    @media screen and (min-width: 768px) and (max-width: 1199px) {
+        .block-getting-started .startguide .gsstep.signup::after {
+            left: -100px;
+            top: 205px;
+
+        }
+
+        .block-getting-started .startguide .gsstep.subscribe::before {
+            left: -60px;
+            top: 53px;
+        }
+    }
+
+    @media screen and (max-width: 767px) {
+        .startguide .gsstep.signup p {
+            left: 85px;
+        }
+
+        .startguide .gsstep p,
+        .startguide .gsstep.explore p,
+        .startguide .gsstep.subscribe p {
+            left: 60px;
+        }
+    }
+
+    .bx--card:not(.node--type-application) {
+        // ============================================================================
+        // Product Cards
+        // ============================================================================
+
+        .apicProductRating {
+            .br-widget a {
+                padding-inline-start: 0;
+                margin-inline-start: 0;
+                padding-inline-end: 8px;
+                margin-inline-end: -6px;
+            }
+
+            .select-wrapper {
+                margin-right: 0;
+                margin-inline-end: 20px;
+            }
+        }
+
+        a {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        // ============================================================================
+        // API Cards
+        // ============================================================================
+
+    }
+
+    // ============================================================================
+    // Plan Cards
+    // ============================================================================
+    .apicPlans {
+        .planCard {
+            .btn {
+                text-align: right;
+            }
+        }
+    }
+
+    // ============================================================================
+    // App Cards
+    // ============================================================================
+    .node--type-application.bx--card {
+        .apicAppCardMain {
+            .apicAppDesc {
+                text-align: right;
+            }
+        }
+    }
+
+
+
+    // ============================================================================
+    // Product Details page
+    // ============================================================================
+    .votingapi-widgets .br-theme-bootstrap-stars .br-widget {
+        display: inline-flex;
+    }
+
+    // Plan modal - header
+    .planDetail--modalClose {
+        right: unset;
+        left: 1rem;
+    }
+
+    // Plan modal - heading
+    .productive-heading-03,
+    .productive-heading-04 {
+        text-align: right;
+    }
+
+    // Plan modal - APIs table
+    .plansTable {
+
+        th,
+        td {
+            text-align: right;
+        }
+
+        td span {
+            float: right;
+            margin-inline-end: .2rem;
+        }
+    }
+
+    // ============================================================================
+    // Product Subscription page
+    // ============================================================================
+    .route-ibm-apimsubscription-wizard,
+    .route-ibm-apimsubscription-wizardnoplan,
+    .route-ibm-apimsubscription-wizardnoplanstep,
+    .route-ibm-apimsubscription-wizardstep {
+        .apicMainContent {
+
+            // Progress bar
+            .wizard-trail {
+                justify-content: right;
+            }
+
+            // App card
+            .apicSubscribeAppsList .apicSubAppCard {
+                .apicAppCard {
+                    text-align: right;
+                }
+            }
+        }
+    }
+
+    // Form table
+    .apicForm {
+        .apicFormContent {
+            .bx--data-table {
+                th {
+                    text-align: right;
+                }
+            }
+        }
+    }
+
+    // Create app dialog
+    .ui-dialog {
+
+        // close icon
+        .ui-dialog-titlebar-close {
+            right: unset;
+            left: .3em;
+        }
+
+        .ui-dialog-buttonpane {
+            padding: .3em .4em .5em 1em;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        // credentials for new app dialog
+        &.ui-corner-all.ui-front {
+            .modal-dialog .modal-body {
+
+                p,
+                .clientIDContainer .field__label {
+                    text-align: right;
+                }
+
+                .bx--form-item.form-item.form-group {
+                    display: inline-flex;
+                    align-items: center;
+                }
+
+                .offscreen-field {
+                    left: unset;
+                    right: -1500px;
+                }
+            }
+        }
+    }
+
+
+    // ============================================================================
+    // MyOrg page
+    // ============================================================================
+    .apicMyOrg {
+        .apicMyOrgMembers {
+
+            th:first-child,
+            tbody td:first-child,
+            .apicMyOrgNoMembers .noMembersTextContainer {
+                text-align: right;
+
+            }
+        }
+
+        .apicMyOrgActions {
+
+            // Organization / member manage menu
+            .organizationMenu.dropitmenu,
+            .overflow-menu.dropitmenu {
+                .dropitmenu-submenu {
+                    right: auto;
+                    left: -10px;
+
+                    &:before {
+                        left: 0.8rem;
+                        right: unset;
+                    }
+                }
+            }
+
+
+        }
+    }
+
+    .paymentMethodContainer.noPaymentMethods {
+        .messageContainer {
+            text-align: right;
+
+        }
+    }
+
+    // ============================================================================
+    // Application page
+    // ============================================================================
+
+    // Three-dot dropdown menus Application header menu (Dashboard, Subscriptions, Notifications tabs)
+    .applicationWrapper .rightTitle .applicationMenu.dropitmenu .dropitmenu-submenu {
+        right: auto;
+        left: 0;
+    }
+
+    // Three-dot dropdown menus Credentials menu
+    .applicationCredentials .credentialsTable .credentialsHeader .credentialsActions .credentialsMenu.dropitmenu .dropitmenu-submenu {
+        right: auto;
+        left: 0;
+    }
+
+    // Three-dot dropdown menus Subscription menu (in each subscription row)
+    .applicationSubscriptions .subscriptionsTable .subscriptionsContent .subscriptionMenu.dropitmenu .dropitmenu-submenu {
+        right: auto;
+        left: 0;
+    }
+
+    // Credentials show pwd icon
+    .appSecret button.shwpd,
+    appId button.shwpd,
+    .clientIDContainer button.shwpd {
+        margin-left: unset;
+        margin-right: 1rem;
+    }
+
+    // Application details - subscription table
+    .applicationSubscriptions {
+        .subscriptionsTable {
+            .subscriptionsContent {
+
+                th:first-child,
+                tbody td:first-child {
+                    text-align: right;
+                }
+            }
+        }
+    }
+
+    // Application details - notification
+    .eventLogTimestamp {
+        margin-right: auto;
+        margin-left: 1rem;
+    }
+
+    // ============================================================================
+    // Form
+    // ============================================================================
+    // Text input
+    .form-inline .input-group {
+        display: flex;
+    }
+
+    // Dropdown arrow icon
+    .select-wrapper::after {
+        left: 0.75rem;
+        right: unset;
+    }
+
+    // Modal action buttons
+    .route-apic-appcreate,
+    .route-apic-appcreate-step-two,
+    .route-applicationcreate,
+    .route-applicationcreate-step-two,
+    .route-apic-appverify-clientsecret,
+    .route-apic-appcredentials-create,
+    .route-apic-appreset-clientid,
+    .route-apic-appreset-clientsecret,
+    .route-apic-appcredentials-update,
+    .route-apic-appcredentials-delete,
+    .route-apic-appupdate,
+    .route-apic-appdelete,
+    .route-apic-apppromote,
+    .route-apic-appimage-upload,
+    .route-apic-appimage-delete,
+    .route-auth-apicdeleteuser,
+    .route-consumerorgchange-member-role,
+    .route-consumerorgcreate,
+    .route-consumerorgupdate,
+    .route-consumerorgdelete,
+    .route-consumerorgchangeowner,
+    .route-consumerorginvite,
+    .route-consumerorgremove-user,
+    .route-consumerorgresend-invite,
+    .route-consumerorgdelete-invite,
+    .route-consumerorgbilling-add-payment,
+    .route-consumerorgbilling-delete-payment,
+    .route-apic-appdisplay-creds,
+    .route-change-pwd-pagechange-password-form.pass-reset {
+        .main-container .row {
+
+            #edit-actions,
+            .form-actions {
+                right: -1rem;
+
+                button,
+                .button {
+                    text-align: right;
+
+                }
+            }
+
+        }
+    }
+
+    // ============================================================================
+    // Profile page
+    // ============================================================================
+    .bx--global-light-ui {
+
+        .button,
+        .btn {
+            &:first-child {
+                margin-inline-start: 0;
+            }
+        }
+
+        &.route-entityuseredit-form .button.apicSecondary#edit-delete {
+            margin-right: 0;
+            margin-left: auto;
+        }
+    }
+
+    // ============================================================================
+    // News / Blog page
+    // ============================================================================
+    .apicNewsLink {
+        display: block !important;
+
+        svg {
+            transform: scaleX(-1);
+        }
+    }
+
+    // user avatar
+    article footer article {
+        margin-right: inherit;
+        margin-inline-end: 1rem;
+    }
+
+    .list-inline {
+        padding-left: inherit;
+        padding-right: 0;
+    }
+
+    .js-comment>h3 {
+        display: flex;
+    }
+
+    // ============================================================================
+    // Forum page
+    // ============================================================================
+    // Add topic button
+    ul.forum-actions-wrapper {
+        padding-inline-start: 0;
+    }
+
+    button.link-edit-summary {
+        float: left !important;
+    }
+
+    // ============================================================================
+    // Admin page
+    // ============================================================================
+    // Fix navbar width
+    .toolbar-loading .apicStickyHeader {
+        left: 0;
+        right: 265px;
+    }
+
+    // Fix navbar width
+    &[data-admin-toolbar="collapsed"] .toolbar-loading .apicStickyHeader {
+        right: 72px;
+    }
+
+    @media screen and (min-width: 642px) and (max-width: 1024px) {
+        &[data-admin-toolbar="collapsed"] .toolbar-loading .apicStickyHeader {
+            right: 0;
+        }
+    }
+
+    // Fix navbar width - use right offset instead of left
+    .apicStickyHeader .navbar.container {
+        width: calc(100% - var(--drupal-displace-offset-right, 0px));
+    }
+
+    dd {
+        margin-right: 0; // Undo browser default
+    }
+
+    // Icon styles.
+
+    a,
+    .btn {
+
+        &.icon-before .glyphicon,
+        & .glyphicon.icon-before {
+            transform: scaleX(-1);
+        }
+
+        &.icon-after .glyphicon,
+        & .glyphicon.icon-after {
+            transform: scaleX(-1);
+        }
+    }
+
+
+    // ============================================================================
+    // Icon after 3rd party links (extlink.css)
+    [data-extlink-placement='append'],
+    [data-extlink-placement='after'] {
+        padding-inline-start: 0.2rem;
+        padding-left: 0px;
+    }
+
+    // Rich text editor (About text formats)
+    .filter-help {
+        float: left;
+    }
+
+    // Search auto complete drpdown
+    .ui-autocomplete .ui-menu-item {
+        text-align: right;
+    }
+
+    // Captcha
+    .reload-captcha {
+        text-align: right;
+    }
+
+    // Pagination / Pager
+    .pager-nav {
+        .pagination {
+            direction: ltr;
+        }
+    }
+
+    // local action tabs
+    nav.tabs,
+    .path-node .tabs {
+        margin-right: -2rem;
+        margin-left: unset;
+    }
+
+    // Hide pwd button
+    button.shwpd {
+        margin-right: -2rem;
+        margin-left: unset;
+    }
+
+    /* Position button absolutely inside the input */
+    .views-exposed-form .js-form-item-title .bx--search-close,
+    .views-exposed-form .form-item-title .bx--search-close {
+        right: unset;
+        left: 0.25rem;
+    }
+
+    // error page - flip background image in RTL
+    .route-system404,
+    .route-system403,
+    .route-system401 {
+        .main-container.container {
+            &::before {
+                // Flip the background image horizontally for RTL
+                transform: scaleX(-1);
+                // Position on the left side in RTL
+                right: auto;
+                left: 2.5%;
+                background-position: left bottom;
+            }
+        }
+    }
+
+    @media (min-width: 768px) {
+
+        .col-sm-1,
+        .col-sm-2,
+        .col-sm-3,
+        .col-sm-4,
+        .col-sm-5,
+        .col-sm-6,
+        .col-sm-7,
+        .col-sm-8,
+        .col-sm-9,
+        .col-sm-10,
+        .col-sm-11,
+        .col-sm-12 {
+            float: right;
+        }
+    }
+
+    .pull-right {
+        float: inline-end !important;
+    }
+
+    .pull-left {
+        float: inline-start !important;
+    }
+}
+
+// End html[dir="rtl"]

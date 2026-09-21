@@ -14,6 +14,7 @@ namespace Drupal\ibm_stripe_payment_method\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * APIC Stripe monetization settings form.
@@ -40,7 +41,7 @@ class StripeConfigForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $config = $this->config('ibm_stripe_payment_method.settings');
 
-    $billingProviderConfig = unserialize(\Drupal::config('ibm_apim.settings')->get('billing_providers'), ['allowed_classes' => FALSE]);
+    $billingProviderConfig = SerializationUtility::decodeData(\Drupal::config('ibm_apim.settings')->get('billing_providers'), TRUE, FALSE);
     if (!isset($billingProviderConfig) || empty($billingProviderConfig)) {
       \Drupal::messenger()->addWarning(t('No billing provider is currently configured in the portal. Go to /admin/config/system/apic_billing to set the billing provider mapping.'));
     }
@@ -64,7 +65,7 @@ class StripeConfigForm extends ConfigFormBase {
     }
 
     $form['intro'] = [
-      '#markup' => t('IBM API Developer Portal Stripe Integration Settings'),
+      '#markup' => t('IBM CMS Portal Stripe Integration Settings'),
       '#weight' => -20,
     ];
 
@@ -76,7 +77,7 @@ class StripeConfigForm extends ConfigFormBase {
     ];
     $form['stripeapi']['publishable_key'] = [
       '#type' => 'textfield',
-      '#title' => t('Publishable Key'),
+      '#title' => t('Publishable key'),
       '#description' => t('Provide the publishable key for your Stripe account.'),
       '#size' => 25,
       '#maxlength' => 256,
@@ -87,7 +88,7 @@ class StripeConfigForm extends ConfigFormBase {
 
     $form['stripeapi']['secret_key'] = [
       '#type' => 'textfield',
-      '#title' => t('Secret Key'),
+      '#title' => t('Secret key'),
       '#description' => t('Provide the secret key for your Stripe account.'),
       '#size' => 25,
       '#maxlength' => 256,

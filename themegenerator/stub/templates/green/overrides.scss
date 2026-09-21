@@ -1,3 +1,6 @@
+// Prevent duplicate font loading
+$css--font-face: false;
+
 // import connect variables
 @import "connect-variables";
 
@@ -5,72 +8,114 @@
 $font-family-base: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
 
 // Green color palette
-$green-01: #008673;
-$green-02: #006456;
-$green-03: #00baa1;
-
-$light-green-01: #C0f5E8;
-$light-green-02: #8EE9D4;
-$light-green-03: #40d5bb;
+$green-10: #defff6;
+$green-20: #c0f5e8;
+$green-30: #8ee6d5;
+$green-40: #42bea5;
+$green-50: #008673;
+$green-60: #006456;
+$green-70: #005347;
+$green-80: #003d35;
+$green-90: #002b26;
+$green-gray: #26302f;
 
 $white-01: #fff;
-$gray-01: #f0f4f4;
-$gray-02: #eaeaea;
-$gray-03: #d8d8d8;
+$white-02: #fbf8f8;
+
+$gray-01: #eaeaea;
+$gray-02: #d8d8d8;
+$gray-03: #c0bfc0;
 $gray-04: #949394;
-$gray-05: #595859;
+$gray-05: #464646;
+$gray-06: #6f6f6f;
+$gray-07: #525252;
+$gray-08: #393939;
+$gray-09: #262626;
 
-$dark-gray-01: #133a32;
-$black-01: #122b26;
-
-$navbar-green: #124f44;
+$black-01: #000;
 
 // theme variables
 // these are the variables to override for custom theme creation
-// Global body
-$body-bg: $light-green-01;
+//** Global body
+$body-bg: $white-01;
+// Dark mode
+$dark-body-bg: $gray-09;
+$dark-page-header-bg: $gray-09;
 
-// Global text color
+//** Text
 $text-color: $black-01;
 $label-color: $black-01;
-//** Global textual link color.
-$link-color: $green-01;
-//** Link hover color
-$link-hover-color: $green-02;
 
-$brand-primary: $green-01;
-$brand-primary-light: $green-03;
-$brand-primary-dark: $green-02;
+//** Highlight
+$highlight: $green-20;
+// Dark mode
+$dark-highlight: $green-90;
 
-// Placeholder text color
-$input-color-placeholder: $gray-05;
+//** Panel background
+$panel-bg: $white-01;
+// Dark mode
+$dark-panel-bg: $green-gray;
 
-// Navbar variable overrides
-$navbar-default-color: rgba($white-01, 0.6);
-$navbar-default-bg: $navbar-green;
+//** Link
+$link-color: $green-70;
+$link-hover-color: $green-60;
+// Dark mode
+$dark-link-color: $green-40;
+$dark-link-hover-color: $green-30;
 
-$navbar-default-link-color: rgba($white-01, 0.6);
-$navbar-default-link-hover-color: rgba($white-01, 1);
-$navbar-default-link-active-color: rgba($white-01, 1);
-$navbar-default-link-active-bg: $navbar-green;
-$navbar-default-link-hover-bg: $green-02;
+//** Focus
+$focus: $green-60;
+$interactive-focus: $green-60;
+$focus-inset: $white-01;
+$focus-inverse: $white-01;
+// Dark mode
+$dark-focus: $green-50;
+$dark-interactive-focus: $green-50;
+$dark-focus-inset: $white-01;
+$dark-focus-inverse: $white-01;
 
-$navbar-default-toggle-icon-bar-bg: $white-01;
+//** Brand
+$brand-primary: $green-70;
+$brand-primary-light: $green-50;
+$brand-primary-dark: $green-60;
+$brand-primary-link-color: $green-70;
+$brand-primary-icon-interactive: $green-70;
+// Dark mode
+$dark-brand-primary-link-color: $green-40;
+$dark-brand-primary-icon-interactive: $green-50;
 
-// footer variable overrides
-$footer-default-bg: $white-01;
-$footer-default-color: $navbar-green;
+//** Navbar
+$navbar-default-color: $white-01;
+$navbar-default-bg: $brand-primary;
+$navbar-default-link-color: $white-01;
+$navbar-default-link-hover-color: $white-01;
+$navbar-default-link-active-color: $white-01;
+$navbar-default-link-active-bg: $brand-primary;
+$navbar-default-link-hover-bg: $green-60;
+$navbar-default-toggle-icon-bar-bg: $brand-primary-dark;
+// Dark mode
+$dark-navbar-default-bg: $green-80;
+$dark-navbar-default-link-hover-bg: $green-70;
+
+//** Footer
+$footer-default-bg: $green-70;
+$footer-default-color: $gray-05;
 $footer-default-bordercolor: $brand-primary;
+$footer-divider: $white-01;
+// Dark mode
+$dark-footer-default-bg: $green-80;
+$dark-footer-divider: $white-01;
 
-$footer-link-color: $brand-primary;
-
-// tabs
+//** Tabs
 $tab-primary-background: $brand-primary;
 $tab-primary-text: $white-01;
+$tab-border-color-active: $green-70;
+// Dark mode
+$dark-tab-border-color-active: $green-50;
 
-// forms
+//** Forms
 $default-header: $gray-05;
-$default-bg-light: $white-01;
+$default-bg-light: $white-02;
 $default-border: $gray-03;
 $default-line: $gray-05;
 $default-submitted: $gray-04;
@@ -83,64 +128,174 @@ $input-border-radius: 0;
 $input-bg: $gray-01;
 $input-border: $gray-01;
 $input-color: $black-01;
+$input-focus: $green-60;
+// Placeholder text color
+$input-color-placeholder: $gray-04;
+$modal-input-bg: $gray-01;
+$modal-input-border: $gray-01;
 
-// buttons
+// Dark mode
+$dark-default-bg-light: $green-gray;
+$dark-input-border: $gray-04;
+$dark-input-focus: $green-50;
+$dark-modal-input-border: $gray-07;
+
+//** Buttons
 $btn-border-radius-base: 0;
 $btn-border-radius-large: 0;
 $btn-border-radius-small: 0;
-$btn-default-color: $green-01;
-$btn-default-bg: $white-01;
-$btn-default-border: $green-01;
+$btn-default-color: $green-70; // secondary button
+$btn-default-bg: $white-01; // secondary button
+$btn-default-border: $green-70; // secondary button
+$btn-default-hover-bg: $white-01; // secondary button
 $btn-primary-color: $white-01;
-$btn-primary-bg: $green-01;
+$btn-primary-bg: $green-70;
+$btn-primary-hover-bg: $green-80;
+$btn-primary-active-bg: $green-80;
 $btn-primary-border: transparent;
 $btn-success-color: $white-01;
-$btn-success-bg: $green-01;
+$btn-success-bg: $green-70;
 $btn-success-border: transparent;
 $btn-link-disabled-color: $brand-primary;
+$tile-btn-bg: $white-02;
+$tile-btn-border: $white-02;
+$tile-btn-color: $green-70;
+$tile-btn-color-hover: $green-70;
+$btn-tertiary-hover-bg: $green-70;
+$btn-tertiary-color: $green-70;
+$btn-tertiary-active-bg: $green-70;
+// Dark mode
+$dark-btn-primary-bg: $green-70;
+$dark-btn-primary-hover-bg: $green-80;
+$dark-btn-primary-active-bg: $green-80;
+$dark-tile-btn-bg: $green-gray;
+$dark-tile-btn-color: $green-40;
+$dark-tile-btn-color-hover: $green-40;
 
-
-$tile-btn-bg: $white-01;
-$tile-btn-border: $white-01;
-$tile-btn-color: $text-color;
-
-// checkboxes and radio buttons
+//** Checkboxes and radio buttons
 $check-radio-bg: $white-01;
 $check-radio-border: $gray-05;
 $check-radio-bg-checked: $brand-primary;
 $check-radio-border-checked: $brand-primary;
 $check-radio-color-checked: $white-01;
+// Dark mode
+$dark-check-radio-bg-checked: $green-40;
 
-// tooltips
+//** Tooltips
 $tooltip-color: $white-01;
-$tooltip-bg: $navbar-green;
+$tooltip-bg: $gray-05;
 
-// modals
-$modal-content-bg: $gray-01;
+//** Modals
+$modal-content-bg: $white-01;
 $modal-content-border-color: $brand-primary;
-$modal-backdrop-bg: $gray-03;
+$modal-backdrop-bg: $white-01;
 $modal-backdrop-opacity: .5;
 $modal-header-border-color: transparent;
-$modal-content-color: $gray-04;
-//** Modal footer border color
+$modal-content-color: $gray-05;
 $modal-footer-border-color: $gray-04;
 
-//** card settings
+//** Card settings
 $card-bg: $gray-01;
-$card-border-color: $gray-04;
+$card-title-color: $green-70;
+$card-border-color: $gray-01;
 $card-footer-bg: $gray-03;
 $disabled-bg: $gray-05;
+$case-study-card-bg: $brand-primary;
+// Dark mode
+$dark-card-title-color: $green-40;
+$dark-card-border-color: $gray-06;
+$dark-card-footer-bg: $gray-07;
+$dark-case-study-card-bg: $case-study-card-bg;
 
-//** table settings
+//** Table settings
 $table-header-bg: $gray-04;
 $table-header-border: $brand-primary;
 $table-row-border: $gray-04;
-$table-row-hover: $light-green-03;
+$table-row-hover: $gray-03;
 $table-row-bg-light: $gray-01;
 $table-row-bg-gray: $gray-02;
 $table-zebra-stripe: $gray-02;
 
+
+
+//** Home page
+$home-banner-bg: $green-10;
+$home-banner-button-bg: $green-60;
+$home-banner-button-color: $text-on-color;
+$home-banner-title-color: $black-01;
+$home-build-button-bg: $green-60;
+$home-button-secondary-bg: $green-20;
+$home-button-secondary-color: $black-01;
+$home-button-secondary-hover-bg: $green-40;
+$home-link-color: $green-70;
+// Dark mode
+$dark-home-button-secondary-bg: $green-20;
+$dark-home-button-secondary-color: $black-01;
+$dark-home-button-secondary-hover-bg: $home-button-secondary-hover-bg;
+$dark-home-banner-bg: $green-70;
+$dark-home-banner-button-bg: $green-20;
+$dark-home-banner-button-color: $black-01;
+$dark-home-banner-title-color: $text-on-color;
+$dark-home-build-button-bg: $green-70;
+$dark-home-link-color: $green-40;
+
+//** HTTP method
+$http-post: $green-70;
+$http-delete: $green-70;
+$http-head: $green-70;
+$http-options: $green-70;
+$http-patch: $green-70;
+$http-put: $green-70;
+$http-trace: $green-70;
+
+$dark-http-post: $green-40;
+$dark-http-delete: $green-40;
+$dark-http-head: $green-40;
+$dark-http-options: $green-40;
+$dark-http-patch: $green-40;
+$dark-http-put: $green-40;
+$dark-http-trace: $green-40;
+
 // import everything from connect_theme as a starting point
 @import "connect-styles";
 
-// place further styling overrides here
+.welcomebanner::before {
+  background-image: none;
+}
+
+// getting started section
+.startguide {
+  .gsstep.explore div.placeholder {
+    background-image: url(../images/explorerapis.svg);
+  }
+  .gsstep.signup div.placeholder {
+    background-image: url(../images/signup.svg);
+  }
+  .gsstep.subscribe div.placeholder {
+    background-image: url(../images/createapp.svg);
+  }
+  .gsstep.check-usage div.placeholder {
+    background-image: url(../images/check-usage.svg);
+  }
+}
+
+.case-study-banner::before {
+  background: url('../images/case-study-banner.svg') center / cover no-repeat;
+}
+
+body[data-dmt-mode="dark"] {
+  .startguide {
+    .gsstep.explore div.placeholder {
+      background-image: url(../images/explorerapis_dark.svg);
+    }
+    .gsstep.signup div.placeholder {
+      background-image: url(../images/signup_dark.svg);
+    }
+    .gsstep.subscribe div.placeholder {
+      background-image: url(../images/createapp_dark.svg);
+    }
+    .gsstep.check-usage div.placeholder {
+      background-image: url(../images/check-usage_dark.svg);
+    }
+  }
+}

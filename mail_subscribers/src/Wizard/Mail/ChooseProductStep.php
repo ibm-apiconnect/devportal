@@ -33,13 +33,13 @@ class ChooseProductStep extends FormBase {
     if ($cached_values['objectType'] === 'plan') {
       $form['intro'] = [
         '#markup' => '<p>' . t('This wizard will email all subscribers of a specific plan for a specific Product. Each subscriber will be sent an individual email.') . '</p>'
-          . '<p>' . t('Select the Products below and then select one of its Plans on the next page.') . '</p>',
+          . '<p>' . t('Select the products below and then select one of its plans on the next page.') . '</p>',
         '#weight' => 0,
       ];
     } else {
       $form['intro'] = [
         '#markup' => '<p>' . t('This wizard will email all subscribers of any plan for a specific Product. Each subscriber will be sent an individual email.') . '</p>'
-          . '<p>' . t('Enter the name of the Product:') . '</p>',
+          . '<p>' . t('Enter the name of the product:') . '</p>',
         '#weight' => 0,
       ];
     }
@@ -55,7 +55,7 @@ class ChooseProductStep extends FormBase {
       ],
       '#maxlength' => NULL,
       '#title' => t('Products'),
-      '#description' => t('Type the first few characters of the Product you would like to add then select from the available search results. Multiple products can be added by separating them by a comma. Please note the search results are affected by which Products you can access.'),
+      '#description' => t('Type the first few characters of the product you would like to add then select from the available search results. Multiple products can be added by separating them by a comma. Please note the search results are affected by which Products you can access.'),
     ];
 
     return $form;
@@ -67,7 +67,7 @@ class ChooseProductStep extends FormBase {
   public function validateForm(array &$form, FormStateInterface $form_state): ?bool {
 
     if (empty($form_state->getUserInput()['products'])) {
-      $form_state->setErrorByName('products', t('You must select at least one Product.'));
+      $form_state->setErrorByName('products', t('You must select at least one product.'));
       return FALSE;
     }
     return NULL;

@@ -1,0 +1,59 @@
+--- /dev/null	2025-07-09 14:59:06
++++ modules/honeypot/honeypot.libraries.yml	2025-07-09 14:52:07
+@@ -0,0 +1,7 @@
++honeypot_style:
++  version: 1.x
++  css:
++    theme:
++      css/honeypot.css: {}
++  dependencies:
++
+--- /dev/null	2025-07-09 15:00:18
++++ modules/honeypot/css/honeypot.css	2025-07-09 14:49:24
+@@ -0,0 +1,3 @@
++.url-textfield.form-group.js-form-wrapper.form-wrapper {
++  display: none !important;
++}
+\ No newline at end of file
+--- modules/honeypot/honeypot.module	2025-02-13 01:39:24
++++ modules/honeypot/honeypot.module	2025-07-09 14:51:02
+@@ -135,3 +135,7 @@
+   @trigger_error("honeypot_log_failure() is deprecated in honeypot:2.1.0 and is removed from honeypot:3.0.0. Use the 'honeypot' service instead. For example, \Drupal::service('honeypot')->logFailure(\$form_id, \$type). See https://www.drupal.org/node/2949447", E_USER_DEPRECATED);
+   \Drupal::service('honeypot')->logFailure($form_id, $type);
+ }
++
++function honeypot_preprocess(&$variables, $hook, &$info) : void {
++ $variables['#attached']['library'][] = 'honeypot/honeypot_style';
++}
+--- modules/honeypot/src/HoneypotService.php	2025-02-13 01:39:24
++++ modules/honeypot/src/HoneypotService.php	2025-07-09 16:04:19
+@@ -15,6 +15,7 @@
+ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+ use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
+ use Drupal\Core\Session\AccountProxyInterface;
++use Drupal\Core\Site\Settings;
+ use Drupal\Core\StringTranslation\StringTranslationTrait;
+ use Drupal\Core\StringTranslation\TranslationInterface;
+ use Symfony\Component\HttpFoundation\RequestStack;
+@@ -164,7 +165,6 @@
+             '#id' => NULL,
+             '#attributes' => [
+               'class' => [$honeypot_class],
+-              'style' => ['display: none !important;'],
+             ],
+           ],
+         ],
+@@ -255,6 +255,13 @@
+       return;
+     }
+ 
++    // Don't do anything if the client IP is whitelisted.
++    $IPAd = \Drupal::service('request_stack')->getCurrentRequest()->getClientIp();
++    $whitelist = Settings::get('reverse_proxy_addresses', 'none') ;
++    if (in_array($IPAd, $whitelist)){
++       return;
++    }
++
+     $triggering_element = $form_state->getTriggeringElement();
+     // Don't do anything if the triggering element is a preview button.
+     if ($triggering_element['#value'] == (string) $this->t('Preview')) {

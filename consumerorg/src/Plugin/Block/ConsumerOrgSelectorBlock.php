@@ -30,7 +30,7 @@ use Drupal\Core\Session\AccountInterface;
  * @Block(
  *   id = "consumer_org_select",
  *   admin_label = @Translation("Consumer organization Selection"),
- *   category = @Translation("IBM API Developer Portal")
+ *   category = @Translation("IBM CMS Portal")
  * )
  */
 class ConsumerOrgSelectorBlock extends BlockBase {

@@ -1,7 +1,14 @@
 //
-// Copyright IBM Corp. 2016, 2020
+// Copyright IBM Corp. 2016, 2025
 //
 
 @import "connect-variables";
 @import "connect-styles";
 @import "connect-only-styles";
+
+// Dark mode theme
+@import "connect-dark-theme";
+@import "dark-mode-toggle";
+
+// BiDi (Right-to-Left) support
+@import "connect-bidi";

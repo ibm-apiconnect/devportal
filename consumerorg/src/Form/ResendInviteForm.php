@@ -189,7 +189,7 @@ class ResendInviteForm extends ConfirmFormBase {
         ]);
     }
     else {
-      $this->messenger->addError(t('Error sending invitation. Contact the system administrator.'));
+      $this->messenger->addError($response->getMessage() ?? t('Error sending invitation. Contact the system administrator.'));
     }
 
     $form_state->setRedirectUrl($this->getCancelUrl());

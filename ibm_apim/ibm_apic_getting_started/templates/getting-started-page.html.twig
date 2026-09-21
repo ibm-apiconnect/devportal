@@ -1,0 +1,53 @@
+{# /********************************************************* {COPYRIGHT-TOP}
+*** * Licensed Materials - Property of IBM * 5725-L30, 5725-Z22 * * (C)
+Copyright IBM Corporation 2018, 2025 * * All Rights Reserved. * US Government
+Users Restricted Rights - Use, duplication or disclosure * restricted by GSA ADP
+Schedule Contract with IBM Corp.
+********************************************************** {COPYRIGHT-END} **/
+/** * @file * Displaying all tutorials * * Available variables: * - tutorials:
+An array of tutorial definitions. */ #}
+
+<div class="ibm-apic-getting-started-page">
+  {# Welcome Banner #}
+  <div class="welcome-banner">
+    <div class="welcome-content">
+      <h1>{% trans %}Welcome to the Developer Portal{% endtrans %}</h1>
+      <p>
+        {% trans %}Get started with customizing your API Connect Developer Portal. Below you'll find tutorials to help you make the most of your site.{% endtrans %}
+      </p>
+    </div>
+  </div>
+
+  <p>
+    {% trans %}As an admin user, you can fully customize the appearance of your Developer Portal — from colors, fonts, logos, to layouts — to match your organization's branding. Extend functionality by installing custom modules from the Drupal community or creating your own. Personalize the hero image on the front page for a more engaging experience. Manage content types, add custom fields, create roles, integrate social features like blogs, forums, and ratings, and configure layouts for different devices.{% endtrans %}
+  </p>
+
+  {# Tutorials Section #}
+  <div class="tutorials-section">
+    <div class="getting-started-cards">
+      {% if tutorials %} {% for tutorial_id, tutorial in tutorials %}
+      <article class="bx--card getting-started-card {% if tutorial.id == last_tutorial_id %}active-tutorial{% endif %}">
+        <div class="getting-started-card-content">
+          <div class="getting-started-card-header">
+            <h3 class="bx--about__title--name">
+              <a
+                href="/admin/getting-started/tutorial/{{ tutorial.id }}"
+                class="tutorial-link"
+                data-tutorial-id="{{ tutorial.id }}"
+                {% if tutorial.id == last_tutorial_id %}aria-current="page"{% endif %}
+              >
+                {{ tutorial.title }}
+              </a>
+            </h3>
+          </div>
+          <div class="getting-started-card-description">
+            {{ tutorial.description }}
+          </div>
+        </div>
+      </article>
+      {% endfor %} {% else %}
+      <p>{% trans %}No tutorials available.{% endtrans %}</p>
+      {% endif %}
+    </div>
+  </div>
+</div>

@@ -14,6 +14,7 @@ namespace Drupal\ibm_apim\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * APIC billing monetization settings form.
@@ -47,7 +48,7 @@ class BillingConfigForm extends ConfigFormBase {
     $localeStorage = \Drupal::service('locale.storage');
 
     $form['intro'] = [
-      '#markup' => t('IBM API Developer Portal Billing Integration Settings'),
+      '#markup' => t('IBM CMS Portal Billing Integration Settings'),
       '#weight' => -20,
     ];
 
@@ -59,7 +60,7 @@ class BillingConfigForm extends ConfigFormBase {
     ];
     $billingProviders = \Drupal::service('ibm_apim.billing')->getAll();
     $configBillingProviders = $config->get('billing_providers') ?? "";
-    $existingMapping = unserialize($configBillingProviders, ['allowed_classes' => FALSE]);
+    $existingMapping = SerializationUtility::decodeData($configBillingProviders, TRUE, FALSE);
     // get a list of modules implementing our hook so we can give the customer a choice of which module to use
     $moduleData = \Drupal::service('extension.list.module')->reset()->getList();
     $hook_modules = [];
@@ -132,7 +133,7 @@ class BillingConfigForm extends ConfigFormBase {
       }
     }
     $this->config('ibm_apim.settings')
-      ->set('billing_providers', serialize($newMapping))
+      ->set('billing_providers', SerializationUtility::encodeData($newMapping))
       ->save();
 
     parent::submitForm($form, $form_state);

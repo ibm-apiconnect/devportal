@@ -13,6 +13,8 @@
 
 namespace Drupal\apic_app\Form;
 
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -91,6 +93,10 @@ class ApplicationCreateForm extends FormBase {
 
     $form['title']['#required'] = TRUE;
 
+    if (isset($form['apic_summary']['widget'][0]['value'])) {
+      $form['apic_summary']['widget'][0]['value']['#attributes']['aria-label'] = $this->t('Description');
+    }
+
     $form['actions']['#type'] = 'actions';
     $form['actions']['#weight'] = $max_weight + 1;
     $form['actions']['submit'] = [
@@ -128,7 +134,10 @@ class ApplicationCreateForm extends FormBase {
     if (is_array($name) && isset($name[0]['value'])) {
       $name = $name[0]['value'];
     }
-    if (!isset($name) || empty($name)) {
+    if (is_array($name)) {
+      $name = '';
+    }
+    if (!isset($name) || empty(trim($name))) {
       $form_state->setErrorByName('Name', $this->t('Application name is a required field.'));
     }
     elseif (preg_match($pattern, $name)) {
@@ -157,10 +166,13 @@ class ApplicationCreateForm extends FormBase {
     if (is_array($name) && isset($name[0]['value'])) {
       $name = $name[0]['value'];
     }
-    $name = trim($name);
+    $name = Html::escape(trim($name));
     $summary = $form_state->getValue('apic_summary');
     if (is_array($summary) && isset($summary[0]['value'])) {
       $summary = $summary[0]['value'];
+    }
+    if (isset($summary)) {
+      $summary = Xss::filter($summary);
     }
     $oauthEndpoints = [];
     $oauth = $form_state->getValue('application_redirect_endpoints');

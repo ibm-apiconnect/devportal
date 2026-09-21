@@ -26,8 +26,8 @@
       <section class="col-sm-12">
         <div class="navbar-header">
           {% if logo %}
-            <a class="logo navbar-btn pull-left" href="{{ path('<front>') }}" title="{{ 'Home'|t }}" rel="home">
-              <img src="{{ logo }}" alt="{{ 'Home'|t }}" />
+            <a class="logo navbar-btn pull-left" href="{{ path('<front>') }}" title="{% trans %}Home{% endtrans %}" rel="home">
+              <img src="{{ logo }}" alt="{% trans %}Home{% endtrans %}" />
             </a>
           {% endif %}
         </div>

@@ -4,6 +4,7 @@ namespace Drupal\Tests\ibm_event_log\Kernel\Entity;
 
 use Drupal\ibm_event_log\Entity\EventLog;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * Class EventLogTest.
@@ -44,7 +45,7 @@ class EventLogTest extends KernelTestBase {
       'artifact_url' => '/foo',
       'app_url' => '/foo',
       'artifact_type' => 'Application',
-      'data' => serialize([]),
+      'data' => SerializationUtility::encodeData([]),
       'user_url' => '/user',
     ]);
     $entity->enforceIsNew();

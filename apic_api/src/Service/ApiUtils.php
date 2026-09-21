@@ -15,6 +15,7 @@ namespace Drupal\apic_api\Service;
 
 use Drupal\Core\State\StateInterface;
 use Drupal\node\Entity\Node;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 class ApiUtils {
 
@@ -47,7 +48,7 @@ class ApiUtils {
       //\Drupal::logger('apic_api')->debug('WSDLRetrieverController: searching for: '.$endpoint, []);
 
       // Go through the OpenAPI document and find any potential 'valid' endpoint for this API.
-      $swagger = unserialize($node->api_swagger->value, ['allowed_classes' => FALSE]);
+      $swagger = SerializationUtility::decodeData($node->api_swagger->value, TRUE, FALSE);
       $endpoints = [];
 
       // First try mechanisms common to OAI2 and OAI3

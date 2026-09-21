@@ -1,0 +1,28 @@
+--- modules/workbench/config/optional/views.view.workbench_recent_content.yml
++++ modules/workbench/config/optional/views.view.workbench_recent_content.yml
+@@ -689,14 +689,14 @@
+           plugin_id: date
+       title: 'Workbench: Recent content'
+       header:
+-        area:
++        area_text_custom:
+           id: area
+           table: views
+           field: area
+           plugin_id: text
+       footer: {}
+       empty:
+-        area:
++        area_text_custom:
+           id: area_text_custom
+           table: views
+           field: area_text_custom
+@@ -1142,7 +1142,7 @@
+           plugin_id: entity_link_edit
+       link_display: /admin/workbench/content/all
+       header:
+-        area:
++        area_text_custom:
+           id: area_text_custom
+           table: views
+           field: area_text_custom

@@ -15,6 +15,16 @@ use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 
 /**
+ * Triggered before an application is created
+ * 
+ * @param array $app
+ *   The array of data to be sent to API Manager
+ */
+function hook_apic_app_pre_create($app) {
+
+}
+
+/**
  * Triggered when an application is created
  *
  * @param NodeInterface $node
@@ -23,6 +33,18 @@ use Drupal\node\NodeInterface;
  *   The array of data returned by API Manager
  */
 function hook_apic_app_create(NodeInterface $node, $app) {
+
+}
+
+/**
+ * Triggered before an application is updated
+ *
+ * @param NodeInterface $node
+ *   The Drupal node representing this application
+ * @param array $app
+ *   The array of data to be sent to API Manager
+ */
+function hook_apic_app_pre_update(NodeInterface $node, $app) {
 
 }
 
@@ -121,6 +143,18 @@ function hook_apic_app_promote(NodeInterface $node, $data, $appId) {
 }
 
 /**
+ * Triggered before a new set of credentials is created for an application
+ *
+ * @param NodeInterface $node
+ *   The Drupal node representing this application
+ * @param array $data
+ *   The array of data to be sent to API Manager
+ */
+function hook_apic_app_creds_pre_create(NodeInterface $node, $data) {
+
+}
+
+/**
  * Triggered when a new set of credentials is created for an application
  *
  * @param NodeInterface $node
@@ -131,6 +165,20 @@ function hook_apic_app_promote(NodeInterface $node, $data, $appId) {
  *   The ID of the credentials
  */
 function hook_apic_app_creds_create(NodeInterface $node, $data, $credId) {
+
+}
+
+/**
+ * Triggered before a set of credentials is updated for an application
+ *
+ * @param NodeInterface $node
+ *   The Drupal node representing this application
+ * @param array $data
+ *   The array of data to be sent to API Manager
+ * @param string $credId
+ *   The ID of the credentials
+ */
+function hook_apic_app_creds_pre_update(NodeInterface $node, $data, $credId) {
 
 }
 
@@ -163,6 +211,22 @@ function hook_apic_app_creds_delete(NodeInterface $node, $data, $credId) {
 }
 
 /**
+ * Triggered before a subscription is created
+ *
+ * @param array $data
+ *   The array of data to be sent to API Manager
+ * @param string $appId
+ *   The application ID
+ * @param string $product_url
+ *   The URL reference to the product
+ * @param string $plan
+ *   The plan being subscribed to
+ */
+function hook_apic_app_pre_subscribe($data, $appId, $product_url, $plan) {
+
+}
+
+/**
  * Triggered when a subscription is created
  *
  * @param NodeInterface $node
@@ -188,6 +252,24 @@ function hook_apic_app_subscribe(NodeInterface $node, $data, $appId, $product_ur
  * @param NodeInterface $node
  *   The Drupal node representing this application
  * @param array $data
+ *   The array of data to be sent to API Manager
+ * @param string $appId
+ *   The application ID
+ * @param string $planId
+ *   The plan ID
+ * @param string $subId
+ *   The subscription ID
+ */
+function hook_apic_app_pre_migrate(NodeInterface $node, $data, $appId, $planId, $subId) {
+
+}
+
+/**
+ * Triggered when a subscription is migrated to a new plan
+ *
+ * @param NodeInterface $node
+ *   The Drupal node representing this application
+ * @param array $data
  *   The array of data returned by API Manager (could be empty)
  * @param string $appId
  *   The application ID
@@ -197,6 +279,24 @@ function hook_apic_app_subscribe(NodeInterface $node, $data, $appId, $product_ur
  *   The subscription ID
  */
 function hook_apic_app_migrate(NodeInterface $node, $data, $appId, $planId, $subId) {
+
+}
+
+/**
+ * Triggered before an application is unsubscribed from a plan
+ *
+ * @param NodeInterface $node
+ *   The Drupal node representing this application
+ * @param string $appId
+ *   The application ID
+ * @param string $product_url
+ *   The URL reference to the product
+ * @param string $plan
+ *   The plan being subscribed to
+ * @param string $subId
+ *   The subscription ID
+ */
+function hook_apic_app_pre_unsubscribe(NodeInterface $node, $appId, $product_url, $plan, $subId) {
 
 }
 
@@ -286,6 +386,20 @@ function hook_apic_app_image_delete(NodeInterface $node, $appId) {
 }
 
 /**
+ * Triggered before a credential client ID is reset
+ *
+ * @param NodeInterface $node
+ *   The Drupal node representing this application
+ * @param string $appId
+ *   The application ID
+ * @param string $credId
+ *   The credential ID
+ */
+function hook_apic_app_pre_clientid_reset(NodeInterface $node, $appId, $credId) {
+
+}
+
+/**
  * Triggered when a credential client ID is reset
  *
  * @param NodeInterface $node
@@ -298,6 +412,20 @@ function hook_apic_app_image_delete(NodeInterface $node, $appId) {
  *   The credential ID
  */
 function hook_apic_app_clientid_reset(NodeInterface $node, $data, $appId, $credId) {
+
+}
+
+/**
+ * Triggered before a credential client secret is reset
+ *
+ * @param NodeInterface $node
+ *   The Drupal node representing this application
+ * @param string $appId
+ *   The application ID
+ * @param string $credId
+ *   The credential ID
+ */
+function hook_apic_app_pre_clientsecret_reset(NodeInterface $node, $appId, $credId) {
 
 }
 

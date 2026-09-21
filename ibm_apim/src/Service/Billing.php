@@ -14,6 +14,7 @@ namespace Drupal\ibm_apim\Service;
 
 use Drupal\Core\State\StateInterface;
 use Psr\Log\LoggerInterface;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * Functionality for handling billing objects
@@ -117,7 +118,7 @@ class Billing {
       foreach ($data as $bill) {
         $bill_url = $bill['billing_url'];
         if (isset($encryptionService, $encryptionProfile) && $moduleHandler->moduleExists('encrypt')) {
-          $bill = $encryptionService->encrypt(serialize($bill), $encryptionProfile);
+          $bill = $encryptionService->encrypt(SerializationUtility::encodeData($bill), $encryptionProfile);
         }
         $billings[$bill_url] = $bill;
       }
@@ -150,7 +151,7 @@ class Billing {
           $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
           $encryptionService = \Drupal::service('encryption');
           if ($encryptionProfile !== NULL) {
-            $data = $encryptionService->encrypt(serialize($data), $encryptionProfile);
+            $data = $encryptionService->encrypt(SerializationUtility::encodeData($data), $encryptionProfile);
           }
         } else {
           \Drupal::logger('ibm_apim')->warning('Billing: No payment method encryption profile set', []);
@@ -220,7 +221,7 @@ class Billing {
           $encryptionProfile = \Drupal\encrypt\Entity\EncryptionProfile::load($encryptionProfileName);
           $encryptionService = \Drupal::service('encryption');
           if ($encryptionProfile !== NULL) {
-            $data = unserialize($encryptionService->decrypt($data, $encryptionProfile), ['allowed_classes' => FALSE]);
+            $data = SerializationUtility::decodeData($encryptionService->decrypt($data, $encryptionProfile), TRUE, FALSE);
           }
         } else {
           \Drupal::logger('ibm_apim')->warning('Billing: No payment method encryption profile set', []);

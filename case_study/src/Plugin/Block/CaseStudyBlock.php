@@ -3,7 +3,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2024
+ * (C) Copyright IBM Corporation 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -25,7 +25,7 @@ use Drupal\file\Entity\File;
 #[Block(
   id: "casestudy_block",
   admin_label: new TranslatableMarkup("Case studies"),
-  category: new TranslatableMarkup("IBM API Developer Portal (Case study)")
+  category: new TranslatableMarkup("IBM CMS Portal (Case study)")
 )]
 
 class CaseStudyBlock extends BlockBase {

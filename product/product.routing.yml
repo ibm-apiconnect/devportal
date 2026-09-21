@@ -35,3 +35,28 @@ product.select:
     parameters:
       apiNode:
         type: 'apic_api.nidorpath'
+        
+product.search_apis:
+  path: '/product/{product_id}/search-apis'
+  defaults:
+    _controller: '\Drupal\product\Controller\ProductController::searchApis'
+  requirements:
+    _permission: 'access content'
+    product_id: \d+
+    
+product.api_details:
+  path: '/product/{product_id}/api-details/{api_name}'
+  defaults:
+    _controller: '\Drupal\product\Controller\ProductController::apiDetails'
+  requirements:
+    _permission: 'access content'
+    product_id: \d+
+
+product.download_api_specs:
+  path: '/product/{product_id}/download-specs'
+  defaults:
+    _controller: '\Drupal\product\Controller\ProductController::downloadSpecs'
+    _title: 'Download API Specs'
+  requirements:
+    _permission: 'access content'
+    product_id: \d+

@@ -1,4 +1,16 @@
 {#
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 /**
  * @file
  * Default theme implementation to display a forum.
@@ -19,14 +31,27 @@
 #}
 {% if forums_defined %}
   <div class="forumWrapper">
-    <div class="forumContent">
-      {{ forums }}
-      {{ topics }}
-      {{ topics_pager }}
-    </div>
-    <div class="forumSidebar">
-      {{ drupal_entity('block', 'forumsidebar') }}
-      {{ drupal_entity('block', current_theme == 'connect_theme' ? 'socialmedialinks' : current_theme ~ '_socialmedialinks') }}
-    </div>
-  </div>
+    {% if topics_original is empty and forums is empty %}
+      <div class="noForumTopicContent">
+        <span class= "noForumTopicImage">
+          {% include 'no-forum-topics.html.twig' %}
+        </span>
+        <div class="noForumTopicTextContainer">
+          <span class="noForumTopicText firstLine">
+            No forum topics have been created yet.
+          </span>
+        </div>
+      </div> 
+    {% else %}
+      <div class="forumContent">
+        {{ forums }}
+          {{ topics }}
+          {{ topics_pager }}
+      </div>
+      <div class="forumSidebar">
+        {{ drupal_entity('block', 'forumsidebar') }}
+        {{ drupal_entity('block', current_theme == 'connect_theme' ? 'socialmedialinks' : current_theme ~ '_socialmedialinks') }}
+      </div>
+    </div>      
+    {% endif %}
 {% endif %}

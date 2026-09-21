@@ -12,6 +12,6 @@
   "require": {
     "drupal/bootstrap": "*",
     "drupal/connect_theme": "*",
-    "scssphp/scssphp": "^1.0.5"
+    "scssphp/scssphp": "^1.10.5"
   }
 }

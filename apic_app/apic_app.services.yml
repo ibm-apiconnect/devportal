@@ -64,7 +64,7 @@ services:
     arguments: [ '@ibm_apim.user_utils', '@ibm_apim.utils', '@module_handler' ]
   apic_app.subscriptions:
     class: Drupal\apic_app\Service\SubscriptionService
-    arguments: [ '@ibm_apim.user_utils', '@ibm_apim.apim_utils', '@module_handler' ]
+    arguments: [ '@ibm_apim.user_utils', '@ibm_apim.apim_utils', '@module_handler', '@ibm_apim.utils' ]
   apic_app.application:
     class: Drupal\apic_app\Service\ApplicationService
     arguments: [ '@ibm_apim.user_utils',
@@ -77,3 +77,6 @@ services:
                  '@ibm_apim.site_config',
                  '@ibm_apim.product_plan',
                  '@entity_type.manager' ]
+  apic_app.subscription_migration:
+    class: Drupal\apic_app\Service\SubscriptionMigrationService
+    arguments: [ '@cache.default', '@ibm_apim.user_utils', '@apic_app.application', '@ibm_apim.apim_utils' ]

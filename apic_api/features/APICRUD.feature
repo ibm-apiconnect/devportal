@@ -44,3 +44,6 @@ Feature: APICRUD
   Scenario: Create api with phase based tagging enabled
     Given I publish an api with the name "api_@now" and the phase "Realized" and autotag_with_phase is true
     Then I should have an api with the name "api_@now" tagged with the phase "Realized"
+
+  Scenario: Create api with metadata serialization
+    Given I publish an api with metadata

@@ -29,8 +29,8 @@ class ForcedTranslations {
     $no_apps = t('No Products were found.');
     $name = t('Name');
     $category = t('Category');
-    $first_name = t('First Name');
-    $last_name = t('Last Name');
+    $first_name = t('First name');
+    $last_name = t('Last name');
     $password_strength = t('Password strength:');
     $already_have_account = t('Already have an account?');
     $sign_up = t('Sign up');
@@ -82,10 +82,10 @@ class ForcedTranslations {
     $text_input_required = t('Select any filter and click on Apply to see results');
     $list_of_faqs = t('List of FAQ nodes for use in the Support page');
     $only_show_faws_keywords = t('Only show frequently asked questions containing specific keywords');
-    $faqs_long = t('Frequently Asked Questions');
-    $app_list = t('App List');
+    $faqs_long = t('Frequently asked questions');
+    $app_list = t('App list');
     $apps = t('Apps');
-    $api_list = t('API List');
+    $api_list = t('API list');
     $apis = t('APIs');
     $production = t('Production');
     $development = t('Development');

@@ -1,7 +1,18 @@
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 .page-node-type-page.bx--global-light-ui .apicMainContent .field--name-body,
 .page-node-type-case-study.bx--global-light-ui .apicMainContent .field--name-body{
   table {
-    border: 1px double #b3b3b3;
+    border: 1px double var(--border-strong-01);
     border-collapse: collapse;
     border-spacing: 0;
     height: 100%;
@@ -17,7 +28,7 @@
   th,
   td {
   
-    border: 1px solid #bfbfbf;
+    border: 1px solid var(--border-strong-01);
     min-width: 2em;
     padding: .4em;
     overflow-wrap: break-word;

@@ -1,0 +1,10 @@
+--- modules/votingapi_widgets/src/Form/BaseRatingForm.php
++++ modules/votingapi_widgets/src/Form/BaseRatingForm.php
+@@ -79,6 +79,7 @@ class BaseRatingForm extends ContentEntityForm {
+     $form['#cache']['contexts'][] = 'user.roles:authenticated';
+ 
+     $form['#attributes']['id'] = $form_id;
++    $form['#attributes']['aria-label'] = $this->t('Rating form');
+ 
+     $form['value'] = [
+       '#type' => 'select',

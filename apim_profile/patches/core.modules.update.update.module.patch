@@ -1,6 +1,32 @@
---- core/modules/update/update.module   2023-08-02 11:10:11
-+++ core/modules/update/update.module   2023-08-02 15:30:32
-@ -190,7 +190,7 @@
+--- core/modules/update/update.module
++++ core/modules/update/update.module
+@@ -5,11 +5,25 @@
+  */
+ 
+ use Drupal\Core\File\Exception\FileException;
++use Drupal\Core\Link;
+ use Drupal\Core\Url;
+ use Drupal\Core\Site\Settings;
+ use Drupal\update\Hook\UpdateThemeHooks;
+ use Drupal\update\UpdateFetcherInterface;
+ use Drupal\update\UpdateManagerInterface;
++/**
++ * Resolves if the current user can access updater menu items.
++ *
++ * It both enforces the 'administer software updates' permission and the global
++ * kill switch for the authorize.php script.
++ *
++ * @return bool
++ *   TRUE if the current user can access the updater menu items; FALSE
++ *   otherwise.
++ */
++function _update_manager_access() {
++  return Settings::get('allow_authorize_operations', TRUE) && \Drupal::currentUser()->hasPermission('administer software updates');
++}
+ 
+ /**
+  * Returns a warning message when there is no data about available updates.
+@@ -176,7 +190,7 @@
    switch ($msg_reason) {
      case UpdateManagerInterface::NOT_SECURE:
        if ($msg_type == 'core') {
@@ -9,25 +35,95 @@
        }
        else {
          $text = t('There are security updates available for one or more of your modules or themes. To ensure the security of your server, you should update immediately!', [], ['langcode' => $langcode]);
-@@ -345,18 +345,11 @@
-  * Clears the temporary files and directories based on file age from disk.
+@@ -353,14 +367,11 @@
+  * @return string
+  *   An eight character string uniquely identifying this Drupal installation.
+  *
+- * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+- *   replacement. Use composer to manage the code for your site.
+  *
+  * @see https://www.drupal.org/node/3522119
   */
- function update_clear_update_disk_cache() {
+ function _update_manager_unique_identifier() {
+-  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119', E_USER_DEPRECATED);
+-
++ 
+   static $id;
+   if (!isset($id)) {
+     $id = substr(hash('sha256', Settings::getHashSalt()), 0, 8);
+@@ -379,14 +390,11 @@
+  *   The full path to the temporary directory where update file archives should
+  *   be extracted.
+  *
+- * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+- *   replacement. Use composer to manage the code for your site.
+  *
+  * @see https://www.drupal.org/node/3522119
+  */
+ function _update_manager_extract_directory($create = TRUE) {
+-  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119', E_USER_DEPRECATED);
+-
++ 
+   static $directory;
+   if (!isset($directory)) {
+     $directory = 'temporary://update-extraction-' . _update_manager_unique_identifier();
+@@ -408,13 +416,10 @@
+  *   The full path to the temporary directory where update file archives should
+  *   be cached.
+  *
+- * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+- *   replacement. Use composer to manage the code for your site.
+  *
+  * @see https://www.drupal.org/node/3522119
+  */
+ function _update_manager_cache_directory($create = TRUE) {
+-  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119', E_USER_DEPRECATED);
+ 
+   static $directory;
+   if (!isset($directory)) {
+@@ -429,27 +434,13 @@
+ /**
+  * Clears the temporary files and directories based on file age from disk.
+  *
+- * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+- *   replacement. Use composer to manage the code for your site.
+- *
+- * @see https://www.drupal.org/node/3522119
+  */
+ function update_clear_update_disk_cache(): void {
+-  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119', E_USER_DEPRECATED);
+-
 -  // List of update module cache directories. Do not create the directories if
 -  // they do not exist.
 -  $directories = [
 -    _update_manager_cache_directory(FALSE),
 -    _update_manager_extract_directory(FALSE),
 -  ];
-+  // Temporary directory for the site
-+  $directory = "temporary://";
- 
+-
 -  // Search for files and directories in base folder only without recursion.
 -  foreach ($directories as $directory) {
--    if (is_dir($directory)) {
--      \Drupal::service('file_system')->scanDirectory($directory, '/.*/', ['callback' => 'update_delete_file_if_stale', 'recurse' => FALSE]);
--    }
-+  if (is_dir($directory)) {
-+    \Drupal::service('file_system')->scanDirectory($directory, '/.*/', ['callback' => 'update_delete_file_if_stale', 'recurse' => FALSE]);
-   }
++    $directory = "temporary://";
+     if (is_dir($directory)) {
+       \Drupal::service('file_system')->scanDirectory($directory, '/.*/', ['callback' => 'update_delete_file_if_stale', 'recurse' => FALSE]);
+     }
+-  }
++
  }
+ 
+ /**
+@@ -473,14 +464,9 @@
+  * @return bool
+  *   TRUE if the file is stale and deleted successfully, FALSE otherwise.
+  *
+- * @deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no
+- *   replacement. Use composer to manage the code for your site.
+- *
+- * @see https://www.drupal.org/node/3522119
+  */
+ function update_delete_file_if_stale($path) {
+-  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:11.2.0 and is removed from drupal:12.0.0. There is no replacement. Use composer to manage the code for your site. See https://www.drupal.org/node/3522119', E_USER_DEPRECATED);
+-
++  
+   if (file_exists($path)) {
+     $filectime = filectime($path);
+     $max_age = \Drupal::config('system.file')->get('temporary_maximum_age');

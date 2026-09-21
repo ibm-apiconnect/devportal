@@ -1,0 +1,202 @@
+<?php
+/********************************************************* {COPYRIGHT-TOP} ***
+  * Licensed Materials - Property of IBM
+  * 5725-L30, 5725-Z22
+  *
+  * (C) Copyright IBM Corporation 2025
+  *
+  * All Rights Reserved.
+  * US Government Users Restricted Rights - Use, duplication or disclosure
+  * restricted by GSA ADP Schedule Contract with IBM Corp.
+********************************************************** {COPYRIGHT-END} **/
+use Drupal\views\ViewExecutable;
+use Drupal\ibm_apim\External\SerializationUtility;
+use Drupal\Component\Utility\Xss;
+
+function ibm_tooltip_views_post_execute(ViewExecutable $view) {
+  $executable_pages = [
+    'products' => ['product'], 
+    'product_content' => ['api'],
+    'search_content' => ['api', 'product'],
+  ];
+  if ($view === NULL || !array_key_exists($view->id(), $executable_pages)) {
+    return;
+  }
+  $nids = [];
+  foreach ($view->result as $row) {
+    if ($view->id() == 'search_content') {
+      $nids[] = $row->_entity->id();
+    } else {
+      $nids[] = $row->nid;
+    }
+  }
+
+  if (empty($nids)) {
+    return;
+  }
+
+  $query = \Drupal::entityTypeManager()
+  ->getStorage('node')
+  ->getQuery()
+  ->accessCheck(TRUE)
+  ->condition('nid', $nids, 'IN')
+  ->condition('type', $executable_pages[$view->id()], 'IN')
+  ->execute();
+  $nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($query) ?? [];
+  if (empty($nodes)) {
+    return;
+  }
+
+  $tooltip_datas = [];
+  switch($view->id()) {
+    case 'products':
+      foreach ($nodes as $node) {
+        $tooltip_datas += parse_product($node) ?? [];
+      }
+      break;
+    case 'product_content':
+      foreach ($nodes as $node) {
+        $tooltip_datas += parse_api($node) ?? [];
+      }
+      break;
+    case 'search_content':
+      foreach ($nodes as $node) {
+        if ($node->getType() == 'api') {
+          $tooltip_datas += parse_api($node) ?? [];
+        } elseif ($node->getType() == 'product') {
+          $tooltip_datas += parse_product($node) ?? [];
+        }
+      }
+      break;
+    default:
+    $tooltip_datas = [];
+  }
+  $view->element['#attached']['library'][] = 'ibm_tooltip/ibm_tooltip';
+  $view->element['#attached']['drupalSettings']['ibm_tooltip'] = [
+    'sharedData' => $tooltip_datas,
+  ];
+}
+
+function parse_api($apiNode) {
+  // Do not render tooltips for anonymous users if the setting is disabled
+  if (\Drupal::currentUser()->isAnonymous() && !((boolean) \Drupal::config('ibm_apim.settings')->get('show_anonymous_apis'))) {
+    return [];
+  }
+  $apiReqs = SerializationUtility::decodeData($apiNode->get('api_swagger')->getValue()[0]['value'], TRUE, FALSE);
+  $apiReqs = $apiReqs['paths'] ?? [];
+  $apiReqs = array_slice($apiReqs ?? [], 0, 5);
+  $nodeKey = "node-{$apiNode->id()}";
+  $tooltip[$nodeKey] = [];
+  foreach ($apiReqs as $apiReqGroup) {
+    foreach ($apiReqGroup as $reqKey => $apiReq) {
+      $api_description = Xss::filter($apiReq['description'] ?? $apiReq['summary'] ?? '');
+      $api_description = mb_strlen($api_description, 'UTF-8') > 50 ? mb_substr($api_description, 0, 50, 'UTF-8') . '...' : $api_description;
+      $tooltip[$nodeKey][] = [
+        'key' => Xss::filter((string) $reqKey),
+        'summary' => $api_description === "" ? [] : [ $api_description ]
+      ];
+      if (count($tooltip[$nodeKey]) >= 5) {
+        break 2; // Break out of both loops
+      }
+    }
+  }
+  return $tooltip;
+}
+
+function normalizeApiType($type) {
+  $type = strtolower($type);
+  
+  $typeMap = [
+    'wsdl-to-rest' => 'REST',
+    'wsdl' => 'SOAP',
+    'rest' => 'REST',
+    'graphql' => 'GraphQL',
+    'soap' => 'SOAP',
+    'asyncapi' => 'AsyncAPI',
+  ];
+  
+  return strtoupper($typeMap[$type] ?? $type);
+}
+
+function parse_product($productNode) {
+  $product_apis = $productNode->get('product_apis')->getValue();
+  
+  $api_names = [];
+  foreach($product_apis as $product_api) {
+    $data = SerializationUtility::decodeData($product_api['value'], TRUE, FALSE);
+    $api_names[] = $data['name'];
+  }
+
+  if (empty($api_names)) {
+    return [];
+  }
+
+  $query = \Drupal::entityTypeManager()
+    ->getStorage('node')
+    ->getQuery()
+    ->accessCheck(TRUE)
+    ->condition('apic_ref', $api_names, 'IN')
+    ->condition('type', 'api')
+    ->range(0, 5)
+    ->execute();
+  $api_nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($query) ?? [];  
+  if (empty($api_nodes)) {
+    return [];
+  }
+  $node_key = "node-{$productNode->id()}";
+  $tooltip[$node_key] = [];
+  foreach($api_nodes as $api_node) {
+    $api = SerializationUtility::decodeData($api_node->get('api_swagger')->getValue()[0]['value'], TRUE, FALSE);
+    $api_name = Xss::filter($api['info']['title'] ?? '');
+    $api_type = Xss::filter($api['x-ibm-configuration']['type'] ?? '');
+    $api_version = Xss::filter($api['info']['version'] ?? '');
+    $api_description = Xss::filter($api['info']['description'] ?? $api['info']['x-ibm-summary'] ?? '');
+    $api_description = mb_strlen($api_description, 'UTF-8') > 50 ? mb_substr($api_description, 0, 50, 'UTF-8') . '...' : $api_description;
+
+    $ibmApimShowVersions = (boolean) \Drupal::config('ibm_apim.settings')->get('show_versions');
+    if ($ibmApimShowVersions === NULL) {
+      $ibmApimShowVersions = TRUE;
+    }
+
+    $tooltip[$node_key][] = [
+      'key' => $api_name,
+      'summary' => [
+          normalizeApiType($api_type),
+          $ibmApimShowVersions ? "{$api_version}" : "",
+          $api_description
+      ]
+    ];
+  }
+  return $tooltip;
+}
+
+//Execute only on Home page, as a Product is also could be rendered there
+function ibm_tooltip_preprocess_page(array &$variables) {
+  $path = \Drupal::service('path.current')->getPath();
+  $alias = \Drupal::service('path_alias.manager')->getAliasByPath($path);
+  if ($alias != '/home') {
+    return [];
+  }
+
+  $query = \Drupal::entityTypeManager()
+    ->getStorage('node')
+    ->getQuery()
+    ->accessCheck(TRUE)
+    ->condition('type', 'product')
+    ->sort('created', 'DESC')
+    ->range(0, 6) 
+    ->execute();
+
+  $product_nodes = \Drupal::entityTypeManager()->getStorage('node')->loadMultiple($query) ?? [];  
+  if (empty($product_nodes)) {
+    return [];
+  }
+  $tooltip_datas = [];
+  foreach($product_nodes as $product_node) {
+    $tooltip_datas += parse_product($product_node) ?? [];
+  }
+  $variables['#attached']['library'][] = 'ibm_tooltip/ibm_tooltip';
+  $variables['#attached']['drupalSettings']['ibm_tooltip'] = [
+    'sharedData' => $tooltip_datas,
+  ];
+}

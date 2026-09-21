@@ -14,6 +14,7 @@ namespace Drupal\ibm_apim\Service\Mocks;
 
 use Drupal\ibm_apim\ApicType\UserRegistry;
 use Drupal\ibm_apim\Service\UserRegistryService;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * Mock functionality for handling user registries
@@ -43,7 +44,7 @@ class MockUserRegistryService extends UserRegistryService {
    * @inheritDoc
    */
   public function updateAll(array $data): bool {
-    $this->logger->debug('MockUserRegistryService::updateAll() with %data', ['%data' => serialize($data)]);
+    $this->logger->debug('MockUserRegistryService::updateAll() with %data', ['%data' => SerializationUtility::encodeData($data)]);
     return parent::updateAll($data);
   }
 

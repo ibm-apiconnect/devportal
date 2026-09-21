@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2024
+ * (C) Copyright IBM Corporation 2018, 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -35,6 +35,7 @@ use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\user\Entity\User;
 use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 /**
  * Class to work with the Application content type, takes input from the JSON returned by
@@ -142,7 +143,6 @@ class ApplicationService {
    */
   public function create($app, $event = 'publish', $formState = NULL) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-
     $node = Node::create([
       'type' => 'application',
       'uid' => 1
@@ -243,7 +243,7 @@ class ApplicationService {
       }
       $node->set('application_redirect_endpoints', $endpoints);
       $node->set('apic_url', $this->apimUtils->removeFullyQualifiedUrl($app['url']));
-      if (!isset($app['state']) || (strtolower($app['state']) !== 'enabled' && strtolower($app['state']) !== 'disabled')) {
+      if (!isset($app['state']) || (strtolower($app['state']) !== 'enabled' && strtolower($app['state']) !== 'disabled' && strtolower($app['state'] !== 'pending'))) {
         $app['state'] = 'enabled';
       }
       $node->set('apic_state', strtolower($app['state']));
@@ -344,7 +344,7 @@ class ApplicationService {
       }
       $node = $this->credentialsService->createOrUpdateCredentialsList($node, $creds, FALSE);
 
-      $node->set('application_data', serialize($app));
+      $node->set('application_data', SerializationUtility::encodeData($app));
 
       if ($formState !== NULL && !empty($formState)) {
         $customFields = $this->getCustomFields();
@@ -354,6 +354,13 @@ class ApplicationService {
       elseif (!empty($app['metadata'])) {
         $customFields = $this->getCustomFields();
         $this->utils->saveCustomFields($node, $customFields, $app['metadata'], TRUE, FALSE);
+      }
+
+      // Store raw metadata in apic_metadata field
+      if (isset($app['metadata']) && !empty($app['metadata'])) {
+        $node->set('apic_metadata', SerializationUtility::encodeData($app['metadata']));
+      } else {
+        $node->set('apic_metadata', NULL);
       }
 
       // ensure this application links to all its subscriptions
@@ -371,6 +378,10 @@ class ApplicationService {
       if ($this->utils->hashMatch($existingNodeHash, $node, 'new-app')) {
         $this->utils->snapshotDebug('App @app not updated as the hash matched', ['@app' => $node->getTitle()]);
       } else {
+        // Calling all modules implementing 'hook_apic_app_pre_update':
+        if ($event !== 'internal' && $event !== 'create' && $event !== 'app_create') {
+          $this->moduleHandler->invokeAll('apic_app_pre_update', [$node, $app]);
+        }
         $node->save();
 
         if ($node !== NULL && $event !== 'internal') {
@@ -889,123 +900,140 @@ class ApplicationService {
   public function getSubscriptions(Node $node): array {
     $subscriptions = $node->application_subscription_refs->referencedEntities();
     $subArray = [];
-    $cost = '';
-    $productImageUrl = '';
 
     if (isset($subscriptions) && is_array($subscriptions)) {
       $config = \Drupal::config('ibm_apim.settings');
       $ibmApimShowPlaceholderImages = (boolean) $config->get('show_placeholder_images');
       foreach ($subscriptions as $sub) {
-        $query = \Drupal::entityQuery('node');
-        $query->condition('type', 'product');
-        $query->condition('apic_url.value', $sub->product_url());
-        $nids = $query->accessCheck()->execute();
-
-        if (isset($nids) && !empty($nids)) {
-          $nid = array_shift($nids);
-          $product = Node::load($nid);
-          if ($product !== NULL) {
-            $fid = $product->apic_image->getValue();
-            $productImageUrl = NULL;
-            $cost = t('Free');
-            if (isset($fid[0]['target_id'])) {
-              $file = File::load($fid[0]['target_id']);
-              if ($file !== NULL) {
-                $productImageUrl = $file->createFileUrl();
-              }
-            }
-            elseif ($ibmApimShowPlaceholderImages === TRUE && $this->moduleHandler->moduleExists('product')) {
-              $rawImage = Product::getRandomImageName($product->getTitle());
-              $productImageUrl = base_path() . \Drupal::service('extension.list.module')->getPath('product') . '/images/' . $rawImage;
-            }
-          }
-          $supersedingProduct = NULL;
-          $planTitle = NULL;
-          if ($this->moduleHandler->moduleExists('product')) {
-            $productPlans = [];
-            foreach ($product->product_plans->getValue() as $arrayValue) {
-              $productPlan = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-              $productPlans[$productPlan['name']] = $productPlan;
-            }
-            if (isset($productPlans[$sub->plan()])) {
-              $thisPlan = $productPlans[$sub->plan()];
-              if (!isset($thisPlan['billing-model'])) {
-                $thisPlan['billing-model'] = [];
-              }
-              $cost = $this->productPlan->parseBilling($thisPlan['billing-model']);
-              $planTitle = $productPlans[$sub->plan()]['title'];
-
-              if (isset($thisPlan['superseded-by'])) {
-                $supersededByProductUrl = $thisPlan['superseded-by']['product_url'];
-                $supersededByPlan = $thisPlan['superseded-by']['plan'];
-                // dont display a link for superseded-by targets that are what we're already subscribed to
-                // apim shouldn't really allow that, but it does, so try to handle it best we can
-                if ($supersededByProductUrl !== $sub->product_url() || $supersededByPlan !== $sub->plan()) {
-                  $supersededByRef = $this->utils->base64_url_encode($supersededByProductUrl . ':' . $supersededByPlan);
-                  $supersededByProductTitle = NULL;
-                  $supersededByProductVersion = NULL;
-                  $supersededByPlanTitle = NULL;
-
-                  $query = \Drupal::entityQuery('node');
-                  $query->condition('type', 'product');
-                  $query->condition('status', 1);
-                  $query->condition('apic_url.value', $supersededByProductUrl);
-                  $results = $query->accessCheck()->execute();
-
-                  if (isset($results) && !empty($results)) {
-                    $nid = array_shift($results);
-                    $supersededByProduct = Node::load($nid);
-                    if ($supersededByProduct !== NULL) {
-                      $productYaml = yaml_parse($supersededByProduct->product_data->value);
-                      $supersededByProductTitle = $productYaml['info']['title'];
-                      $supersededByProductVersion = $productYaml['info']['version'];
-                      foreach ($supersededByProduct->product_plans->getValue() as $arrayValue) {
-                        $supersededByProductPlan = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
-                        if ($supersededByProductPlan['name'] === $supersededByPlan) {
-                          $supersededByPlanTitle = $supersededByProductPlan['title'];
-                          break;
-                        }
-                      }
-                    }
-                  }
-                  if (!isset($supersededByPlanTitle) || empty($supersededByPlanTitle)) {
-                    $supersededByPlanTitle = $supersededByPlan;
-                  }
-
-                  $supersedingProduct = [
-                    'product_ref' => $supersededByRef,
-                    'plan' => $supersededByPlan,
-                    'plan_title' => $supersededByPlanTitle,
-                    'product_title' => $supersededByProductTitle,
-                    'product_version' => $supersededByProductVersion,
-                  ];
-                }
-              }
-            }
-          }
-          if (!isset($planTitle) || empty($planTitle)) {
-            $planTitle = $sub->plan();
-          }
-          if (!is_array($supersedingProduct) || in_array(NULL, $supersedingProduct, TRUE)) {
-             $supersedingProduct = NULL;
-          }
-
-          $subArray[] = [
-            'product_title' => $product->getTitle(),
-            'product_version' => $product->apic_version->value,
-            'product_nid' => $nid,
-            'product_image' => $productImageUrl,
-            'plan_name' => $sub->plan(),
-            'plan_title' => $planTitle,
-            'state' => $sub->state(),
-            'subId' => $sub->uuid(),
-            'cost' => $cost,
-            'superseded_by_product' => $supersedingProduct,
-          ];
+        $subscriptionData = $this->processSubscription($sub->product_url(),$sub->plan(), $sub->state(),$sub->uuid(),$ibmApimShowPlaceholderImages);
+        if (!empty($subscriptionData)) {
+          $subArray[] = $subscriptionData;
         }
       }
     }
     return $subArray;
+  }
+  /**
+   * Process a single subscription and return its data
+   *
+   * @param \Drupal\apic_app\Entity\ApplicationSubscription $sub
+   * @param bool $ibmApimShowPlaceholderImages
+   *
+   * @return array|null
+   */
+  public function processSubscription($sub_product_url, $sub_plan,$sub_state,$sub_uuid, bool $ibmApimShowPlaceholderImages): ?array {
+    $cost = '';
+    $productImageUrl = '';
+    
+    $query = \Drupal::entityQuery('node');
+    $query->condition('type', 'product');
+    $query->condition('apic_url.value', $sub_product_url);
+    $nids = $query->accessCheck()->execute();
+
+    if (isset($nids) && !empty($nids)) {
+      $nid = array_shift($nids);
+      $product = Node::load($nid);
+      if ($product !== NULL) {
+        $fid = $product->apic_image->getValue();
+        $productImageUrl = NULL;
+        $cost = t('Free');
+        if (isset($fid[0]['target_id'])) {
+          $file = File::load($fid[0]['target_id']);
+          if ($file !== NULL) {
+            $productImageUrl = $file->createFileUrl();
+          }
+        }
+        elseif ($ibmApimShowPlaceholderImages === TRUE && $this->moduleHandler->moduleExists('product')) {
+          $rawImage = Product::getRandomImageName($product->getTitle());
+          $productImageUrl = base_path() . \Drupal::service('extension.list.module')->getPath('product') . '/images/' . $rawImage;
+        }
+      }
+      $supersedingProduct = NULL;
+      $planTitle = NULL;
+      if ($this->moduleHandler->moduleExists('product')) {
+        $productPlans = [];
+        foreach ($product->product_plans->getValue() as $arrayValue) {
+          $productPlan = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
+          $productPlans[$productPlan['name']] = $productPlan;
+        }
+        if (isset($productPlans[$sub_plan])) {
+          $thisPlan = $productPlans[$sub_plan];
+          if (!isset($thisPlan['billing-model'])) {
+            $thisPlan['billing-model'] = [];
+          }
+          $cost = $this->productPlan->parseBilling($thisPlan['billing-model']);
+          $planTitle = $productPlans[$sub_plan]['title'];
+
+          if (isset($thisPlan['superseded-by'])) {
+            $supersededByProductUrl = $thisPlan['superseded-by']['product_url'];
+            $supersededByPlan = $thisPlan['superseded-by']['plan'];
+            // dont display a link for superseded-by targets that are what we're already subscribed to
+            // apim shouldn't really allow that, but it does, so try to handle it best we can
+            if ($supersededByProductUrl !== $sub_product_url || $supersededByPlan !== $sub_plan) {
+              $supersededByRef = $this->utils->base64_url_encode($supersededByProductUrl . ':' . $supersededByPlan);
+              $supersededByProductTitle = NULL;
+              $supersededByProductVersion = NULL;
+              $supersededByPlanTitle = NULL;
+
+              $query = \Drupal::entityQuery('node');
+              $query->condition('type', 'product');
+              $query->condition('status', 1);
+              $query->condition('apic_url.value', $supersededByProductUrl);
+              $results = $query->accessCheck()->execute();
+
+              if (isset($results) && !empty($results)) {
+                $nid = array_shift($results);
+                $supersededByProduct = Node::load($nid);
+                if ($supersededByProduct !== NULL) {
+                  $productYaml = yaml_parse($supersededByProduct->product_data->value);
+                  $supersededByProductTitle = $productYaml['info']['title'];
+                  $supersededByProductVersion = $productYaml['info']['version'];
+                  foreach ($supersededByProduct->product_plans->getValue() as $arrayValue) {
+                    $supersededByProductPlan = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
+                    if ($supersededByProductPlan['name'] === $supersededByPlan) {
+                      $supersededByPlanTitle = $supersededByProductPlan['title'];
+                      break;
+                    }
+                  }
+                }
+              }
+              if (!isset($supersededByPlanTitle) || empty($supersededByPlanTitle)) {
+                $supersededByPlanTitle = $supersededByPlan;
+              }
+
+              $supersedingProduct = [
+                'product_ref' => $supersededByRef,
+                'plan' => $supersededByPlan,
+                'plan_title' => $supersededByPlanTitle,
+                'product_title' => $supersededByProductTitle,
+                'product_version' => $supersededByProductVersion,
+              ];
+            }
+          }
+        }
+      }
+      if (!isset($planTitle) || empty($planTitle)) {
+        $planTitle = $sub_plan;
+      }
+      if (!is_array($supersedingProduct) || in_array(NULL, $supersedingProduct, TRUE)) {
+         $supersedingProduct = NULL;
+      }
+
+      return [
+        'product_title' => $product->getTitle(),
+        'product_version' => $product->apic_version->value,
+        'product_nid' => $nid,
+        'product_image' => $productImageUrl,
+        'plan_name' => $sub_plan,
+        'plan_title' => $planTitle,
+        'state' => $sub_state,
+        'subId' => $sub_uuid,
+        'cost' => $cost,
+        'superseded_by_product' => $supersedingProduct,
+      ];
+    }
+    
+    return [];
   }
 
   /**
@@ -1017,7 +1045,7 @@ class ApplicationService {
     if (!$currentUser->isAnonymous() && (int) $currentUser->id() !== 1) {
       try {
         $org = $this->userUtils->getCurrentConsumerOrg();
-        $tags = ['consumerorg:' . Html::cleanCssIdentifier($org['url'])];
+        $tags = ['consumerorg:' . Html::cleanCssIdentifier($org['url']),'apic_app_application_subs_list','config:views.view.application_subscriptions'];
         Cache::invalidateTags($tags);
       } catch (TempStoreException | \JsonException $e) {
       }

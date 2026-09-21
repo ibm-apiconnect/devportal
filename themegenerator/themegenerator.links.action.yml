@@ -4,3 +4,9 @@ themegenerator.theme_generate:
   weight: 5
   appears_on:
     - system.themes_page
+themegenerator.theme_add:
+  route_name: themegenerator.theme_add
+  title: 'Add new theme'
+  weight: 6
+  appears_on:
+    - system.themes_page

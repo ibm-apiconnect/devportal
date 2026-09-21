@@ -37,19 +37,30 @@ class CaseStudyHooks {
 
   #[Hook('theme')]
   public function theme($existing, $type, $theme, $path): array {
-    return [
+    $module_path = \Drupal::service('extension.list.module')->getPath('case_study') . '/templates';
+    
+    $definitions = [
+      'node__case_study' => [
+        'base hook' => 'node',
+        'template'  => 'node--case_study',        
+        'path'      => $module_path,
+      ],
+      'node__case_study__card' => [
+        'base hook' => 'node',
+        'template'  => 'node--case_study--card', 
+        'path'      => $module_path,
+      ],
+      
       'productcasestudy_block' => [
-        'variables' => [
-          'productCaseStudies' => NULL,
-        ],
+        'variables' => ['productCaseStudies' => NULL],
       ],
       'casestudy_block' => [
-        'variables' => [
-          'caseStudies' => NULL,
-        ],
+        'variables' => ['caseStudies' => NULL],
       ],
     ];
+    return $definitions;
   }
+
 
   /**
   * Implements hook_module_preuninstall().

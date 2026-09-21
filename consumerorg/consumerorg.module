@@ -21,6 +21,7 @@
 use Drupal\consumerorg\ApicType\Member;
 use Drupal\consumerorg\ApicType\Role;
 use Drupal\ibm_apim\ApicType\ApicUser;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /* Define a single permission to be granted */
 define('CONSUMERORG_GRANT', 1);
@@ -52,6 +53,8 @@ function consumerorg_preprocess_node(&$variables): void {
       if (isset($org['url']) && $org['url'] === $variables['node']->consumerorg_url->value) {
         $editMode = TRUE;
       }
+      
+      $images_path = \Drupal::service('extension.list.module')->getPath('ibm_apim');
 
       $myorgOwnerUrl = $variables['node']->consumerorg_owner->value;
       $cOrgRoles = $variables['node']->consumerorg_roles->getValue();
@@ -62,7 +65,7 @@ function consumerorg_preprocess_node(&$variables): void {
         $whitelist = [Role::class];
         foreach ($cOrgRoles as $cOrgRole) {
           $role = new Role();
-          $role->createFromArray(unserialize($cOrgRole['value'], ['allowed_classes' => $whitelist]));
+          $role->createFromArray(SerializationUtility::decodeData($cOrgRole['value'], TRUE, $whitelist));
           $roleName = $role->getName();
           if ($roleName !== 'owner' && $roleName !== 'member' && in_array($roleName, $configRoles, true)) {
               $permittedcOrgRoles[] = $role;
@@ -90,42 +93,40 @@ function consumerorg_preprocess_node(&$variables): void {
         }
       }
 
-      $cOrgMembers = $variables['node']->consumerorg_members->getValue();
-      if ($cOrgMembers !== NULL) {
-        $whitelist = [Member::class, ApicUser::class];
-        foreach ($cOrgMembers as $arrayValue) {
-          $orgMember = new Member();
-          $orgMember->createFromArray(unserialize($arrayValue['value'], ['allowed_classes' => $whitelist]));
+      // Load members and invitations from entity table using service method
+      $entities = $cOrgService->loadMembersAndInvitationsFromEntities($variables['node']->id());
+      
+      // Process members
+      foreach ($entities['members'] as $member_data) {
+        $orgMember = new Member();
+        $orgMember->createFromArray($member_data);
 
-          $memberUserUrl = $orgMember->getUserUrl();
-          if ($myorgOwnerUrl === $memberUserUrl) {
-            $owner = $orgService->prepareOrgMemberForDisplay($orgMember);
-          }
-          else {
-            $newMember = $orgService->prepareOrgMemberForDisplay($orgMember);
-            $members[$newMember['id']] = $newMember;
-          }
+        $memberUserUrl = $orgMember->getUserUrl();
+        if ($myorgOwnerUrl === $memberUserUrl) {
+          $owner = $orgService->prepareOrgMemberForDisplay($orgMember);
+        }
+        else {
+          $newMember = $orgService->prepareOrgMemberForDisplay($orgMember);
+          $members[$newMember['id']] = $newMember;
         }
       }
 
-      // add pending invitations into the list of members.
-      $cOrgInvites = $variables['node']->consumerorg_invites->getValue();
-      if ($cOrgInvites !== NULL) {
-        $cOrgObject = $cOrgService->getConsumerOrgAsObject($variables['node']->consumerorg_url->value);
-        $memberEmails = $cOrgObject->getMemberEmails();
-        if ($memberEmails === NULL) {
-          $memberEmails = [];
-        }
-        foreach ($cOrgInvites as $invites_array) {
-          $invite = unserialize($invites_array['value'], ['allowed_classes' => FALSE]);
-          if (!in_array($invite['email'], $memberEmails, FALSE)) {
-            $invitedMember = [];
-            $invitedMember['details'] = $invite['email'];
-            $invitedMember['state'] = 'Pending';
-            $invitedMember['id'] = basename($invite['url'] ?? '');
-            $invitedMember['role_urls'] = $invite['role_urls'];
-            $members[] = $invitedMember;
-          }
+      // Process pending invitations
+      $cOrgObject = $cOrgService->getConsumerOrgAsObject($variables['node']->consumerorg_url->value);
+      $memberEmails = $cOrgObject->getMemberEmails();
+      if ($memberEmails === NULL) {
+        $memberEmails = [];
+      }
+      
+      foreach ($entities['invitations'] as $invite_data) {
+        $email = $invite_data['email'];
+        if (!in_array($email, $memberEmails, FALSE)) {
+          $invitedMember = [];
+          $invitedMember['details'] = $email;
+          $invitedMember['state'] = 'Pending';
+          $invitedMember['id'] = basename($invite_data['url'] ?? '');
+          $invitedMember['role_urls'] = $invite_data['role_urls'];
+          $members[$invitedMember['id']] = $invitedMember;
         }
       }
 
@@ -200,7 +201,7 @@ function consumerorg_preprocess_node(&$variables): void {
       \Drupal::moduleHandler()->alter('consumerorg_myorg_tabs', $tabs, $nodeArray);
       $variables['tabs'] = $tabs;
       $variables['edit_mode'] = $editMode;
-      $variables['images_path'] = \Drupal::service('extension.list.module')->getPath('ibm_apim');
+      $variables['images_path'] = $images_path;
       $variables['myorg_title'] = $variables['node']->getTitle();
       $variables['myorg_name'] = $variables['node']->consumerorg_name->value;
       $variables['myorg_url'] = $variables['node']->consumerorg_url->value;
@@ -215,6 +216,7 @@ function consumerorg_preprocess_node(&$variables): void {
       $variables['myorg_can_delete_org'] = $canDeleteOrg;
       $variables['consumer_org_invitation_enabled'] = $consumerOrgInvitationEnabled;
       $variables['custom_fields'] = $custom_fields;
+      $variables['myorg_has_no_members'] = empty($members);
 
       // display a suitable message to explain why the user does not have edit access
       $currentUser = \Drupal::currentUser();
@@ -304,6 +306,189 @@ function consumerorg_preprocess(&$variables, $hook, &$info) {
         }
       }
       ibm_apim_exit_trace(__FUNCTION__, NULL);
+    }
+  }
+}
+/**
+ * Implements hook_views_pre_render().
+ *
+ * Attach the context menu library to the consumer organization members view.
+ */
+function consumerorg_views_pre_render(\Drupal\views\ViewExecutable $view) {
+  if ($view->id() === 'consumerorg_members') {
+    $view->element['#attached']['library'][] = 'consumerorg/member_context_menu';
+    
+    // Pass the base path to JavaScript
+    $base_path = \Drupal::request()->getBasePath();
+    $path_prefix = \Drupal::config('ibm_apim.site_config')->get('path_prefix');
+    
+    if ($path_prefix) {
+      $base_path .= '/' . trim($path_prefix, '/');
+    }
+    
+    $view->element['#attached']['drupalSettings']['consumerorg']['basePath'] = $base_path;
+  }
+}
+
+/**
+ * Implements hook_preprocess_views_view_table().
+ *
+ * Add entity data attributes to table rows for the context menu.
+ * Also hide the owner row and handle empty state.
+ */
+function consumerorg_preprocess_views_view_table(&$variables) {
+  if ($variables['view']->id() === 'consumerorg_members') {
+    $variables['view']->element['#attached']['library'][] = 'consumerorg/member_context_menu';
+    
+    // Check if user has member:manage permission
+    $userUtils = \Drupal::service('ibm_apim.user_utils');
+    $hasMemberManagePerm = $userUtils->checkHasPermission('member:manage');
+    
+    // Add an actions header as the last column and register the column with
+    // the table style plugin metadata so Twig renders it.
+    $variables['header']['operations'] = [
+      'content' => '',
+      'default_classes' => TRUE,
+      'attributes' => new \Drupal\Core\Template\Attribute(),
+    ];
+
+    if (!isset($variables['fields']['operations'])) {
+      $variables['fields']['operations'] = 'operations';
+    }
+
+    foreach ($variables['rows'] as $row_index => $row) {
+      if (!isset($variables['rows'][$row_index]['columns']['operations'])) {
+        $variables['rows'][$row_index]['columns']['operations'] = [
+          'content' => [],
+          'default_classes' => TRUE,
+          'fields' => ['operations'],
+          'attributes' => new \Drupal\Core\Template\Attribute(),
+        ];
+      }
+    }
+
+    // Get the org node to check owner.
+    $args = $variables['view']->args;
+    $org_nid = !empty($args) ? $args[0] : NULL;
+    $owner_user_url = NULL;
+
+    if ($org_nid) {
+      $org_node = \Drupal::entityTypeManager()->getStorage('node')->load($org_nid);
+      if ($org_node && $org_node->hasField('consumerorg_owner')) {
+        $owner_user_url = $org_node->get('consumerorg_owner')->value;
+      }
+    }
+
+    foreach ($variables['rows'] as $row_index => $row) {
+      if (isset($variables['view']->result[$row_index])) {
+        $entity = $variables['view']->result[$row_index]->_entity;
+        if ($entity) {
+          // Check if this member is the owner.
+          if ($entity->isMember() && $owner_user_url) {
+            $member_user_url = $entity->getUserUrl();
+            if ($member_user_url === $owner_user_url) {
+              // Remove the owner row.
+              unset($variables['rows'][$row_index]);
+              continue;
+            }
+          }
+
+          $url = $entity->getUrl();
+          if ($url) {
+            $id = basename($url);
+            $type = $entity->getType();
+
+            // Add data attributes to the row.
+            if (!isset($variables['rows'][$row_index]['attributes'])) {
+              $variables['rows'][$row_index]['attributes'] = [];
+            }
+            $variables['rows'][$row_index]['attributes']['data-entity-id'] = $id;
+            $variables['rows'][$row_index]['attributes']['data-entity-type'] = $type;
+
+            // Only show the 3-dots menu if user has member:manage permission
+            if ($hasMemberManagePerm) {
+              $links = [];
+              if ($entity->isMember()) {
+                $links['change_role'] = [
+                  'title' => t('Change role'),
+                  'url' => \Drupal\Core\Url::fromRoute('consumerorg.change_member_role', ['memberId' => $id]),
+                ];
+                $links['remove_user'] = [
+                  'title' => t('Delete member'),
+                  'url' => \Drupal\Core\Url::fromRoute('consumerorg.remove_user', ['memberId' => $id]),
+                ];
+              }
+              elseif ($entity->isInvitation()) {
+                $links['resend_invite'] = [
+                  'title' => t('Resend invitation'),
+                  'url' => \Drupal\Core\Url::fromRoute('consumerorg.resend_invite', ['inviteId' => $id]),
+                ];
+                $links['delete_invite'] = [
+                  'title' => t('Delete invitation'),
+                  'url' => \Drupal\Core\Url::fromRoute('consumerorg.delete_invite', ['inviteId' => $id]),
+                ];
+              }
+
+              $menu_items = [];
+              foreach ($links as $link_key => $link) {
+                $link_classes = ['consumerorg-row-actions__link'];
+                if (in_array($link_key, ['remove_user', 'delete_invite'], TRUE)) {
+                  $link_classes[] = 'consumerorg-row-actions__link--danger';
+                }
+
+                $menu_items[] = [
+                  '#type' => 'html_tag',
+                  '#tag' => 'li',
+                  '#attributes' => ['class' => ['consumerorg-row-actions__item']],
+                  'link' => [
+                    '#type' => 'link',
+                    '#title' => $link['title'],
+                    '#url' => $link['url'],
+                    '#attributes' => ['class' => $link_classes],
+                  ],
+                ];
+              }
+
+              $variables['rows'][$row_index]['columns']['operations'] = [
+                'default_classes' => TRUE,
+                'fields' => ['operations'],
+                'attributes' => new \Drupal\Core\Template\Attribute([
+                  'class' => ['consumerorg-row-actions-cell'],
+                ]),
+                'content' => [
+                  [
+                    'separator' => '',
+                    'field_output' => [
+                      '#type' => 'html_tag',
+                      '#tag' => 'details',
+                      '#attributes' => [
+                        'class' => ['consumerorg-row-actions'],
+                      ],
+                      'summary' => [
+                        '#type' => 'html_tag',
+                        '#tag' => 'summary',
+                        '#value' => '⋮',
+                        '#attributes' => [
+                          'class' => ['consumerorg-row-actions__toggle'],
+                          'aria-label' => (string) t('Open row actions'),
+                        ],
+                      ],
+                      'menu' => [
+                        '#type' => 'html_tag',
+                        '#tag' => 'ul',
+                        '#attributes' => [
+                          'class' => ['consumerorg-row-actions__menu'],
+                        ],
+                        'items' => $menu_items,
+                      ],
+                    ],
+                  ],
+                ],
+              ];
+            }
+          }
+        }
+      }
     }
   }
 }

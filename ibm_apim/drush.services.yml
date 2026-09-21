@@ -1,5 +1,0 @@
-services:
-  ibm_apim.commands:
-    class: Drupal\ibm_apim\Commands\IbmApimCommands
-    tags:
-      - { name: drush.command } 

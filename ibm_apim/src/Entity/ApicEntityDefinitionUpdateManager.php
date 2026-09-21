@@ -216,7 +216,7 @@ final class ApicEntityDefinitionUpdateManager implements ContainerInjectionInter
    *
    * @throws \Drupal\Core\Entity\Exception\FieldStorageDefinitionUpdateForbiddenException
    */
-  private function doFieldUpdate(string $op, FieldStorageDefinitionInterface $storage_definition = NULL, FieldStorageDefinitionInterface $original_storage_definition = NULL): void {
+  private function doFieldUpdate(string $op, ?FieldStorageDefinitionInterface $storage_definition = NULL, ?FieldStorageDefinitionInterface $original_storage_definition = NULL): void {
     if ($storage_definition !== NULL) {
       switch ($op) {
         case EntityDefinitionUpdateManagerInterface::DEFINITION_CREATED:

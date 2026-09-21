@@ -140,7 +140,7 @@ class ChooseApplicationStep extends IbmWizardStepBase {
         // the productName check here is to ensure we were fed a valid productId
         $form['#createNewApp'] = [
           '#type' => 'link',
-          '#title' => $this->t('Create Application'),
+          '#title' => $this->t('Create application'),
           '#url' => Url::fromRoute('apic_app.create_modal'),
           '#attributes' => [
             'class' => [

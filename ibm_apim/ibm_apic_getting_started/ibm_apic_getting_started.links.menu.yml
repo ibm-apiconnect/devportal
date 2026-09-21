@@ -1,0 +1,126 @@
+ibm_apic_getting_started.tutorials:
+  title: "Getting started"
+  description: "Helpful resources to get started."
+  parent: content
+  route_name: ibm_apic_getting_started.tutorials
+  menu_name: content
+  weight: -100
+
+ibm_apic_getting_started.customize_portal_theme:
+  title: "Customizing portal theme"
+  description: "Tutorial on how to customize portal theme"
+  parent: ibm_apic_getting_started.tutorials
+  route_name: ibm_apic_getting_started.generate_subtheme
+  menu_name: content
+  options:
+    attributes:
+      id: "ibm-apic-gs-launch"
+      class:
+        - use-ajax
+        - getting-started-offcanvas
+        - tutorial-link
+      data-dialog-type: "dialog"
+      data-dialog-renderer: "off_canvas"
+      data-tutorial-id: "customize-portal-theme"
+
+ibm_apic_getting_started.install_custom_module:
+  title: "Installing custom module"
+  description: "Tutorial on how to install a custom module"
+  parent: ibm_apic_getting_started.tutorials
+  route_name: ibm_apic_getting_started.install_custom_module
+  menu_name: content
+  options:
+    attributes:
+      id: "ibm-apic-gs-launch"
+      class:
+        - use-ajax
+        - getting-started-offcanvas
+        - tutorial-link
+      data-dialog-type: "dialog"
+      data-dialog-renderer: "off_canvas"
+      data-tutorial-id: "install-custom-module"
+
+ibm_apic_getting_started.customize_hero_image:
+  title: "Customizing hero image"
+  description: "Tutorial on how to customize hero image of your Portal site"
+  parent: ibm_apic_getting_started.tutorials
+  route_name: ibm_apic_getting_started.customize_hero_image
+  menu_name: content
+  options:
+    attributes:
+      id: "ibm-apic-gs-launch"
+      class:
+        - use-ajax
+        - getting-started-offcanvas
+        - tutorial-link
+      data-dialog-type: "dialog"
+      data-dialog-renderer: "off_canvas"
+      data-tutorial-id: "customize-hero-image"
+
+ibm_apic_getting_started.customize_front_page:
+  title: "Customizing front page"
+  description: "Tutorial on how to customize front page of your Portal site"
+  parent: ibm_apic_getting_started.tutorials
+  route_name: ibm_apic_getting_started.customize_front_page
+  menu_name: content
+  options:
+    attributes:
+      id: "ibm-apic-gs-launch"
+      class:
+        - use-ajax
+        - getting-started-offcanvas
+        - tutorial-link
+      data-dialog-type: "dialog"
+      data-dialog-renderer: "off_canvas"
+      data-tutorial-id: "customize-front-page"
+
+ibm_apic_getting_started.taxonomy:
+  title: "Grouping products by category"
+  description: "Tutorial on how to group products by category"
+  parent: ibm_apic_getting_started.tutorials
+  route_name: ibm_apic_getting_started.taxonomy
+  menu_name: content
+  options:
+    attributes:
+      id: "ibm-apic-gs-launch"
+      class:
+        - use-ajax
+        - getting-started-offcanvas
+        - tutorial-link
+      data-dialog-type: "dialog"
+      data-dialog-renderer: "off_canvas"
+      data-tutorial-id: "taxonomy"
+
+ibm_apic_getting_started.email_subscribers:
+  title: "Emailing subscribers"
+  description: "Tutorial on how to email all the subscribers of a specific API, plan, product, or all registered consumer organizations."
+  parent: ibm_apic_getting_started.tutorials
+  route_name: ibm_apic_getting_started.email_subscribers
+  menu_name: admin
+  options:
+    attributes:
+      id: "ibm-apic-gs-launch"
+      class:
+        - use-ajax
+        - getting-started-offcanvas
+        - tutorial-link
+      data-dialog-type: "dialog"
+      data-dialog-renderer: "off_canvas"
+      data-tutorial-id: "email-subscribers"
+
+ibm_apic_getting_started.content_security_policy:
+  title: "Enforcing content security policy"
+  description: "Tutorial on how to enforce content security policy"
+  parent: ibm_apic_getting_started.tutorials
+  route_name: ibm_apic_getting_started.content_security_policy
+  menu_name: admin
+  options:
+    attributes:
+      id: "ibm-apic-gs-launch"
+      class:
+        - use-ajax
+        - getting-started-offcanvas
+        - tutorial-link
+      data-dialog-type: "dialog"
+      data-dialog-renderer: "off_canvas"
+      data-tutorial-id: "content-security-policy"

@@ -34,5 +34,5 @@
 a.thumbnail:hover,
 a.thumbnail:focus,
 a.thumbnail.active {
-  border-color: $link-color;
+  border-color: var(--link-color);
 }

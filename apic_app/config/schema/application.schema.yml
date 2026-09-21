@@ -98,9 +98,21 @@ apic_app.apic_app_application_subs.*:
     product_url:
       type: string
       label: 'Product URL'
+    product_title:
+      type: string
+      label: 'Product title'
     plan:
       type: string
       label: 'Plan name'
+    plan_title:
+      type: string
+      label: 'Plan title'
+    product_title_missing:
+      type: integer
+      label: 'Product title missing'
+    plan_title_missing:
+      type: integer
+      label: 'Plan title missing'
     state:
       type: string
       label: 'State'

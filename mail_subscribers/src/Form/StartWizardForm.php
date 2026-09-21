@@ -65,7 +65,7 @@ class StartWizardForm extends FormBase {
       $options =array_merge(['list' => t('Selected list')],$options);
       $form['list'] = [
         '#type' => 'select',
-        '#title' => 'Email lists',
+        '#title' => t('Email lists'),
         '#description' => t('Select a predefined list to send emails to.'),
         '#required' => False,
         '#weight' => 0,
@@ -95,10 +95,17 @@ class StartWizardForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
+    
+    // Sanitize and validate objectType
     $objectType = $form_state->getValue('objectType');
-
+    $objectType = htmlspecialchars($objectType, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+    
+    // Validate list selection if objectType is 'list'
     if ($objectType === 'list') {
       $listId = $form_state->getValue('list');
+      // Sanitize listId
+      $listId = htmlspecialchars($listId, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+      
       $entity = EmailList::load($listId);
       if (empty($entity)) {
         $form_state->setErrorByName('list', $this->t('Selected email list does not exist.'));
@@ -117,13 +124,21 @@ class StartWizardForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
+    // Sanitize objectType
     $objectType = $form_state->getValue('objectType');
+    $objectType = htmlspecialchars($objectType, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+    
     if ($objectType === 'list') {
+      // Sanitize listId
       $listId = $form_state->getValue('list');
+      $listId = htmlspecialchars($listId, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+      
       $entity = EmailList::load($listId);
       $cached_values = $entity->get('data')->getValue()[0];
 
+      // Sanitize the objectType from cached values
       $objectType = $cached_values['objectType'];
+      $objectType = htmlspecialchars($objectType, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
 
       \Drupal::service('tempstore.private')->get('mail_subscribers')->set('data', $cached_values);
       $step = 'entercontent';

@@ -1,7 +1,7 @@
 name: 'APIC Flood Control UI'
 type: module
 description: 'Allow administrators to configure flood control settings'
-package: 'IBM API Developer Portal'
+package: 'IBM CMS Portal'
 core_version_requirement: ^8 || ^9 || ^10 || ^11
 version: 8.x-1.0.1
 project: ibm_apic_flood_control_ui

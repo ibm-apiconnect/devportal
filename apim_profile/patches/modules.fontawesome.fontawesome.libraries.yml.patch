@@ -1,0 +1,10 @@
+--- modules/fontawesome/fontawesome.libraries.yml	2025-06-09 15:44:59
++++ modules/fontawesome/fontawesome.libraries.yml	2025-06-09 15:44:43
+@@ -7,6 +7,7 @@
+   version: &fontawesome_version "6.4.2"
+   header: true
+   js:
++    /libraries/fontawesome/js/init.js: { weight: -20 }
+     /libraries/fontawesome/js/all.min.js: { minified: true, attributes: { defer: true } }
+ 
+ fontawesome.svg.shim:

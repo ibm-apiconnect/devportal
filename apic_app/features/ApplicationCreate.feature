@@ -101,6 +101,8 @@ Feature: ApplicationCreate
     Given I enter "app12345xyz" for "edit-title-0-value"
     And I enter "this is some text" for "edit-apic-summary-0-value"
     When I press the "Save" button
+    Then the custom hook with key "apic_app_pre_create" should have been invoked
+    Then the custom hook with key "apic_app_create" should have been invoked
     Then there are no errors
     And I should see the text "API Key and Secret"
     And I should see a ".appID" element
@@ -113,6 +115,32 @@ Feature: ApplicationCreate
     And I should see the text "Delete"
     And there are no errors
     Then I delete all applications from the site
+
+
+  Scenario: Create application as a user with the role developer, hook needs to fail app creation
+    Given I do not have an analytics service
+    Given users:
+      | name                 | mail                 | pass                     | status |
+      | @data(andre[0].mail) | @data(andre[0].mail) | @data(andre[0].password) | 1      |
+      | @data(andre[4].mail) | @data(andre[4].mail) | @data(andre[4].password) | 1      |
+    Given consumerorgs:
+      | title                             | name                             | id     | owner                |
+      | @data(andre[0].consumerorg.title) | @data(andre[0].consumerorg.name) | 123456 | @data(andre[0].mail) |
+    Given members:
+      | consumerorgid                  | username             | roles                 |
+      | 123456                         | @data(andre[4].mail) | developer             |
+    Given I am logged in as "@data(andre[4].mail)"
+    Given I do not have any applications
+    Given the Drupal state "apic_app_pre_create_throw_exception" is set to "TRUE"
+    Given I am at "/application/new"
+    And I should see a "#edit-title-0-value" element
+    And I should see a "#edit-apic-summary-0-value" element
+    And I should see a "#edit-application-redirect-endpoints-0-value" element
+    And I should see a "#edit-submit" element
+    Given I enter "app12345xyz" for "edit-title-0-value"
+    And I enter "this is some text" for "edit-apic-summary-0-value"
+    When I press the "Save" button
+    Then I should see the unexpected error message
 
 
   Scenario: Create application as a user with the role administrator
@@ -319,3 +347,38 @@ Feature: ApplicationCreate
     Then I should see the text "00:00"
     Then I delete all applications from the site
     Then I delete the datetime type custom fields for application entities
+
+  Scenario: Create application with pending state (green path)
+    Given I have an analytics service
+    Given I am not logged in
+    Given users:
+      | name  | pass     | mail              | status |
+      | Andre | Qwert123IsBadPassword! | andre@example.com | 1      |
+    Given consumerorgs:
+      | title       | name        | id     | owner |
+      | andreconsumerorg | andreconsumerorg | 123456 | Andre |
+    Given I am logged in as "Andre"
+    Given I do not have any applications
+    Given I am at "/application/new"
+    And I should see a "#edit-title-0-value" element
+    And I should see a "#edit-apic-summary-0-value" element
+    And I should see a "#edit-application-redirect-endpoints-0-value" element
+    And I should see a "#edit-submit" element
+    Given I enter "app9101112" for "edit-title-0-value"
+    And I enter "this is some text" for "edit-apic-summary-0-value"
+    When I press the "Save" button
+    Then there are no errors
+    And I should see the text "API Key and Secret"
+    And I should see a ".appID" element
+    And I should see a ".appSecret" element
+    When I click "OK"
+    Then I should see the text "app9101112"
+    And I should see the text "Subscriptions"
+    And I should see the text "Edit"
+    And I should see the text "Upload image"
+    And I should see the text "Delete"
+    Given I am at "/application"
+    Then dump the current html
+    And I should see the text "app9101112"
+    And I should see the text "pending"
+    Then dump the current html

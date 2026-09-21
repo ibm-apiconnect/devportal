@@ -206,7 +206,7 @@
 +    $contentTypes = \Drupal::service('entity_type.repository')->getEntityTypeLabels(TRUE)['Content'];
 +    $contentTypes = array_filter($contentTypes, function($x) { return !$this->isBlocked($x); });
 +    $blockedTypes = [ "user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs",
-+                  "apic_app_application_creds", "avatars_preview", "comment", "contact_message", "search_api_task", "vote", "vote_result" ];
++                  "apic_app_application_creds", "avatars_preview", "comment", "contact_message", "search_api_task", "vote", "vote_result", "vote_type" ];
 +
 +    $allExports = [];
 +    $count = 0;
@@ -275,7 +275,7 @@
 +
 +  public function isBlocked(string $entity): bool {
 +    $blockedTypes = [ "crop", "user", "api", "application", "consumerorg", "product", "event_log", "consumerorg_payment_method", "apic_app_application_subs",
-+                  "apic_app_application_creds", "avatars_preview", "comment", "contact_message", "search_api_task", "vote", "vote_result" ];
++                  "apic_app_application_creds", "avatars_preview", "comment", "contact_message", "search_api_task", "vote", "vote_result", "vote_type" ];
 +    return in_array($entity, $blockedTypes);
 +  }
 +

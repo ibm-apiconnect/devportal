@@ -26,7 +26,7 @@ class IbmCreateNodeTypeCheck implements AccessInterface {
    *
    * @return \Drupal\Core\Access\AccessResult
    */
-  public function access(ConfigEntityInterface $node_type = NULL): AccessResult {
+  public function access(?ConfigEntityInterface $node_type = NULL): AccessResult {
     $allowed = TRUE;
     if (isset($node_type) && in_array($node_type->id(), ['application', 'api', 'product', 'consumerorg'])) {
       $allowed = FALSE;

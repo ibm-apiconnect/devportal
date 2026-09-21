@@ -41,7 +41,6 @@ abstract class AuthApicTestBaseClass extends UnitTestCase {
 
     $account->get('first_name')->willReturn($this->createSimpleObject('value', 'abc'));
     $account->get('last_name')->willReturn($this->createSimpleObject('value', 'def'));
-    $account->get('consumer_organization')->willReturn($this->createConsumerorgArray());
     $account->get('uid')->willReturn($this->createSimpleObject('value', '1'));
     $account->get('mail')->willReturn($this->createSimpleObject('value', 'abc@me.com'));
     $account->get('apic_user_registry_url')->willReturn($this->createSimpleObject('value', '/registry/idp1'));
@@ -55,10 +54,15 @@ abstract class AuthApicTestBaseClass extends UnitTestCase {
     $consumerorg_url_field->getValue()->willReturn([['value' => '/consumer-orgs/1234/5678/9abc']]);
     $account->get('consumerorg_url')->willReturn($consumerorg_url_field);
 
+    $consumer_organization_field = $this->prophet->prophesize(\Drupal\Core\Field\FieldItemList::class);
+    $consumer_organization_field->getValue()->willReturn(['value' => "org1"]);
+    $account->get('consumer_organization')->willReturn($consumer_organization_field);
+
     $account->set('first_name', 'abc')->willReturn(NULL);
     $account->set('last_name', 'def')->willReturn(NULL);
     $account->set('mail', 'abc@me.com')->willReturn(NULL);
     $account->set('consumerorg_url', [['value' => '/consumer-orgs/1234/5678/9abc']])->willReturn(NULL);
+    $account->set('consumer_organization', [['value' => "org1"]])->willReturn(NULL);
     $account->set('apic_user_registry_url', '/registry/idp1')->willReturn(NULL);
     $account->set('registry_url', '/registry/idp1')->willReturn(NULL);
     $account->set('apic_url', 'user/url')->willReturn(NULL);
@@ -111,6 +115,7 @@ abstract class AuthApicTestBaseClass extends UnitTestCase {
   protected function createAccountStubNoConsumerOrgs() {
     $account = $this->createAccountBase();
     $account->set('consumerorg_url', NULL)->willReturn(NULL)->shouldBeCalled();
+    $account->set('consumer_organization', NULL)->willReturn(NULL)->shouldBeCalled();
     $account->isBlocked()->willReturn(FALSE);
     return $account->reveal();
   }

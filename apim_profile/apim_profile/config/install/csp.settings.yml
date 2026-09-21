@@ -6,9 +6,19 @@ report-only:
   reporting:
     plugin: none
 enforce:
-  enable: false
+  enable: true
   directives:
-    default-src:
+    img-src:
+      base: self
+      sources:
+        - 'data:'
+    font-src:
+      base: self
+      sources:
+        - 'data:'
+    script-src:
+      base: self
+    style-src:
       base: self
   reporting:
     plugin: none

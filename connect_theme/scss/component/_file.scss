@@ -8,15 +8,15 @@
   margin: 5px 0;
   width: 100%;
   > span {
-    background: #fff;
-    color: $brand-primary;
-    border-bottom: 1px solid $input-border;
-    border-top: 1px solid $input-border;
+    background: var(--layer-02);
+    color: var(--brand-primary-link-color);
+    border-bottom: 1px solid var(--input-border);
+    border-top: 1px solid var(--input-border);
     &:first-child {
-      border-left: 1px solid $input-border;
+      border-inline-start: 1px solid var(--input-border);
     }
     &:last-child {
-      border-right: 1px solid $input-border;
+      border-inline-end: 1px solid var(--input-border);
     }
   }
   > .tabledrag-changed {

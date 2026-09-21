@@ -23,6 +23,7 @@ use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\product\Product;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Drupal\ibm_apim\External\SerializationUtility; 
 
 /* Permissions that can be granted */
 
@@ -112,7 +113,7 @@ function product_preprocess_node(&$variables) {
     $productApis = [];
 
     foreach ($variables['node']->product_apis->getValue() as $arrayValue) {
-      $productApis[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+      $productApis[] = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
     }
     if ($productApis !== NULL && is_array($productApis)) {
       $variables['apiCount'] = count($productApis);
@@ -125,10 +126,36 @@ function product_preprocess_node(&$variables) {
         $apiNames[] = $productApi['name'];
         $apiRefs[$key] = Html::getClass($productApi['name']);
       } // end for
-      $query = \Drupal::entityQuery('node');
-      $query->condition('type', 'api');
-      $query->condition('status', 1);
-      $query->condition('apic_ref.value', $apiNames, 'IN');
+
+      $request = \Drupal::request();
+      $page = max(0, (int) $request->query->get('page', 0));
+
+      $view_items_per_page = 12;
+      $items_per_page = 101;
+
+      // Count total items
+      $count_query = \Drupal::entityQuery('node')
+        ->condition('type', 'api')
+        ->condition('status', 1)
+        ->condition('apic_ref.value', $apiNames, 'IN')
+        ->accessCheck();
+
+      $total = $count_query->count()->execute();
+
+      $offset = $page * $view_items_per_page;
+
+      if ($offset + $items_per_page > $total) {
+        $offset = max(0, $total - $items_per_page);
+      }
+
+      // Main query
+      $query = \Drupal::entityQuery('node')
+        ->condition('type', 'api')
+        ->condition('status', 1)
+        ->condition('apic_ref.value', $apiNames, 'IN')
+        ->range($offset, $items_per_page)
+        ->sort('nid', 'DESC');
+
       $results = $query->accessCheck()->execute();
       if ($results !== NULL && !empty($results)) {
         $apiNids = array_values($results);
@@ -162,7 +189,7 @@ function product_preprocess_node(&$variables) {
           }
           $swagger = NULL;
           if (isset($api->api_swagger->value)) {
-            $swagger = unserialize($api->api_swagger->value, ['allowed_classes' => FALSE]);
+            $swagger = SerializationUtility::decodeData($api->api_swagger->value, TRUE, FALSE);
             if (isset($swagger['x-ibm-configuration']) && is_array($swagger['x-ibm-configuration']) && !empty($swagger['x-ibm-configuration']) && $swagger['x-ibm-configuration']['enforced'] === TRUE) {
               $enforcedCount++;
             }
@@ -189,7 +216,7 @@ function product_preprocess_node(&$variables) {
         $planArray = [];
         $productPlans = [];
         foreach ($variables['node']->product_plans->getValue() as $arrayValue) {
-          $productPlans[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+          $productPlans[] = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
         }
         $billing = FALSE;
         $billingEnabled = (bool) \Drupal::service('ibm_apim.billing')->isEnabled();
@@ -258,16 +285,21 @@ function product_preprocess_node(&$variables) {
     if ($variables['view_mode'] === 'full') {
       $customDocs = [];
       $productData = yaml_parse($variables['node']->product_data->value);
+      // x-embedded-doc may be at the root level (legacy) or inside info (APIM schema-compliant)
       if (isset($productData['x-embedded-doc']) && is_array($productData['x-embedded-doc']) && !empty($productData['x-embedded-doc'])) {
         $variables['embedded_docs'] = Product::processEmbeddedDocs($productData['x-embedded-doc']);
         $customDocs = $productData['x-embedded-doc'];
       }
+      elseif (isset($productData['info']['x-embedded-doc']) && is_array($productData['info']['x-embedded-doc']) && !empty($productData['info']['x-embedded-doc'])) {
+        $variables['embedded_docs'] = Product::processEmbeddedDocs($productData['info']['x-embedded-doc']);
+        $customDocs = $productData['info']['x-embedded-doc'];
+      }
       $variables['initial_embeddeddoc'] = Product::findInitialEmbeddedDoc($customDocs);
 
-      // custom extensions
+      // custom extensions (exclude x-embedded-doc to avoid passing a raw array into the template)
       $customExtensions = [];
       foreach (array_keys($productData['info']) as $key) {
-        if ($key !== 'x-ibm-languages' && strpos($key, 'x-') === 0) {
+        if ($key !== 'x-ibm-languages' && $key !== 'x-embedded-doc' && strpos($key, 'x-') === 0) {
           $keyName = substr($key, strlen('x-'));
           $customExtensions[$keyName] = $productData['info'][$key];
         }
@@ -347,7 +379,7 @@ function product_check_product_subscribe($node): bool {
             $myOrg = $userUtils->getCurrentConsumerOrg();
             $visibility = [[]];
             foreach ($node->product_visibility->getValue() as $arrayValue) {
-              $visibility[] = unserialize($arrayValue['value'], ['allowed_classes' => FALSE]);
+              $visibility[] = SerializationUtility::decodeData($arrayValue['value'], TRUE, FALSE);
             }
             $visibility = array_merge(...$visibility);
             if ($visibility !== NULL && $visibility['subscribe']['type'] !== NULL) {

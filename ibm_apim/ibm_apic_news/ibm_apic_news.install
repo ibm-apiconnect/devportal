@@ -1,0 +1,123 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+use Drupal\menu_link_content\Entity\MenuLinkContent;
+use Drupal\block\Entity\Block;
+use Drupal\page_manager\Entity\Page;
+
+/**
+* Implements hook_install().
+*
+* Note: Menu link creation is handled by apim_profile_install() to ensure
+* translations are available. This hook only handles the News block setup.
+*/
+function ibm_apic_news_install() {
+    // Should only be one page variant, so we'll just grab the first one
+    // Add News Block to Home Page
+    $page = Page::load('welcome');
+    if ($page !== NULL) {
+        $page_variants = $page->getVariants();
+        reset($page_variants);
+        $page_variant = array_values($page_variants)[0];
+        if ($page_variant !== NULL) {
+            $variant_plugin = $page_variant->getVariantPlugin();
+
+            $news_block = [
+                "id" => "home_page_news_block",
+                "label" => "IBM News",
+                "label_display" => "0",
+                "provider" => "home_page_news_block",
+                "context_mapping" => [],
+                "region" => "main",
+                "weight" => 3,
+                "numberOfTiles" => 4,
+                "selectionType" => "CREATED",
+                "customNodes" => null,
+            ];
+            $variant_plugin->addBlock($news_block);
+            $page_variant->save();
+        }
+    }
+}
+
+/**
+* Implements hook_uninstall().
+*/
+function ibm_apic_news_uninstall() {
+    //Find menu button with link '/news'
+    $menu_links = \Drupal::entityTypeManager()->getStorage('menu_link_content')->loadByProperties(['link.uri' => 'internal:/news']);
+    //Delete it from storage
+    foreach ($menu_links as $menu_link) {
+        $menu_link->delete();
+    }
+
+
+    $page = Page::load('welcome');
+    // should only be one page variant, so we'll just grab the first one
+    if ($page !== NULL) {
+        $page_variants = $page->getVariants();
+        reset($page_variants);
+        $page_variant = array_values($page_variants)[0];
+        if ($page_variant !== NULL) {
+            $blocks = $page_variant->get('variant_settings')['blocks'];
+            $blockUUID = '';
+            foreach ($blocks as $blockKey => $blockValue) {
+                if ($blockValue['id'] == 'home_page_news_block') {
+                    $blockUUID = $blockKey;
+                    break;
+                }
+            }
+            if (!empty($blockUUID)) {
+                $variant_plugin = $page_variant->getVariantPlugin();
+                $variant_plugin->removeBlock($blockUUID);
+                $page_variant->save();
+            }
+        }
+    }
+
+    $view_id = 'news';
+    $config_factory = \Drupal::configFactory();
+    $config_factory->getEditable('views.view.' . $view_id)->delete();
+}
+
+/**
+ * Add translations to the News menu link for existing installations.
+ */
+function ibm_apic_news_update_11001() {
+  // Find the News menu link
+  $menu_links = \Drupal::entityTypeManager()
+    ->getStorage('menu_link_content')
+    ->loadByProperties(['link.uri' => 'internal:/news']);
+
+  foreach ($menu_links as $menu_link) {
+    // Add translations for all enabled languages
+    $languages = \Drupal::languageManager()->getLanguages();
+    foreach ($languages as $language) {
+      $lang = $language->getId();
+      if ($lang === 'en' || $menu_link->hasTranslation($lang)) {
+        continue;
+      }
+      $translation = [
+        'title' => t('News', [], ['langcode' => $lang]),
+        'description' => t('Portal homepage', [], ['langcode' => $lang]),
+        'link' => ['uri' => 'internal:/news'],
+        'menu_name' => 'main',
+        'expanded' => TRUE,
+        'weight' => 27,
+      ];
+      $menu_link->addTranslation($lang, $translation);
+    }
+    $menu_link->save();
+  }
+
+  return t('Added translations to News menu link.');
+}

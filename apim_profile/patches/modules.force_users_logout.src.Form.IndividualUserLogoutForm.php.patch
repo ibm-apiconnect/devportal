@@ -1,0 +1,21 @@
+--- modules/force_users_logout/src/Form/IndividualUserLogoutForm.php	2025-05-15 22:07:41
++++ modules/force_users_logout/src/Form/IndividualUserLogoutForm.php	2025-05-15 22:02:48
+@@ -50,7 +50,7 @@
+    * {@inheritdoc}
+    */
+   public function submitForm(array &$form, FormStateInterface $form_state) {
+-    parent::submitForm($form, $form_state);
++    //parent::submitForm($form, $form_state);
+     $selecteduser = $form_state->getValue('uid');
+     preg_match('#\((.*?)\)#', $selecteduser, $match);
+     $uid = $match[1];
+@@ -59,7 +59,8 @@
+     if (\Drupal::currentUser()->isAuthenticated()) {
+       $session_manager = \Drupal::service('session_manager');
+       $session_manager->delete(\Drupal::currentUser()->id());
+-      $this->messenger()->addStatus('The user @user has been Logged out.', ['@user' => $account->getAccountName()]);
++      $this->messenger()->addStatus($this->t('The user @user has been logged out.', ['@user' => $account->getAccountName()]));
++      \Drupal::logger('FORCE_LOGOUT')->notice($this->t('The user @user has been logged out.', ['@user' => $account->getAccountName()]));
+     }
+   }
+ 

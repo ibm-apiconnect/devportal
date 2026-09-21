@@ -123,18 +123,56 @@ function apic_app_preprocess_node(&$variables) {
         $url = Url::fromRoute('ibm_apim.analyticsproxy')->toString(TRUE)->getGeneratedUrl();
         $dashboard = \Drupal::config('ibm_apim.settings')->get('analytics_dashboard');
         if (empty($dashboard)) {
-          $dashboard = ['total_calls', 'total_errors', 'avg_response', 'num_calls', 'status_codes', 'top_products', 'top_apis', 'response_time', 'num_throttled', 'num_errors', 'call_table'];
+          $dashboard = [
+            'total_calls',
+            'total_errors',
+            'avg_response',
+            'num_calls',
+            'status_codes',
+            'top_products',
+            'top_apis',
+            'num_throttled',
+            'num_errors',
+            'call_table',
+            'top_api_paths',
+            'apis_with_fastest_response_time',
+            'apis_with_slowest_response_time'
+          ];
         }
         $filters = \Drupal::config('ibm_apim.settings')->get('analytics_filters');
         if (empty($filters)) {
-          $filters = ['api_name', 'api_version', 'product_name', 'product_version', 'plan_name'];
+          $filters = ['api_name', 'api_version', 'product_name', 'product_version', 'plan_name', 'status_code', 'operation_path'];
         }
+
+        $app_id = $variables['node']->application_id->value;
+        $apiNames = [];
+        $apiVersions = [];
+        $productNames = [];
+        $productVersions = [];
+        $planNames = [];
+
+        // Get the app-specific data
+        apic_app_generate_app_specific_portal_data($app_id, $apiNames, $apiVersions, $productNames, $productVersions, $planNames);
+
+        $portalData = [
+          'apiNames' => $apiNames,
+          'apiVersions' => $apiVersions,
+          'productNames' => $productNames,
+          'productVersion' => $productVersions,
+          'planNames' => $planNames,
+        ];
         $variables['#attached']['library'][] = 'ibm_apim/analytics';
         $variables['#attached']['drupalSettings']['analytics']['proxyURL'] = $url;
         $variables['#attached']['drupalSettings']['analytics']['locale'] = \Drupal::service('ibm_apim.utils')->convert_lang_name(\Drupal::languageManager()->getCurrentLanguage()->getId());
         $variables['#attached']['drupalSettings']['analytics']['application_id'] = $variables['node']->application_id->value;
         $variables['#attached']['drupalSettings']['analytics']['dashboard'] = $dashboard;
         $variables['#attached']['drupalSettings']['analytics']['filters'] = $filters;
+        $analyticsTheme = \Drupal::request()->cookies->get('analytics_theme', 'g10');
+        if (!in_array($analyticsTheme, ['g10', 'g100'], TRUE)) {
+          $analyticsTheme = 'g10';
+        }
+        $variables['#attached']['drupalSettings']['analytics']['theme'] = $analyticsTheme;
+        $variables['#attached']['drupalSettings']['analytics']['portalData'] = $portalData;
         $variables['analytics_access'] = TRUE;
       }
       else {
@@ -295,4 +333,587 @@ function apic_app_preprocess(&$variables, $hook, &$info) {
       ibm_apim_exit_trace(__FUNCTION__, NULL);
     }
   }
+}
+
+
+
+/**
+ * Implements hook_views_data().
+ */
+/**
+ * Generate app-specific portal data for APIs, products, and plans related to a specific application.
+ *
+ * @param string $app_id
+ *   The application ID to look up.
+ * @param array &$apiNames
+ *   Array to store API names.
+ * @param array &$apiVersions
+ *   Array to store API versions.
+ * @param array &$productNames
+ *   Array to store product names.
+ * @param array &$productVersions
+ *   Array to store product versions.
+ * @param array &$planNames
+ *   Array to store plan names.
+ */
+function apic_app_generate_app_specific_portal_data($app_id, &$apiNames, &$apiVersions, &$productNames, &$productVersions, &$planNames) {
+  // First, find the application node
+  $query = \Drupal::entityQuery('node');
+  $query->condition('type', 'application');
+  $query->condition('application_id.value', $app_id);
+  $nids = $query->accessCheck()->execute();
+
+  if (empty($nids)) {
+    return;
+  }
+
+  $nid = array_shift($nids);
+  $applicationNode = \Drupal\node\Entity\Node::load($nid);
+
+  if (!$applicationNode) {
+    return;
+  }
+
+  // Get all subscriptions for this application
+  $applicationService = \Drupal::service('apic_app.application');
+  $subscriptions = $applicationService->getSubscriptions($applicationNode);
+
+  if (empty($subscriptions)) {
+    return;
+  }
+
+  // Process each subscription to get product details
+  foreach ($subscriptions as $subscription) {
+    $productNode = \Drupal\node\Entity\Node::load($subscription['product_nid']);
+    if ($productNode && $productNode->hasField('product_data') && !$productNode->get('product_data')->isEmpty()) {
+      $productYaml = $productNode->get('product_data')->value;
+      $product = yaml_parse($productYaml);
+
+      $related_product_apis = [];
+      $related_product_plans = [];
+
+      // Extract APIs from the product YAML
+      if (isset($product['apis']) && is_array($product['apis'])) {
+        foreach ($product['apis'] as $api) {
+          if (isset($api['name'])) {
+            $apiParts = explode(':', $api['name']);
+            if (count($apiParts) >= 2) {
+              $api_key = $apiParts[0];
+              $api_version = $apiParts[1];
+
+              // Add to related product APIs
+              $related_product_apis[] = [
+                'key' => $api_key,
+                'version' => $api_version
+              ];
+
+              // Add to apiVersions if not already there
+              if (!in_array($api_version, $apiVersions)) {
+                $apiVersions[] = $api_version;
+              }
+
+              // Add to apiNames if not already there
+              $apiExists = false;
+              foreach ($apiNames as $existingApi) {
+                if ($existingApi['key'] === $api_key) {
+                  $apiExists = true;
+                  break;
+                }
+              }
+
+              if (!$apiExists) {
+                // Try to find the API node for more information
+                $query = \Drupal::entityQuery('node');
+                $query->condition('type', 'api');
+                $query->condition('apic_ref.value', $api_key);
+                $query->condition('apic_version.value', $api_version);
+                $apiNids = $query->accessCheck()->execute();
+
+                if (!empty($apiNids)) {
+                  $apiNid = array_shift($apiNids);
+                  $apiNode = \Drupal\node\Entity\Node::load($apiNid);
+                  if ($apiNode) {
+                    $apiNames[] = [
+                      'key' => $api_key,
+                      'title' => $apiNode->getTitle(),
+                      'version' => $api_version,
+                    ];
+                  } else {
+                    // If API node not found, add with basic info
+                    $apiNames[] = [
+                      'key' => $api_key,
+                      'title' => $api_key,
+                      'version' => $api_version,
+                    ];
+                  }
+                } else {
+                  // If API node not found, add with basic info
+                  $apiNames[] = [
+                    'key' => $api_key,
+                    'title' => $api_key,
+                    'version' => $api_version,
+                  ];
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Extract only the subscribed plan from the product YAML
+      if (isset($product['plans']) && is_array($product['plans'])) {
+        $subscribed_plan_name = $subscription['plan_name'];
+
+        if (isset($product['plans'][$subscribed_plan_name])) {
+          $plan = $product['plans'][$subscribed_plan_name];
+
+          // Add to plan names if not already there
+          $planExists = false;
+          foreach ($planNames as $existingPlan) {
+            if ($existingPlan['key'] === $subscribed_plan_name) {
+              $planExists = true;
+              break;
+            }
+          }
+
+          if (!$planExists) {
+            $planNames[] = [
+              'key' => $subscribed_plan_name,
+              'title' => $plan['title'] ?? $subscribed_plan_name,
+            ];
+          }
+
+          // Add only the subscribed plan to related_product_plans
+          $related_product_plans[] = $subscribed_plan_name;
+        }
+      }
+
+      // Add product to productNames
+      if (isset($product['info'])) {
+        $productInfo = [
+          'key' => $product['info']['name'] ?? '',
+          'title' => $product['info']['title'] ?? '',
+          'version' => $product['info']['version'] ?? '',
+          'apis' => $related_product_apis,
+          'plans' => $related_product_plans,
+        ];
+
+        $productNames[] = $productInfo;
+
+        // Add to productVersions if not already there
+        if (isset($product['info']['version']) && !in_array($product['info']['version'], $productVersions)) {
+          $productVersions[] = $product['info']['version'];
+        }
+      }
+    }
+  }
+}
+
+function apic_app_views_data() {
+  $data = [];
+
+  $data['apic_app_application_subs']['table']['group'] = t('Application');
+  $data['apic_app_application_subs']['table']['base'] = [
+    'field' => 'id',
+    'title' => t('Application Subscriptions'),
+    'help' => t('Subscriptions for an Application.'),
+  ];
+
+  $data['apic_app_application_subs']['id'] = [
+    'title' => t('ID'),
+    'help' => t('The subscription ID.'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'numeric',
+    ],
+    'argument' => [
+      'id' => 'numeric',
+    ],
+  ];
+
+  $data['apic_app_application_subs']['uuid'] = [
+    'title' => t('UUID'),
+    'help' => t('The subscription UUID.'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'string',
+    ],
+    'argument' => [
+      'id' => 'string',
+    ],
+  ];
+
+  $data['apic_app_application_subs']['app_url'] = [
+    'title' => t('Application URL'),
+    'help' => t('The application URL the subscription belongs to.'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'string',
+    ],
+    'argument' => [
+      'id' => 'string',
+    ],
+  ];
+
+  $data['apic_app_application_subs']['product_url'] = [
+    'title' => t('Product URL'),
+    'help' => t('The product URL the subscription is for.'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'string',
+    ],
+    'argument' => [
+      'id' => 'string',
+    ],
+  ];
+
+  $data['apic_app_application_subs']['product_title'] = [
+    'title' => t('Product Title'),
+    'help' => t('The product display title.'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'string',
+    ],
+  ];
+
+  $data['apic_app_application_subs']['plan'] = [
+    'title' => t('Plan'),
+    'help' => t('The plan name.'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'string',
+    ],
+  ];
+
+  $data['apic_app_application_subs']['plan_title'] = [
+    'title' => t('Plan Title'),
+    'help' => t('The plan display title.'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'string',
+    ],
+  ];
+
+  $data['apic_app_application_subs']['product_title_missing'] = [
+    'title' => t('Product Title Missing'),
+    'help' => t('Whether the product title is missing (1) or present (0).'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'numeric',
+    ],
+  ];
+
+  $data['apic_app_application_subs']['plan_title_missing'] = [
+    'title' => t('Plan Title Missing'),
+    'help' => t('Whether the plan title is missing (1) or present (0).'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'numeric',
+    ],
+  ];
+
+  $data['apic_app_application_subs']['state'] = [
+    'title' => t('State'),
+    'help' => t('The subscription state.'),
+    'field' => [
+      'id' => 'standard',
+    ],
+    'sort' => [
+      'id' => 'standard',
+    ],
+    'filter' => [
+      'id' => 'string',
+    ],
+  ];
+
+  return $data;
+}
+
+/**
+ * Implements hook_views_query_alter().
+ */
+function apic_app_views_query_alter(\Drupal\views\ViewExecutable $view, \Drupal\views\Plugin\views\query\QueryPluginBase $query) {
+  if ($view->id() !== 'application_subscriptions' || $view->current_display !== 'block_1') {
+    return;
+  }
+
+  if (!$query instanceof \Drupal\views\Plugin\views\query\Sql) {
+    return;
+  }
+
+  $exposed = $view->getExposedInput();
+  $sort_by = $exposed['sort_by'] ?? 'id';
+  $sort_order = strtoupper($exposed['sort_order'] ?? 'ASC');
+  if (!in_array($sort_order, ['ASC', 'DESC'], TRUE)) {
+    $sort_order = 'ASC';
+  }
+
+  $sorts = [
+    'id' => [
+      ['field' => 'id', 'order' => $sort_order],
+    ],
+    'plan_title' => [
+      ['field' => 'plan_title_missing', 'order' => 'ASC'],
+      ['field' => 'plan_title', 'order' => $sort_order],
+    ],
+    'product_title' => [
+      ['field' => 'product_title_missing', 'order' => 'ASC'],
+      ['field' => 'product_title', 'order' => $sort_order],
+    ],
+  ];
+
+  if (!isset($sorts[$sort_by])) {
+    return;
+  }
+
+  $query->orderby = [];
+  foreach ($sorts[$sort_by] as $sort) {
+    $query->addOrderBy('apic_app_application_subs', $sort['field'], $sort['order']);
+  }
+
+  // Handle keyword search filter for product_title and plan_title
+  if (isset($exposed['keyword']) && !empty($exposed['keyword'])) {
+    $search_value = $exposed['keyword'];
+    
+    // Find and remove the default product_title condition added by Views for keyword filter
+    // Since keyword uses product_title as its field, Views will add a condition for it
+    if (isset($query->where)) {
+      foreach ($query->where as $group_id => &$group) {
+        if (isset($group['conditions'])) {
+          foreach ($group['conditions'] as $key => $condition) {
+            // Look for the product_title filter added by Views for our keyword filter
+            if (is_array($condition) &&
+                isset($condition['field']) &&
+                is_string($condition['field']) &&
+                strpos($condition['field'], 'product_title') !== FALSE) {
+              // Remove the single product_title condition
+              unset($group['conditions'][$key]);
+              
+              // Add OR condition for both product_title and plan_title
+              $or_condition = $query->getConnection()->condition('OR');
+              $or_condition->condition('apic_app_application_subs.product_title', '%' . $query->getConnection()->escapeLike($search_value) . '%', 'LIKE');
+              $or_condition->condition('apic_app_application_subs.plan_title', '%' . $query->getConnection()->escapeLike($search_value) . '%', 'LIKE');
+              // Use addWhere to properly add the condition to the query
+              $query->addWhere($group_id, $or_condition);
+              break 2; // Exit both loops once we've found and handled the condition
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+/**
+ * Implements hook_apic_app_migrate().
+ *
+ * Invalidates the subscription migration cache when a subscription is migrated.
+ * Uses org-specific cache tag invalidation to avoid clearing unrelated dev orgs.
+ */
+function apic_app_apic_app_migrate($node, $data, $appId, $planId, $subId) {
+  ibm_apim_entry_trace(__FUNCTION__, NULL);
+
+  // Get the consumer org URL from the application node
+  $consumerOrgUrl = NULL;
+  if ($node && $node->hasField('application_consumer_org_url')) {
+    $consumerOrgUrl = $node->get('application_consumer_org_url')->value;
+  }
+
+  // Invalidate org-specific migration cache using cache tags
+  // This only clears cache for the specific dev org, not all orgs
+  if ($consumerOrgUrl) {
+    $orgHash = md5($consumerOrgUrl);
+    \Drupal\Core\Cache\Cache::invalidateTags(['apic_app_migrations:' . $orgHash]);
+
+    \Drupal::logger('apic_app')->info('Subscription migration cache invalidated for org @org after migration of subscription @subId', [
+      '@org' => $orgHash,
+      '@subId' => $subId,
+    ]);
+  } else {
+    // Fallback: invalidate all if we can't determine the org
+    \Drupal\Core\Cache\Cache::invalidateTags(['apic_app_migrations']);
+
+    \Drupal::logger('apic_app')->warning('Could not determine consumer org for migration, cleared all migration caches for subscription @subId', [
+      '@subId' => $subId,
+    ]);
+  }
+
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
+
+/**
+ * Implements hook_user_login().
+ *
+ * Displays a notification message when user logs in if subscriptions can be migrated.
+ */
+function apic_app_user_login($account) {
+  ibm_apim_entry_trace(__FUNCTION__, $account->id());
+
+  // Don't show for admin user
+  if ((int) $account->id() === 1) {
+    ibm_apim_exit_trace(__FUNCTION__, 'admin user');
+    return;
+  }
+
+  try {
+    // Get migration service
+    $migrationService = \Drupal::service('apic_app.subscription_migration');
+    $migratableSubscriptions = $migrationService->getMigratableSubscriptions();
+
+    if (empty($migratableSubscriptions)) {
+      ibm_apim_exit_trace(__FUNCTION__, 'no migrations');
+      return;
+    }
+
+    // Group subscriptions by application
+    $appMigrations = [];
+    foreach ($migratableSubscriptions as $subscription) {
+      $appId = $subscription['app_id'] ?? NULL;
+      $appNid = $subscription['app_nid'] ?? NULL;
+      $appTitle = $subscription['app_title'] ?? 'Unknown Application';
+
+      if ($appId && $appNid) {
+        if (!isset($appMigrations[$appId])) {
+          $appMigrations[$appId] = [
+            'nid' => $appNid,
+            'title' => $appTitle,
+            'app_id' => $appId,
+            'count' => 0,
+          ];
+        }
+        $appMigrations[$appId]['count']++;
+      }
+    }
+
+    // Limit to 5 applications
+    $appMigrations = array_slice($appMigrations, 0, 5, TRUE);
+
+    if (empty($appMigrations)) {
+      ibm_apim_exit_trace(__FUNCTION__, 'no app migrations');
+      return;
+    }
+
+    // Build application links pointing to subscriptions page
+    $appLinks = [];
+    foreach ($appMigrations as $appData) {
+      try {
+
+        $url = Url::fromRoute('entity.node.canonical', ['node' => $appData['nid']])->toString();
+        $subscriptions_url = $url . '/subscriptions';
+
+        $link = '<a href="' . $subscriptions_url . '">' . htmlspecialchars($appData['title']) . '</a>';
+        
+        $appLinks[] = [
+          'link' => $link,
+          'count' => $appData['count'],
+        ];
+      } catch (\Exception $e) {
+        \Drupal::logger('apic_app')->warning('Failed to create URL for app @app: @message', [
+          '@app' => $appData['title'],
+          '@message' => $e->getMessage(),
+        ]);
+      }
+    }
+
+    if (empty($appLinks)) {
+      ibm_apim_exit_trace(__FUNCTION__, 'no valid links');
+      return;
+    }
+
+    $numAppsWithMigrations = count($appMigrations);
+
+    $message_lines = [];
+    $message_lines[] = \Drupal::translation()->formatPlural(
+      $numAppsWithMigrations,
+      'You are currently subscribed to a deprecated product, migrate to its replacement from the application subscriptions page:',
+      'You are currently subscribed to deprecated products, migrate to their replacements from the application subscriptions page:'
+    );
+    
+    foreach ($appLinks as $appLink) {
+      $message_lines[] = '• ' . $appLink['link'];
+    }
+
+    // Use Markup to preserve HTML links
+    $message = \Drupal\Core\Render\Markup::create(implode('<br>', $message_lines));
+
+    // Display the message as informational
+    \Drupal::messenger()->addStatus($message);
+
+  } catch (\Exception $e) {
+    \Drupal::logger('apic_app')->error('Failed to display migration notification on login: @message', [
+      '@message' => $e->getMessage(),
+    ]);
+  }
+
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
+}
+
+/**
+ * Implements hook_user_logout().
+ *
+ * Invalidates subscription migration cache on logout using cache tags.
+ */
+function apic_app_user_logout($account) {
+  ibm_apim_entry_trace(__FUNCTION__, $account->id());
+
+  try {
+    // Invalidate user-specific migration cache using cache tags
+    \Drupal\Core\Cache\Cache::invalidateTags(['user:' . $account->id()]);
+
+    \Drupal::logger('apic_app')->info('Subscription migration cache cleared on logout for user @uid', [
+      '@uid' => $account->id(),
+    ]);
+  } catch (\Exception $e) {
+    \Drupal::logger('apic_app')->error('Failed to clear migration cache on logout: @message', [
+      '@message' => $e->getMessage(),
+    ]);
+  }
+
+  ibm_apim_exit_trace(__FUNCTION__, NULL);
 }

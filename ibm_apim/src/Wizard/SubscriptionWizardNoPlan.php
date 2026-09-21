@@ -54,7 +54,7 @@ class SubscriptionWizardNoPlan extends FormWizardBase {
     $steps = [];
 
     $steps['chooseapp'] = [
-      'title' => t('Select Application'),
+      'title' => t('Select application'),
       'form' => ChooseApplicationStep::class,
     ];
 

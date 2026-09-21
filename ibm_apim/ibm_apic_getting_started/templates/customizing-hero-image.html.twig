@@ -1,0 +1,160 @@
+{# /********************************************************* {COPYRIGHT-TOP}
+*** * Licensed Materials - Property of IBM * 5725-L30, 5725-Z22 * * (C)
+Copyright IBM Corporation 2025 * * All Rights Reserved. * US Government Users
+Restricted Rights - Use, duplication or disclosure * restricted by GSA ADP
+Schedule Contract with IBM Corp.
+********************************************************** {COPYRIGHT-END} **/
+/** * @file * Customizing Hero Image tutorial template. * * Available
+variables: * - tutorial: The tutorial definition. * - images_path: Path to the
+tutorial images. */ #}
+{% set header_content %}
+<p>
+  The IBM API Connect Developer Portal enables you to personalize the hero image
+  on your site’s front page. By customizing this image, you can better reflect
+  your brand identity and create a more engaging experience for developers
+  browsing your APIs.
+</p>
+
+<p>
+  In this tutorial, we’ll guide you through the process of generating a custom
+  sub-theme, adding a new hero image, applying custom CSS, and uploading the
+  updated theme to your portal.
+</p>
+
+<p>This tutorial covers the following steps:</p>
+<ul>
+  <li>Generating a sub-theme</li>
+  <li>Adding a custom hero image</li>
+  <li>Styling the hero image in <code>override.css</code></li>
+  <li>Uploading and enabling the sub-theme</li>
+</ul>
+
+<img
+  src="{{ images_path }}/current-hero.png"
+  alt="Current Hero Image"
+  class="img-responsive"
+  loading="lazy"
+/>
+{% endset %}
+
+{% set steps_content %}
+<li class="gs-step" data-step="Generate Sub-theme">
+  <h3>Step 1: Generate a Sub-theme</h3>
+  <p>1. Navigate to:</p>
+  <div class="path-instruction">
+    <strong>Appearance → Generate sub-theme</strong>
+  </div>
+  <p>2. In the <strong>Generate</strong> tab:</p>
+  <ul class="instruction-list">
+    <li>
+      Enter a <strong>Subtheme name</strong> (e.g., <code>my_theme</code>)
+    </li>
+    <li>Select <strong>CSS</strong> as the Subtheme type</li>
+    <li>Select <strong>Default Connect Theme</strong> as the base template</li>
+  </ul>
+  <p>3. Click <strong>Generate</strong>, then download and extract the ZIP file</p>
+  <p>Once your sub-theme is set up, you’ll be able to apply custom styles directly to your portal.</p>
+</li>
+
+<li class="gs-step" data-step="Add Hero Image">
+  <h3>Step 2: Add Your Custom Hero Image</h3>
+  <p>1. Download an image to use as your hero banner. For example, you can use 
+    <a href="https://images.unsplash.com/photo-1562705121-e624542c7b9b?q=80&w=3270&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA==" target="_blank">
+      this sample image
+    </a> or choose one from your own collection.
+  </p>
+  <p>2. Save the image in your sub-theme’s <code>images</code> folder and name it 
+    <code>welcome-banner.png</code> for easy reference.
+  </p>
+</li>
+
+<li class="gs-step" data-step="Customize Hero Image with CSS">
+  <h3>Step 3: Customize the Appearance with CSS</h3>
+  <p>1. Open the <code>override.css</code> file in your sub-theme folder.</p>
+  <p>2. Add the following CSS to style the hero image:</p>
+
+  <div class="command-block">
+    <pre><code class="language-css">.welcomebanner {
+  background: url('../images/welcome-banner.png') no-repeat center center;
+  background-size: cover;
+  min-height: 400px;
+  display: flex;
+  color: #ffffff;
+  text-align: center;
+}</code></pre>
+  </div>
+</li>
+
+<li class="gs-step" data-step="Verify Theme Structure">
+  <h3>Step 4: Verify the Theme Structure</h3>
+  <p>After adding your CSS and hero image, your sub-theme folder should look like this:</p>
+
+  <div class="command-block">
+    <pre><code class="language-bash">your-theme/
+├── css/
+│   ├── mail.css
+│   ├── override.css
+├── images/
+│   ├── ibmcarbon/svg/ErrorPages
+│   ├── welcome-banner.png
+├── theme-settings.yml
+├── your-theme.libraries.yml
+├── your-theme.theme
+├── your-theme.info.yml
+├── composer.json
+├── favicon.ico
+├── logo.svg
+└── screenshot.png</code></pre>
+  </div>
+
+  <div class="success-message">
+    <p>Your sub-theme is now ready for upload.</p>
+  </div>
+</li>
+
+<li class="gs-step" data-step="Upload and Enable Theme">
+  <h3>Step 5: Upload and Enable the Theme</h3>
+  <p>1. Zip the contents of your sub-theme folder (including the 
+    <code>override.css</code> file and <code>welcome-banner.png</code>).
+  </p>
+  <div class="command-block">
+    <pre><code class="language-bash">zip -r mycustomtheme.zip mycustomtheme</code></pre>
+  </div> 
+  <p>2. Navigate to:</p>
+  <div class="path-instruction">
+    <strong>Appearance → Add new theme</strong>
+  </div>
+  <p>3. Upload your sub-theme zip file.</p>
+  <p>4. After installation, click <strong>Enable newly added themes</strong>.</p>
+  <p>5. Find your theme under <strong>Disabled themes</strong> and click<strong> Enable and set as default</strong>.</p>
+
+  <img
+    src="{{ images_path }}/enable-theme.png"
+    alt="Enable Uploaded Theme"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <div class="success-message">
+    <p>Your custom sub-theme has been uploaded and activated!</p>
+  </div>
+</li>
+
+<li class="gs-step" data-step="Check Result">
+  <h3>Step 6: Check the Result</h3>
+  <p>Refresh the front page of your portal. The new hero image should now appear as your welcome banner, giving your Developer Portal a branded, custom look.</p>
+
+  <img
+    src="{{ images_path }}/updated-hero.png"
+    alt="Updated Hero Image on Portal Front Page"
+    class="img-responsive"
+    loading="lazy"
+  />
+
+  <div class="success-message">
+    <p>Congratulations! You’ve successfully customized your portal’s hero image.</p>
+  </div>
+</li>
+{% endset %}
+
+{% include 'tutorial-base.html.twig' with { 'tutorial': tutorial, 'images_path': images_path, 'header_content': header_content, 'steps_content': steps_content } %}

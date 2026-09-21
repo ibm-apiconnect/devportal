@@ -3,7 +3,7 @@
  */
 .overflow-menu{
   .dropit-icon svg {
-    fill: $ui-05;
+    fill: var(--ui-05);
   }
 
   ul.dropit-submenu{
@@ -22,7 +22,7 @@
       z-index: -1;
       -webkit-transform: rotate(45deg);
       transform: rotate(45deg);
-      background-color: $default-bg-light;
+      background-color: var(--default-bg-light);
       border-top: unset;
       border-left: unset;
       top: -5px;
@@ -40,11 +40,11 @@
     font-size: 0.875rem;
     line-height: 2.5rem;
     padding: 0 1rem;
-    background-color: $default-bg-light;
-    color: $text-color;
+    background-color: var(--default-bg-light);
+    color: var(--text-color);
     &:hover {
-      background-color: $hover-ui;
-      color: $text-color;
+      background-color: var(--hover-ui);
+      color: var(--text-color);
     }
   }
 }

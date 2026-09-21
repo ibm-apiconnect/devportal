@@ -84,6 +84,7 @@ interface ManagementServerInterface {
    */
   public function postUsersRegister(ApicUser $user);
 
+
   /**
    * Invited user register.
    *
@@ -185,7 +186,7 @@ interface ManagementServerInterface {
    *
    * @return \Drupal\ibm_apim\Rest\Interfaces\RestResponseInterface|\Drupal\ibm_apim\Rest\RestResponse|null
    */
-  public function postMemberInvitation(ConsumerOrg $org, string $email_address, string $role = NULL);
+  public function postMemberInvitation(ConsumerOrg $org, string $email_address, ?string $role = NULL);
 
   /**
    * Delete a member invitation.

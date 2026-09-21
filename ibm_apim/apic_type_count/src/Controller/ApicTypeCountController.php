@@ -1,5 +1,16 @@
 <?php
 
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 /**
  * @file
  * Contains \Drupal\apic_type_count\Controller\ApicTypeCountController.
@@ -10,6 +21,8 @@ namespace Drupal\apic_type_count\Controller;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\node\NodeInterface;
+use Drupal\user\RoleInterface;
+use Drupal\user\Entity\Role;
 
 /**
  * Controller routines for page example routes.
@@ -76,9 +89,9 @@ class ApicTypeCountController extends ControllerBase {
   public function userRoleCount(): array {
     // We are going to output the results in a table with a nice header.
     $header = [
-      t('Role Name'),
-      t('Role Machine Name'),
-      t('Number of Users'),
+      t('Role name'),
+      t('Role machine name'),
+      t('Number of users'),
     ];
     $result_final = [];
     $roles = Role::loadMultiple();
@@ -219,7 +232,7 @@ class ApicTypeCountController extends ControllerBase {
    * @return array
    */
   public static function getEntityTypes(): array {
-    return ['apic_app_application_subs' => 'Subscriptions', 'apic_app_application_creds' => 'Credentials', 'consumerorg_payment_method' => 'Payment Methods', 'event_log' => 'Event Logs'];
+    return ['apic_app_application_subs' => 'Subscriptions', 'apic_app_application_creds' => 'Credentials', 'consumerorg_payment_method' => 'Payment Methods', 'event_log' => 'Event logs'];
   }
 
 }

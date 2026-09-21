@@ -27,7 +27,7 @@ class AllSubscribersWizard extends FormWizardBase {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string
    */
   public function getWizardLabel() {
-    return t('Mail All Users Wizard');
+    return t('Mail all users wizard');
   }
 
   /**
@@ -51,7 +51,7 @@ class AllSubscribersWizard extends FormWizardBase {
     $steps = [];
 
     $steps['choosesubs'] = [
-      'title' => t('Select Users'),
+      'title' => t('Select users'),
       'form' => ChooseRoleStep::class,
     ];
 

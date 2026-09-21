@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2024
+ * (C) Copyright IBM Corporation 2018, 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -65,11 +65,14 @@ class UploadImageForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    if ($appId !== NULL) {
-      $this->node = $appId;
+    $route_match = \Drupal::routeMatch();
+    if ($route_match->getParameter('appId') !== NULL) {
+      // The AppIdParamConverter has already converted the appId to a node
+      $this->node = $route_match->getParameter('appId');
     }
+ 
     $form['intro'] = ['#markup' => '<p>' . t('Use this form to upload an image or icon for this application.') . '</p>'];
 
     $form['image'] = [
@@ -171,9 +174,9 @@ class UploadImageForm extends FormBase {
     $appImgDir = 'private://application';
     \Drupal::service('file_system')->prepareDirectory($appImgDir, FileSystemInterface::CREATE_DIRECTORY);
     $fileTemp = file_save_upload('image', [
-      'file_validate_is_image' => [], // Validates file is really an image.
-      'file_validate_size' => [2 * 1024 * 1024], // file size less than 2mb
-      'file_validate_extensions' => ['png gif jpg jpeg'],
+      'FileIsImage' => [],
+      'FileSizeLimit' => 2 * 1024 * 1024, // file size less than 2mb
+      'FileExtension' => ['png gif jpg jpeg'],
     ], $appImgDir, FileSystemInterface::EXISTS_RENAME); // Validate extensions.
 
     if (empty($fileTemp)) {

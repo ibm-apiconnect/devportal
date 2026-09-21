@@ -1,5 +1,5 @@
 name: 'IBM Event Log'
 type: module
 description: 'Notifications of events'
-package: 'IBM API Developer Portal'
+package: 'IBM CMS Portal'
 core_version_requirement: ^8 || ^9 || ^10 || ^11

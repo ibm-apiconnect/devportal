@@ -1,5 +1,15 @@
 <?php
 
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
 namespace Drupal\product\Plugin\views\filter;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -58,14 +68,17 @@ class SubscriptionStatusFilter extends InOperator implements ContainerFactoryPlu
     }
 
     $this->valueOptions = [
-      'Subscribed To',
-      'Not Subscribed To'
+      $this->t('Subscribed To'),
+      $this->t('Not Subscribed To')
     ];
+
+    return $this->valueOptions;
   }
 
 
   /**
-   * Only show the value form in the exposed form if authenticated and not admin user
+   * Only show the value form in the exposed form for authenticated users
+   *   Admins should be able to configure, but not use in the UI
    *
    * {@inheritdoc}
    * @param $form
@@ -76,10 +89,10 @@ class SubscriptionStatusFilter extends InOperator implements ContainerFactoryPlu
 
     if (\Drupal::currentUser()->isAnonymous() || (int) \Drupal::currentUser()->id() === 1) {
       $form_state->set('exposed', FALSE);
-      $this->options['exposed'] = FALSE;
     }
 
-    if ($form_state->get('exposed')) {
+    // Check if filter is configured as exposed and form state confirms it
+    if (($this->options['exposed'] ?? FALSE) && $form_state->get('exposed')) {
       parent::valueForm($form, $form_state);
     }
 
@@ -89,6 +102,11 @@ class SubscriptionStatusFilter extends InOperator implements ContainerFactoryPlu
    * {@inheritdoc}
    */
   public function query() {
+    // When not exposed, don't filter, show all products
+    if (!($this->options['exposed'] ?? FALSE)) {
+      return;
+    }
+
     $this->ensureMyTable();
 
     $value = isset($this->value) ? (bool) $this->value[0] : FALSE;
@@ -104,6 +122,27 @@ class SubscriptionStatusFilter extends InOperator implements ContainerFactoryPlu
       }
       $this->query->addWhere($this->options['group'], "$this->tableAlias.apic_url_value", $productUrls, $operator);
     }
+  }
+
+  /**
+   * Skip exposed input handling for anonymous/admin or when not truly exposed.
+   */
+  public function acceptExposedInput($input) {
+    if (\Drupal::currentUser()->isAnonymous() || (int) \Drupal::currentUser()->id() === 1) {
+      return TRUE;
+    }
+
+    if (!($this->options['exposed'] ?? FALSE)) {
+      return TRUE;
+    }
+
+    // Avoid notices when the identifier isn't in the input.
+    $identifier = $this->options['expose']['identifier'] ?? NULL;
+    if ($identifier && !isset($input[$identifier])) {
+      return TRUE;
+    }
+
+    return parent::acceptExposedInput($input);
   }
 
 }

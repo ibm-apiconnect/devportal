@@ -1,3 +1,14 @@
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 .page-node-type-application h1.page-header {
   display: none;
 }
@@ -42,7 +53,7 @@
   max-width: 500px;
 }
 .apicAppIcon {
-  margin-right: 0.75rem;
+  margin-inline-end: 0.75rem;
 }
 .apicAppIcon img {
   border: 0;
@@ -96,12 +107,12 @@
   display: inline-block;
 }
 .applicationWrapper header.titleSection {
-  background-color: #fff;
+  background-color: var(--page-header-bg);
 }
 
 .applicationWrapper header.titleSection .breadcrumb {
   margin-bottom: 0;
-  background-color: #fff;
+  background-color: var(--page-header-bg);
   padding: 8px 0;
 }
 .titleSection .applicationTitle .applicationLogo,
@@ -120,7 +131,7 @@
   align-items: center;
 }
 .applicationWrapper .rightTitle .applicationMenu {
-  margin-left: 16px;
+  margin-inline-start: 16px;
 }
 .applicationWrapper .applicationTitle {
   display: flex;
@@ -141,13 +152,13 @@
 
 /* tabs in application details view */
 .applicationWrapper .titleSection .applicationTabs {
-  background-color: #fff;
+  background-color: transparent;
   flex-basis: 100%;
 }
 .applicationWrapper .titleSection .applicationTabs ul,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs ul {
   flex-direction: row;
-  padding-left: 0;
+  padding-inline-start: 0;
   display: flex;
   max-width: 100%;
   max-height: none;
@@ -220,7 +231,7 @@
 }
 .applicationCredentials .credentialsTable .credentialsHeader,
 .applicationSubscriptions .subscriptionsTable .subscriptionsHeader {
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--ui-03);
   padding: 1rem;
   display: flex;
   justify-content: space-between;
@@ -238,7 +249,7 @@
   vertical-align: bottom;
 }
 .applicationCredentials .credentialsTable .credentialsHeader .credentialsActions .credentialsActionsAdd{
-  margin-right: 16px;
+  margin-inline-end: 16px;
 }
 .applicationCredentials .credentialsTable .credentialsHeader .credentialsActions .credentialsActionsAdd:hover{
   background-color: #e5e5e5;
@@ -265,7 +276,7 @@
   font-size: 0.75rem;
   font-weight: 400;
   margin-bottom: 0.625rem;
-  color: #152935;
+  color: var(--text-secondary);
   display: block;
   line-height: 16px;
   letter-spacing: 0.32px;
@@ -283,7 +294,7 @@
   padding: 10px 0;
 }
 .appSecret button.shwpd, appId button.shwpd, .clientIDContainer button.shwpd {
-  margin-left: 1rem;
+  margin-inline-start: 1rem;
 }
 .applicationSubscriptions {
   margin-top: 30px;
@@ -315,7 +326,7 @@
 .applicationSubscriptions .subscriptionsTable .subscriptionsContent th:first-child,
 .applicationSubscriptions .subscriptionsTable .subscriptionsContent tbody td:first-child {
   text-align:left;
-  padding-left: 1rem;
+  padding-inline-start: 1rem;
 }
 
 .applicationSubscriptions .subscriptionsTable .subscriptionsContent tbody td {
@@ -403,7 +414,7 @@
 }
 
 .field--name-application-redirect-endpoints .form-item .clearfix {
-  padding-right: 10px;
+  padding-inline-end: 10px;
 }
 
 /* application cards */
@@ -440,7 +451,7 @@
   font-size: 0.875rem;
   letter-spacing: 0.16px;
   line-height: 20px;
-  text-align: left;
+  text-align: start;
 }
 
 .apicAppStatus {
@@ -452,12 +463,16 @@
   height: 1rem;
   width: 1rem;
   border-radius: 100%;
-  margin-right: 0.25rem;
+  margin-inline-end: 0.25rem;
   background-color: #5aa700;
 }
 
 .apicAppStatus.disabled:before {
   background-color: #5a6872;
+}
+
+.apicAppStatus.pending:before {
+  background-color: #f1c21b;
 }
 
 .apicAppStatus .apicStatusText {
@@ -472,6 +487,7 @@
   font-size: 100%;
   font-family: inherit;
   vertical-align: baseline;
+  margin-inline-start: 1rem;
 }
 
 .bx--card-footer__app-status > *,
@@ -489,11 +505,7 @@
   padding-top: 1rem;
   padding-right: 1rem;
   display: flex;
-}
-
-.bx--card .apicAppCard{
   flex-direction: column;
-  height: 12rem;
   width: 20rem;
   max-width: 20rem;
 }
@@ -535,6 +547,24 @@ input.clipboardjs {
   width: 300px;
 }
 
+/* Reduce input width in modal dialogs to fit all elements in one line */
+.ui-dialog input.clipboardjs.password-field.passwordCreds {
+  width: 430px;
+}
+
+/* Style OK button in credentials modal */
+.ui-dialog .pwd-see + .form-group {
+  text-align: right;
+  margin: 0 -1rem -0.5rem 0;
+}
+
+.ui-dialog .pwd-see + .form-group a.button--primary {
+  display: inline-block;
+  margin: 0;
+  width: 50%;
+  color: var(--text-on-color);
+}
+
 button.clipboardjs-button {
   padding: 3px 7px;
   border: unset;
@@ -542,11 +572,12 @@ button.clipboardjs-button {
   border-radius: 0;
   width: 40px;
   height: 40px;
-  margin-left: 3px;
+  margin-inline-start: 3px;
+  color: var(--icon-primary);
 }
 
 button.clipboardjs-button:hover {
-  background-color: #e5e5e5;
+  background-color: var(--layer-hover-01);
 }
 
 span.clipboardjs-tooltip {
@@ -555,9 +586,8 @@ span.clipboardjs-tooltip {
 }
 
 button.clipboardjs-button:focus {
-  outline: 2px solid #0f62fe;
+  outline: 2px solid var(--interactive-focus);
   outline-offset: -2px;
-  outline-color: #0f62fe;
 }
 
 button .bx--snippet__icon,
@@ -582,4 +612,28 @@ consumeranalytics .App {
 
 .consumer_analytics_ui .contentInnerWrapper {
   padding-top: 1rem;
+}
+
+#application-verify-clientsecret-form input#edit-secret.form-text.required.form-control {
+  display: inline-block;
+}
+
+.my-svg {
+  enable-background: new 0 0 32 32; 
+}
+
+.st0 {
+  fill: none;
+}
+
+/* Product subscriptions - fix margin */
+.view-application-subscriptions {
+  margin-bottom: 2rem;
+}
+.view-application-subscriptions #apic-view-filter {
+  margin-bottom: -3rem;
+}
+.view-application-subscriptions .form-item,
+.view-application-subscriptions .view-filters.form-group .form-actions {
+  margin-bottom: 0;
 }

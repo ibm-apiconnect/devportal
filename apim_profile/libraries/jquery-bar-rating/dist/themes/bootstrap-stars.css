@@ -7,7 +7,7 @@
   text-rendering: auto;
   -webkit-font-smoothing: antialiased;
   text-decoration: none;
-  margin-right: 2px;
+  margin-inline-end: 2px;
 }
 .br-theme-bootstrap-stars .br-widget a:after {
   content: '\e006';

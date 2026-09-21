@@ -1,0 +1,11 @@
+--- modules/workbench/config/optional/views.view.workbench_current_user.yml
++++ modules/workbench/config/optional/views.view.workbench_current_user.yml
+@@ -405,7 +405,7 @@
+             default_group_multiple: {}
+             group_items: {}
+       header:
+-        area:
++        area_text_custom:
+           id: area_text_custom
+           table: views
+           field: area_text_custom

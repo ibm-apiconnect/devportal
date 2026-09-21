@@ -32,6 +32,10 @@ class ApplicationSubscriptionSchema extends SqlContentEntityStorageSchema {
       case 'consumerorg_url':
       case 'app_url':
       case 'product_url':
+      case 'plan_title':
+      case 'product_title':
+      case 'plan_title_missing':
+      case 'product_title_missing':
         $this->addSharedTableFieldIndex($storage_definition, $schema);
         break;
     }

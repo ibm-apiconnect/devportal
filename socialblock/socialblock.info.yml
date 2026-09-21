@@ -1,9 +1,9 @@
 name: Socialblock
 type: module
 description: Displays active forum topics and tweets
-package: IBM API Developer Portal
+package: IBM CMS Portal
 core_version_requirement: ^8 || ^9 || ^10 || ^11
-version: 6.2.3
+version: 8.x-99.0.0
 project: socialblock
 configure: socialblock.form
 dependencies:

@@ -1,0 +1,11 @@
+--- modules/masonry/src/Services/MasonryService.php	2026-01-26 15:37:38
++++ modules/masonry/src/Services/MasonryService_new.php	2026-01-26 15:38:20
+@@ -188,7 +188,7 @@
+             'animated' => (bool) $options['isLayoutAnimated'],
+             'animation_duration' => (int) $options['layoutAnimationDuration'],
+             'fit_width' => (bool) $options['isLayoutFitsWidth'],
+-            'rtl' => (bool) $options['isLayoutRtlMode'],
++            'rtl' => (bool) ($this->languageManager->getCurrentLanguage()->getDirection() == LanguageInterface::DIRECTION_RTL),
+             'images_first' => (bool) $options['isLayoutImagesLoadedFirst'],
+             'images_lazyload' => (bool) $options['isLayoutImagesLazyLoaded'],
+             'lazyload_selector' => $options['imageLazyloadSelector'],

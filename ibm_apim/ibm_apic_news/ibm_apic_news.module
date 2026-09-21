@@ -1,0 +1,65 @@
+<?php
+
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+ 
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_theme() to register node templates in the module.
+ */
+function ibm_apic_news_theme($existing, $type, $theme, $path) {
+  $module_path = \Drupal::service('extension.list.module')->getPath('ibm_apic_news');
+
+  return [
+    // Node template for card view mode.
+    'node__news__card' => [
+      'base hook' => 'node',
+      'template'  => 'node--news--card',
+      'path'      => $module_path . '/templates',
+    ],
+
+    // Block template (previously in NewsHooks.php)
+    'home_page_news_block' => [
+      'variables' => ['newsContainer' => NULL],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter() for node templates.
+ */
+function ibm_apic_news_theme_suggestions_node_alter(array &$suggestions, array $variables) {
+  if (isset($variables['elements']['#node']) && $variables['elements']['#node'] instanceof NodeInterface) {
+    $node = $variables['elements']['#node'];
+    $view_mode = $variables['elements']['#view_mode'];
+
+    // Force article nodes in card view mode to use module template.
+    if ($node->bundle() === 'article' && $view_mode === 'card') {
+      $suggestions[] = 'node__news__card';
+    }
+  }
+}
+
+/**
+ * Preprocess for node templates in ibm_apic_news module.
+ */
+function ibm_apic_news_preprocess_node(array &$variables) {
+  $node = $variables['node'] ?? NULL;
+
+  if ($node instanceof NodeInterface && $node->bundle() === 'article') {
+    // Set module path for images (used in node--news--card.html.twig).
+    $variables['images_path'] = base_path() . \Drupal::service('extension.list.module')->getPath('ibm_apic_news');
+
+    // Attach CSS/JS library.
+    $variables['#attached']['library'][] = 'ibm_apic_news/news_style';
+  }
+}

@@ -35,8 +35,10 @@ requirejs( [ 'require', 'jquery', '../../dist/masonry.pkgd' ],
       'jquery-bridget/jquery-bridget'
     ],
     function() {
+      var isRTL = document.documentElement.getAttribute('dir') === 'rtl';
       $.bridget( 'masonry', Masonry );
       $('#basic').masonry({
+        isOriginLeft: !isRTL,
         columnWidth: 60
       });
     }

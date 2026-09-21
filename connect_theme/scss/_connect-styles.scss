@@ -21,6 +21,7 @@
 @import "component/icon";
 @import "component/modal";
 @import "component/navbar";
+@import "component/language-switcher";
 @import "component/node";
 @import "component/overflow-menu";
 @import "component/panel";
@@ -34,13 +35,15 @@
 // jQuery UI style overrides.
 @import "jquery-ui/autocomplete";
 
+@import "css-custom-properties";
+
 svg {
   -webkit-transition: fill 250ms;
   transition: fill 250ms;
 }
 
 ol, ul {
-  padding-left: 1.5em;
+  padding-inline-start: 1.5em;
   .popover &:last-child {
     margin-bottom: 0;
   }
@@ -71,6 +74,10 @@ a:focus {
   color: #000;
   background-color: #fff;
 }
+
+.skip-link {
+  margin: 12px;
+}
 // do not display SVG titles by default but they need contrast ratios for accessibility
 svg title {
   position: absolute;
@@ -92,7 +99,7 @@ h1.productName,
 h1.applicationName,
 h1.apiName,
 h1.orgName {
-  color: $default-header;
+  color: var(--default-header);
   font-family: $font-family-base;
   font-size: 2rem;
   line-height: 40px;
@@ -101,8 +108,10 @@ h1.orgName {
 }
 
 h1.page-header {
-  border-bottom: $body-bg;
-  background: $ui-02;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  border-bottom: var(--body-bg);
+  background: var(--page-header-bg);
   margin: 0 -1.9rem;
   padding: 1rem 2rem;
 }
@@ -114,15 +123,19 @@ h1.page-header {
 }
 
 a {
-  color: $link-color;
+  color: var(--link-color);
 }
 
 .bx--secondary-text {
-  color: $secondary-text;
+  color: var(--secondary-text);
 }
 
 .bx--tertiary-text {
-  color: $tertiary-text;
+  color: var(--tertiary-text);
+}
+
+.display-none {
+  display: none !important;
 }
 
 // sticky header
@@ -131,7 +144,7 @@ a {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 40;
+  z-index: 500;
   width: 100%;
 }
 
@@ -157,6 +170,16 @@ a {
 //  min-height: calc(100vh - 148px);
   margin-top: 48px;
   min-height: calc(100vh - 136px);
+  
+  // When admin top-bar exists, add extra margin (48px nav + 64px top-bar = 112px)
+  html:has(aside.top-bar[data-drupal-admin-styles]) & {
+    margin-top: 112px !important;
+    min-height: calc(100vh - 200px);
+  }
+}
+
+.apicMainContent .col-sm-12 {
+  float: none !important;
 }
 
 .path-frontpage .apicMainContent,
@@ -164,6 +187,42 @@ a {
 .route-ibm-apimmyorg .apicMainContent{
   margin-top: 48px;
   min-height: calc(100vh - 136px);
+  
+  // When admin top-bar exists, add extra margin
+  html:has(aside.top-bar[data-drupal-admin-styles]) & {
+    margin-top: 112px !important;
+    min-height: calc(100vh - 200px);
+  }
+}
+
+
+
+// When admin top-bar is present, push content down
+// Use attribute selector to detect top-bar presence without relying on body classes
+// This targets any page where the top-bar exists
+.apicMainContent {
+  // Default margin
+  margin-top: 48px;
+  min-height: calc(100vh - 136px);
+  
+  // When top-bar exists (detected via CSS), add extra margin
+  // Using a high specificity selector that checks for top-bar in the document
+  html:has(aside.top-bar[data-drupal-admin-styles]) & {
+    margin-top: 112px !important;
+    min-height: calc(100vh - 200px);
+  }
+}
+
+.path-frontpage .apicMainContent,
+.page-node-type-application .apicMainContent,
+.route-ibm-apimmyorg .apicMainContent {
+  margin-top: 48px;
+  min-height: calc(100vh - 136px);
+  
+  html:has(aside.top-bar[data-drupal-admin-styles]) & {
+    margin-top: 112px !important;
+    min-height: calc(100vh - 200px);
+  }
 }
 // make front page full width
 // and app, myorg pages too
@@ -177,6 +236,12 @@ a {
   margin-left: 0;
   margin-right: 0;
   width: 100%;
+}
+
+// when the frontpage is product page, give it a 15px padding
+.path-frontpage.context--product .apicMainContent.container{
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 // title and content wrappers for applications need to honor the media page widths
@@ -208,6 +273,11 @@ a {
 .path-frontpage .apicMainContent.container div.region-content section.block-welcome-banner > div{
   padding-left: 0;
   padding-right: 0;
+}
+
+// Featured News block header link font size on homepage
+body.context--home .featuredNewsBlockHeader a {
+  font-size: 14px;
 }
 
 // need space for admin toolbar
@@ -259,6 +329,15 @@ body.route-productapi nav.tabs {
   padding: 0 15px;
 }
 
+.path-frontpage .apicMainContent.container .region.region-highlighted {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 0 15px;
+}
+
 // API view
 .page-node-type-api .col-sm-12,
 .page-node-type-eventstream .col-sm-12,
@@ -293,7 +372,7 @@ p:last-child,
 }
 
 .help-block, .control-group .help-inline {
-  color: lighten($text-color, 25%);
+  color: var(--text-secondary); // for a11y
   font-size: 12px;
   margin: 5px 0 10px;
   padding: 0;
@@ -314,20 +393,23 @@ p:last-child,
     li.removeOrganizationUser,
     li.unsubscribe {
       a:hover {
-        background-color: $brand-danger;
+        background-color: var(--brand-danger);
       }
     }
   }
   button.btn-danger {
-    background-color: $brand-danger;
-    border-color: $brand-danger;
+    background-color: var(--brand-danger);
+    border-color: var(--brand-danger);
     &:hover{
-      background-color: $hover-danger;
-      border-color: $hover-danger;
+      background-color: var(--hover-danger);
+      border-color: var(--hover-danger);
     }
     &:active {
-      background-color: $active-danger;
-      border-color: $active-danger;
+      background-color: var(--active-danger);
+      border-color: var(--active-danger);
+    }
+    &:disabled {
+      border-color: var(--btn-disabled-bg);
     }
   }
 }
@@ -350,10 +432,10 @@ apiconnect-explorer pre {
   line-height: normal;
 }
 
-apiconnect-explorer a,
-apiconnect-explorer .bx--link {
-  color: $brand-primary;
-}
+// apiconnect-explorer a,
+// apiconnect-explorer .bx--link {
+//   color: $brand-primary;
+// }
 
 apiconnect-explorer ul {
   padding: unset;
@@ -366,7 +448,7 @@ apiconnect-explorer ul {
 
 .featuredcontent h3,
 .goahead h3 {
-  color: $text-01;
+  color: var(--text-01);
 }
 
 /* rhs menu icons */
@@ -376,14 +458,14 @@ apiconnect-explorer ul {
   border-radius: 50%;
   display: inline-block;
   svg {
-    fill: $navbar-default-link-color;
+    fill: var(--navbar-default-link-color);
     background: transparent;
   }
 }
 
 .imageContainer:hover {
   svg {
-    fill: $navbar-default-link-hover-color;
+    fill: var(--navbar-default-link-hover-color);
   }
 }
 
@@ -391,6 +473,22 @@ apiconnect-explorer ul {
   width: 24px;
   height: 24px;
   border-radius: 50%;
+}
+
+.imageContainer .letter-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #b3e5fc;
+  color: #000000;
+  font-size: 20px;
+  font-weight: 300;
+  text-transform: uppercase;
+  line-height: 1;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .path-search .region-content nav.tabs {
@@ -487,18 +585,18 @@ th, td {
   letter-spacing: 0.16px;
   padding: 1rem 0 0;
   a {
-    color: $brand-primary;
+    color: var(--brand-primary-link-color);
     font-size: 0.875rem;
     vertical-align: middle;
     svg {
-      fill: $brand-primary;
+      fill: var(--brand-primary-link-color);
       vertical-align: middle;
     }
   }
 }
 
 .applicationWrapper a.addCredential svg{
-  fill: $default-header;
+  fill: var(--default-header);
   &:hover {
     fill: $brand-primary;
   }
@@ -511,46 +609,50 @@ th, td {
 
 .applicationCredentials .credentialsTable,
 .applicationSubscriptions .subscriptionsTable {
-  background-color: $table-row-bg-light;
-  border: 1px solid $table-row-border;
+  background-color: var(--table-row-bg-light);
+  border: 1px solid var(--table-row-border);
 }
 .apicMyOrg .apicMyOrgMembers tbody tr.member-odd,
 .applicationSubscriptions .subscriptionsTable .subscriptionsContent tbody tr.member-odd {
-  background-color: #f0f3f6;
+  background-color: var(--table-row-odd-bg);
 }
 .apicMyOrg .apicMyOrgMembers tbody tr.member-even,
 .applicationSubscriptions .subscriptionsTable .subscriptionsContent tbody tr.member-even {
-  background-color: $ui-background;
+  background-color: var(--table-row-even-bg);
 }
 .apicMyOrg .apicMyOrgMembers table thead,
 .applicationSubscriptions .subscriptionsTable .subscriptionsContent table thead {
-  background: $ui-03;
+  background: var(--ui-03);
 }
 
 .applicationCredentials .credentialsTable .credentialsHeader {
-  border-bottom: 1px solid $ui-03;
+  border-bottom: 1px solid var(--ui-03);
 }
 .applicationWrapper .titleSection .applicationTabs li.selected a,
+.applicationWrapper .titleSection .applicationTabs li.selected:hover a,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li.selected a,
+.applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li.selected:hover a,
 .nav.nav-tabs.filter-formats li.selected a,
-.apicMyOrg .titleSection .organizationTabs li.selected a {
-  color: $text-01;
-  border-bottom: 2px solid $interactive-04;
+.nav.nav-tabs.filter-formats li.selected:hover a,
+.apicMyOrg .titleSection .organizationTabs li.selected a,
+.apicMyOrg .titleSection .organizationTabs li.selected:hover a {
+  color: var(--text-01);
+  border-bottom: 2px solid var(--tab-border-color-active);
 }
 
 .applicationWrapper .titleSection .applicationTabs li:hover a,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:hover a,
 .nav.nav-tabs.filter-formats li:hover a,
 .apicMyOrg .titleSection .organizationTabs li:hover a {
-  color: $text-01;
-  border-bottom: 2px solid $ui-04;
+  color: var(--text-01);
+  border-bottom: 2px solid var(--tab-border-color-hover);
 }
 .applicationWrapper .titleSection .applicationTabs li:focus a,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li:focus a,
 .nav.nav-tabs.filter-formats li:focus a,
 .apicMyOrg .titleSection .organizationTabs li:focus a {
-  color: $text-01;
-  border-bottom: 2px solid $focus;
+  color: var(--text-01);
+  border-bottom: 2px solid var(--interactive-focus);
 }
 
 .applicationWrapper .titleSection .applicationTabs li.selected,
@@ -565,44 +667,53 @@ th, td {
 .apicMyOrg .titleSection .organizationTabs li.selected,
 .apicMyOrg .titleSection .organizationTabs li:hover,
 .apicMyOrg .titleSection .organizationTabs li:focus {
-  color: $text-01;
+  color: var(--text-01);
 }
 
 .applicationWrapper .titleSection .applicationTabs li,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li,
 .nav.nav-tabs.filter-formats li,
 .apicMyOrg .titleSection .organizationTabs li {
-  color: $text-02;
+  color: var(--text-02);
 }
 
 .applicationWrapper .titleSection .applicationTabs li a,
 .applicationCredentials .credentialsTable .credentialsContent .credentialsTabs li a,
 .nav.nav-tabs.filter-formats li a,
 .apicMyOrg .titleSection .organizationTabs li a {
-  color: $text-02;
-  border-bottom: 2px solid $ui-03;
+  color: var(--text-02);
+  border-bottom: 2px solid var(--tab-border-color);
 }
 
 .apicMyOrg .apicMyOrgMembers .apicMyOrgStatus {
-  color: $brand-success;
+  color: var(--brand-success);
   font-size: 0.875rem;
+}
+
+.button.apicNewUser.orgInvite,
+.button.apicNewUser.orgInvite span {
+  color: var(--text-on-color);
+}
+
+.button.apicNewUser.orgInvite:hover {
+  background-color: var(--btn-primary-hover-bg);
 }
 
 .apicMyOrg .memberSection,
 .apicMyOrgOwner {
-  background-color: $ui-02;
+  background-color: var(--ui-02);
 }
 
 .apicMyOrg .field.organizationMembers .memberHeader{
-  border-bottom: 1px solid $ui-03;
+  border-bottom: 1px solid var(--ui-03);
 }
 
 .apicMyOrg .apicMyOrgMembers table thead {
-  background: $ui-03;
+  background: var(--ui-03);
 }
 
 .apicMyOrg .apicMyOrgMembers .apicMyOrgNoMembers {
-  background: $table-row-bg-light;
+  background: var(--table-row-bg-light);
 }
 
 .apiWrapper header.titleSection {
@@ -610,11 +721,11 @@ th, td {
 }
 
 header h1 {
-  color: $black-01;
+  color: var(--black-01);
 }
 
 .apicMainContent .supportContentWrapper .views-element-container .view {
-  background: $default-bg-light;
+  background: var(--default-bg-light);
   border: unset;
 }
 
@@ -625,20 +736,20 @@ header h1 {
 .views-element-container .view.view-faqs .ui-state-default,
 .views-element-container .view.view-faqs .ui-widget-content .ui-state-default,
 .views-element-container .view.view-faqs .ui-widget-header .ui-state-default {
-  color: $text-color;
+  color: var(--text-color);
 }
 
 .views-element-container .view.view-faqs .ui-state-active,
 .views-element-container .view.view-faqs .ui-widget-content .ui-state-active,
 .views-element-container .view.view-faqs .ui-widget-header .ui-state-active {
-  color: $text-color;
+  color: var(--text-color);
 }
 
 /* socialblock */
 .socialblock.card {
   border: unset;
-  background-color: $default-bg-light;
-  color: $text-color;
+  background-color: var(--default-bg-light);
+  color: var(--text-color);
   max-width: 21rem;
   min-width: 21rem;
 }
@@ -648,11 +759,11 @@ header h1 {
 }
 
 .socialblock .op {
-  color: $alert-info-text;
+  color: var(--alert-info-text);
 }
 
 .socialblock .timestamp {
-  color: $alert-info-text;
+  color: var(--alert-info-text);
 }
 
 .socialblock .profile_name.name {
@@ -660,11 +771,11 @@ header h1 {
 }
 
 .socialblock .twitter_handle {
-  color: $alert-info-text;
+  color: var(--alert-info-text);
 }
 
 .socialblock .tweet_timestamp {
-  color: $alert-info-text;
+  color: var(--alert-info-text);
 }
 
 .socialblock .hashtag,
@@ -693,7 +804,7 @@ header h1 {
 /* Explorer styling overrides */
 
 .apiconnect-explorer-menu .explorer-toc a {
-  color: $text-color;
+  color: var(--text-color);
 }
 
 .apiconnect-explorer-menu .explorer-toc ul .tocItem a span{
@@ -737,30 +848,25 @@ header h1 {
 //** Home page colour settings
 section.block-getting-started,
 section.block-go-ahead {
-  background: $default-bg-light;
-}
-
-.gsstep h3,
-.gsstep a {
-  color: $brand-primary;
+  background: var(--default-bg-light);
 }
 
 
 .block-get-help {
-  color: $default-inverse;
-  background-color: $navbar-default-bg;
+  color: var(--inverse-text-on-color);
+  background-color: var(--footer-default-bg);
 }
 
 .get_help h4,
 .get_help a,
 .get_help a:hover {
-  color: $brand-primary-light;
-  fill: $brand-primary-light;
+  color: var(--brand-text-on-color);
+  fill: var(--brand-text-on-color);
 }
 
 
 .ibmapimGetStarted header h2 {
-  color: $default-header;
+  color: var(--default-header);
 }
 
 @media (max-width:$screen-sm-min) {
@@ -776,13 +882,13 @@ section.block-go-ahead {
 .gsstep h3,
 .gsstep a,
 .ibmapimNoPermissions .contactLink a {
-  color: $brand-primary;
+  color: var(--brand-primary-link-color);
 }
 
 // loading
 
 .page-load-progress-lock-screen .bx--loading__stroke {
-  stroke: $brand-primary;
+  stroke: var(--brand-primary-icon-interactive);
 };
 // maintenance page
 .maintenance-page {
@@ -854,9 +960,9 @@ section.block-go-ahead {
 
 .node--view-mode-teaser,
 article.search-result {
-  background-color: white;
+  background-color: var(--layer-02);
   padding: 20px;
-  border: 1px solid #e7eaed;
+  border: 1px solid var(--border-subtle-00);
   margin-bottom: 10px;
 }
 
@@ -882,7 +988,8 @@ article.search-result {
 footer.footer.container {
   padding-left: 32px;
   justify-content: normal;
-  height: 64px;
+  height: auto;
+  min-height: 64px;
 }
 @media (max-width: 380px) {
   footer.footer.container {
@@ -894,7 +1001,7 @@ footer.footer.container {
 .apic-login-wrapper:after,
 .apic-register-wrapper:after,
 .apic-reset-wrapper:after {
-  background-color: $ui-01;
+  background-color: var(--ui-01);
 }
 
 body.bx--global-light-ui.context--user-login,
@@ -902,22 +1009,22 @@ body.bx--global-light-ui.context--user-register,
 body.bx--global-light-ui.route-change-pwd-pagereset,
 body.bx--global-light-ui.route-apicresetpw,
 body.bx--global-light-ui.context--user-password {
-  background-color: $ui-02;
+  background-color: var(--ui-02);
 }
 
 .apicMyOrg .apicMyOrgMembers .apicMyOrgNoMembers .noMembersTextContainer .firstLine,
 .noPaymentMethods .noPaymentMethodsText.firstLine,
 .block .apicNoContent .noContentTextContainer .firstLine {
-  color: $text-01;
+  color: var(--text-01);
 }
 
 .apicMyOrg .apicMyOrgMembers .apicMyOrgNoMembers .noMembersTextContainer .secondLine,
 .noPaymentMethods .noPaymentMethodsText.secondLine,
 .block .apicNoContent .noContentTextContainer .secondLine {
-  color: $text-02;
+  color: var(--text-02);
 }
 .bx--data-table thead {
-  background: $table-header-bg;
+  background: var(--table-header-bg);
 }
 
 .bx--data-table th {
@@ -927,7 +1034,7 @@ body.bx--global-light-ui.context--user-password {
 
 .bx--data-table td {
     @include type-style('body-short-01');
-    color: $secondary-text;
+    color: var(--secondary-text);
     padding: $spacing-05;
 }
 
@@ -936,10 +1043,10 @@ body.bx--global-light-ui.context--user-password {
 }
 
 .applicationCredentials .credentialsTable .credentialsHeader .credentialsActions .credentialsActionsAdd:hover{
-  background-color: $hover-ui;
+  background-color: var(--hover-ui);
 }
 .dropit-icon:hover  {
-  background-color: $hover-ui;
+  background-color: var(--hover-ui);
 }
 .consumerorgSelectBlock .dropit-icon:hover  {
   background-color: transparent;
@@ -947,6 +1054,7 @@ body.bx--global-light-ui.context--user-password {
 /* password view toggles */
 .bx--global-light-ui .eye-close {
   background-image: url(../images/ibmcarbon/svg/view.svg);
+  margin-inline-start: -2em;
 }
 .bx--global-light-ui .eye-open {
   background-image: url(../images/ibmcarbon/svg/view--off.svg);
@@ -980,12 +1088,28 @@ body.bx--global-light-ui.context--user-password {
 .route-system403,
 .route-system401 {
   .main-container.container {
-    background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_OTHER.svg);
+    position: relative;
     min-height: 600px;
-    background-size: 50%;
-    background-repeat: no-repeat;
-    background-position: 95% bottom;
+    
+    // Use ::before for background image so it can be flipped in RTL
+    &::before {
+      content: '';
+      position: absolute;
+      right: 2.5%;
+      bottom: 0;
+      width: 50%;
+      height: 100%;
+      background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_OTHER.svg);
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: right bottom;
+      pointer-events: none;
+      z-index: 0;
+    }
+    
     .row {
+      position: relative;
+      z-index: 1;
       margin: 24px;
       width: calc(100% - 80px);
 
@@ -1009,17 +1133,17 @@ body.bx--global-light-ui.context--user-password {
           padding: 1rem 2rem;
           font-size: 3.75em;
           font-weight: 300;
-          color: #DA1E28;
+          color: var(--text-error);
         }
       }
     }
   }
 }
 
-.route-system403 .main-container.container {
+.route-system403 .main-container.container::before {
   background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_403.svg);
 }
-.route-system404 .main-container.container {
+.route-system404 .main-container.container::before {
   background-image: url(../images/ibmcarbon/svg/ErrorPages/Error_Page_Illustrations_404.svg);
 }
 /* comments filter format page */
@@ -1048,30 +1172,30 @@ body.bx--global-light-ui.context--user-password {
 }
 
 .planDetail--header {
-  background-color: $ui-background;
+  background-color: var(--modal-content-bg);
 }
 
 .planDetail--content {
-  background-color: $ui-background;
+  background-color: var(--modal-content-bg);
 }
 
 .plansTable thead {
-  background-color: $table-header-bg;
+  background-color: var(--table-header-bg);
 }
 
 .planCard {
-  background-color: $card-bg;
+  background-color: var(--card-bg);
 }
 
 .plansTable .tableRow {
-  border-bottom: 1px solid $table-row-border;
+  border-bottom: 1px solid var(--table-row-border);
 }
 
 .apicConcepts {
   background-color: $ui-background;
 }
 .apicConcepts table tr {
-  border-bottom: 1px solid $ui-03;
+  border-bottom: 1px solid var(--ui-03);
 }
 
 .bx--global-light-ui  consumeranalytics {
@@ -1098,5 +1222,114 @@ body.bx--global-light-ui.context--user-password {
 }
 
 .contentInnerWrapper .productrecommendations {
-  background-color: $highlight
+  background-color: var(--highlight)
+}
+
+
+// Position admin top-bar below navigation bar on larger screens
+@media (min-width: 64rem) {
+  [data-drupal-admin-styles].top-bar {
+    top: 48px !important;
+    inset-block-start: 48px !important;
+  }
+}
+
+.ajax-progress__throbber {
+  box-sizing: border-box;
+  width: 1.125rem;
+  height: 1.125rem;
+  animation: claro-throbber 0.75s linear infinite;
+  border: 2px solid var(--brand-primary-icon-interactive);
+  border-right: 2px dotted transparent;
+  border-radius: 50%;
+}
+
+@keyframes claro-throbber {
+  0% {
+    transform: rotateZ(0);
+  }
+  100% {
+    transform: rotateZ(360deg);
+  }
+}
+
+@media (min-width: 64rem) {
+  
+  [data-drupal-admin-styles].top-bar {
+    top: 48px !important;
+    inset-block-start: 48px !important;
+  }
+}
+
+ #edit-captcha-image-wrapper img {
+  mix-blend-mode: multiply;
+}
+
+
+// ============================================================================
+// 3RD PARTY COMPONENT OVERRIDE: Explorer
+// - Scope: API details page
+// - Override: carbon
+// ============================================================================
+.explorerWrapper {
+  .cds--g100,
+  .cds--white {
+    --cds-link-primary: var(--link-color);
+    --cds-link-primary-hover: var(--link-hover-color);
+    --cds-border-interactive: var(--tab-border-color-active);
+    --cds-button-primary: var(--btn-primary-bg);
+    --cds-button-primary-hover: var(--btn-primary-hover-bg);
+    --cds-button-primary-active: var(--btn-primary-active-bg);
+    --cds-focus: var(--interactive-focus);
+    --cds-interactive: var(--brand-primary-icon-interactive);
+    .apiconnect-explorer {
+      .apiconnect-explorer-menu .operation-method-post,
+      .labelText.method.post {
+        color: var(--http-post);
+      }
+      .apiconnect-explorer-menu .operation-method-put,
+      .labelText.method.put {
+        color: var(--http-put);
+      }
+      .apiconnect-explorer-menu .operation-method-delete,
+      .labelText.method.delete {
+        color: var(--http-delete);
+      }
+      .apiconnect-explorer-menu .operation-method-options,
+      .labelText.method.options {
+        color: var(--http-options);
+      }
+      .apiconnect-explorer-menu .operation-method-patch,
+      .labelText.method.patch {
+        color: var(--http-patch);
+      }
+      .apiconnect-explorer-menu .operation-method-head,
+      .labelText.method.head {
+        color: var(--http-head);
+      }
+      .apiconnect-explorer-menu .operation-method-trace,
+      .labelText.method.trace {
+        color: var(--http-trace);
+      }
+    }
+  }
+}
+
+.ajax-progress__throbber {
+  box-sizing: border-box;
+  width: 1.125rem;
+  height: 1.125rem;
+  animation: claro-throbber 0.75s linear infinite;
+  border: 2px solid #003ecc;
+  border-right: 2px dotted transparent;
+  border-radius: 50%;
+}
+
+@keyframes claro-throbber {
+  0% {
+    transform: rotateZ(0);
+  }
+  100% {
+    transform: rotateZ(360deg);
+  }
 }

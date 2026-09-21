@@ -12,7 +12,25 @@
 
 namespace Drupal\Tests\ibm_apim\Unit\mocks;
 
+use Drupal\ibm_apim\External\SerializationUtility;
+
 class MockApiNodeBuilder extends AbstractMockNodeBuilder {
+
+  public function __construct($phpUnitScope) {
+    $createMocks = function() {
+      $nodeMock = $this->getMockBuilder('\Drupal\node\Entity\Node')
+        ->disableOriginalConstructor()
+        ->getMock();
+      $fieldBuilderMock = $this->getMockBuilder('\Drupal\Core\Field\FieldItemList')
+        ->disableOriginalConstructor();
+      return [$nodeMock, $fieldBuilderMock];
+    };
+
+    $boundCallback = $createMocks->bindTo($phpUnitScope, $phpUnitScope);
+    list($nodeMock, $fieldBuilderMock) = $boundCallback();
+
+    parent::__construct($phpUnitScope, $nodeMock, $fieldBuilderMock);
+  }
 
   public function setDocument($apiDocument) {
     $apiName = $apiDocument['info']['title'];
@@ -26,7 +44,7 @@ class MockApiNodeBuilder extends AbstractMockNodeBuilder {
       'apic_url' => 'mock url',
       'api_id' => $apiDocument['info']['x-ibm-name'],
       'apic_version' => '1.0.0',
-      'api_swagger' => serialize($apiDocument),
+      'api_swagger' => SerializationUtility::encodeData($apiDocument),
       'api_protocol' => $protocol
     );
 

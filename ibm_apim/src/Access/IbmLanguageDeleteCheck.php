@@ -26,7 +26,7 @@ class IbmLanguageDeleteCheck implements AccessInterface {
    *
    * @return \Drupal\Core\Access\AccessResult
    */
-  public function access(RouteMatch $routeMatch = NULL): AccessResult {
+  public function access(?RouteMatch $routeMatch = NULL): AccessResult {
     $allowed = TRUE;
 
     $protected_languages = ['en', 'de', 'fr', 'it', 'zh-hant', 'zh-hans', 'ja', 'pt-br', 'es', 'ko', 'nl', 'tr', 'pl', 'cs', 'ru'];

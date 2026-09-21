@@ -34,13 +34,13 @@ We call a macro which calls itself to render the full tree.
     <ul class="account-menu dropitmenu">
       <li title="{{ user.account.name }}"><a href="#" class="trigger">
           <div class="imageContainer">
-            {% if user_picture is defined %}
-              <img src="{{ user_picture }}" alt="{{ user.account.name }}" title="{{ user.account.name }}"/>
-            {% else %}
-              <span title="{{ user.account.name }}">
-                  {% include active_theme_path() ~ '/images/ibmcarbon/svg/user.svg' %}
-              </span>
-            {% endif %}
+            {% if user_picture is defined and user_picture != '' %}
+            <img src="{{ user_picture }}" alt="{{ user.account.name }}" title="{{ user.account.name }}" />
+          {% else %}
+            <span class="letter-avatar" title="{{ user.account.name }}">
+              {{ user.account.name|first|upper }}
+            </span>
+          {% endif %}
           </div>
           <ul class="dropitmenu-submenu">
             {% for item in items %}

@@ -329,6 +329,9 @@ class ApplicationRestService implements ApplicationRestInterface {
         $data['metadata'] = $customFieldValues;
       }
 
+      // Calling all modules implementing 'hook_apic_app_pre_create':
+      \Drupal::moduleHandler()->invokeAll('apic_app_pre_create', ['app' => $data]);
+
       $result = $this->postApplication($url, json_encode($data, JSON_THROW_ON_ERROR));
 
       if ($result !== NULL && $result->code >= 200 && $result->code < 300) {
@@ -390,6 +393,14 @@ class ApplicationRestService implements ApplicationRestInterface {
         'product_url' => $fullProductUrl,
         'plan' => $planName,
       ];
+
+      // Calling all modules implementing 'hook_apic_app_pre_subscribe':
+      \Drupal::moduleHandler()->invokeAll('apic_app_pre_subscribe', [
+        'data' => $data,
+        'appId' => $appUrl,
+        'product_url' => $productUrl,
+        'plan' => $planName,
+      ]);
 
       $result = $this->postSubscription($url, json_encode($data, JSON_THROW_ON_ERROR));
 
@@ -464,7 +475,7 @@ class ApplicationRestService implements ApplicationRestInterface {
     $consumerOrg = $org['url'];
 
     if (!isset($consumerOrg)) {
-      \Drupal::messenger()->addError('Consumer organization not set.');
+      \Drupal::messenger()->addError(t('Consumer organization not set.'));
       return NULL;
     }
 

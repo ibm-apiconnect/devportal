@@ -61,3 +61,58 @@ drupal.message:
   version: VERSION
   js:
     js/message.js: {}
+
+fix-tabledrag:
+  version: 1.x
+  js:
+    js/fix-tabledrag.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+
+
+# CSS for no forum topic
+no_forum_topic_styles:
+  css:
+    theme:
+      css/components/no-forum-topics.css: { }
+
+# Dark mode handler
+dark_mode_handler:
+  version: 1.x
+  js:
+    js/dark-mode-handler.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+# Search clear button
+search_clear:
+  version: 1.x
+  css:
+    theme:
+      css/components/search-clear.css: { }
+  js:
+    js/search-clear.js: {}
+  dependencies:
+    - core/drupal
+
+# Remove dir attribute from article elements
+remove_article_dir:
+  version: 1.x
+  js:
+    js/remove-article-dir.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+# Language switcher select dropdown
+language_switcher:
+  version: 1.x
+  js:
+    js/language-switcher.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/jquery.once

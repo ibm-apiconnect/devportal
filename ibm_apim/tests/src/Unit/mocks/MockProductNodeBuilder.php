@@ -12,19 +12,37 @@
 
 namespace Drupal\Tests\ibm_apim\Unit\mocks;
 
+use Drupal\ibm_apim\External\SerializationUtility;
+
 class MockProductNodeBuilder extends AbstractMockNodeBuilder {
   private ?array $product_apis = NULL;
   private ?array $product_plans = NULL;
   private ?string $apic_url = NULL;
   private ?string $product_data = NULL;
 
+  public function __construct($phpUnitScope) {
+    $createMocks = function() {
+      $nodeMock = $this->getMockBuilder('\Drupal\node\Entity\Node')
+        ->disableOriginalConstructor()
+        ->getMock();
+      $fieldBuilderMock = $this->getMockBuilder('\Drupal\Core\Field\FieldItemList')
+        ->disableOriginalConstructor();
+      return [$nodeMock, $fieldBuilderMock];
+    };
+
+    $boundCallback = $createMocks->bindTo($phpUnitScope, $phpUnitScope);
+    list($nodeMock, $fieldBuilderMock) = $boundCallback();
+
+    parent::__construct($phpUnitScope, $nodeMock, $fieldBuilderMock);
+  }
+
   public function setApis($apis) {
-    $this->product_apis = array_map('serialize', $apis);
+    $this->product_apis = array_map([SerializationUtility::class, 'encodeData'], $apis);
     return $this;
   }
 
   public function setPlans($plans) {
-    $this->product_plans = array_map('serialize', $plans);
+    $this->product_plans = array_map([SerializationUtility::class, 'encodeData'], $plans);
     return $this;
   }
 
@@ -51,3 +69,4 @@ class MockProductNodeBuilder extends AbstractMockNodeBuilder {
     return $this->node;
   }
 }
+

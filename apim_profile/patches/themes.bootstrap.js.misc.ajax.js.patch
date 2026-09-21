@@ -1,0 +1,12 @@
+--- themes/bootstrap/js/misc/ajax.js	2025-12-06 00:22:51.618918156 +0000
++++ themes/bootstrap/js/misc/ajax.js	2025-12-06 00:19:10.255919000 +0000
+@@ -93,7 +93,8 @@
+ 
+     // Otherwise, add a glyphicon throbber after the element.
+     if (!this.progress.element) {
+-      this.progress.element = $(Drupal.theme('ajaxThrobber'));
++      //this.progress.element = $(Drupal.theme('ajaxThrobber'));
++      this.progress.element = $('<div class="ajax-progress__throbber"></div>')
+     }
+     if (this.progress.message) {
+       this.progress.element.after('<div class="message">' + this.progress.message + '</div>');

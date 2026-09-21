@@ -29,7 +29,7 @@ class ApplicationAccessCheck implements AccessInterface {
    *
    * @return \Drupal\Core\Access\AccessResult|\Drupal\Core\Access\AccessResultAllowed|\Drupal\Core\Access\AccessResultNeutral
    */
-  public function access(NodeInterface $application = NULL) {
+  public function access(?NodeInterface $application = NULL) {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $allowed = FALSE;
     $current_user = \Drupal::currentUser();
@@ -47,6 +47,7 @@ class ApplicationAccessCheck implements AccessInterface {
 
       $user = User::load($current_user->id());
 
+      // Allow all members to view applications and notifications
       if ($user !== NULL && $org->isMember($user->get('apic_url')->value)) {
         $allowed = TRUE;
       }

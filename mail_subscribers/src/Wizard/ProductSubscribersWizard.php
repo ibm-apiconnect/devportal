@@ -28,7 +28,7 @@ class ProductSubscribersWizard extends FormWizardBase {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string
    */
   public function getWizardLabel() {
-    return t('Mail Product Subscribers Wizard');
+    return t('Mail product subscribers wizard');
   }
 
   /**
@@ -58,7 +58,7 @@ class ProductSubscribersWizard extends FormWizardBase {
     ];
 
     $steps['choosesubs'] = [
-      'title' => t('Select Subscribers'),
+      'title' => t('Select subscribers'),
       'form' => ChooseRoleStep::class,
     ];
 

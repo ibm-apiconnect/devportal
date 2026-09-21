@@ -13,6 +13,16 @@
 use Drupal\node\NodeInterface;
 
 /**
+ * Triggered before a consumer org is created
+ *
+ * @param array $data
+ *   The array of data to be sent to API Manager
+ */
+function hook_consumerorg_pre_create($data) {
+
+}
+
+/**
  * Triggered when a consumer org is created
  *
  * @param NodeInterface $node
@@ -21,6 +31,18 @@ use Drupal\node\NodeInterface;
  *   The array of data returned by API Manager
  */
 function hook_consumerorg_create(NodeInterface $node, $data) {
+
+}
+
+/**
+ * Triggered before a consumer org is updated
+ *
+ * @param NodeInterface $node
+ *   The Drupal node representing this consumer org
+ * @param array $data
+ *   The array of data to be sent to API Manager
+ */
+function hook_consumerorg_pre_update(NodeInterface $node, $data) {
 
 }
 

@@ -142,7 +142,7 @@ class EventLog extends ContentEntityBase implements EventLogInterface {
     // Standard field, used as unique if primary index.
     $fields['id'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('ID'))
-      ->setDescription(t('The ID of the Event Log entity'))
+      ->setDescription(t('The ID of the event log entity'))
       ->setSetting('unsigned', TRUE)
       ->setReadOnly(TRUE);
 
@@ -162,7 +162,7 @@ class EventLog extends ContentEntityBase implements EventLogInterface {
       ]);
 
     $fields['artifact_type'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Artifact Type'))
+      ->setLabel(t('Artifact type'))
       ->setDescription(t('The type of artifact for this event'))
       ->setReadOnly(TRUE);
 

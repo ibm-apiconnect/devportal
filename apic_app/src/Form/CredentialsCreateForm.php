@@ -4,7 +4,7 @@
  * Licensed Materials - Property of IBM
  * 5725-L30, 5725-Z22
  *
- * (C) Copyright IBM Corporation 2018, 2024
+ * (C) Copyright IBM Corporation 2018, 2025
  *
  * All Rights Reserved.
  * US Government Users Restricted Rights - Use, duplication or disclosure
@@ -26,6 +26,8 @@ use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\TempStore\PrivateTempStore;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
 
 /**
  * Form to create new application credentials.
@@ -102,10 +104,12 @@ class CredentialsCreateForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $appId = NULL): array {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
-    if ($appId !== NULL) {
-      $this->node = $appId;
+    $route_match = \Drupal::routeMatch();
+    if ($route_match->getParameter('appId') !== NULL) {
+      // The AppIdParamConverter has already converted the appId to a node
+      $this->node = $route_match->getParameter('appId');
     }
     $moduleHandler = \Drupal::service('module_handler');
 
@@ -166,12 +170,28 @@ class CredentialsCreateForm extends FormBase {
     $appUrl = $this->node->apic_url->value;
 
     $title = $form_state->getValue('title');
+    if (isset($title)) {
+      $title = Html::escape(trim($title));
+    }
+
     $summary = $form_state->getValue('summary');
+    if (isset($summary)) {
+      $summary = Xss::filter(trim($summary));
+    }
 
     $url = $appUrl . '/credentials';
     $data = ['title' => $title, 'summary' => $summary];
+    
+    // Calling all modules implementing 'hook_apic_app_creds_pre_create':
+    $moduleHandler = \Drupal::moduleHandler();
+    $moduleHandler->invokeAll('apic_app_creds_pre_create', [
+      'node' => $this->node,
+      'data' => $result->data,
+    ]);
+
     $result = $this->restService->postCredentials($url, json_encode($data, JSON_THROW_ON_ERROR));
     if (isset($result) && $result->code >= 200 && $result->code < 300) {
+
       $currentUser = \Drupal::currentUser();
       \Drupal::logger('apic_app')->notice('New credentials created for application @appName by @username', [
         '@appName' => $this->node->getTitle(),
@@ -240,7 +260,6 @@ class CredentialsCreateForm extends FormBase {
       $eventLogService->createIfNotExist($eventEntity);
 
       // Calling all modules implementing 'hook_apic_app_creds_create':
-      $moduleHandler = \Drupal::moduleHandler();
       $moduleHandler->invokeAll('apic_app_creds_create', [
         'node' => $this->node,
         'data' => $result->data,

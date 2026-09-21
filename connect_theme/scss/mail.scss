@@ -37,7 +37,7 @@ td {
 }
 
 #header {
-  background-color: $black-01;
+  background-color: var(--black-01-bg);
   color: $light-gray-01;
   padding: 1rem;
   height: 3rem;
@@ -46,12 +46,12 @@ td {
 #main {
   padding: 2rem;
   background-color: $light-gray-01;
-  color: $black-01;
+  color: var(--black-01);
   font-size: $base-font-size;
 }
 
 #footer {
-  background-color: $black-01;
+  background-color: var(--black-01-bg);
   color: $light-gray-01;
   font-size: $base-font-size;
   padding: 2rem;

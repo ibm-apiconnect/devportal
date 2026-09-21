@@ -59,7 +59,7 @@ class GenerateTheme extends FormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
 
     $intro_text = '<p>' . t('The first step in customizing the branding of your Developer Portal is to create a custom sub-theme. ') . '</br>';
-    $intro_text .= t('The sub-theme inherits all of the resources of the parent theme, and you can then override specific resources in the overrides.css file to configure your customizations. For more information, see:') . ' <a href="https://www.ibm.com/docs/SSMNED_v10cd?topic=tutorials-tutorial-creating-custom-theme-developer-portal" target="_new">' . t('Knowledge Center') . '</a></p>';
+    $intro_text .= t('The sub-theme inherits all of the resources of the parent theme, and you can then override specific resources in the overrides.css file to configure your customizations. For more information, see:') . ' <a href="https://www.ibm.com/docs/en/SSMNED_12.1.x_cd?topic=tutorials-tutorial-creating-custom-theme-developer-portal" target="_new">' . t('Knowledge center') . '</a></p>';
     $intro_text .= '<p>' . t('Complete the form below and you will be presented with a custom sub-theme to download.') . '</p>';
 
     $form['intro'] = [
@@ -89,12 +89,12 @@ class GenerateTheme extends FormBase {
     ];
 
     $template_options = [
-      'connect_theme' => t('Default Connect Theme'),
-      'mono' => t('Business Mono'),
-      'blue' => t('Sapphire Blue'),
-      'green' => t('Emerald Green'),
-      'brown' => t('Golden Brown'),
-      'red' => t('Ruby Red'),
+      'connect_theme' => t('Default connect theme'),
+      'mono' => t('Business mono'),
+      'blue' => t('Sapphire blue'),
+      'green' => t('Emerald green'),
+      'brown' => t('Golden brown'),
+      'red' => t('Ruby red'),
     ];
 
     $form['template'] = [
@@ -125,14 +125,25 @@ class GenerateTheme extends FormBase {
     ibm_apim_entry_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
     $name = $form_state->getValue('name');
 
+    $reserved = [
+      'src', 'lib', 'vendor', 'assets', 'css', 'files', 'images', 'js', 'misc',
+      'templates', 'includes', 'fixtures', 'drupal',
+    ];
+
     if ($name === NULL || empty($name)) {
       $form_state->setErrorByName('name', $this->t('Sub-theme name is a required field.'));
     }
-    if (!preg_match('/^[a-z0-9_]+$/', $name)) {
-      $form_state->setErrorByName('name', $this->t('The sub-theme name can only contain the following characters: a-z0-9_'));
+    if (!preg_match('/^[a-z][a-z0-9_]*$/', $name)) {
+      $form_state->setErrorByName('name', $this->t('The sub-theme name must start with a letter and may contain only lower-case letters, numbers, and underscores.'));
     }
     if (\strlen($name) > 20) {
       $form_state->setErrorByName('name', $this->t('The sub-theme name must be less than 20 characters long.'));
+    }
+    if (in_array($name, $reserved, TRUE)) {
+      $form_state->setErrorByName(
+        'name',
+        $this->t('The sub-theme name "@name" is reserved. Please choose a different name.', ['@name' => $name])
+      );
     }
 
     ibm_apim_exit_trace(__CLASS__ . '::' . __FUNCTION__, NULL);
@@ -163,6 +174,14 @@ class GenerateTheme extends FormBase {
       $this->messenger->addMessage(t('Success. Your sub-theme can be downloaded here: @htmlLink. This download will be available for 24 hours.', [
         '@htmlLink' => $messageHtml,
       ]));
+
+      \Drupal::service('ibm_apim.utils')->logAuditEvent(
+        'PORTAL_GENERATE_THEME',
+        'success',
+        '/admin/theme/generate',
+        $url,
+        [ 'theme_name' => $name, 'template' => $template, 'type' => $type ]
+      );
     }
     else {
       $this->messenger->addError(t('An error has occurred.'));

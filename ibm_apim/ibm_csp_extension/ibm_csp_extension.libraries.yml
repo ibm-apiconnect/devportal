@@ -1,0 +1,6 @@
+ckeditor5_nonce_shim:
+  js:
+    js/ckeditor5-nonce-shim.js:
+      weight: -200
+  dependencies:
+    - core/drupalSettings

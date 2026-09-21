@@ -17,8 +17,10 @@ use CommerceGuys\Intl\Currency\CurrencyRepository;
 use CommerceGuys\Intl\Formatter\CurrencyFormatter;
 use CommerceGuys\Intl\NumberFormat\NumberFormatRepository;
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\TranslationManager;
+use Drupal\ibm_apim\External\SerializationUtility;
 
 /**
  * Class ProductPlan
@@ -212,7 +214,7 @@ class ProductPlan {
         $apiSafeNodeRef = Html::getClass($api['node']->apic_ref->value);
         $nodes[$apiSafeNodeRef] = $this->createApiNodeForPlan($api);
 
-        $apiDocument = unserialize($api['node']->api_swagger->value, ['allowed_classes' => FALSE]);
+        $apiDocument = SerializationUtility::decodeData($api['node']->api_swagger->value, TRUE, FALSE);
         if (isset($apiDocument['asyncapi'])) {
           $nodes[$apiSafeNodeRef]['resources'] = $this->generateLimitsForChannels($apiDocument['channels'], $planRateLimit, $planRateData);
         }
@@ -255,6 +257,11 @@ class ProductPlan {
 
     foreach ($plan['apis'] as $key => $planApi) {
       $apiSafeName = Html::getClass($productApis[$key]['name']);
+
+      // Skip if API not loaded (for performance with large products)
+      if (!isset($apiNodeMap[$apiSafeName])) {
+        continue;
+      }
 
       $api = $apiNodeMap[$apiSafeName];
       $api['node'] = $this->translateNodeIfPossible($api['node'], $lang_code);
@@ -337,7 +344,7 @@ class ProductPlan {
         }
       }
       else {
-        $apiDocument = unserialize($api['node']->api_swagger->value, ['allowed_classes' => FALSE]);
+        $apiDocument = SerializationUtility::decodeData($api['node']->api_swagger->value, TRUE, FALSE);
         if (isset($apiDocument['asyncapi'])) {
           $apiNode['resources'] = $this->generateLimitsForChannels($apiDocument['channels'], $planRateLimit, $planRateData);
         }
@@ -383,7 +390,7 @@ class ProductPlan {
       }
 
       if (array_key_exists('description', $planArray['data']['x-ibm-languages']) && array_key_exists($lang_code, $planArray['data']['x-ibm-languages']['description'])) {
-        $planArray['data']['description'] = $planArray['data']['x-ibm-languages']['description'][$lang_code];
+        $planArray['data']['description'] = Xss::filter($planArray['data']['x-ibm-languages']['description'][$lang_code]);
       }
     }
 

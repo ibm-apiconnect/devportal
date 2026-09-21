@@ -3,3 +3,14 @@ basic:
   css:
     component:
       css/consumerorg.css: { }
+
+member_context_menu:
+  version: 1.x
+  js:
+    js/member-context-menu.js: { }
+  css:
+    component:
+      css/member-context-menu.css: { }
+  dependencies:
+    - core/drupal
+    - core/once

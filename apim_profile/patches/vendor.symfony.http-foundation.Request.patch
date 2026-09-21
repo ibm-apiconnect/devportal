@@ -1,12 +1,13 @@
---- vendor/symfony/http-foundation/Request.php  2024-07-26 13:41:01
-+++ vendor/symfony/http-foundation/Request.php     2024-09-03 15:07:38
-@@ -1063,9 +1063,15 @@
+--- vendor/symfony/http-foundation/Request.php
++++ vendor/symfony/http-foundation/Request.php
+@@ -1169,10 +1169,18 @@
       */
      public function getHost(): string
      {
 -        if ($this->isFromTrustedProxy() && $host = $this->getTrustedValues(self::HEADER_X_FORWARDED_HOST)) {
 -            $host = $host[0];
--        } elseif (!$host = $this->headers->get('HOST')) {
+-        } else {
+-            $host = $this->headers->get('HOST') ?: $this->server->get('SERVER_NAME') ?: $this->server->get('SERVER_ADDR', '');
 +        // velox/devportal#7594 - we have commented the code related to X_FORWARDED_HOST and trusted proxies here
 +        // as this creates issues in OCP environments where sometimes getTrustedValues() returns values which
 +        // cause us to use the wrong hostname to search for a cookie which won't exist. This then means authorize.php
@@ -16,6 +17,9 @@
 +        //    $host = $host[0];
 +        //} elseif (!$host = $this->headers->get('HOST')) {
 +        if (!$host = $this->headers->get('HOST')) {
-             if (!$host = $this->server->get('SERVER_NAME')) {
-                 $host = $this->server->get('SERVER_ADDR', '');
-             }
++            if (!$host = $this->server->get('SERVER_NAME')) {
++                $host = $this->server->get('SERVER_ADDR', '');
++            }
+         }
+ 
+         // trim and remove port number from host

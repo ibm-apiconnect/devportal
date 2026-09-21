@@ -2,7 +2,7 @@ ibm_apim.settings:
   path: '/admin/config/system/ibm_apim'
   defaults:
     _form: 'Drupal\ibm_apim\Form\AdminForm'
-    _title: 'Configure the IBM API Developer Portal'
+    _title: 'Configure the IBM CMS Portal'
   requirements:
     _permission: 'administer_apic'
 
@@ -10,7 +10,7 @@ ibm_apim.analytics_settings:
   path: '/admin/config/system/analytics'
   defaults:
     _form: 'Drupal\ibm_apim\Form\AnalyticsConfigForm'
-    _title: 'Configure the consumer analytics for the IBM API Developer Portal'
+    _title: 'Configure the consumer analytics for the IBM CMS Portal'
   requirements:
     _permission: 'administer_apic'
     _ibm_apim_analytics_admin_access_check: 'TRUE'
@@ -19,7 +19,7 @@ ibm_apim.billing_settings:
   path: '/admin/config/system/apic_billing'
   defaults:
     _form: 'Drupal\ibm_apim\Form\BillingConfigForm'
-    _title: 'Configure the billing integration for the IBM API Developer Portal'
+    _title: 'Configure the billing integration for the IBM CMS Portal'
   requirements:
     _permission: 'administer_apic'
     _ibm_apim_billing_admin_access_check: 'TRUE'
@@ -43,7 +43,7 @@ ibm_apim.version:
   path: '/ibm_apim/version'
   defaults:
     _controller: '\Drupal\ibm_apim\Controller\IbmApimController::version'
-    _title: 'IBM API Developer Portal Version'
+    _title: 'IBM CMS Portal Version'
   requirements:
     _permission: 'access content'
 

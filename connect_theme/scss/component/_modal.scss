@@ -1,8 +1,19 @@
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2025
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
 .bx--global-light-ui {
 
   .modal {
     text-align: center;
-    background-color: $modal_overlay;
+    background-color: var(--modal-overlay);
   }
 
   &.modal-open {
@@ -41,6 +52,7 @@
 
   .modal-body {
     padding: 1rem;
+    overflow: auto;
 
     input[type="radio"].bx--radio-button,
     input[type="checkbox"].bx--checkbox {
@@ -51,9 +63,9 @@
     .form-item input:hover,
     .form-item textarea,
     .form-item select {
-      background-color: $input-bg;
+      background-color: var(--input-bg);
       border: unset;
-      border-bottom: 1px solid $default-input-border;
+      border-bottom: 1px solid var(--default-input-border);
     }
 
     .bx--form-item.form-item:last-child {
@@ -69,7 +81,6 @@
   .modal-content {
     border-radius: 0;
     border: none;
-    overflow-y: auto;
     box-shadow: unset;
   }
 
@@ -109,9 +120,10 @@
 // treat popovers as xs passive modal
 .popover {
   border-radius: 0;
-  border: 1px solid $ui-02;
+  // border: 1px solid $ui-02;
+  filter: var(--popover-container-filter);
   box-shadow: unset;
-  background-color:	$ui-01;
+  background-color:	var(--popover-background);
   .arrow {
     display: none;
   }
@@ -135,17 +147,22 @@
   }
   .modal-buttons .btn:last-child {
     flex-grow: 1;
-    background-color: $btn-default-bg;
-    color: $btn-default-color;
-    border: 2px solid $btn-default-border;
+    background-color: var(--btn-default-bg);
+    color: var(--btn-default-color);
+    border: 2px solid var(--btn-default-border);
     &:hover {
-      color: $btn-primary-color;
-      background-color: $hover-secondary;
+      color: var(--btn-primary-color);
+      background-color: var(--hover-secondary);
     }
     &:focus{
-      color: $btn-primary-color;
-      inset: $inverse-01;
-      border: $focus;
+      color: var(--btn-primary-color);
+      
+      border: 1px solid var(--interactive-focus);
     }
   }
+}
+
+// Fix for Drupal core ui-dialog modal title text color
+.ui-dialog .ui-dialog-title {
+  color: var(--default-header);
 }

@@ -72,7 +72,13 @@
  * @ingroup themeable
  */
 #}
-<article{{ attributes.addClass('blog-post') }}>
+{%
+  set article_attributes = attributes
+    .addClass('blog-post')
+    .removeAttribute('dir')
+    .removeAttribute('aria-labelledby')
+%}
+<article{{ article_attributes }} aria-label="{{ label }}">
 
   {{ title_prefix }}
   {% if label and not page %}

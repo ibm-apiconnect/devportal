@@ -1,18 +1,32 @@
+/********************************************************* {COPYRIGHT-TOP} ***
+ * Licensed Materials - Property of IBM
+ * 5725-L30, 5725-Z22
+ *
+ * (C) Copyright IBM Corporation 2018, 2024
+ *
+ * All Rights Reserved.
+ * US Government Users Restricted Rights - Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ ********************************************************** {COPYRIGHT-END} **/
+
+ 
 @import "../carbon/helper-mixins";
 
 .bx--card {
   @include reset;
   display: flex;
   flex-direction: column;
-  width: rem(300px);
-  max-width: rem(300px);
-  min-height: rem(300px);
-  max-height: rem(400px);
-  background-color: $card-bg;
-  border: 1px solid $card-border-color;
+  width: rem(320px);
+  max-width: rem(320px);
+  min-height: rem(320px);
+  max-height: rem(320px);
+  height: rem(320px);
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border-color);
   margin-bottom: 2px;
   &:focus {
-    @include focus-outline('outline');
+    outline-offset: -2px;
+    outline: 2px solid var(--interactive-focus);
   }
 }
 
@@ -41,7 +55,7 @@
   align-items: center;
   justify-content: space-between;
   height: rem(48px);
-  background-color: $card-footer-bg;
+  background-color: var(--card-footer-bg);
   padding-left: 1rem;
   padding-right: 1rem;
   font-size: 0.75rem;
@@ -85,7 +99,7 @@
   font-weight: 400;
   padding: 0;
   margin: 0;
-  color: $text-02;
+  color: var(--text-secondary);
 
   &:first-child {
     padding-top: .25rem;
@@ -100,8 +114,8 @@
   justify-content: center;
   width: rem(32px);
   height: rem(32px);
-  background-color: $card-bg;
-  border: 1px solid $card-border-color;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border-color);
   .bx--about__icon--img {
     width: rem(32px);
     height: rem(32px);
@@ -121,7 +135,7 @@
   &:hover,
   &:focus {
     .bx--app-actions__button--icon {
-      fill: $btn-primary-bg;
+      fill: var(--btn-primary-bg);
     }
   }
 
@@ -150,7 +164,7 @@
     font-weight: 600;
     font-family: 'IBM Plex Sans', sans-serif;
     .apicApiName{
-      padding-right: 0.625rem;
+      padding-inline-end: 0.625rem;
       max-width: 10rem;
     }
     .apicApiCardVersion{
@@ -193,9 +207,8 @@
 
 .bx--card .apicApiCount
 {
-  border-top: 1px solid $card-border-color;
+  border-top: 1px solid var(--card-border-color);
   margin: 0 1rem;
-  padding: 1rem 0;
 }
 
 
@@ -208,11 +221,11 @@
 }
 
 .node--type-application.bx--card a {
-  color: $black-01;
+  color: var(--text-secondary);
 }
 
 .node--type-application.bx--card a .apicAppName {
-  color: $brand-primary;
+  color: var(--card-title-color);
   font-size: 0.875rem;
   line-height: 18px;
   word-break: break-word;
